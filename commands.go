@@ -18,8 +18,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.ibm.com/codewind-installer/errors"
-	"github.ibm.com/codewind-installer/utils"
+	"github.com/eclipse/codewind-installer/errors"
+	"github.com/eclipse/codewind-installer/utils"
 
 	"github.com/docker/docker/api/types"
 
