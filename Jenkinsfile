@@ -58,10 +58,10 @@ pipeline {
 						cd ../..
 						export GOPATH=$GOPATH:$(pwd)
 						cd $CODE_DIRECTORY
-						GOOS=darwin go build -o ${PRODUCT_NAME}-macos
-  						GOOS=windows go build -o ${PRODUCT_NAME}-win.exe
-  						GOOS=linux go build -o ${PRODUCT_NAME}-linux
-  						chmod -v +x ${PRODUCT_NAME}-*
+						//GOOS=darwin go build -o ${PRODUCT_NAME}-macos
+  						//GOOS=windows go build -o ${PRODUCT_NAME}-win.exe
+  						//GOOS=linux go build -o ${PRODUCT_NAME}-linux
+  						//chmod -v +x ${PRODUCT_NAME}-*
 					'''
 
 		    	}
