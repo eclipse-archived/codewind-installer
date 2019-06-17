@@ -4,6 +4,10 @@ pipeline {
 
 	agent any
 
+	tools {
+		go 'go-1.12'
+	}
+
     options {
         skipStagesAfterUnstable()
     }
@@ -31,9 +35,9 @@ pipeline {
 						cd ../..
 						export GOPATH=$GOPATH:$(pwd)
 						cd $CODE_DIRECTORY
-						# get all of of the go dependences
-						# curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-						# dep ensure -v
+						get all of of the go dependences
+						curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+						dep ensure -v
 						echo "Building in directory $(pwd)"
 						'''
 				}
@@ -58,11 +62,14 @@ pipeline {
 						cd ../..
 						export GOPATH=$GOPATH:$(pwd)
 						cd $CODE_DIRECTORY
-						# GOOS=darwin go build -o ${PRODUCT_NAME}-macos
-  						# GOOS=windows go build -o ${PRODUCT_NAME}-win.exe
-  						# GOOS=linux go build -o ${PRODUCT_NAME}-linux
+						GOOS=darwin go build -o ${PRODUCT_NAME}-macos
+  						GOOS=windows go build -o ${PRODUCT_NAME}-win.exe
+  					 	GOOS=linux go build -o ${PRODUCT_NAME}-linux
   						# chmod -v +x ${PRODUCT_NAME}-*
-					'''
+						'''
+
+						zip archive: true,  dir: 'codewind-installer', glob: ' ', zipFile: 'codewind-installer.zip'
+                    	archiveArtifacts artifacts: 'codewind-installer.zip', fingerprint: true
 
 		    	}
 			}
