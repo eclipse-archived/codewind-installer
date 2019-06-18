@@ -28,6 +28,14 @@ spec:
 	}
 
 	stages {
+		stage('Run Go') {
+      		steps {
+        		container('go') {
+         			 sh 'go version'
+        		}
+      		}
+    	}
+		
 		stage ('preBuild') {
 			agent { 
 				node { 
