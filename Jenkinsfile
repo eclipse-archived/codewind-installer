@@ -2,10 +2,22 @@
 
 pipeline {
 
-	agent any
+	agent {
+		kubernetes {
+      		label 'go-pod'
+      		yaml """
+				apiVersion: v1
+				kind: Pod
+				spec:
+  				containers:
+  					- name: go
+    			image: golang:1.11-alpine3.9
+    			tty: true
+    			command:
+    				- cat
+			"""
+    	}
 
-	tools {
-		go 'go-1.12'
 	}
 
     options {
@@ -27,19 +39,22 @@ pipeline {
 
 			steps {
 				script {
-					sh 'echo "starting preInstall.....: GOPATH=$GOPATH"'
-					sh '''
-						# add the base directory to the gopath
-						CODE_DIRECTORY=$PWD
-						projectDir=$(basename $PWD)
-						cd ../..
-						export GOPATH=$GOPATH:$(pwd)
-						cd $CODE_DIRECTORY
-						get all of of the go dependences
-						curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-						dep ensure -v
-						echo "Building in directory $(pwd)"
+					container('go') {
+						sh 'echo "starting preInstall.....: GOPATH=$GOPATH"'
+						sh '''
+							# add the base directory to the gopath
+							CODE_DIRECTORY=$PWD
+							projectDir=$(basename $PWD)
+							cd ../..
+							export GOPATH=$GOPATH:$(pwd)
+							cd $CODE_DIRECTORY
+							get all of of the go dependences
+							curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+							dep ensure -v
+							echo "Building in directory $(pwd)"
+						
 						'''
+					}
 				}
 			}
 		}
@@ -55,22 +70,20 @@ pipeline {
 
 			steps {
 				script {
-					sh '''
-						# add the base directory to the gopath
-						CODE_DIRECTORY=$PWD
-						projectDir=$(basename $PWD)
-						cd ../..
-						export GOPATH=$GOPATH:$(pwd)
-						cd $CODE_DIRECTORY
-						GOOS=darwin go build -o ${PRODUCT_NAME}-macos
-  						GOOS=windows go build -o ${PRODUCT_NAME}-win.exe
-  					 	GOOS=linux go build -o ${PRODUCT_NAME}-linux
-  						# chmod -v +x ${PRODUCT_NAME}-*
+					container('go') {
+						sh '''
+							# add the base directory to the gopath
+							CODE_DIRECTORY=$PWD
+							projectDir=$(basename $PWD)
+							cd ../..
+							export GOPATH=$GOPATH:$(pwd)
+							cd $CODE_DIRECTORY
+							GOOS=darwin go build -o ${PRODUCT_NAME}-macos
+							GOOS=windows go build -o ${PRODUCT_NAME}-win.exe
+							GOOS=linux go build -o ${PRODUCT_NAME}-linux
+							# chmod -v +x ${PRODUCT_NAME}-*
 						'''
-
-						zip archive: true,  dir: 'codewind-installer', glob: ' ', zipFile: 'codewind-installer.zip'
-                    	archiveArtifacts artifacts: 'codewind-installer.zip', fingerprint: true
-
+					}
 		    	}
 			}
 		}
@@ -103,10 +116,9 @@ pipeline {
   						mv -v $PRODUCT_NAME-* $PRODUCT_NAME/
 						echo "zip up the images - does not work!"  
 					'''
-				}		 
-				script { 
 					zip archive: true,  dir: 'codewind-installer', glob: ' ', zipFile: 'codewind-installer.zip'
-				}
+                    archiveArtifacts artifacts: 'codewind-installer.zip', fingerprint: true
+				}		 
 			}
         }
 	}
