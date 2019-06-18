@@ -5,19 +5,18 @@ pipeline {
 	agent {
 		kubernetes {
       		label 'go-pod'
-      		yaml """
-                apiVersion: v1
-                kind: Pod
-                spec:
-                containers:
-                - name: go
-                image: golang:1.11-alpine3.9
-                tty: true
-                command:
-                - cat
-			"""
+			yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: go
+    image: golang:1.11-alpine3.9
+    tty: true
+    command:
+    - cat
+"""
     	}
-
 	}
 
     options {
@@ -29,6 +28,14 @@ pipeline {
 	}
 
 	stages {
+		stage('Run Go') {
+      		steps {
+        		container('go') {
+         			 sh 'go version'
+        		}
+      		}
+    	}
+		
 		stage ('preBuild') {
 			agent { 
 				node { 
