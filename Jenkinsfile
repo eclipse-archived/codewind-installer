@@ -6,15 +6,15 @@ pipeline {
 		kubernetes {
       		label 'go-pod'
       		yaml """
-				apiVersion: v1
-				kind: Pod
-				spec:
-  				containers:
-  					- name: go
-    			image: golang:1.11-alpine3.9
-    			tty: true
-    			command:
-    				- cat
+                apiVersion: v1
+                kind: Pod
+                spec:
+                containers:
+                - name: go
+                image: golang:1.11-alpine3.9
+                tty: true
+                command:
+                - cat
 			"""
     	}
 
