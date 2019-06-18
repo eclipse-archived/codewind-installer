@@ -28,6 +28,14 @@ spec:
 	}
 
 	stages {
+		stage('Run Go') {
+      		steps {
+        		container('go') {
+         			 sh 'go version'
+        		}
+      		}
+    	}
+		
 		stage ('preBuild') {
 			agent { 
 				node { 
@@ -37,23 +45,21 @@ spec:
 			}
 
 			steps {
-				script {
-					container('go') {
-						sh 'echo "starting preInstall.....: GOPATH=$GOPATH"'
-						sh '''
-							# add the base directory to the gopath
-							CODE_DIRECTORY=$PWD
-							projectDir=$(basename $PWD)
-							cd ../..
-							export GOPATH=$GOPATH:$(pwd)
-							cd $CODE_DIRECTORY
-							get all of of the go dependences
-							curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-							dep ensure -v
-							echo "Building in directory $(pwd)"
-						
-						'''
-					}
+				container('go') {
+					sh 'echo "starting preInstall.....: GOPATH=$GOPATH"'
+					sh '''
+						# add the base directory to the gopath
+						CODE_DIRECTORY=$PWD
+						projectDir=$(basename $PWD)
+						cd ../..
+						export GOPATH=$GOPATH:$(pwd)
+						cd $CODE_DIRECTORY
+						get all of of the go dependences
+						curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+						dep ensure -v
+						echo "Building in directory $(pwd)"
+					
+					'''
 				}
 			}
 		}
@@ -68,22 +74,20 @@ spec:
 			}
 
 			steps {
-				script {
-					container('go') {
-						sh '''
-							# add the base directory to the gopath
-							CODE_DIRECTORY=$PWD
-							projectDir=$(basename $PWD)
-							cd ../..
-							export GOPATH=$GOPATH:$(pwd)
-							cd $CODE_DIRECTORY
-							GOOS=darwin go build -o ${PRODUCT_NAME}-macos
-							GOOS=windows go build -o ${PRODUCT_NAME}-win.exe
-							GOOS=linux go build -o ${PRODUCT_NAME}-linux
-							# chmod -v +x ${PRODUCT_NAME}-*
-						'''
-					}
-		    	}
+				container('go') {
+					sh '''
+						# add the base directory to the gopath
+						CODE_DIRECTORY=$PWD
+						projectDir=$(basename $PWD)
+						cd ../..
+						export GOPATH=$GOPATH:$(pwd)
+						cd $CODE_DIRECTORY
+						GOOS=darwin go build -o ${PRODUCT_NAME}-macos
+						GOOS=windows go build -o ${PRODUCT_NAME}-win.exe
+						GOOS=linux go build -o ${PRODUCT_NAME}-linux
+						# chmod -v +x ${PRODUCT_NAME}-*
+					'''
+				}
 			}
 		}
 		
