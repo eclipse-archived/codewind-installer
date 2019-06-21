@@ -91,13 +91,11 @@ spec:
 						
 						TIMESTAMP="$(date +%F-%H%M)" 
 						# WINDOWS EXE: Submit Windows unsigned.exe and save signed output to signed.exe
-                        curl -o codewind-installer/codewind-installer-win-signed${TIMESTAMP}.exe  -F file=@codewind-installer-win.exe http://build.eclipse.org:31338/winsign.php
+                        curl -o codewind-installer/codewind-installer-win-${TIMESTAMP}.exe  -F file=@codewind-installer-win.exe http://build.eclipse.org:31338/winsign.php
 
 						# move other executable to codewind-installer directoryand add timestamp to the name
 						for fileid in codewind-installer-*; do
-    						if [ "${fileid##*.}" == "exe" ]; then 
-        						mv -v $fileid codewind-installer/${fileid%.*}-$TIMESTAMP.exe
-    						else
+    						if [ "${fileid##*.}" != "exe" ]; then 
         						mv -v $fileid codewind-installer/${fileid%.*}-$TIMESTAMP
     						fi        
 						done
