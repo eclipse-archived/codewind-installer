@@ -1,0 +1,10 @@
+# System files
+.DS_Store
+.vscode/
+.project
+
+# Dependancies
+vendor
+
+# Compiled output
+main

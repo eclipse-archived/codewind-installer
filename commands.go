@@ -181,7 +181,7 @@ func commands() {
 				containerArr := [3]string{}
 				containerArr[0] = "codewind-pfe"
 				containerArr[1] = "codewind-performance"
-				containerArr[2] = "mc-"
+				containerArr[2] = "cw-"
 
 				containers := utils.GetContainerList()
 
@@ -200,7 +200,7 @@ func commands() {
 
 		{
 			Name:  "remove",
-			Usage: "Remove Codewind/Project docker images and the microclimate network",
+			Usage: "Remove Codewind/Project docker images and the codewind network",
 			Action: func(c *cli.Context) error {
 				imageArr := [7]string{}
 				imageArr[0] = "sys-mcs-docker-local.artifactory.swg-devops.com/codewind-pfe"
@@ -209,8 +209,8 @@ func commands() {
 				imageArr[3] = "ibmcom/codewind-pfe"
 				imageArr[4] = "ibmcom/codewind-performance"
 				imageArr[5] = "ibmcom/codewind-initialize"
-				imageArr[6] = "mc-"
-				networkName := "microclimate"
+				imageArr[6] = "cw-"
+				networkName := "codewind"
 
 				images := utils.GetImageList()
 
@@ -221,7 +221,11 @@ func commands() {
 					imageTags := strings.Join(image.RepoTags, " ")
 					for _, key := range imageArr {
 						if strings.HasPrefix(imageRepo, key) || strings.HasPrefix(imageTags, key) {
-							fmt.Println("Deleting Image ", image.RepoTags[0], "... ")
+							if len(image.RepoTags) > 0 {
+								fmt.Println("Deleting Image ", image.RepoTags[0], "... ")
+							} else {
+								fmt.Println("Deleting Image ", image.ID, "... ")
+							}
 							utils.RemoveImage(image.ID)
 						}
 					}
