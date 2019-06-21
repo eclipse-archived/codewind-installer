@@ -27,8 +27,8 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
+	"github.com/eclipse/codewind-installer/errors"
 	"github.com/moby/moby/client"
-	"github.ibm.com/codewind-installer/errors"
 	"gopkg.in/yaml.v3"
 )
 
@@ -42,16 +42,16 @@ services:
   image: ${REPOSITORY}codewind-pfe${PLATFORM}:${TAG}
   container_name: codewind-pfe
   user: root
-  environment: ["HOST_WORKSPACE_DIRECTORY=${WORKSPACE_DIRECTORY}","CONTAINER_WORKSPACE_DIRECTORY=/microclimate-workspace","HOST_OS=${HOST_OS}","TELEMETRY=${TELEMETRY}","MICROCLIMATE_VERSION=${TAG}","PERFORMANCE_CONTAINER=codewind-performance${PLATFORM}:${TAG}"]
+  environment: ["HOST_WORKSPACE_DIRECTORY=${WORKSPACE_DIRECTORY}","CONTAINER_WORKSPACE_DIRECTORY=/codewind-workspace","HOST_OS=${HOST_OS}","CODEWIND_VERSION=${TAG}","PERFORMANCE_CONTAINER=codewind-performance${PLATFORM}:${TAG}"]
   depends_on: [codewind-performance]
   ports: ["127.0.0.1:9090:9090"]
-  volumes: ["/var/run/docker.sock:/var/run/docker.sock","${WORKSPACE_DIRECTORY}:/microclimate-workspace"]
+  volumes: ["/var/run/docker.sock:/var/run/docker.sock","${WORKSPACE_DIRECTORY}:/codewind-workspace"]
   networks: [network]
  codewind-performance:
   image: codewind-performance${PLATFORM}:${TAG}
   ports: ["127.0.0.1:9095:9095"]
   container_name: codewind-performance
-  volumes: ["/var/run/docker.sock:/var/run/docker.sock","${WORKSPACE_DIRECTORY}:/microclimate-workspace"]
+  volumes: ["/var/run/docker.sock:/var/run/docker.sock","${WORKSPACE_DIRECTORY}:/codewind-workspace"]
   networks: [network]
 networks:
   network:
@@ -130,8 +130,7 @@ func WriteToComposeFile(tempFilePath string) bool {
 func DockerCompose() {
 
 	// Set env variables for the docker compose file
-	home, err := os.UserHomeDir()
-	errors.CheckErr(err, 205, "Failed to get home dir")
+	home := os.Getenv("HOME")
 
 	const GOARCH string = runtime.GOARCH
 	const GOOS string = runtime.GOOS
@@ -147,13 +146,12 @@ func DockerCompose() {
 	os.Setenv("REPOSITORY", "")
 	os.Setenv("TAG", "latest")
 	if GOOS == "windows" {
-		os.Setenv("WORKSPACE_DIRECTORY", "C:\\microclimate-workspace")
+		os.Setenv("WORKSPACE_DIRECTORY", "C:\\codewind-workspace")
 	} else {
-		os.Setenv("WORKSPACE_DIRECTORY", home+"/microclimate-workspace")
+		os.Setenv("WORKSPACE_DIRECTORY", home+"/codewind-workspace")
 	}
 	os.Setenv("HOST_OS", GOOS)
-	os.Setenv("TELEMETRY", "")
-	os.Setenv("COMPOSE_PROJECT_NAME", "microclimate")
+	os.Setenv("COMPOSE_PROJECT_NAME", "codewind")
 
 	cmd := exec.Command("docker-compose", "-f", "installer-docker-compose.yaml", "up", "-d")
 	output := new(bytes.Buffer)
@@ -166,6 +164,11 @@ func DockerCompose() {
 	fmt.Printf("Please wait whilst containers initialize... %s \n", output.String())
 	cmd.Wait()
 	fmt.Printf(output.String()) // Wait to finish execution, so we can read all output
+
+	if strings.Contains(output.String(), "ERROR") {
+		DeleteTempFile("installer-docker-compose.yaml")
+		os.Exit(1)
+	}
 }
 
 // DeleteTempFile once the the Codewind environment has been created
