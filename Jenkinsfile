@@ -11,7 +11,7 @@ kind: Pod
 spec:
   containers:
   - name: go
-    image: golang:1.11-alpine3.9
+    image: golang:1.11-stretch
     tty: true
     command:
     - cat
@@ -20,72 +20,52 @@ spec:
 	}
 
     options {
+		timestamps() 
         skipStagesAfterUnstable()
     }
 
 	environment {
-  		PRODUCT_NAME = 'codewind-installer'
+		CODE_DIRECTORY_FOR_GO = 'src/github.com/eclipse/codewind-installer'
+		DEFAULT_WORKSPACE_DIR_FILE = 'temp_default_dir'
 	}
 
 	stages {
-		stage('Run Go') {
-      		steps {
-        		container('go') {
-         			 sh 'go version'
-        		}
-      		}
-    	}
 		
-		stage ('preBuild') {
-			agent { 
-				node { 
-					label '' 
-					customWorkspace 'src/codewind-installer' 
-				}
-			}
-
+		stage ('Build') {
 			steps {
 				container('go') {
 					sh 'echo "starting preInstall.....: GOPATH=$GOPATH"'
 					sh '''
 						# add the base directory to the gopath
-						CODE_DIRECTORY=$PWD
-						projectDir=$(basename $PWD)
+						DEFAULT_CODE_DIRECTORY=$PWD
 						cd ../..
 						export GOPATH=$GOPATH:$(pwd)
-						cd $CODE_DIRECTORY
-						get all of of the go dependences
-						curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+
+						# create a new directory to store the code for go compile 
+						if [ -d $CODE_DIRECTORY_FOR_GO ]; then
+							rm -rf $CODE_DIRECTORY_FOR_GO
+						fi
+						mkdir -p $CODE_DIRECTORY_FOR_GO
+						cd $CODE_DIRECTORY_FOR_GO
+
+						# copy the code into the new directory for go compile
+						cp -r $DEFAULT_CODE_DIRECTORY/* . 
+						echo $DEFAULT_CODE_DIRECTORY >> $DEFAULT_WORKSPACE_DIR_FILE
+						
+						# get dep and run it
+						wget -O - https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+						dep status
 						dep ensure -v
-						echo "Building in directory $(pwd)"
-					
-					'''
-				}
-			}
-		}
 
-		stage('Build') {
+						# now compile the code
+						export HOME=$JENKINS_HOME
+						export GOCACHE="off"
+						export GOARCH=amd64
+						GOOS=darwin go build -o codewind-installer-macos
+  						GOOS=windows go build -o codewind-installer-win.exe
+  						GOOS=linux go build -o codewind-installer-linux
+  						chmod -v +x codewind-installer-*
 
-			agent { 
-				node { 
-					label '' 
-					customWorkspace 'src/codewind-installer' 
-				}
-			}
-
-			steps {
-				container('go') {
-					sh '''
-						# add the base directory to the gopath
-						CODE_DIRECTORY=$PWD
-						projectDir=$(basename $PWD)
-						cd ../..
-						export GOPATH=$GOPATH:$(pwd)
-						cd $CODE_DIRECTORY
-						GOOS=darwin go build -o ${PRODUCT_NAME}-macos
-						GOOS=windows go build -o ${PRODUCT_NAME}-win.exe
-						GOOS=linux go build -o ${PRODUCT_NAME}-linux
-						# chmod -v +x ${PRODUCT_NAME}-*
 					'''
 				}
 			}
@@ -98,32 +78,59 @@ spec:
         }
         
         stage('Upload') {
- 			agent { 
-				node { 
-					label '' 
-					customWorkspace 'src/codewind-installer' 
-				}
-			}
-
-           steps {
+          steps {
 				script {
 					sh '''
-						if [ -d $PRODUCT_NAME ]; then
-							rm -rf $PRODUCT_NAME
+						# switch to the code go directory
+						cd ../../$CODE_DIRECTORY_FOR_GO
+						echo $(pwd)
+						if [ -d codewind-installer ]; then
+							rm -rf codewind-installer
 						fi	
-						mkdir $PRODUCT_NAME
+						mkdir codewind-installer
 						
 						# WINDOWS EXE: Submit Windows unsigned.exe and save signed output to signed.exe
-                        curl -o $PRODUCT_NAME/${PRODUCT_NAME}-win-signed.exe  -F file=@${PRODUCT_NAME}-win.exe http://build.eclipse.org:31338/winsign.php
+                        curl -o codewind-installer/codewind-installer-win-signed.exe  -F file=@codewind-installer-win.exe http://build.eclipse.org:31338/winsign.php
 
-  						mv -v $PRODUCT_NAME-* $PRODUCT_NAME/
-						echo "zip up the images - does not work!"  
+						# move other executables to codewind-installer directory	
+  						mv -v codewind-installer-* "codewind-installer"
+						DEFAULT_WORKSPACE_DIR=$(cat $DEFAULT_WORKSPACE_DIR_FILE)
+						cp -r codewind-installer $DEFAULT_WORKSPACE_DIR 
+						
 					'''
-					zip archive: true,  dir: 'codewind-installer', glob: ' ', zipFile: 'codewind-installer.zip'
-                    archiveArtifacts artifacts: 'codewind-installer.zip', fingerprint: true
+					// stash the executables so they are avaialable outside of this agent
+					dir('codewind-installer') {
+						stash includes: '**', name: 'EXECUTABLES'
+					}	
 				}		 
 			}
         }
+		stage('Deploy') {
+			agent any	
+           	steps {
+               	sshagent ( ['projects-storage.eclipse.org-bot-ssh']) {
+                println("Deploying codewind-installer to downoad area...")
+				sh '''
+		 			if [ -d codewind-installer ]; then
+						rm -rf codewind-installer
+					fi	
+		 			mkdir codewind-installer
+				'''	
+				// get the stashed executables 
+		 		dir ('codewind-installer') {     
+		 			unstash 'EXECUTABLES'
+		 		}	 
+                sh '''
+					WORKSPACE=$PWD
+					ls -la ${WORKSPACE}/codewind-installer/*
+                    ssh genie.codewind@projects-storage.eclipse.org rm -rf /home/data/httpd/download.eclipse.org/codewind/codewind-installer/snapshots
+                    ssh genie.codewind@projects-storage.eclipse.org mkdir -p /home/data/httpd/download.eclipse.org/codewind/codewind-installer/snapshots
+                    scp -r ${WORKSPACE}/codewind-installer/* genie.codewind@projects-storage.eclipse.org:/home/data/httpd/download.eclipse.org/codewind/codewind-installer/snapshots
+                 '''
+               }
+           }
+		}
+
 	}
 	
 	post {
