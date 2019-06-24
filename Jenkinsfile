@@ -61,9 +61,9 @@ spec:
 						export HOME=$JENKINS_HOME
 						export GOCACHE="off"
 						export GOARCH=amd64
-						GOOS=darwin go build -o codewind-installer-macos
-  						GOOS=windows go build -o codewind-installer-win.exe
-  						GOOS=linux go build -o codewind-installer-linux
+						GOOS=darwin go build -ldflags="-s -w" -o codewind-installer-macos
+  						GOOS=windows go build -ldflags="-s -w" -o codewind-installer-win.exe
+  						GOOS=linux go build -ldflags="-s -w" -o codewind-installer-linux
   						chmod -v +x codewind-installer-*
 
 					'''
