@@ -38,16 +38,13 @@ func commands() {
 	app.Version = versionNum
 	app.Usage = "Start, Stop and Remove Codewind"
 
-	//myFlags := []cli.Flag{} - No need to use seperate global flags yet
-
-	//app.Flags = myFlags
-
 	// create commands
 	app.Commands = []cli.Command{
 
 		{
-			Name:  "install-dev",
-			Usage: "Pull pfe, performance & intialize images from artifactory",
+			Name:    "install-dev",
+			Aliases: []string{"in-dev"},
+			Usage:   "Pull pfe, performance & intialize images from artifactory",
 			Action: func(c *cli.Context) error {
 
 				authConfig := types.AuthConfig{
@@ -83,18 +80,26 @@ func commands() {
 		},
 
 		{
-			Name:  "install",
-			Usage: "Pull pfe, performance & intialize images from dockerhub",
+			Name:    "install",
+			Aliases: []string{"in"},
+			Usage:   "Pull pfe, performance & intialize images from dockerhub",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "tag, t",
+					Value: "latest",
+					Usage: "dockerhub image tag",
+				},
+			},
 			Action: func(c *cli.Context) error {
+				tag := c.String("tag")
+				codewindImage := "docker.io/ibmcom/codewind-pfe-amd64:" + tag
+				codewindImageTarget := "codewind-pfe-amd64:" + tag
 
-				codewindImage := "docker.io/ibmcom/codewind-pfe-amd64"
-				codewindImageTarget := "codewind-pfe-amd64:latest"
+				performanceImage := "docker.io/ibmcom/codewind-performance-amd64:" + tag
+				performanceImageTarget := "codewind-performance-amd64:" + tag
 
-				performanceImage := "docker.io/ibmcom/codewind-performance-amd64"
-				performanceImageTarget := "codewind-performance-amd64:latest"
-
-				initializeImage := "docker.io/ibmcom/codewind-initialize-amd64"
-				initializeImageTarget := "codewind-initialize-amd64:latest"
+				initializeImage := "docker.io/ibmcom/codewind-initialize-amd64:" + tag
+				initializeImageTarget := "codewind-initialize-amd64:" + tag
 
 				utils.PullImage(codewindImage, "")
 				utils.PullImage(performanceImage, "")
@@ -113,15 +118,23 @@ func commands() {
 		{
 			Name:  "start",
 			Usage: "Start the Codewind containers",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "tag, t",
+					Value: "latest",
+					Usage: "dockerhub image tag",
+				},
+			},
 			Action: func(c *cli.Context) error {
 				status := utils.CheckContainerStatus()
 
 				if status {
 					fmt.Println("Codewind is already running!")
 				} else {
+					tag := c.String("tag")
 					utils.CreateTempFile(tempFilePath)
 					utils.WriteToComposeFile(tempFilePath)
-					utils.DockerCompose()
+					utils.DockerCompose(tag)
 					utils.DeleteTempFile(tempFilePath) // Remove installer-docker-compose.yaml
 					utils.PingHealth(healthEndpoint)
 				}
@@ -199,8 +212,9 @@ func commands() {
 		},
 
 		{
-			Name:  "remove",
-			Usage: "Remove Codewind/Project docker images and the codewind network",
+			Name:    "remove",
+			Aliases: []string{"rm"},
+			Usage:   "Remove Codewind/Project docker images and the codewind network",
 			Action: func(c *cli.Context) error {
 				imageArr := [7]string{}
 				imageArr[0] = "sys-mcs-docker-local.artifactory.swg-devops.com/codewind-pfe"
