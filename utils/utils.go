@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -240,8 +241,7 @@ func PingHealth(healthEndpoint string) bool {
 	}
 
 	if started != true {
-		fmt.Println("Codewind containers are taking a while to start. Please check the container logs and/or restart Codewind")
-		os.Exit(1)
+		log.Fatal("Codewind containers are taking a while to start. Please check the container logs and/or restart Codewind")
 	}
 	return started
 }
