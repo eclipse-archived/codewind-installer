@@ -92,7 +92,7 @@ spec:
 						TIMESTAMP="$(date +%F-%H%M)" 
 						# WINDOWS EXE: Submit Windows unsigned.exe and save signed output to signed.exe
 
-	                    // only sign windows exe if not a pull request and is master branch
+	                    # only sign windows exe if not a pull request
 						if [ -z $CHANGE_ID ]; then
                         	curl -o codewind-installer/codewind-installer-win-${TIMESTAMP}.exe  -F file=@codewind-installer-win.exe http://build.eclipse.org:31338/winsign.php
 							rm codewind-installer-win.exe 
