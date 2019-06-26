@@ -91,13 +91,15 @@ spec:
 						
 						TIMESTAMP="$(date +%F-%H%M)" 
 						# WINDOWS EXE: Submit Windows unsigned.exe and save signed output to signed.exe
-                        curl -o codewind-installer/codewind-installer-win-${TIMESTAMP}.exe  -F file=@codewind-installer-win.exe http://build.eclipse.org:31338/winsign.php
 
+	                    # only sign windows exe if not a pull request
+						if [ -z $CHANGE_ID ]; then
+                        	curl -o codewind-installer/codewind-installer-win-${TIMESTAMP}.exe  -F file=@codewind-installer-win.exe http://build.eclipse.org:31338/winsign.php
+							rm codewind-installer-win.exe 
+						fi
 						# move other executable to codewind-installer directoryand add timestamp to the name
 						for fileid in codewind-installer-*; do
-    						if [ "${fileid##*.}" != "exe" ]; then 
-        						mv -v $fileid codewind-installer/${fileid%.*}-$TIMESTAMP
-    						fi        
+        					mv -v $fileid codewind-installer/${fileid}-$TIMESTAMP      
 						done
 
 						DEFAULT_WORKSPACE_DIR=$(cat $DEFAULT_WORKSPACE_DIR_FILE)
@@ -129,9 +131,14 @@ spec:
                 sh '''
 					WORKSPACE=$PWD
 					ls -la ${WORKSPACE}/codewind-installer/*
-                 	ssh genie.codewind@projects-storage.eclipse.org rm -rf /home/data/httpd/download.eclipse.org/codewind/codewind-installer/${GIT_BRANCH}/${BUILD_ID}
-            		ssh genie.codewind@projects-storage.eclipse.org mkdir -p /home/data/httpd/download.eclipse.org/codewind/codewind-installer/${GIT_BRANCH}/${BUILD_ID}
-                    scp -r ${WORKSPACE}/codewind-installer/* genie.codewind@projects-storage.eclipse.org:/home/data/httpd/download.eclipse.org/codewind/codewind-installer/${GIT_BRANCH}/${BUILD_ID}
+					if [ -z $CHANGE_ID ]; then
+    					UPLOAD_DIR="$GIT_BRANCH/$BUILD_ID"
+					else
+    					UPLOAD_DIR="pr/$CHANGE_ID/$BUILD_ID"
+					fi
+                 	ssh genie.codewind@projects-storage.eclipse.org rm -rf /home/data/httpd/download.eclipse.org/codewind/codewind-installer/${UPLOAD_DIR}
+            		ssh genie.codewind@projects-storage.eclipse.org mkdir -p /home/data/httpd/download.eclipse.org/codewind/codewind-installer/${UPLOAD_DIR}
+                    scp -r ${WORKSPACE}/codewind-installer/* genie.codewind@projects-storage.eclipse.org:/home/data/httpd/download.eclipse.org/codewind/codewind-installer/${UPLOAD_DIR}
                   '''
                }
            }
