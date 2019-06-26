@@ -127,7 +127,7 @@ func WriteToComposeFile(tempFilePath string) bool {
 }
 
 // DockerCompose to set up the Codewind environment
-func DockerCompose() {
+func DockerCompose(tag string) {
 
 	// Set env variables for the docker compose file
 	home := os.Getenv("HOME")
@@ -144,7 +144,7 @@ func DockerCompose() {
 	}
 
 	os.Setenv("REPOSITORY", "")
-	os.Setenv("TAG", "latest")
+	os.Setenv("TAG", tag)
 	if GOOS == "windows" {
 		os.Setenv("WORKSPACE_DIRECTORY", "C:\\codewind-workspace")
 	} else {
@@ -165,7 +165,12 @@ func DockerCompose() {
 	cmd.Wait()
 	fmt.Printf(output.String()) // Wait to finish execution, so we can read all output
 
-	if strings.Contains(output.String(), "ERROR") {
+	if strings.Contains(output.String(), "ERROR") || strings.Contains(output.String(), "error") {
+		DeleteTempFile("installer-docker-compose.yaml")
+		os.Exit(1)
+	}
+
+	if strings.Contains(output.String(), "The image for the service you're trying to recreate has been removed") {
 		DeleteTempFile("installer-docker-compose.yaml")
 		os.Exit(1)
 	}
