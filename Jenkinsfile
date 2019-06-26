@@ -41,6 +41,8 @@ spec:
 						cd ../..
 						export GOPATH=$GOPATH:$(pwd)
 
+						set
+
 						# create a new directory to store the code for go compile 
 						if [ -d $CODE_DIRECTORY_FOR_GO ]; then
 							rm -rf $CODE_DIRECTORY_FOR_GO
