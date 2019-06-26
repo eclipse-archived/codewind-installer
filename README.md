@@ -1,6 +1,6 @@
 # Codewind Installer
 Install Codewind on MacOS or Windows.
-Prebuilt binaries are available for download [on Artifactory](https://sys-mcs-docker-local.artifactory.swg-devops.com/artifactory/sys-mcs-docker-local/codewind-installer/).
+Prebuilt binaries are available for download [on Artifactory](https://download.eclipse.org/codewind/codewind-installer/).
 
 [![Build Status](https://travis.ibm.com/dev-ex/codewind-installer.svg?token=jLZpzPrJozeLHsb1tpsR&branch=master)](https://travis.ibm.com/dev-ex/codewind-installer)
 [![Eclipse License](https://img.shields.io/badge/license-Eclipse-brightgreen.svg)](https://github.ibm.com/dev-ex/tempest/blob/master/LICENSE)
