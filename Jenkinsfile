@@ -41,8 +41,6 @@ spec:
 						cd ../..
 						export GOPATH=$GOPATH:$(pwd)
 
-						set
-
 						# create a new directory to store the code for go compile 
 						if [ -d $CODE_DIRECTORY_FOR_GO ]; then
 							rm -rf $CODE_DIRECTORY_FOR_GO
@@ -131,9 +129,14 @@ spec:
                 sh '''
 					WORKSPACE=$PWD
 					ls -la ${WORKSPACE}/codewind-installer/*
-                 	ssh genie.codewind@projects-storage.eclipse.org rm -rf /home/data/httpd/download.eclipse.org/codewind/codewind-installer/${GIT_BRANCH}/${BUILD_ID}
-            		ssh genie.codewind@projects-storage.eclipse.org mkdir -p /home/data/httpd/download.eclipse.org/codewind/codewind-installer/${GIT_BRANCH}/${BUILD_ID}
-                    scp -r ${WORKSPACE}/codewind-installer/* genie.codewind@projects-storage.eclipse.org:/home/data/httpd/download.eclipse.org/codewind/codewind-installer/${GIT_BRANCH}/${BUILD_ID}
+					if [ -z $CHANGE_ID ]; then
+    					UPLOAD_DIR="$GIT_BRANCH/$BUILD_ID"
+					else
+    					UPLOAD_DIR="pr/$CHANGE_ID/$BUILD_ID"
+					fi
+                 	ssh genie.codewind@projects-storage.eclipse.org rm -rf /home/data/httpd/download.eclipse.org/codewind/codewind-installer/${UPLOAD_DIR}
+            		ssh genie.codewind@projects-storage.eclipse.org mkdir -p /home/data/httpd/download.eclipse.org/codewind/codewind-installer/${UPLOAD_DIR}
+                    scp -r ${WORKSPACE}/codewind-installer/* genie.codewind@projects-storage.eclipse.org:/home/data/httpd/download.eclipse.org/codewind/codewind-installer/${UPLOAD_DIR}
                   '''
                }
            }
