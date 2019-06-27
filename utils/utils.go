@@ -224,19 +224,19 @@ func TagImage(source, tag string) {
 // PingHealth - pings environment api over a 15 second to check if containers started
 func PingHealth(healthEndpoint string) bool {
 	var started = false
-	for i := 0; i < 20; i++ {
+	fmt.Println("Waiting for Codewind to start")
+	for i := 0; i < 120; i++ {
 		resp, err := http.Get(healthEndpoint)
 		if err != nil {
-			fmt.Println("Waiting for Codewind to start...")
+			fmt.Printf(".")
 		} else {
 			if resp.StatusCode == 200 {
-				fmt.Println("HTTP Response Status:", resp.StatusCode, http.StatusText(resp.StatusCode))
+				fmt.Println("\nHTTP Response Status:", resp.StatusCode, http.StatusText(resp.StatusCode))
 				fmt.Println("Codewind successfully started")
 				started = true
 				break
 			}
 		}
-
 		time.Sleep(1 * time.Second)
 	}
 
