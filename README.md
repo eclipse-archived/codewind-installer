@@ -2,8 +2,6 @@
 Install Codewind on MacOS or Windows.
 Prebuilt binaries are available for download [on Eclipse](https://download.eclipse.org/codewind/codewind-installer/).
 
-[![Build Status](https://travis.ibm.com/dev-ex/codewind-installer.svg?token=jLZpzPrJozeLHsb1tpsR&branch=master)](https://travis.ibm.com/dev-ex/codewind-installer)
-[![Eclipse License](https://img.shields.io/badge/license-Eclipse-brightgreen.svg)](https://github.ibm.com/dev-ex/tempest/blob/master/LICENSE)
 [![License](https://img.shields.io/badge/License-EPL%202.0-red.svg?label=license&logo=eclipse)](https://www.eclipse.org/legal/epl-2.0/)
 
 ## Downloading the release binary for MacOS
