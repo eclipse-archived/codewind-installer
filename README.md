@@ -50,7 +50,7 @@ $ export PASS=<artifactory-API-key>
 8. To run a command, enter ` .\win-installer.exe <command>`.
 
 ## Build and deploying locally on MacOS
-1. Ensure that you have a Go environment set up. If you don't yet have a Go environment, see [Install Go for NATS](https://nats.io/documentation/tutorials/go-install/).
+1. Ensure that you have a Go environment set up. If you don't yet have a Go environment, see [Install Go](https://golang.org/doc/install).
 2. If you have Brew, use the following commands to install `dep` for MacOS:
 ```
 $ brew install dep
