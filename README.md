@@ -78,10 +78,6 @@ $ export PASS=<artifactory-API-key>
 3. To run the tests, type the `go test -v` command in the terminal window and wait for the tests to finish.
 4. For any other unit tests, the same steps apply, but the directory might change.
 
- ## Installing for Codewind on Kubernetes
-
-See [Installing Eclipse Che on Kubernetes](https://github.ibm.com/dev-ex/che-docs/wiki/Installing-Eclipse-Che-on-Kubernetes) for instructions on installing.
-
 ## Contributing
 Submit issues and contributions:
 1. [Submitting issues](https://github.com/eclipse/codewind/issues)
