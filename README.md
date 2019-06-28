@@ -49,13 +49,9 @@ $ export PASS=<artifactory-API-key>
 7. To get started and see the commands that are available, type the ` .\win-installer.exe` command in the command prompt with the exported environment variables.
 8. To run a command, enter ` .\win-installer.exe <command>`.
 
-## Build and deploying locally on MacOS
+## Build and deploying locally
 1. Ensure that you have a Go environment set up. If you don't yet have a Go environment, see [Install Go](https://golang.org/doc/install).
-2. If you have Brew, use the following commands to install `dep` for MacOS:
-```
-$ brew install dep
-$ brew upgrade dep
-```
+2. Install `dep` - see [Dep Installation]https://github.com/golang/dep#installation
 3. Clone the `git clone https://github.com/eclipse/codewind-installer.git` repo.
 4. Use the `cd` command to go into the project directory and install the vendor packages with the `dep ensure -v` command.
 5. Build the binary and give it a name with the `go build -o <binary-name>` command. To build a binary without the debug symbols use the command `go build -ldflags="-s -w" -o <binary-name>`.
