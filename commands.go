@@ -54,22 +54,18 @@ func commands() {
 
 				authStr := base64.URLEncoding.EncodeToString(encodedJSON)
 
-				codewindImage := "sys-mcs-docker-local.artifactory.swg-devops.com/codewind-pfe-amd64"
-				codewindImageTarget := "codewind-pfe-amd64:latest"
+				imageArr := [3]string{"sys-mcs-docker-local.artifactory.swg-devops.com/codewind-pfe-amd64",
+					"sys-mcs-docker-local.artifactory.swg-devops.com/codewind-performance-amd64",
+					"sys-mcs-docker-local.artifactory.swg-devops.com/codewind-initialize-amd64"}
 
-				performanceImage := "sys-mcs-docker-local.artifactory.swg-devops.com/codewind-performance-amd64"
-				performanceImageTarget := "codewind-performance-amd64:latest"
+				targetArr := [3]string{"codewind-pfe-amd64:latest",
+					"codewind-performance-amd64:latest",
+					"codewind-initialize-amd64:latest"}
 
-				initializeImage := "sys-mcs-docker-local.artifactory.swg-devops.com/codewind-initialize-amd64"
-				initializeImageTarget := "codewind-initialize-amd64:latest"
-
-				utils.PullImage(codewindImage, authStr)
-				utils.PullImage(performanceImage, authStr)
-				utils.PullImage(initializeImage, authStr)
-
-				utils.TagImage(codewindImage, codewindImageTarget)
-				utils.TagImage(performanceImage, performanceImageTarget)
-				utils.TagImage(initializeImage, initializeImageTarget)
+				for i := 0; i < len(imageArr); i++ {
+					utils.PullImage(imageArr[i], authStr)
+					utils.TagImage(imageArr[i], targetArr[i])
+				}
 
 				fmt.Println("Image Tagging Successful")
 
@@ -90,22 +86,19 @@ func commands() {
 			},
 			Action: func(c *cli.Context) error {
 				tag := c.String("tag")
-				codewindImage := "docker.io/ibmcom/codewind-pfe-amd64:" + tag
-				codewindImageTarget := "codewind-pfe-amd64:" + tag
 
-				performanceImage := "docker.io/ibmcom/codewind-performance-amd64:" + tag
-				performanceImageTarget := "codewind-performance-amd64:" + tag
+				imageArr := [3]string{"docker.io/ibmcom/codewind-pfe-amd64:",
+					"docker.io/ibmcom/codewind-performance-amd64:",
+					"docker.io/ibmcom/codewind-initialize-amd64:"}
 
-				initializeImage := "docker.io/ibmcom/codewind-initialize-amd64:" + tag
-				initializeImageTarget := "codewind-initialize-amd64:" + tag
+				targetArr := [3]string{"codewind-pfe-amd64:",
+					"codewind-performance-amd64:",
+					"codewind-initialize-amd64:"}
 
-				utils.PullImage(codewindImage, "")
-				utils.PullImage(performanceImage, "")
-				utils.PullImage(initializeImage, "")
-
-				utils.TagImage(codewindImage, codewindImageTarget)
-				utils.TagImage(performanceImage, performanceImageTarget)
-				utils.TagImage(initializeImage, initializeImageTarget)
+				for i := 0; i < len(imageArr); i++ {
+					utils.PullImage(imageArr[i]+tag, "")
+					utils.TagImage(imageArr[i]+tag, targetArr[i]+tag)
+				}
 
 				fmt.Println("Image Tagging Successful")
 
