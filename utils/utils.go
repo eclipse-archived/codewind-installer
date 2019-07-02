@@ -21,7 +21,6 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
-	"strconv"
 	"strings"
 	"time"
 
@@ -32,8 +31,6 @@ import (
 	"github.com/moby/moby/client"
 	"gopkg.in/yaml.v3"
 )
-
-var debug, _ = strconv.ParseBool(os.Getenv("DEBUG"))
 
 // docker-compose yaml data
 var data = `
@@ -103,7 +100,7 @@ func CreateTempFile(tempFilePath string) bool {
 }
 
 // WriteToComposeFile the contents of the docker compose yaml
-func WriteToComposeFile(tempFilePath string) bool {
+func WriteToComposeFile(tempFilePath string, debug bool) bool {
 	if tempFilePath == "" {
 		return false
 	}

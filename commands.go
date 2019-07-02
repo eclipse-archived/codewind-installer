@@ -15,7 +15,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/eclipse/codewind-installer/errors"
@@ -27,7 +26,6 @@ import (
 )
 
 var tempFilePath = "installer-docker-compose.yaml"
-var debug, _ = strconv.ParseBool(os.Getenv("DEBUG"))
 
 const versionNum = "0.2.0"
 const healthEndpoint = "http://localhost:9090/api/v1/environment"
@@ -124,6 +122,10 @@ func commands() {
 					Value: "latest",
 					Usage: "dockerhub image tag",
 				},
+				cli.BoolFlag{
+					Name:  "debug, d",
+					Usage: "add debug output",
+				},
 			},
 			Action: func(c *cli.Context) error {
 				status := utils.CheckContainerStatus()
@@ -132,8 +134,10 @@ func commands() {
 					fmt.Println("Codewind is already running!")
 				} else {
 					tag := c.String("tag")
+					debug := c.Bool("debug")
+					fmt.Println("Debug:", debug)
 					utils.CreateTempFile(tempFilePath)
-					utils.WriteToComposeFile(tempFilePath)
+					utils.WriteToComposeFile(tempFilePath, debug)
 					utils.DockerCompose(tag)
 					utils.DeleteTempFile(tempFilePath) // Remove installer-docker-compose.yaml
 					utils.PingHealth(healthEndpoint)
