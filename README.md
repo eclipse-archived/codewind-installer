@@ -9,11 +9,7 @@ Prebuilt binaries are available for download [on Eclipse](https://download.eclip
 2. Use the `cd` command to go to the location of the downloaded file in the Terminal window.
 3. If the binary file has the extension `.dms`, remove the extension so that the file is named `mac-installer`.
 4. Enter the `chmod +x mac-installer` command to give yourself execution permissions for the binary.
-5. Export the environment variables for artifactory authentication with the following commands:
-```
-$ export USER=<artifactory-username>
-$ export PASS=<artifactory-API-key>
-```
+5. Log in to Docker to set the environment variables.
 6. If you already have a `codewind-workspace` with your projects in it, copy it into your `/Users/<username>` home directory. If you do not already have a workspace, the installer creates an empty workspace for you in this directory.
 7. Type `./mac-installer` in the Terminal window with the exported environment variables to run the installer.
 8. To run a command, enter `./mac-installer <command>`.
@@ -23,11 +19,7 @@ $ export PASS=<artifactory-API-key>
 2. Use the `cd` command to go to the location of the downloaded file in the Terminal window.
 3. If necessary, remove any file extensions so that the file is named `linux-installer`.
 4. Enter the `chmod +x linux-installer` command to give yourself execution permissions for the binary. 
-5. Export the environment variables for artifactory authentication with the following commands:
-```
-$ export USER=<artifactory-username>
-$ export PASS=<artifactory-API-key>
-```
+5. Log in to Docker to set the environment variables.
 6. If you already have a `codewind-workspace` with your projects in it, copy the workspace into your `$HOME` home directory. If you do not already have a workspace, the installer creates an empty workspace for you in this directory.
 7. Install `docker-compose` with [Install Docker Compose](https://docs.docker.com/compose/install/).
 8. To run the installer, enter `./linux-installer` in the Terminal window with the exported environment variables.
@@ -37,11 +29,7 @@ $ export PASS=<artifactory-API-key>
 1. Download the release binary file to a folder on your system.
 2. Use the `cd` command to go to the location of the downloaded file in the command prompt.
 3. Ensure that the binary file has an `.exe` extension. If it doesn't, add the extension to the file name.
-4. Export the environment variables for artifactory authentication with the following commands:
-```
-> $ENV:USER += "<artifactory-username>"
-> $ENV:PASS += "<artifactory-API-key>"
-```
+4. Log in to Docker to set the environment variables.
 5. Ensure that your `C:\` drive is shared with Docker Desktop for Windows. To check, go to **Settings**>**Shared drives** and make sure the `C:\` drive check box is selected.
 6. If you already have a `codewind-workspace` with your projects in it, copy the `codewind-workspace` into your `C:\` directory. If you do not already have a workspace, the installer creates an empty one for you in this directory.
 7. To get started and see the commands that are available, type the ` .\win-installer.exe` command in the command prompt with the exported environment variables.
@@ -57,11 +45,7 @@ $ brew upgrade dep
 3. Clone the `git clone https://github.com/eclipse/codewind-installer.git` repo.
 4. Use the `cd` command to go into the project directory and install the vendor packages with the `dep ensure -v` command.
 5. Build the binary and give it a name with the `go build -o <binary-name>` command. To build a binary without the debug symbols use the command `go build -ldflags="-s -w" -o <binary-name>`.
-6. Export the environment variables for artifactory authentication with the following commands:
-```
-$ export USER=<artifactory-username>
-$ export PASS=<artifactory-API-key>
-```
+6. Log in to Docker to set the environment variables.
 7. Copy your codewind-workspace into your `/Users/<username>` home directory.
 8. Type `./<binary-name>` in the Terminal window with the exported environment varibles to run the installer.
 9. To run a command, enter `./<binary-name> <command>`.
