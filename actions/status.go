@@ -8,10 +8,28 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
-package main
+package actions
 
-import "github.com/eclipse/codewind-installer/actions"
+import (
+	"fmt"
+	"os"
 
-func main() {
-	actions.Commands()
+	"github.com/eclipse/codewind-installer/utils"
+)
+
+//StatusCommand to show the status
+func StatusCommand() {
+	if utils.CheckContainerStatus() {
+		fmt.Println("Codewind is installed and running")
+		os.Exit(2)
+	}
+
+	if utils.CheckImageStatus() {
+		fmt.Println("Codewind is installed but not running")
+		os.Exit(1)
+	} else {
+		fmt.Println("Codewind is not installed")
+		os.Exit(0)
+	}
+	return
 }
