@@ -53,6 +53,10 @@ func Commands() {
 					Value: "latest",
 					Usage: "dockerhub image tag",
 				},
+				cli.StringFlag{
+					Name:  "output, o",
+					Usage: "specify json terminal output",
+				},
 			},
 			Action: func(c *cli.Context) error {
 				InstallCommand(c)

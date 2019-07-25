@@ -129,12 +129,13 @@ func DockerCompose(tag string) {
 }
 
 // PullImage - pull pfe/performance/initialize images from artifactory
-func PullImage(image string, auth string) {
+func PullImage(image string, auth string, output string) {
 	ctx := context.Background()
 	cli, err := client.NewEnvClient()
 	errors.CheckErr(err, 200, "")
 
 	var codewindOut io.ReadCloser
+
 	if auth == "" {
 		codewindOut, err = cli.ImagePull(ctx, image, types.ImagePullOptions{})
 	} else {
@@ -143,9 +144,14 @@ func PullImage(image string, auth string) {
 
 	errors.CheckErr(err, 100, "")
 
-	defer codewindOut.Close()
-	termFd, isTerm := term.GetFdInfo(os.Stderr)
-	jsonmessage.DisplayJSONMessagesStream(codewindOut, os.Stderr, termFd, isTerm, nil)
+	if output == "json" {
+		defer codewindOut.Close()
+		io.Copy(os.Stdout, codewindOut)
+	} else {
+		defer codewindOut.Close()
+		termFd, isTerm := term.GetFdInfo(os.Stderr)
+		jsonmessage.DisplayJSONMessagesStream(codewindOut, os.Stderr, termFd, isTerm, nil)
+	}
 }
 
 // TagImage - locally retag the downloaded images
