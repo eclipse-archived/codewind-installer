@@ -55,7 +55,7 @@ func Commands() {
 				},
 				cli.StringFlag{
 					Name:  "output, o",
-					Usage: "specify json terminal output",
+					Usage: "specify terminal output",
 				},
 			},
 			Action: func(c *cli.Context) error {
