@@ -129,7 +129,7 @@ func DockerCompose(tag string) {
 }
 
 // PullImage - pull pfe/performance/initialize images from artifactory
-func PullImage(image string, auth string, output string) {
+func PullImage(image string, auth string, jsonOutput bool) {
 	ctx := context.Background()
 	cli, err := client.NewEnvClient()
 	errors.CheckErr(err, 200, "")
@@ -144,7 +144,7 @@ func PullImage(image string, auth string, output string) {
 
 	errors.CheckErr(err, 100, "")
 
-	if output == "json" {
+	if jsonOutput == true {
 		defer codewindOut.Close()
 		io.Copy(os.Stdout, codewindOut)
 	} else {

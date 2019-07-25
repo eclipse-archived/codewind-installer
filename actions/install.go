@@ -25,7 +25,7 @@ import (
 //InstallCommand to pull images from dockerhub
 func InstallCommand(c *cli.Context) {
 	tag := c.String("tag")
-	output := c.String("output")
+	jsonOutput := c.Bool("json")
 
 	imageArr := [3]string{"docker.io/ibmcom/codewind-pfe-amd64:",
 		"docker.io/ibmcom/codewind-performance-amd64:",
@@ -36,7 +36,7 @@ func InstallCommand(c *cli.Context) {
 		"codewind-initialize-amd64:"}
 
 	for i := 0; i < len(imageArr); i++ {
-		utils.PullImage(imageArr[i]+tag, "", output)
+		utils.PullImage(imageArr[i]+tag, "", jsonOutput)
 		utils.TagImage(imageArr[i]+tag, targetArr[i]+tag)
 	}
 
@@ -63,7 +63,7 @@ func InstallDevCommand() {
 		"codewind-initialize-amd64:latest"}
 
 	for i := 0; i < len(imageArr); i++ {
-		utils.PullImage(imageArr[i], authStr, "")
+		utils.PullImage(imageArr[i], authStr, false)
 		utils.TagImage(imageArr[i], targetArr[i])
 	}
 

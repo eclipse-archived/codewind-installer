@@ -53,8 +53,8 @@ func Commands() {
 					Value: "latest",
 					Usage: "dockerhub image tag",
 				},
-				cli.StringFlag{
-					Name:  "output, o",
+				cli.BoolFlag{
+					Name:  "json, j",
 					Usage: "specify terminal output",
 				},
 			},
