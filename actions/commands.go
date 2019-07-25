@@ -35,6 +35,33 @@ func Commands() {
 	app.Commands = []cli.Command{
 
 		{
+			Name:    "clone",
+			Aliases: []string{"c"},
+			Usage:   "Clone a template from github",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "template, t",
+					Value: "",
+					Usage: "project template URL",
+				},
+			},
+			Action: func(c *cli.Context) error {
+				CloneTemplate(c)
+				return nil
+			},
+		},
+
+		{
+			Name:    "install-dev",
+			Aliases: []string{"in-dev"},
+			Usage:   "Pull pfe, performance & intialize images from artifactory",
+			Action: func(c *cli.Context) error {
+				InstallDevCommand()
+				return nil
+			},
+		},
+
+		{
 			Name:    "install",
 			Aliases: []string{"in"},
 			Usage:   "Pull pfe, performance & intialize images from dockerhub",
