@@ -31,7 +31,7 @@ func InstallCommand(c *cli.Context) {
 		"codewind-initialize-amd64:"}
 
 	for i := 0; i < len(imageArr); i++ {
-		utils.PullImage(imageArr[i]+tag, "", jsonOutput)
+		utils.PullImage(imageArr[i]+tag, jsonOutput)
 		utils.TagImage(imageArr[i]+tag, targetArr[i]+tag)
 	}
 

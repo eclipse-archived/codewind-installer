@@ -128,8 +128,8 @@ func DockerCompose(tag string) {
 	}
 }
 
-// PullImage - pull pfe/performance/initialize images from artifactory
-func PullImage(image string, auth string, jsonOutput bool) {
+// PullImage - pull pfe/performance/initialize images from dockerhub
+func PullImage(image string, jsonOutput bool) {
 	ctx := context.Background()
 	cli, err := client.NewEnvClient()
 	errors.CheckErr(err, 200, "")
