@@ -21,15 +21,15 @@ import (
 func StatusCommand() {
 	if utils.CheckContainerStatus() {
 		fmt.Println("Codewind is installed and running")
-		os.Exit(2)
+		os.Exit(202)
 	}
 
 	if utils.CheckImageStatus() {
 		fmt.Println("Codewind is installed but not running")
-		os.Exit(1)
+		os.Exit(201)
 	} else {
 		fmt.Println("Codewind is not installed")
-		os.Exit(0)
+		os.Exit(200)
 	}
 	return
 }
