@@ -136,11 +136,7 @@ func PullImage(image string, auth string, jsonOutput bool) {
 
 	var codewindOut io.ReadCloser
 
-	if auth == "" {
-		codewindOut, err = cli.ImagePull(ctx, image, types.ImagePullOptions{})
-	} else {
-		codewindOut, err = cli.ImagePull(ctx, image, types.ImagePullOptions{RegistryAuth: auth})
-	}
+	codewindOut, err = cli.ImagePull(ctx, image, types.ImagePullOptions{})
 
 	errors.CheckErr(err, 100, "")
 
@@ -191,13 +187,10 @@ func CheckContainerStatus() bool {
 // CheckImageStatus of Codewind installed/uninstalled
 func CheckImageStatus() bool {
 	var imageStatus = false
-	imageArr := [6]string{}
-	imageArr[0] = "sys-mcs-docker-local.artifactory.swg-devops.com/codewind-pfe"
-	imageArr[1] = "sys-mcs-docker-local.artifactory.swg-devops.com/codewind-performance"
-	imageArr[2] = "sys-mcs-docker-local.artifactory.swg-devops.com/codewind-initialize"
-	imageArr[3] = "ibmcom/codewind-pfe"
-	imageArr[4] = "ibmcom/codewind-performance"
-	imageArr[5] = "ibmcom/codewind-initialize"
+	imageArr := [3]string{}
+	imageArr[0] = "ibmcom/codewind-pfe"
+	imageArr[1] = "ibmcom/codewind-performance"
+	imageArr[2] = "ibmcom/codewind-initialize"
 
 	images := GetImageList()
 

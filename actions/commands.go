@@ -34,16 +34,6 @@ func Commands() {
 	app.Commands = []cli.Command{
 
 		{
-			Name:    "install-dev",
-			Aliases: []string{"in-dev"},
-			Usage:   "Pull pfe, performance & intialize images from artifactory",
-			Action: func(c *cli.Context) error {
-				InstallDevCommand()
-				return nil
-			},
-		},
-
-		{
 			Name:    "install",
 			Aliases: []string{"in"},
 			Usage:   "Pull pfe, performance & intialize images from dockerhub",
