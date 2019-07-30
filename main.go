@@ -8,6 +8,7 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
+
 package main
 
 import "github.com/eclipse/codewind-installer/actions"
