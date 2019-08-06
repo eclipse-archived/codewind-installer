@@ -143,8 +143,8 @@ func MoveFiles(source, destination string) {
 	src := source
 	dest := destination
 
-	fmt.Println("old dir: ", src)
-	fmt.Println("new dir: ", dest)
+	fmt.Println("==> moving files from ", src)
+	fmt.Println("==> moving files too ", dest)
 
 	err := os.Rename(src, dest)
 	if err != nil {
