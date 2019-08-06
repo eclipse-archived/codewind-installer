@@ -35,7 +35,7 @@ func CloneTemplate(c *cli.Context) {
 	destination := c.String("destination")
 
 	zipURL := GetZipURL(c)
-	tempName := "/tmp/test_" + time.Now().String()
+	tempName := "/tmp/test_" + time.Now().Format(time.RFC3339)
 	zipFileName := tempName + ".zip"
 
 	// download files in zip format
