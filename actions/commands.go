@@ -45,16 +45,19 @@ func Commands() {
 					Usage: "repository branch",
 				},
 				cli.StringFlag{
-					Name:  "destination, d",
-					Usage: "absolute destination file path",
+					Name:     "destination, d",
+					Required: true,
+					Usage:    "absolute destination file path",
 				},
 				cli.StringFlag{
-					Name:  "owner",
-					Usage: "repository owner",
+					Name:     "owner",
+					Required: true,
+					Usage:    "repository owner",
 				},
 				cli.StringFlag{
-					Name:  "repo",
-					Usage: "repository to download",
+					Name:     "repo",
+					Required: true,
+					Usage:    "repository to download",
 				},
 			},
 			Action: func(c *cli.Context) error {

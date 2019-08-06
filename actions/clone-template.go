@@ -33,9 +33,6 @@ import (
 func CloneTemplate(c *cli.Context) {
 	//TODO Use go-git to do this in future
 	destination := c.String("destination")
-	if destination == "" {
-		log.Fatal("Error: No destination path provided")
-	}
 
 	zipURL := GetZipURL(c)
 	tempName := "/tmp/test_" + time.Now().Format(time.RFC3339)
