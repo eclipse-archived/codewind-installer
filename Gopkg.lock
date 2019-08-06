@@ -96,6 +96,22 @@
   version = "v0.4.0"
 
 [[projects]]
+  digest = "1:525ebc5da920b1f2c76ae763c13f4decdc3c3bc541ff0fa18f2399d4e742177f"
+  name = "github.com/google/go-github"
+  packages = ["github"]
+  pruneopts = "UT"
+  revision = "4c1ec01570ac97daecec8c2b62b07176700f093d"
+  version = "v27.0.4"
+
+[[projects]]
+  digest = "1:a63cff6b5d8b95638bfe300385d93b2a6d9d687734b863da8e09dc834510a690"
+  name = "github.com/google/go-querystring"
+  packages = ["query"]
+  pruneopts = "UT"
+  revision = "44c6ddd0a2342c386950e880b658017258da92fc"
+  version = "v1.0.0"
+
+[[projects]]
   digest = "1:31e761d97c76151dde79e9d28964a812c46efc5baee4085b86f68f0c654450de"
   name = "github.com/konsorten/go-windows-terminal-sequences"
   packages = ["."]
@@ -153,6 +169,22 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:50804d40964a0c59170e827824e79bbf810cc10ae57603d8facce8a1f48f9a83"
+  name = "golang.org/x/crypto"
+  packages = [
+    "cast5",
+    "openpgp",
+    "openpgp/armor",
+    "openpgp/elgamal",
+    "openpgp/errors",
+    "openpgp/packet",
+    "openpgp/s2k",
+  ]
+  pruneopts = "UT"
+  revision = "4def268fd1a49955bfb3dda92fe3db4f924f2285"
+
+[[projects]]
+  branch = "master"
   digest = "1:63c7bce98d2534e119bf2830e5152b3d5d58d9d1278d5184f0d05641996e9c8f"
   name = "golang.org/x/net"
   packages = [
@@ -190,6 +222,7 @@
     "github.com/docker/docker/api/types",
     "github.com/docker/docker/pkg/jsonmessage",
     "github.com/docker/docker/pkg/term",
+    "github.com/google/go-github/github",
     "github.com/moby/moby/client",
     "github.com/stretchr/testify/assert",
     "github.com/urfave/cli",

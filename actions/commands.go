@@ -40,9 +40,21 @@ func Commands() {
 			Usage:   "Clone a template from github",
 			Flags: []cli.Flag{
 				cli.StringFlag{
-					Name:  "template, t",
-					Value: "",
-					Usage: "project template URL",
+					Name:  "branch, b",
+					Value: "master",
+					Usage: "repository branch",
+				},
+				cli.StringFlag{
+					Name:  "destination, d",
+					Usage: "absolute destination file path",
+				},
+				cli.StringFlag{
+					Name:  "owner",
+					Usage: "repository owner",
+				},
+				cli.StringFlag{
+					Name:  "repo",
+					Usage: "repository to download",
 				},
 			},
 			Action: func(c *cli.Context) error {
