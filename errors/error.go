@@ -55,13 +55,13 @@ func CheckErr(err error, code int, optMsg string) {
 		case 300:
 			log.Fatal("APPLICATION_ERROR", "[", code, "]: ", err, ". ", optMsg)
 		case 400:
-			log.Fatal("REPOSITORY_CLONE_ERROR", "[", code, "]: ", err, ". ", optMsg)
+			log.Fatal("REPOSITORY_DOWNLOAD_ERROR", "[", code, "]: ", err, ". ", optMsg)
 		case 401:
-			log.Fatal("ZIP_FILE_ERROR", "[", code, "]: ", err, ". ", optMsg)
+			log.Fatal("CREATE_ZIP_FILE_ERROR", "[", code, "]: ", err, ". ", optMsg)
 		case 402:
-			log.Fatal("READ_ZIP_FILE_ERROR", "[", code, "]: ", err, ". ", optMsg)
+			log.Fatal("ZIP_FILE_READ_ERROR", "[", code, "]: ", err, ". ", optMsg)
 		case 403:
-			log.Fatal("ZIP_OUTPUT_FILE_ERROR", "[", code, "]: ", err, ". ", optMsg)
+			log.Fatal("OUTPUT_FILE_ERROR", "[", code, "]: ", err, ". ", optMsg)
 		case 404:
 			log.Fatal("WRITE_FILE_ERROR", "[", code, "]: ", err, ". ", optMsg)
 		default:
