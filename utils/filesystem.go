@@ -189,14 +189,3 @@ func UnZip(zipFileName, destination string) {
 	}
 	log.Println("File extracted:", zipFileName)
 }
-
-//MoveFiles to directory specified in command
-func MoveFiles(source, destination string) {
-	fmt.Println("==> moving files from ", source)
-	fmt.Println("==> moving files too ", destination)
-
-	err := os.Rename(source, destination)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
