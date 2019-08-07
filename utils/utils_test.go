@@ -34,7 +34,7 @@ func TestToggleDebug(t *testing.T) {
 
 func TestRemoveImage(t *testing.T) {
 	performanceImage := "docker.io/ibmcom/codewind-performance-amd64"
-	PullImage(performanceImage, "")
+	PullImage(performanceImage, false)
 	RemoveImage(performanceImage)
 }
 func TestCheckImageStatusFalse(t *testing.T) {
@@ -54,7 +54,7 @@ func TestCheckContainerStatusFalse(t *testing.T) {
 func TestPullDockerImage(t *testing.T) {
 	performanceImage := "docker.io/ibmcom/codewind-performance-amd64"
 	performanceImageTarget := "codewind-performance-amd64:latest"
-	PullImage(performanceImage, "")
+	PullImage(performanceImage, false)
 	TagImage(performanceImage, performanceImageTarget)
 
 	ctx := context.Background()

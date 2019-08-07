@@ -30,8 +30,6 @@ func CheckErr(err error, code int, optMsg string) {
 			log.Fatal("IMAGE_STATUS_ERROR", "[", code, "]: ", err, ". ", optMsg)
 		case 105:
 			log.Fatal("REMOVE_IMAGE_ERROR", "[", code, "]: ", err, ". ", optMsg)
-		case 106:
-			log.Fatal("AUTH_ENCODING_ERROR", "[", code, "]: ", err, ". ", optMsg)
 		case 107:
 			log.Fatal("CONTAINER_LIST_ERROR", "[", code, "]: ", err, ". ", optMsg)
 		case 108:

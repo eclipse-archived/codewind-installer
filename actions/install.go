@@ -11,13 +11,8 @@
 package actions
 
 import (
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
-	"os"
 
-	"github.com/docker/docker/api/types"
-	"github.com/eclipse/codewind-installer/errors"
 	"github.com/eclipse/codewind-installer/utils"
 	"github.com/urfave/cli"
 )
@@ -36,35 +31,8 @@ func InstallCommand(c *cli.Context) {
 		"codewind-initialize-amd64:"}
 
 	for i := 0; i < len(imageArr); i++ {
-		utils.PullImage(imageArr[i]+tag, "", jsonOutput)
+		utils.PullImage(imageArr[i]+tag, jsonOutput)
 		utils.TagImage(imageArr[i]+tag, targetArr[i]+tag)
-	}
-
-	fmt.Println("Image Tagging Successful")
-}
-
-//InstallDevCommand to pull images from artifactory
-func InstallDevCommand() {
-	authConfig := types.AuthConfig{
-		Username: os.Getenv("USER"),
-		Password: os.Getenv("PASS"),
-	}
-	encodedJSON, err := json.Marshal(authConfig)
-	errors.CheckErr(err, 106, "")
-
-	authStr := base64.URLEncoding.EncodeToString(encodedJSON)
-
-	imageArr := [3]string{"sys-mcs-docker-local.artifactory.swg-devops.com/codewind-pfe-amd64",
-		"sys-mcs-docker-local.artifactory.swg-devops.com/codewind-performance-amd64",
-		"sys-mcs-docker-local.artifactory.swg-devops.com/codewind-initialize-amd64"}
-
-	targetArr := [3]string{"codewind-pfe-amd64:latest",
-		"codewind-performance-amd64:latest",
-		"codewind-initialize-amd64:latest"}
-
-	for i := 0; i < len(imageArr); i++ {
-		utils.PullImage(imageArr[i], authStr, false)
-		utils.TagImage(imageArr[i], targetArr[i])
 	}
 
 	fmt.Println("Image Tagging Successful")
