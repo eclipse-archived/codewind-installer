@@ -142,13 +142,10 @@ func UnZip(zipFileName, destination string) {
 
 //MoveFiles to directory specified in command
 func MoveFiles(source, destination string) {
-	src := source
-	dest := destination
+	fmt.Println("==> moving files from ", source)
+	fmt.Println("==> moving files too ", destination)
 
-	fmt.Println("==> moving files from ", src)
-	fmt.Println("==> moving files too ", dest)
-
-	err := os.Rename(src, dest)
+	err := os.Rename(source, destination)
 	if err != nil {
 		log.Fatal(err)
 	}
