@@ -59,7 +59,7 @@ func CheckErr(err error, code int, optMsg string) {
 		case 401:
 			log.Fatal("CREATE_ZIP_FILE_ERROR", "[", code, "]: ", err, ". ", optMsg)
 		case 402:
-			log.Fatal("ZIP_FILE_READ_ERROR", "[", code, "]: ", err, ". ", optMsg)
+			log.Fatal("READ_ZIP_FILE_ERROR", "[", code, "]: ", err, ". ", optMsg)
 		case 403:
 			log.Fatal("OUTPUT_FILE_ERROR", "[", code, "]: ", err, ". ", optMsg)
 		case 404:

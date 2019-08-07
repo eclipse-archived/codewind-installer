@@ -127,11 +127,11 @@ func GetZipURL(c *cli.Context) string {
 		log.Fatal(err)
 	}
 	url := URL.String()
-	fmt.Println(URL)
+	fmt.Println("Repository archive link - ", URL)
 	return url
 }
 
-//DownloadFile - the git zip of master into current dir
+//DownloadFile into /temp dir using the git archive link
 func DownloadFile(zipFileName, url string) error {
 
 	// Get the data
@@ -140,19 +140,19 @@ func DownloadFile(zipFileName, url string) error {
 	defer resp.Body.Close()
 
 	// Create the file
-	out, err := os.Create(zipFileName)
+	file, err := os.Create(zipFileName)
 	errors.CheckErr(err, 401, "")
-	defer out.Close()
+	defer file.Close()
 
 	// Write body to file
-	_, err = io.Copy(out, resp.Body)
+	_, err = io.Copy(file, resp.Body)
 	fmt.Println(zipFileName)
 
 	return err
 }
 
 //UnZip downloaded file
-func UnZip(zipFileName, destination string) {
+func UnZip(zipFileName, fileDestination string) {
 	zipReader, _ := zip.OpenReader(zipFileName)
 
 	var extractedFilePath = ""
@@ -163,7 +163,7 @@ func UnZip(zipFileName, destination string) {
 		defer zippedFile.Close()
 
 		fileNameArr := strings.Split(file.Name, "/")
-		extractedFilePath = destination
+		extractedFilePath = fileDestination
 
 		for i := 1; i < len(fileNameArr); i++ {
 			extractedFilePath = filepath.Join(extractedFilePath, fileNameArr[i])

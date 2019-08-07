@@ -24,8 +24,10 @@ import (
 
 // CloneTemplate from github
 func CloneTemplate(c *cli.Context) {
-	var tempPath = ""
+	destination := c.String("destination")
+	branch := c.String("branch")
 
+	var tempPath = ""
 	const GOOS string = runtime.GOOS
 	if GOOS == "windows" {
 		tempPath = os.Getenv("TEMP") + "\\"
@@ -33,9 +35,8 @@ func CloneTemplate(c *cli.Context) {
 		tempPath = "/tmp/"
 	}
 
-	destination := c.String("destination")
-	branch := c.String("branch")
 	zipURL := utils.GetZipURL(c)
+
 	time := time.Now().Format(time.RFC3339)
 	time = strings.Replace(time, ":", "-", -1) // ":" is illegal char in windows
 	tempName := tempPath + branch + "_" + time
