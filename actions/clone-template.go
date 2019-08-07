@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -31,11 +32,21 @@ import (
 
 // CloneTemplate from github
 func CloneTemplate(c *cli.Context) {
-	//TODO Use go-git to do this in future
+	var tempPath = ""
+	const GOOS string = runtime.GOOS
+	if GOOS == "windows" {
+		tempPath = os.Getenv("TEMP") + "\\"
+	} else {
+		tempPath = "/tmp/"
+	}
 	destination := c.String("destination")
+	branch := c.String("branch")
 
 	zipURL := GetZipURL(c)
-	tempName := "/tmp/test_" + time.Now().Format(time.RFC3339)
+	time := time.Now().Format(time.RFC3339)
+	time = strings.Replace(time, ":", "-", -1) // ":" is illegal char in windows
+
+	tempName := tempPath + branch + "_" + time
 	zipFileName := tempName + ".zip"
 
 	// download files in zip format
@@ -44,15 +55,7 @@ func CloneTemplate(c *cli.Context) {
 	}
 
 	// unzip into /tmp dir
-	extracedFilePath := UnZip(zipFileName, "/tmp")
-
-	// get top level dir from unzipped file and move files to new destination
-	if strings.HasPrefix(extracedFilePath, "/tmp/") {
-		extracedFilePath = strings.TrimPrefix(extracedFilePath, "/tmp/")
-	}
-	filePath := strings.Split(extracedFilePath, "/")
-	source := "/tmp/" + filePath[0]
-	MoveFiles(source, destination)
+	UnZip(zipFileName, destination)
 
 	//delete zip file
 	utils.DeleteTempFile(zipFileName)
@@ -99,7 +102,7 @@ func DownloadFile(zipFileName, url string) error {
 }
 
 //UnZip downloaded file
-func UnZip(zipFileName, tempDestination string) string {
+func UnZip(zipFileName, destination string) {
 	zipReader, _ := zip.OpenReader(zipFileName)
 
 	var extractedFilePath = ""
@@ -109,11 +112,12 @@ func UnZip(zipFileName, tempDestination string) string {
 		errors.CheckErr(err, 402, "")
 		defer zippedFile.Close()
 
-		targetDir := tempDestination
-		extractedFilePath = filepath.Join(
-			targetDir,
-			file.Name,
-		)
+		fileNameArr := strings.Split(file.Name, "/")
+		extractedFilePath = destination
+
+		for i := 1; i < len(fileNameArr); i++ {
+			extractedFilePath = filepath.Join(extractedFilePath, fileNameArr[i])
+		}
 
 		if file.FileInfo().IsDir() {
 			log.Println("Directory Created:", extractedFilePath)
@@ -134,8 +138,6 @@ func UnZip(zipFileName, tempDestination string) string {
 		}
 	}
 	log.Println("File extracted:", zipFileName)
-	fmt.Println("Extraced file path", extractedFilePath)
-	return extractedFilePath
 }
 
 //MoveFiles to directory specified in command
