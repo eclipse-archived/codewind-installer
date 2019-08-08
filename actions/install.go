@@ -23,9 +23,9 @@ func InstallCommand(c *cli.Context) {
 	tag := c.String("tag")
 	jsonOutput := c.Bool("json")
 
-	imageArr := [3]string{"docker.io/ibmcom/codewind-pfe-amd64:",
-		"docker.io/ibmcom/codewind-performance-amd64:",
-		"docker.io/ibmcom/codewind-initialize-amd64:"}
+	imageArr := [3]string{"docker.io/eclipse/codewind-pfe-amd64:",
+		"docker.io/eclipse/codewind-performance-amd64:",
+		"docker.io/eclipse/codewind-initialize-amd64:"}
 
 	targetArr := [3]string{"codewind-pfe-amd64:",
 		"codewind-performance-amd64:",

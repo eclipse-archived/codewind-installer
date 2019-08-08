@@ -21,9 +21,9 @@ import (
 //RemoveCommand to remove all codewind and project images
 func RemoveCommand() {
 	imageArr := [4]string{}
-	imageArr[0] = "ibmcom/codewind-pfe"
-	imageArr[1] = "ibmcom/codewind-performance"
-	imageArr[2] = "ibmcom/codewind-initialize"
+	imageArr[0] = "eclipse/codewind-pfe"
+	imageArr[1] = "eclipse/codewind-performance"
+	imageArr[2] = "eclipse/codewind-initialize"
 	imageArr[3] = "cw-"
 	networkName := "codewind"
 
