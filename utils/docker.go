@@ -36,7 +36,7 @@ services:
   image: ${REPOSITORY}codewind-pfe${PLATFORM}:${TAG}
   container_name: codewind-pfe
   user: root
-  environment: ["HOST_WORKSPACE_DIRECTORY=${WORKSPACE_DIRECTORY}","CONTAINER_WORKSPACE_DIRECTORY=/codewind-workspace","HOST_OS=${HOST_OS}","CODEWIND_VERSION=${TAG}","PERFORMANCE_CONTAINER=codewind-performance${PLATFORM}:${TAG}"]
+  environment: ["HOST_WORKSPACE_DIRECTORY=${WORKSPACE_DIRECTORY}","CONTAINER_WORKSPACE_DIRECTORY=/codewind-workspace","HOST_OS=${HOST_OS}","CODEWIND_VERSION=${TAG}","PERFORMANCE_CONTAINER=codewind-performance${PLATFORM}:${TAG}","HOME=${HOME}","MAVEN_OPTS=${MAVEN_OPTS}"]
   depends_on: [codewind-performance]
   ports: ["127.0.0.1:9090:9090"]
   volumes: ["/var/run/docker.sock:/var/run/docker.sock","${WORKSPACE_DIRECTORY}:/codewind-workspace"]
@@ -99,11 +99,22 @@ func DockerCompose(tag string) {
 	os.Setenv("TAG", tag)
 	if GOOS == "windows" {
 		os.Setenv("WORKSPACE_DIRECTORY", "C:\\codewind-workspace")
+		// In Windows, calling the env variable "HOME" does not return
+		// the user directory correctly
+		userHome, err := os.UserHomeDir()
+		if (err == nil){
+		  os.Setenv("HOME", userHome)
+		} else {
+		  os.Setenv("HOME", home)
+		}
+
 	} else {
 		os.Setenv("WORKSPACE_DIRECTORY", home+"/codewind-workspace")
+		os.Setenv("HOME", home)
 	}
 	os.Setenv("HOST_OS", GOOS)
 	os.Setenv("COMPOSE_PROJECT_NAME", "codewind")
+	os.Setenv("MAVEN_OPTS", os.Getenv("MAVEN_OPTS"))         
 
 	cmd := exec.Command("docker-compose", "-f", "installer-docker-compose.yaml", "up", "-d")
 	output := new(bytes.Buffer)
