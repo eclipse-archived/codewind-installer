@@ -35,6 +35,38 @@ func Commands() {
 	app.Commands = []cli.Command{
 
 		{
+			Name:    "clone",
+			Aliases: []string{"c"},
+			Usage:   "Clone a template from github",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "branch, b",
+					Value: "master",
+					Usage: "repository branch",
+				},
+				cli.StringFlag{
+					Name:     "destination, d",
+					Required: true,
+					Usage:    "absolute destination file path",
+				},
+				cli.StringFlag{
+					Name:     "owner",
+					Required: true,
+					Usage:    "repository owner",
+				},
+				cli.StringFlag{
+					Name:     "repo",
+					Required: true,
+					Usage:    "repository to download",
+				},
+			},
+			Action: func(c *cli.Context) error {
+				CloneTemplate(c)
+				return nil
+			},
+		},
+
+		{
 			Name:    "install",
 			Aliases: []string{"in"},
 			Usage:   "Pull pfe, performance & intialize images from dockerhub",
