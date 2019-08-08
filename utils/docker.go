@@ -188,9 +188,9 @@ func CheckContainerStatus() bool {
 func CheckImageStatus() bool {
 	var imageStatus = false
 	imageArr := [3]string{}
-	imageArr[0] = "ibmcom/codewind-pfe"
-	imageArr[1] = "ibmcom/codewind-performance"
-	imageArr[2] = "ibmcom/codewind-initialize"
+	imageArr[0] = "eclipse/codewind-pfe"
+	imageArr[1] = "eclipse/codewind-performance"
+	imageArr[2] = "eclipse/codewind-initialize"
 
 	images := GetImageList()
 

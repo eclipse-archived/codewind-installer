@@ -33,7 +33,7 @@ func TestToggleDebug(t *testing.T) {
 }
 
 func TestRemoveImage(t *testing.T) {
-	performanceImage := "docker.io/ibmcom/codewind-performance-amd64"
+	performanceImage := "docker.io/eclipse/codewind-performance-amd64"
 	PullImage(performanceImage, false)
 	RemoveImage(performanceImage)
 }
@@ -52,7 +52,7 @@ func TestCheckContainerStatusFalse(t *testing.T) {
 }
 
 func TestPullDockerImage(t *testing.T) {
-	performanceImage := "docker.io/ibmcom/codewind-performance-amd64"
+	performanceImage := "docker.io/eclipse/codewind-performance-amd64"
 	performanceImageTarget := "codewind-performance-amd64:latest"
 	PullImage(performanceImage, false)
 	TagImage(performanceImage, performanceImageTarget)
@@ -68,7 +68,7 @@ func TestPullDockerImage(t *testing.T) {
 			assert.Equal(t, imageStatus, true, "should return true: imageStatus should be true")
 		}
 	}
-	cmd := exec.Command("docker", "image", "rm", "ibmcom/codewind-performance-amd64", performanceImageTarget, "-f")
+	cmd := exec.Command("docker", "image", "rm", "eclipse/codewind-performance-amd64", performanceImageTarget, "-f")
 	cmd.Stdin = strings.NewReader("Deleting pulled image")
 	var out bytes.Buffer
 	cmd.Stdout = &out
