@@ -26,7 +26,6 @@ import (
 
 	"github.com/eclipse/codewind-installer/errors"
 	"github.com/google/go-github/github"
-	"github.com/urfave/cli"
 	"gopkg.in/yaml.v3"
 )
 
@@ -113,11 +112,7 @@ func PingHealth(healthEndpoint string) bool {
 }
 
 //GetZipURL from github api /repos/:owner/:repo/:archive_format/:ref
-func GetZipURL(c *cli.Context) string {
-	branch := c.String("branch")
-	owner := c.String("owner")
-	repo := c.String("repo")
-
+func GetZipURL(owner, repo, branch string) string {
 	client := github.NewClient(nil)
 
 	opt := &github.RepositoryContentGetOptions{Ref: branch}

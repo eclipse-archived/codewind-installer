@@ -67,6 +67,25 @@ func Commands() {
 		},
 
 		{
+			Name:  "project",
+			Usage: "Project management",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "r",
+					Usage: "repository url",
+				},
+				cli.StringFlag{
+					Name:  "a",
+					Usage: "archive url",
+				},
+			},
+			Action: func(c *cli.Context) error {
+				CloneTemplate(c)
+				return nil
+			},
+		},
+
+		{
 			Name:    "install",
 			Aliases: []string{"in"},
 			Usage:   "Pull pfe, performance & intialize images from dockerhub",

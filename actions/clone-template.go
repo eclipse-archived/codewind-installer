@@ -24,8 +24,20 @@ import (
 
 // CloneTemplate from github
 func CloneTemplate(c *cli.Context) {
-	destination := c.String("destination")
-	branch := c.String("branch")
+	destination := c.Args().Get(0)
+	if destination == "" {
+		log.Fatal("destination not set")
+	}
+	repoURL := c.String("r")
+
+	if strings.HasPrefix(repoURL, "https://") {
+		repoURL = strings.TrimPrefix(repoURL, "https://")
+	}
+
+	repoArray := strings.Split(repoURL, "/")
+	owner := repoArray[1]
+	repo := repoArray[2]
+	branch := "master"
 
 	var tempPath = ""
 	const GOOS string = runtime.GOOS
@@ -35,7 +47,7 @@ func CloneTemplate(c *cli.Context) {
 		tempPath = "/tmp/"
 	}
 
-	zipURL := utils.GetZipURL(c)
+	zipURL := utils.GetZipURL(owner, repo, branch)
 
 	time := time.Now().Format(time.RFC3339)
 	time = strings.Replace(time, ":", "-", -1) // ":" is illegal char in windows
