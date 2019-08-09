@@ -22,8 +22,8 @@ import (
 	"github.com/urfave/cli"
 )
 
-// CloneTemplate from github
-func CloneTemplate(c *cli.Context) {
+// DownloadTemplate from github
+func DownloadTemplate(c *cli.Context) {
 	destination := c.Args().Get(0)
 	if destination == "" {
 		log.Fatal("destination not set")
