@@ -22,7 +22,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-// DownloadTemplate from github
+// DownloadTemplate using the url/link provided
 func DownloadTemplate(c *cli.Context) {
 	destination := c.Args().Get(0)
 	if destination == "" {

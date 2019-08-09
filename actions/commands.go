@@ -48,7 +48,11 @@ func Commands() {
 				},
 			},
 			Action: func(c *cli.Context) error {
-				DownloadTemplate(c)
+				if c.NumFlags() == 0 {
+					// run validation
+				} else {
+					DownloadTemplate(c)
+				}
 				return nil
 			},
 		},
