@@ -36,7 +36,7 @@ func Commands() {
 
 		{
 			Name:  "project",
-			Usage: "Project management",
+			Usage: "Manage Codewind projects",
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "r",
@@ -45,7 +45,7 @@ func Commands() {
 			},
 			Action: func(c *cli.Context) error {
 				if c.NumFlags() == 0 {
-					// ValidateProject()
+					// TODO: add ValidateProject() func
 				} else {
 					DownloadTemplate(c)
 				}

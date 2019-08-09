@@ -32,7 +32,7 @@ func DownloadTemplate(c *cli.Context) {
 
 	repoURL := c.String("r")
 
-	// expecting string in format 'https://github.com/<owner>/<repo>
+	// expecting string in format 'https://github.com/<owner>/<repo>'
 	if strings.HasPrefix(repoURL, "https://") {
 		repoURL = strings.TrimPrefix(repoURL, "https://")
 	}
