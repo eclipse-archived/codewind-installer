@@ -101,12 +101,7 @@ func DockerCompose(tag string) {
 		os.Setenv("WORKSPACE_DIRECTORY", "C:\\codewind-workspace")
 		// In Windows, calling the env variable "HOME" does not return
 		// the user directory correctly
-		userHome, err := os.UserHomeDir()
-		if (err == nil){
-		  os.Setenv("HOME", userHome)
-		} else {
-		  os.Setenv("HOME", home)
-		}
+		os.Setenv("HOME", os.Getenv("USERPROFILE"))
 
 	} else {
 		os.Setenv("WORKSPACE_DIRECTORY", home+"/codewind-workspace")
