@@ -42,10 +42,6 @@ func Commands() {
 					Name:  "r",
 					Usage: "repository url",
 				},
-				cli.StringFlag{
-					Name:  "a",
-					Usage: "archive url",
-				},
 			},
 			Action: func(c *cli.Context) error {
 				if c.NumFlags() == 0 {
