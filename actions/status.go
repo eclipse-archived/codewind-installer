@@ -21,7 +21,7 @@ import (
 //StatusCommand to show the status
 func StatusCommand() {
 	if utils.CheckContainerStatus() {
-		fmt.Println("Codewind is installed and running")
+		fmt.Println("Codewind is installed and running on port " + utils.GetPort())
 		os.Exit(202)
 	}
 
