@@ -22,10 +22,25 @@ import (
 	"github.com/urfave/cli"
 )
 
-// CloneTemplate from github
-func CloneTemplate(c *cli.Context) {
-	destination := c.String("destination")
-	branch := c.String("branch")
+// DownloadTemplate using the url/link provided
+func DownloadTemplate(c *cli.Context) {
+	destination := c.Args().Get(0)
+
+	if destination == "" {
+		log.Fatal("destination not set")
+	}
+
+	repoURL := c.String("r")
+
+	// expecting string in format 'https://github.com/<owner>/<repo>'
+	if strings.HasPrefix(repoURL, "https://") {
+		repoURL = strings.TrimPrefix(repoURL, "https://")
+	}
+
+	repoArray := strings.Split(repoURL, "/")
+	owner := repoArray[1]
+	repo := repoArray[2]
+	branch := "master"
 
 	var tempPath = ""
 	const GOOS string = runtime.GOOS
@@ -35,7 +50,7 @@ func CloneTemplate(c *cli.Context) {
 		tempPath = "/tmp/"
 	}
 
-	zipURL := utils.GetZipURL(c)
+	zipURL := utils.GetZipURL(owner, repo, branch)
 
 	time := time.Now().Format(time.RFC3339)
 	time = strings.Replace(time, ":", "-", -1) // ":" is illegal char in windows
@@ -52,4 +67,9 @@ func CloneTemplate(c *cli.Context) {
 
 	//delete zip file
 	utils.DeleteTempFile(zipFileName)
+}
+
+//ValidateProject type
+func ValidateProject() {
+	//code here
 }
