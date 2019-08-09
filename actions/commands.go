@@ -49,7 +49,7 @@ func Commands() {
 			},
 			Action: func(c *cli.Context) error {
 				if c.NumFlags() == 0 {
-					// run validation
+					// ValidateProject()
 				} else {
 					DownloadTemplate(c)
 				}

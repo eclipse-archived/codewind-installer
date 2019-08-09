@@ -65,3 +65,8 @@ func DownloadTemplate(c *cli.Context) {
 	//delete zip file
 	utils.DeleteTempFile(zipFileName)
 }
+
+//ValidateProject type
+func ValidateProject() {
+	//code here
+}
