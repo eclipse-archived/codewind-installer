@@ -30,6 +30,7 @@ func Commands() {
 	app.Name = "Codewind Installer"
 	app.Version = versionNum
 	app.Usage = "Start, Stop and Remove Codewind"
+	app.UsageText = "codewind-installer-<OS> [global options] command [command options] [arguments...]"
 
 	// create commands
 	app.Commands = []cli.Command{
