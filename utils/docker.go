@@ -288,7 +288,7 @@ func RemoveNetwork(network types.NetworkResource) {
 	}
 }
 
-// GetPFEPort will return the current port that PFE is running on (hardcoded to 9090 for now)
+// GetPFEPort will return the current port that PFE is running on
 func GetPFEPort() string {
 	if CheckContainerStatus() {
 		containerList := GetContainerList()
