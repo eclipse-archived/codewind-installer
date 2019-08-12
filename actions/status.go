@@ -14,23 +14,40 @@ package actions
 import (
 	"fmt"
 	"os"
-
+	"encoding/json"
+	"github.com/urfave/cli"
 	"github.com/eclipse/codewind-installer/utils"
 )
 
 //StatusCommand to show the status
-func StatusCommand() {
+func StatusCommand(c *cli.Context) {
+	jsonOutput := c.Bool("json")
 	if utils.CheckContainerStatus() {
-		fmt.Println("Codewind is installed and running on port " + utils.GetPort())
-		os.Exit(202)
+		if jsonOutput {
+			output, _ := json.Marshal(map[string]string{"status": "started", "url": "http://localhost:9090"})
+			fmt.Println(string(output))
+		} else {
+			fmt.Println("Codewind is installed and running on port " + utils.GetPort())
+		}
+		os.Exit(0)
 	}
 
 	if utils.CheckImageStatus() {
-		fmt.Println("Codewind is installed but not running")
-		os.Exit(201)
+		if jsonOutput {
+			output, _ := json.Marshal(map[string]string{"status": "stopped"})
+			fmt.Println(string(output))
+	  } else {
+			fmt.Println("Codewind is installed but not running")
+		}
+		os.Exit(0)
 	} else {
-		fmt.Println("Codewind is not installed")
-		os.Exit(200)
+		if jsonOutput {
+			output, _ := json.Marshal(map[string]string{"status": "uninstalled"})
+			fmt.Println(string(output))
+		} else {
+			fmt.Println("Codewind is not installed")
+		}
+		os.Exit(0)
 	}
 	return
 }

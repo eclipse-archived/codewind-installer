@@ -97,8 +97,14 @@ func Commands() {
 		{
 			Name:  "status",
 			Usage: "Print the installation status of Codewind",
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "json, j",
+					Usage: "specify terminal output",
+				},
+			},
 			Action: func(c *cli.Context) error {
-				StatusCommand()
+				StatusCommand(c)
 				return nil
 			},
 		},
