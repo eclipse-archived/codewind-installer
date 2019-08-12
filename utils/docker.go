@@ -20,6 +20,7 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
+	"strconv"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/pkg/jsonmessage"
@@ -38,7 +39,7 @@ services:
   user: root
   environment: ["HOST_WORKSPACE_DIRECTORY=${WORKSPACE_DIRECTORY}","CONTAINER_WORKSPACE_DIRECTORY=/codewind-workspace","HOST_OS=${HOST_OS}","CODEWIND_VERSION=${TAG}","PERFORMANCE_CONTAINER=codewind-performance${PLATFORM}:${TAG}","HOST_HOME=${HOST_HOME}","HOST_MAVEN_OPTS=${HOST_MAVEN_OPTS}"]
   depends_on: [codewind-performance]
-  ports: ["127.0.0.1:9090:9090"]
+  ports: ["127.0.0.1::9090"]
   volumes: ["/var/run/docker.sock:/var/run/docker.sock","${WORKSPACE_DIRECTORY}:/codewind-workspace"]
   networks: [network]
  codewind-performance:
@@ -77,6 +78,9 @@ type Compose struct {
 		Network map[string]string `yaml:"network"`
 	} `yaml:"networks"`
 }
+
+// constant to identify the internal port of PFE in its container
+const internalPFEPort = 9090
 
 // DockerCompose to set up the Codewind environment
 func DockerCompose(tag string) {
@@ -290,7 +294,19 @@ func RemoveNetwork(network types.NetworkResource) {
 	}
 }
 
-// GetPort will return the current port that PFE is running on (hardcoded to 9090 for now)
-func GetPort() string {
-	return "9090";
+// GetPFEPort will return the current port that PFE is running on
+func GetPFEPort() string {
+	if CheckContainerStatus() {
+		containerList := GetContainerList()
+		for _, container := range containerList {
+			if strings.HasPrefix(container.Image, "codewind-pfe") {
+				for _, port := range container.Ports {
+					if port.PrivatePort == internalPFEPort {
+						return strconv.Itoa(int(port.PublicPort))
+					}
+				}
+			}
+		}
+	}
+	return ""
 }
