@@ -283,3 +283,8 @@ func RemoveNetwork(network types.NetworkResource) {
 		errors.CheckErr(err, 111, "Cannot remove "+network.Name+". Use 'stop-all' flag to ensure all containers have been terminated")
 	}
 }
+
+// GetPort will return the current port that PFE is running on (hardcoded to 9090 for now)
+func GetPort() string {
+	return "9090";
+}

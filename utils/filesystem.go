@@ -97,7 +97,7 @@ func PingHealth(healthEndpoint string) bool {
 		} else {
 			if resp.StatusCode == 200 {
 				fmt.Println("\nHTTP Response Status:", resp.StatusCode, http.StatusText(resp.StatusCode))
-				fmt.Println("Codewind successfully started")
+				fmt.Println("Codewind successfully started on port " + GetPort())
 				started = true
 				break
 			}
