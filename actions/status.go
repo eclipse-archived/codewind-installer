@@ -28,7 +28,7 @@ func StatusCommand(c *cli.Context) {
 			output, _ := json.Marshal(map[string]string{"status": "started", "url": "http://localhost:" + port})
 			fmt.Println(string(output))
 		} else {
-			fmt.Println("Codewind is installed and running on port " + port)
+			fmt.Println("Codewind is installed and running on http://localhost:" + port)
 		}
 		os.Exit(0)
 	}
