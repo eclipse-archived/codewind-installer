@@ -5,6 +5,9 @@ Prebuilt binaries are available for download [on Eclipse](https://download.eclip
 [![License](https://img.shields.io/badge/License-EPL%202.0-red.svg?label=license&logo=eclipse)](https://www.eclipse.org/legal/epl-2.0/)
 [![Build Status](https://ci.eclipse.org/codewind/buildStatus/icon?job=Codewind%2Fcodewind-installer%2Fmaster)](https://ci.eclipse.org/codewind/job/Codewind/job/codewind-installer/job/master/)
 
+## Before starting
+Ensure you are logged into docker by typing `docker login`into any Terminal window or command promp and follow any further instructions.
+
 ## Downloading the release binary for MacOS
 1. Download the release binary file to a folder on your system.
 2. Use the `cd` command to go to the location of the downloaded file in the Terminal window.
