@@ -22,33 +22,36 @@ import (
 	"strings"
 	"time"
 
+	"github.com/eclipse/codewind-installer/errors"
 	"github.com/eclipse/codewind-installer/utils"
 	"github.com/urfave/cli"
 )
 
-// ProjectType represents the information codewind requires to build a project.
-type ProjectType struct {
-	Language  string `json:"language"`
-	BuildType string `json:"buildType"`
-}
+type (
+	// ProjectType represents the information codewind requires to build a project.
+	ProjectType struct {
+		Language  string `json:"language"`
+		BuildType string `json:"buildType"`
+	}
 
-// ValidationResponse represents the respose to validating a project on local filesystem.
-type ValidationResponse struct {
-	Status string      `json:"status"`
-	Path   string      `json:"path"`
-	Result ProjectType `json:"result"`
-}
+	// ValidationResponse represents the respose to validating a project on local filesystem.
+	ValidationResponse struct {
+		Status string      `json:"status"`
+		Path   string      `json:"path"`
+		Result ProjectType `json:"result"`
+	}
 
-// CWSettings represents the .cw-settings file which is written to a project
-type CWSettings struct {
-	ContextRoot       string   `json:"contextRoot"`
-	InternalPort      string   `json:"internalPort"`
-	HealthCheck       string   `json:"healthCheck"`
-	InternalDebugPort *string  `json:"internalDebugPort"`
-	IgnoredPaths      []string `json:"ignoredPaths"`
-	MavenProfiles     []string `json:"mavenProfiles,omitempty"`
-	MavenProperties   []string `json:"mavenProperties,omitempty"`
-}
+	// CWSettings represents the .cw-settings file which is written to a project
+	CWSettings struct {
+		ContextRoot       string   `json:"contextRoot"`
+		InternalPort      string   `json:"internalPort"`
+		HealthCheck       string   `json:"healthCheck"`
+		InternalDebugPort *string  `json:"internalDebugPort"`
+		IgnoredPaths      []string `json:"ignoredPaths"`
+		MavenProfiles     []string `json:"mavenProfiles,omitempty"`
+		MavenProperties   []string `json:"mavenProperties,omitempty"`
+	}
+)
 
 // DownloadTemplate using the url/link provided
 func DownloadTemplate(c *cli.Context) {
@@ -100,6 +103,8 @@ func DownloadTemplate(c *cli.Context) {
 // ValidateProject returns the language and buildType for a project at given filesystem path
 func ValidateProject(c *cli.Context) {
 	projectPath := c.Args().Get(0)
+	checkProjectPath(projectPath)
+
 	language, buildType := determineProjectInfo(projectPath)
 
 	resp := ValidationResponse{
@@ -109,13 +114,20 @@ func ValidateProject(c *cli.Context) {
 	}
 
 	projectInfo, err := json.Marshal(resp)
+	errors.CheckErr(err, 203, "")
 
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
 	writeToCwSettings(projectPath, buildType)
 	fmt.Println(string(projectInfo))
+}
+
+func checkProjectPath(projectPath string) {
+	if projectPath == "" {
+		log.Fatal("Project path has not been set")
+	}
+
+	if _, err := os.Stat("/path/to/whatever"); os.IsNotExist(err) {
+		log.Fatal("Project not found at given path")
+	}
 }
 
 func determineProjectInfo(projectPath string) (string, string) {
@@ -154,27 +166,39 @@ func determineJavaBuildType(projectPath string) string {
 }
 
 func writeToCwSettings(projectPath string, ProjectType string) {
-	pathToWrite := path.Join(projectPath, ".cw-settings")
+	pathToCwSettings := path.Join(projectPath, ".cw-settings")
+	pathToLegacySettings := path.Join(projectPath, ".mc-settings")
+
+	// Don't overwrite existing .cw-settings
+	if _, err := os.Stat(pathToCwSettings); err == nil {
+		return
+	}
+	// Move legacy .mc-settings to.cw-settings
+	if _, err := os.Stat(pathToLegacySettings); err == nil {
+		err := os.Rename(pathToLegacySettings, pathToCwSettings)
+		errors.CheckErr(err, 205, "")
+		return
+	}
+
+	// Write new .cw-settings
 	defaultCwSettings := CWSettings{
 		ContextRoot:  "",
 		InternalPort: "",
 		HealthCheck:  "",
 		IgnoredPaths: []string{""},
 	}
+
 	cwSettings := addNonDefaultFields(defaultCwSettings, ProjectType)
 	settings, err := json.MarshalIndent(cwSettings, "", "")
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-	err = ioutil.WriteFile(pathToWrite, settings, 0644)
+	errors.CheckErr(err, 203, "")
+	err = ioutil.WriteFile(pathToCwSettings, settings, 0644)
 }
 
 func addNonDefaultFields(cwSettings CWSettings, ProjectType string) CWSettings {
 	projectTypesWithInternalDebugPort := []string{"liberty", "spring", "nodejs"}
 	projectTypesWithMavenSettings := []string{"liberty", "spring"}
 	if stringInSlice(ProjectType, projectTypesWithInternalDebugPort) {
-		// We use a pointer, as without an empty string would be removed due to omitempty on struct
+		// We use a pointer, as an empty string would be removed due to omitempty on struct
 		defaultValue := ""
 		cwSettings.InternalDebugPort = &defaultValue
 	}
