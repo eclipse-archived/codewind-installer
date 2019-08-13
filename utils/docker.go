@@ -39,7 +39,7 @@ services:
   user: root
   environment: ["HOST_WORKSPACE_DIRECTORY=${WORKSPACE_DIRECTORY}","CONTAINER_WORKSPACE_DIRECTORY=/codewind-workspace","HOST_OS=${HOST_OS}","CODEWIND_VERSION=${TAG}","PERFORMANCE_CONTAINER=codewind-performance${PLATFORM}:${TAG}","HOST_HOME=${HOST_HOME}","HOST_MAVEN_OPTS=${HOST_MAVEN_OPTS}"]
   depends_on: [codewind-performance]
-  ports: ["127.0.0.1::9090"]
+  ports: ["127.0.0.1:10000-11000:9090"]
   volumes: ["/var/run/docker.sock:/var/run/docker.sock","${WORKSPACE_DIRECTORY}:/codewind-workspace"]
   networks: [network]
  codewind-performance:
@@ -294,19 +294,19 @@ func RemoveNetwork(network types.NetworkResource) {
 	}
 }
 
-// GetPFEPort will return the current port that PFE is running on
-func GetPFEPort() string {
+// GetPFEHostAndPort will return the current hostname and port that PFE is running on
+func GetPFEHostAndPort() (string, string) {
 	if CheckContainerStatus() {
 		containerList := GetContainerList()
 		for _, container := range containerList {
 			if strings.HasPrefix(container.Image, "codewind-pfe") {
 				for _, port := range container.Ports {
 					if port.PrivatePort == internalPFEPort {
-						return strconv.Itoa(int(port.PublicPort))
+						return port.IP, strconv.Itoa(int(port.PublicPort))
 					}
 				}
 			}
 		}
 	}
-	return ""
+	return "",""
 }

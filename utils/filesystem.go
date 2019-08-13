@@ -90,15 +90,15 @@ func DeleteTempFile(tempFilePath string) (boolean bool, err error) {
 func PingHealth(healthEndpoint string) bool {
 	var started = false
 	fmt.Println("Waiting for Codewind to start")
-	port := GetPFEPort()
+	hostname, port := GetPFEHostAndPort()
 	for i := 0; i < 120; i++ {
-		resp, err := http.Get("http://localhost:" + port + healthEndpoint)
+		resp, err := http.Get("http://" + hostname + ":" + port + healthEndpoint)
 		if err != nil {
 			fmt.Printf(".")
 		} else {
 			if resp.StatusCode == 200 {
 				fmt.Println("\nHTTP Response Status:", resp.StatusCode, http.StatusText(resp.StatusCode))
-				fmt.Println("Codewind successfully started on http://localhost:" + port)
+				fmt.Println("Codewind successfully started on http://" + hostname + ":" + port)
 				started = true
 				break
 			}
