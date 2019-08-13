@@ -24,7 +24,7 @@ Ensure you are logged into docker by typing `docker login`into any Terminal wind
 1. Download the release binary file to a folder on your system.
 2. Use the `cd` command to go to the location of the downloaded file in the Terminal window.
 3. If necessary, remove any file extensions so that the file is named `codewind-installer-linux`.
-4. Enter the `chmod +x codewind-installer-linux` command to give yourself execution permissions for the binary. 
+4. Enter the `chmod +x codewind-installer-linux` command to give yourself execution permissions for the binary.
 5. If you already have a `codewind-workspace` with your projects in it, copy the workspace into your `$HOME` home directory. If you do not already have a workspace, the installer creates an empty workspace for you in this directory.
 6. Install `docker-compose` with [Install Docker Compose](https://docs.docker.com/compose/install/).
 7. To run the installer, enter `./codewind-installer-linux` in the Terminal window.
