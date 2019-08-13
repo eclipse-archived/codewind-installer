@@ -45,7 +45,7 @@ func Commands() {
 			},
 			Action: func(c *cli.Context) error {
 				if c.NumFlags() == 0 {
-					// TODO: add ValidateProject() func
+					ValidateProject(c)
 				} else {
 					DownloadTemplate(c)
 				}

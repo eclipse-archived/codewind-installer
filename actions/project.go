@@ -12,8 +12,12 @@
 package actions
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
+	"path"
 	"runtime"
 	"strings"
 	"time"
@@ -21,6 +25,30 @@ import (
 	"github.com/eclipse/codewind-installer/utils"
 	"github.com/urfave/cli"
 )
+
+// ProjectType represents the information codewind requires to build a project.
+type ProjectType struct {
+	Language  string `json:"language"`
+	BuildType string `json:"buildType"`
+}
+
+// ValidationResponse represents the respose to validating a project on local filesystem.
+type ValidationResponse struct {
+	Status string      `json:"status"`
+	Path   string      `json:"path"`
+	Result ProjectType `json:"result"`
+}
+
+// CWSettings represents the .cw-settings file which is written to a project
+type CWSettings struct {
+	ContextRoot       string   `json:"contextRoot"`
+	InternalPort      string   `json:"internalPort"`
+	HealthCheck       string   `json:"healthCheck"`
+	InternalDebugPort *string  `json:"internalDebugPort"`
+	IgnoredPaths      []string `json:"ignoredPaths"`
+	MavenProfiles     []string `json:"mavenProfiles,omitempty"`
+	MavenProperties   []string `json:"mavenProperties,omitempty"`
+}
 
 // DownloadTemplate using the url/link provided
 func DownloadTemplate(c *cli.Context) {
@@ -69,7 +97,99 @@ func DownloadTemplate(c *cli.Context) {
 	utils.DeleteTempFile(zipFileName)
 }
 
-//ValidateProject type
-func ValidateProject() {
-	//code here
+// ValidateProject returns the language and buildType for a project at given filesystem path
+func ValidateProject(c *cli.Context) {
+	projectPath := c.Args().Get(0)
+	language, buildType := determineProjectInfo(projectPath)
+
+	resp := ValidationResponse{
+		Status: "success",
+		Result: ProjectType{language, buildType},
+		Path:   projectPath,
+	}
+
+	projectInfo, err := json.Marshal(resp)
+
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	writeToCwSettings(projectPath, buildType)
+	fmt.Println(string(projectInfo))
+}
+
+func determineProjectInfo(projectPath string) (string, string) {
+	language := "unknown"
+	buildType := "docker"
+	if _, err := os.Stat(path.Join(projectPath, "pom.xml")); err == nil {
+		language = "java"
+		buildType = determineJavaBuildType(projectPath)
+	}
+	if _, err := os.Stat(path.Join(projectPath, "package.json")); err == nil {
+		language = "nodejs"
+		buildType = "nodejs"
+	}
+	if _, err := os.Stat(path.Join(projectPath, "Package.swift")); err == nil {
+		language = "swift"
+		buildType = "swift"
+	}
+	return language, buildType
+}
+
+func determineJavaBuildType(projectPath string) string {
+	pathToPomXML := path.Join(projectPath, "pom.xml")
+	pomXMLContents, _err := ioutil.ReadFile(pathToPomXML)
+	// if there is an error reading the pom.xml, build as docker
+	if _err != nil {
+		return "docker"
+	}
+	pomXMLString := string(pomXMLContents)
+	if strings.Contains(pomXMLString, "<groupId>org.springframework.boot</groupId>") {
+		return "spring"
+	}
+	if strings.Contains(pomXMLString, "<groupId>org.eclipse.microprofile</groupId>") {
+		return "liberty"
+	}
+	return "docker"
+}
+
+func writeToCwSettings(projectPath string, ProjectType string) {
+	pathToWrite := path.Join(projectPath, ".cw-settings")
+	defaultCwSettings := CWSettings{
+		ContextRoot:  "",
+		InternalPort: "",
+		HealthCheck:  "",
+		IgnoredPaths: []string{""},
+	}
+	cwSettings := addNonDefaultFields(defaultCwSettings, ProjectType)
+	settings, err := json.MarshalIndent(cwSettings, "", "")
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	err = ioutil.WriteFile(pathToWrite, settings, 0644)
+}
+
+func addNonDefaultFields(cwSettings CWSettings, ProjectType string) CWSettings {
+	projectTypesWithInternalDebugPort := []string{"liberty", "spring", "nodejs"}
+	projectTypesWithMavenSettings := []string{"liberty", "spring"}
+	if stringInSlice(ProjectType, projectTypesWithInternalDebugPort) {
+		// We use a pointer, as without an empty string would be removed due to omitempty on struct
+		defaultValue := ""
+		cwSettings.InternalDebugPort = &defaultValue
+	}
+	if stringInSlice(ProjectType, projectTypesWithMavenSettings) {
+		cwSettings.MavenProfiles = []string{""}
+		cwSettings.MavenProperties = []string{""}
+	}
+	return cwSettings
+}
+
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }
