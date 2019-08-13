@@ -23,12 +23,12 @@ import (
 func StatusCommand(c *cli.Context) {
 	jsonOutput := c.Bool("json")
 	if utils.CheckContainerStatus() {
-		port := utils.GetPFEPort()
+		hostname, port := utils.GetPFEHostAndPort()
 		if jsonOutput {
-			output, _ := json.Marshal(map[string]string{"status": "started", "url": "http://localhost:" + port})
+			output, _ := json.Marshal(map[string]string{"status": "started", "url": "http://"+ hostname + ":" + port})
 			fmt.Println(string(output))
 		} else {
-			fmt.Println("Codewind is installed and running on http://localhost:" + port)
+			fmt.Println("Codewind is installed and running on http://" + hostname + ":" + port)
 		}
 		os.Exit(0)
 	}
