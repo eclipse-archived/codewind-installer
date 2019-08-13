@@ -7,7 +7,7 @@ Prebuilt binaries are available for download [on Eclipse](https://download.eclip
 
 ## Before starting
 
-Ensure you are logged into docker by typing `docker login`into any Terminal window or command prompt and follow any further instructions.
+Ensure you are logged into docker by typing `docker login` into any Terminal window or command prompt and follow any further instructions.
 
 ## Downloading the release binary for MacOS
 
