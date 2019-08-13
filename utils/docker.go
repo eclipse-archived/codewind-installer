@@ -16,11 +16,13 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
+	"net"
 	"os"
 	"os/exec"
 	"runtime"
-	"strings"
 	"strconv"
+	"strings"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/pkg/jsonmessage"
@@ -113,7 +115,7 @@ func DockerCompose(tag string) {
 	}
 	os.Setenv("HOST_OS", GOOS)
 	os.Setenv("COMPOSE_PROJECT_NAME", "codewind")
-	os.Setenv("HOST_MAVEN_OPTS", os.Getenv("MAVEN_OPTS"))         
+	os.Setenv("HOST_MAVEN_OPTS", os.Getenv("MAVEN_OPTS"))
 
 	cmd := exec.Command("docker-compose", "-f", "installer-docker-compose.yaml", "up", "-d")
 	output := new(bytes.Buffer)
@@ -309,4 +311,27 @@ func GetPFEPort() string {
 		}
 	}
 	return ""
+}
+
+// IsTCPPortAvailable checks to see if a specified port is available
+func IsTCPPortAvailable() (bool, string) {
+	var status string
+	const (
+		minTCPPort = 10000
+		maxTCPPort = 11000
+	)
+	for port := minTCPPort; port < maxTCPPort; port++ {
+		conn, err := net.Listen("tcp", "127.0.0.1:"+strconv.Itoa(port))
+		if err != nil {
+			log.Println("Connection error:", err)
+			status = "Port " + strconv.Itoa(port) + " Unreachable"
+			log.Println(status)
+		} else {
+			status = "Port " + strconv.Itoa(port) + " Available"
+			log.Println(status)
+			conn.Close()
+			return true, strconv.Itoa(port)
+		}
+	}
+	return false, ""
 }
