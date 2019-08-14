@@ -106,26 +106,25 @@ func ValidateProject(c *cli.Context) {
 	checkProjectPath(projectPath)
 
 	language, buildType := determineProjectInfo(projectPath)
-
-	resp := ValidationResponse{
+	response := ValidationResponse{
 		Status: "success",
 		Result: ProjectType{language, buildType},
 		Path:   projectPath,
 	}
+	projectInfo, err := json.Marshal(response)
 
-	projectInfo, err := json.Marshal(resp)
 	errors.CheckErr(err, 203, "")
-
 	writeToCwSettings(projectPath, buildType)
 	fmt.Println(string(projectInfo))
 }
 
 func checkProjectPath(projectPath string) {
 	if projectPath == "" {
+
 		log.Fatal("Project path has not been set")
 	}
 
-	if _, err := os.Stat("/path/to/whatever"); os.IsNotExist(err) {
+	if _, err := os.Stat(projectPath); os.IsNotExist(err) {
 		log.Fatal("Project not found at given path")
 	}
 }
@@ -169,18 +168,16 @@ func writeToCwSettings(projectPath string, ProjectType string) {
 	pathToCwSettings := path.Join(projectPath, ".cw-settings")
 	pathToLegacySettings := path.Join(projectPath, ".mc-settings")
 
-	// Don't overwrite existing .cw-settings
-	if _, err := os.Stat(pathToCwSettings); err == nil {
-		return
+	if _, err := os.Stat(pathToLegacySettings); os.IsExist(err) {
+		renameLegacySettings(pathToLegacySettings, pathToCwSettings)
+	} else if _, err := os.Stat(pathToCwSettings); os.IsExist(err) {
+		// Don't overwrite existing .cw-settings
+	} else {
+		writeNewCwSettings(ProjectType, pathToCwSettings)
 	}
-	// Move legacy .mc-settings to.cw-settings
-	if _, err := os.Stat(pathToLegacySettings); err == nil {
-		err := os.Rename(pathToLegacySettings, pathToCwSettings)
-		errors.CheckErr(err, 205, "")
-		return
-	}
+}
 
-	// Write new .cw-settings
+func writeNewCwSettings(ProjectType string, pathToCwSettings string) {
 	defaultCwSettings := CWSettings{
 		ContextRoot:  "",
 		InternalPort: "",
@@ -192,6 +189,11 @@ func writeToCwSettings(projectPath string, ProjectType string) {
 	settings, err := json.MarshalIndent(cwSettings, "", "")
 	errors.CheckErr(err, 203, "")
 	err = ioutil.WriteFile(pathToCwSettings, settings, 0644)
+}
+
+func renameLegacySettings(pathToLegacySettings string, pathToCwSettings string) {
+	err := os.Rename(pathToLegacySettings, pathToCwSettings)
+	errors.CheckErr(err, 205, "")
 }
 
 func addNonDefaultFields(cwSettings CWSettings, ProjectType string) CWSettings {
