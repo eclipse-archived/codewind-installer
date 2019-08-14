@@ -44,11 +44,10 @@ func Commands() {
 				},
 			},
 			Action: func(c *cli.Context) error {
-				if c.NumFlags() == 0 {
-					ValidateProject(c)
-				} else {
+				if c.NumFlags() != 0 {
 					DownloadTemplate(c)
 				}
+				ValidateProject(c)
 				return nil
 			},
 		},

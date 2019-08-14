@@ -18,7 +18,6 @@ import (
 	"os"
 	"path"
 	"strings"
-
 	"github.com/eclipse/codewind-installer/errors"
 )
 
