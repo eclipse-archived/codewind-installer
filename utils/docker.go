@@ -313,7 +313,7 @@ func GetPFEHostAndPort() (string, string) {
 	return "",""
 }
 
-// IsTCPPortAvailable checks to see if a specified port is available
+// IsTCPPortAvailable checks to find the next available port and returns it
 func IsTCPPortAvailable() (bool, string) {
 	var status string
 	const (
