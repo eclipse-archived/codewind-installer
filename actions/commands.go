@@ -56,7 +56,7 @@ func Commands() {
 		{
 			Name:    "install",
 			Aliases: []string{"in"},
-			Usage:   "Pull pfe, performance & intialize images from dockerhub",
+			Usage:   "Pull pfe, performance & initialize images from dockerhub",
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "tag, t",

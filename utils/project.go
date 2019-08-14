@@ -33,10 +33,9 @@ type CWSettings struct {
 	MavenProperties   []string `json:"mavenProperties,omitempty"`
 }
 
-// DetermineProjectInfo returns language and buildType for a project
+// DetermineProjectInfo returns the language and build-type of a project
 func DetermineProjectInfo(projectPath string) (string, string) {
-	language := "unknown"
-	buildType := "docker"
+	language, buildType := "unknown", "docker"
 	if _, err := os.Stat(path.Join(projectPath, "pom.xml")); err == nil {
 		language = "java"
 		buildType = determineJavaBuildType(projectPath)
@@ -52,7 +51,8 @@ func DetermineProjectInfo(projectPath string) (string, string) {
 	return language, buildType
 }
 
-// CheckProjectPath will error if the path to a project is invalid
+// CheckProjectPath will stop the process and return an error if path does not
+// exist or is invalid
 func CheckProjectPath(projectPath string) {
 	if projectPath == "" {
 		log.Fatal("Project path has not been set")
@@ -66,7 +66,7 @@ func CheckProjectPath(projectPath string) {
 func determineJavaBuildType(projectPath string) string {
 	pathToPomXML := path.Join(projectPath, "pom.xml")
 	pomXMLContents, _err := ioutil.ReadFile(pathToPomXML)
-	// if there is an error reading the pom.xml, build as docker
+	// if there is an error reading the pom.xml, we build as docker
 	if _err != nil {
 		return "docker"
 	}
@@ -80,7 +80,8 @@ func determineJavaBuildType(projectPath string) string {
 	return "docker"
 }
 
-// WriteNewCwSettings writes a default .cw-settings file to the given path, dependent on buildType
+// WriteNewCwSettings writes a default .cw-settings file to the given path,
+// dependant on the build type of the project
 func WriteNewCwSettings(pathToCwSettings string, BuildType string,) {
 	defaultCwSettings := getDefaultCwSettings()
 	cwSettings := addNonDefaultFieldsToCwSettings(defaultCwSettings, BuildType)
@@ -89,7 +90,7 @@ func WriteNewCwSettings(pathToCwSettings string, BuildType string,) {
 	err = ioutil.WriteFile(pathToCwSettings, settings, 0644)
 }
 
-// RenameLegacySettings renames a legacy .mc-settings file to .cw-settings
+// RenameLegacySettings renames a .mc-settings file to .cw-settings
 func RenameLegacySettings(pathToLegacySettings string, pathToCwSettings string) {
 	err := os.Rename(pathToLegacySettings, pathToCwSettings)
 	errors.CheckErr(err, 205, "")

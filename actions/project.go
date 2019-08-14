@@ -27,13 +27,13 @@ import (
 )
 
 type (
-	// ProjectType represents the information codewind requires to build a project.
+	// ProjectType represents the information Codewind requires to build a project.
 	ProjectType struct {
 		Language  string `json:"language"`
 		BuildType string `json:"buildType"`
 	}
 
-	// ValidationResponse represents the respose to validating a project on local filesystem.
+	// ValidationResponse represents the response to validating a project on the users filesystem.
 	ValidationResponse struct {
 		Status string      `json:"status"`
 		Path   string      `json:"path"`
@@ -103,18 +103,17 @@ func ValidateProject(c *cli.Context) {
 	projectInfo, err := json.Marshal(response)
 
 	errors.CheckErr(err, 203, "")
-	writeCwSettings(projectPath, buildType)
+	writeCwSettingsIfNotInProject(projectPath, buildType)
 	fmt.Println(string(projectInfo))
 }
 
-func writeCwSettings(projectPath string, BuildType string) {
+func writeCwSettingsIfNotInProject(projectPath string, BuildType string) {
 	pathToCwSettings := path.Join(projectPath, ".cw-settings")
 	pathToLegacySettings := path.Join(projectPath, ".mc-settings")
 
 	if _, err := os.Stat(pathToLegacySettings); os.IsExist(err) {
 		utils.RenameLegacySettings(pathToLegacySettings, pathToCwSettings)
 	} else if _, err := os.Stat(pathToCwSettings); os.IsNotExist(err) {
-		// Don't overwrite existing .cw-settings
 		utils.WriteNewCwSettings(pathToCwSettings, BuildType)
 	}
 }
