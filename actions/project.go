@@ -60,8 +60,6 @@ func DownloadTemplate(c *cli.Context) {
 // DownloadFromURLThenExtract downloads files from a URL
 // to a destination, extracting them if necessary
 func DownloadFromURLThenExtract(URL string, destination string) error {
-	// TODO: warn if destination already exists?
-
 	if _, err := url.ParseRequestURI(URL); err != nil {
 		return err
 	}
