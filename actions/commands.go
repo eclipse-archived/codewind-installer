@@ -129,9 +129,20 @@ func Commands() {
 		{
 			Name:    "remove",
 			Aliases: []string{"rm"},
-			Usage:   "Remove Codewind/Project docker images and the codewind network",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "tag, t",
+					Value: "latest",
+					Usage: "dockerhub image tag",
+				},
+				cli.BoolFlag{
+					Name:  "alltags, at",
+					Usage: "remove all tagged codewind images",
+				},
+			},
+			Usage: "Remove Codewind/Project docker images and the codewind network",
 			Action: func(c *cli.Context) error {
-				RemoveCommand()
+				RemoveCommand(c)
 				return nil
 			},
 		},
