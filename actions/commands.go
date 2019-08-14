@@ -44,11 +44,10 @@ func Commands() {
 				},
 			},
 			Action: func(c *cli.Context) error {
-				if c.NumFlags() == 0 {
-					// TODO: add ValidateProject() func
-				} else {
+				if c.NumFlags() != 0 {
 					DownloadTemplate(c)
 				}
+				ValidateProject(c)
 				return nil
 			},
 		},
@@ -56,7 +55,7 @@ func Commands() {
 		{
 			Name:    "install",
 			Aliases: []string{"in"},
-			Usage:   "Pull pfe, performance & intialize images from dockerhub",
+			Usage:   "Pull pfe, performance & initialize images from dockerhub",
 			Flags: []cli.Flag{
 				cli.StringFlag{
 					Name:  "tag, t",

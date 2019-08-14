@@ -15,7 +15,7 @@ import (
 	"log"
 )
 
-// CheckErr function to responde with appropriate error messages
+// CheckErr function to respond with appropriate error messages
 func CheckErr(err error, code int, optMsg string) {
 	if err != nil {
 		switch code {

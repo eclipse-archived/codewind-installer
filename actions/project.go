@@ -12,14 +12,33 @@
 package actions
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 	"os"
+	"path"
 	"runtime"
 	"strings"
 	"time"
 
+	"github.com/eclipse/codewind-installer/errors"
 	"github.com/eclipse/codewind-installer/utils"
 	"github.com/urfave/cli"
+)
+
+type (
+	// ProjectType represents the information Codewind requires to build a project.
+	ProjectType struct {
+		Language  string `json:"language"`
+		BuildType string `json:"buildType"`
+	}
+
+	// ValidationResponse represents the response to validating a project on the users filesystem.
+	ValidationResponse struct {
+		Status string      `json:"status"`
+		Path   string      `json:"path"`
+		Result ProjectType `json:"result"`
+	}
 )
 
 // DownloadTemplate using the url/link provided
@@ -69,7 +88,32 @@ func DownloadTemplate(c *cli.Context) {
 	utils.DeleteTempFile(zipFileName)
 }
 
-//ValidateProject type
-func ValidateProject() {
-	//code here
+// ValidateProject returns the language and buildType for a project at given filesystem path,
+// and writes a default .cw-settings file to that project
+func ValidateProject(c *cli.Context) {
+	projectPath := c.Args().Get(0)
+	utils.CheckProjectPath(projectPath)
+
+	language, buildType := utils.DetermineProjectInfo(projectPath)
+	response := ValidationResponse{
+		Status: "success",
+		Result: ProjectType{language, buildType},
+		Path:   projectPath,
+	}
+	projectInfo, err := json.Marshal(response)
+
+	errors.CheckErr(err, 203, "")
+	writeCwSettingsIfNotInProject(projectPath, buildType)
+	fmt.Println(string(projectInfo))
+}
+
+func writeCwSettingsIfNotInProject(projectPath string, BuildType string) {
+	pathToCwSettings := path.Join(projectPath, ".cw-settings")
+	pathToLegacySettings := path.Join(projectPath, ".mc-settings")
+
+	if _, err := os.Stat(pathToLegacySettings); os.IsExist(err) {
+		utils.RenameLegacySettings(pathToLegacySettings, pathToCwSettings)
+	} else if _, err := os.Stat(pathToCwSettings); os.IsNotExist(err) {
+		utils.WriteNewCwSettings(pathToCwSettings, BuildType)
+	}
 }
