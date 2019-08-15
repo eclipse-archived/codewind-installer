@@ -15,11 +15,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"net/url"
 	"os"
 	"path"
-	"strings"
-	"time"
 
 	"github.com/eclipse/codewind-installer/errors"
 	"github.com/eclipse/codewind-installer/utils"
