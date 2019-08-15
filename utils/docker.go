@@ -41,7 +41,7 @@ services:
   user: root
   environment: ["HOST_WORKSPACE_DIRECTORY=${WORKSPACE_DIRECTORY}","CONTAINER_WORKSPACE_DIRECTORY=/codewind-workspace","HOST_OS=${HOST_OS}","CODEWIND_VERSION=${TAG}","PERFORMANCE_CONTAINER=codewind-performance${PLATFORM}:${TAG}","HOST_HOME=${HOST_HOME}","HOST_MAVEN_OPTS=${HOST_MAVEN_OPTS}"]
   depends_on: [codewind-performance]
-  ports: ["127.0.0.1:10000-11000:9090"]
+  ports: ["127.0.0.1:${PFE_EXTERNAL_PORT}:9090"]
   volumes: ["/var/run/docker.sock:/var/run/docker.sock","${WORKSPACE_DIRECTORY}:/codewind-workspace"]
   networks: [network]
  codewind-performance:
@@ -84,6 +84,12 @@ type Compose struct {
 // constant to identify the internal port of PFE in its container
 const internalPFEPort = 9090
 
+// constants to identify the range of external ports on which to expose PFE
+const (
+	minTCPPort = 10000
+	maxTCPPort = 11000
+)
+
 // DockerCompose to set up the Codewind environment
 func DockerCompose(tag string) {
 
@@ -116,6 +122,12 @@ func DockerCompose(tag string) {
 	os.Setenv("HOST_OS", GOOS)
 	os.Setenv("COMPOSE_PROJECT_NAME", "codewind")
 	os.Setenv("HOST_MAVEN_OPTS", os.Getenv("MAVEN_OPTS"))
+	fmt.Printf("Attempting to find available port\n")
+	portAvailable, port := IsTCPPortAvailable(minTCPPort, maxTCPPort)
+	if (!portAvailable) {
+		fmt.Printf("No available external ports in range, will default to Docker-assigned port")
+	}
+	os.Setenv("PFE_EXTERNAL_PORT", port)
 
 	cmd := exec.Command("docker-compose", "-f", "installer-docker-compose.yaml", "up", "-d")
 	output := new(bytes.Buffer)
@@ -314,18 +326,12 @@ func GetPFEHostAndPort() (string, string) {
 }
 
 // IsTCPPortAvailable checks to find the next available port and returns it
-func IsTCPPortAvailable() (bool, string) {
+func IsTCPPortAvailable(minTCPPort int, maxTCPPort int) (bool, string) {
 	var status string
-	const (
-		minTCPPort = 10000
-		maxTCPPort = 11000
-	)
 	for port := minTCPPort; port < maxTCPPort; port++ {
 		conn, err := net.Listen("tcp", "127.0.0.1:"+strconv.Itoa(port))
 		if err != nil {
-			log.Println("Connection error:", err)
-			status = "Port " + strconv.Itoa(port) + " Unreachable"
-			log.Println(status)
+			log.Println("Unable to connect to port", port, ":", err)
 		} else {
 			status = "Port " + strconv.Itoa(port) + " Available"
 			fmt.Println(status)
