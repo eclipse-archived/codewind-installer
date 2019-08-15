@@ -328,7 +328,7 @@ func IsTCPPortAvailable() (bool, string) {
 			log.Println(status)
 		} else {
 			status = "Port " + strconv.Itoa(port) + " Available"
-			log.Println(status)
+			fmt.Println(status)
 			conn.Close()
 			return true, strconv.Itoa(port)
 		}
