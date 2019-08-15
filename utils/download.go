@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"path"
 )
 
 // DownloadFromURLThenExtract downloads files from a URL
@@ -25,7 +26,7 @@ func DownloadFromURLThenExtract(URL string, destination string) error {
 func DownloadFromTarGzURL(URL string, destination string) error {
 	_ = os.MkdirAll(destination, 0700) // gives User rwx permission
 
-	pathToTempFile := destination + "/temp.tar.gz"
+	pathToTempFile := path.Join(destination, "temp.tar.gz")
 	err := DownloadFile(URL, pathToTempFile)
 	if err != nil {
 		return err
@@ -74,7 +75,6 @@ func DownloadAndExtractZip(zipURL string, destination string) error {
 	DeleteTempFile(pathToTempZipFile)
 	return nil
 }
-
 
 // IsTarGzURL returns whether the provided URL is a tar.gz file
 func IsTarGzURL(URL string) bool {

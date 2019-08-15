@@ -112,7 +112,7 @@ func PingHealth(healthEndpoint string) bool {
 	return started
 }
 
-//GetZipURL from github api /repos/:owner/:repo/:archive_format/:ref
+// GetZipURL from github api /repos/:owner/:repo/:archive_format/:ref
 func GetZipURL(owner, repo, branch string) (string, error) {
 	client := github.NewClient(nil)
 
@@ -126,7 +126,7 @@ func GetZipURL(owner, repo, branch string) (string, error) {
 	return url, nil
 }
 
-//DownloadFile from URL to file destination
+// DownloadFile from URL to file destination
 func DownloadFile(URL, destination string) error {
 	// Get the data
 	resp, err := http.Get(URL)
@@ -149,7 +149,7 @@ func DownloadFile(URL, destination string) error {
 	return err
 }
 
-//UnZip unzips a file to a destination
+// UnZip unzips a file to a destination
 func UnZip(filePath, destination string) error {
 	zipReader, _ := zip.OpenReader(filePath)
 	if zipReader == nil {
@@ -172,9 +172,11 @@ func UnZip(filePath, destination string) error {
 		}
 
 		if file.FileInfo().IsDir() {
+			// For debug:
 			// fmt.Println("Directory Created:", extractedFilePath)
 			os.MkdirAll(extractedFilePath, file.Mode())
 		} else {
+			// For debug:
 			// fmt.Println("File extracted:", file.Name)
 
 			outputFile, err := os.OpenFile(
@@ -195,7 +197,7 @@ func UnZip(filePath, destination string) error {
 
 // UnTar unpacks a tar.gz file to a destination
 func UnTar(pathToTarFile, destination string) error {
-	fileReader, err := read(pathToTarFile)
+	fileReader, err := readFile(pathToTarFile)
 	if err != nil {
 		return err
 	}
@@ -222,7 +224,7 @@ func UnTar(pathToTarFile, destination string) error {
 				log.Fatal(err)
 			}
 		case tar.TypeReg:
-			fileToOverwrite, err := overwrite(target)
+			fileToOverwrite, err := overwriteFile(target)
 			defer fileToOverwrite.Close()
 			if err != nil {
 				log.Fatal(err)
@@ -237,8 +239,8 @@ func UnTar(pathToTarFile, destination string) error {
 	return nil
 }
 
-func overwrite(filePath string) (*os.File, error) {
-	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_TRUNC, 0777)
+func overwriteFile(filePath string) (*os.File, error) {
+	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_TRUNC, 0777) // gives everyone rwx permission
 	if err != nil {
 		file, err = os.Create(filePath)
 		if err != nil {
@@ -248,8 +250,8 @@ func overwrite(filePath string) (*os.File, error) {
 	return file, nil
 }
 
-func read(filePath string) (*os.File, error) {
-	file, err := os.OpenFile(filePath, os.O_RDONLY, 0444)
+func readFile(filePath string) (*os.File, error) {
+	file, err := os.OpenFile(filePath, os.O_RDONLY, 0444) // gives everyone read permission
 	if err != nil {
 		return file, err
 	}
