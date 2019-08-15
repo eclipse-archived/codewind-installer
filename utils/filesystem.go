@@ -185,3 +185,11 @@ func UnZip(zipFileName, fileDestination string) {
 	}
 	log.Println("File extracted:", zipFileName)
 }
+
+// PathExists returns whether a path exists on the local file system.
+func PathExists(path string) bool {
+	if _,err := os.Stat(path); err == nil {
+		return true
+	}
+	return false
+}
