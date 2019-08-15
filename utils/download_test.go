@@ -1,4 +1,4 @@
-package actions
+package utils
 
 import (
 	"errors"
@@ -8,6 +8,7 @@ import (
 	"os"
 	"testing"
 	"path/filepath"
+	"fmt"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -66,6 +67,7 @@ func TestDownloadFromURLThenExtract(t *testing.T) {
 
 		})
 		os.RemoveAll(testDir)
+		fmt.Println()
 	}
 }
 
@@ -109,6 +111,7 @@ func TestDownloadFromRepoURL(t *testing.T) {
 
 		})
 		os.RemoveAll(testDir)
+		fmt.Println()
 	}
 }
 
@@ -150,6 +153,7 @@ func TestDownloadAndExtractZip(t *testing.T) {
 
 		})
 		os.RemoveAll(testDir)
+		fmt.Println()
 	}
 }
 
@@ -192,6 +196,7 @@ func TestDownloadFromTarGzURL(t *testing.T) {
 
 		})
 		os.RemoveAll(testDir)
+		fmt.Println()
 	}
 }
 

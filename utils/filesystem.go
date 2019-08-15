@@ -82,7 +82,7 @@ func DeleteTempFile(filePath string) (bool, error) {
 	}
 
 	os.Remove(filePath)
-	log.Printf("Deleted file: %s\n\n", filePath)
+	// fmt.Printf("==> Deleted file: %s\n", filePath)
 	return true, nil
 }
 
@@ -144,7 +144,7 @@ func DownloadFile(URL, destination string) error {
 
 	// Write body to file
 	_, err = io.Copy(file, resp.Body)
-	log.Printf("Downloaded file: from '%s' to '%s'\n", URL, destination)
+	fmt.Printf("Downloaded file from '%s' to '%s'\n", URL, destination)
 
 	return err
 }
@@ -172,10 +172,10 @@ func UnZip(filePath, destination string) error {
 		}
 
 		if file.FileInfo().IsDir() {
-			// log.Println("Directory Created:", extractedFilePath)
+			// fmt.Println("Directory Created:", extractedFilePath)
 			os.MkdirAll(extractedFilePath, file.Mode())
 		} else {
-			// log.Println("File extracted:", file.Name)
+			// fmt.Println("File extracted:", file.Name)
 
 			outputFile, err := os.OpenFile(
 				extractedFilePath,
@@ -189,7 +189,7 @@ func UnZip(filePath, destination string) error {
 			errors.CheckErr(err, 404, "")
 		}
 	}
-	log.Printf("Extracted file: from '%s' to '%s'\n", filePath, destination)
+	fmt.Printf("Extracted file from '%s' to '%s'\n", filePath, destination)
 	return nil
 }
 
@@ -213,22 +213,22 @@ func UnTar(pathToTarFile, destination string) error {
 			break
 		}
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
 		target := filepath.Join(destination, header.Name)
 		switch header.Typeflag {
 		case tar.TypeDir:
 			if err := os.MkdirAll(target, os.FileMode(header.Mode)); err != nil {
-				panic(err)
+				log.Fatal(err)
 			}
 		case tar.TypeReg:
 			fileToOverwrite, err := overwrite(target)
 			defer fileToOverwrite.Close()
 			if err != nil {
-				panic(err)
+				log.Fatal(err)
 			}
 			if _, err := io.Copy(fileToOverwrite, tarReader); err != nil {
-				panic(err)
+				log.Fatal(err)
 			}
 		default:
 			log.Printf("Can't: %c, %s\n", header.Typeflag, target)
