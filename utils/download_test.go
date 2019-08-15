@@ -2,13 +2,12 @@ package utils
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
-
 	"net/url"
 	"os"
-	"testing"
 	"path/filepath"
-	"fmt"
+	"testing"
 
 	"github.com/stretchr/testify/assert"
 )

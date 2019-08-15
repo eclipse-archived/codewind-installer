@@ -233,7 +233,7 @@ func UnTar(pathToTarFile, destination string) error {
 				log.Fatal(err)
 			}
 		default:
-			log.Printf("Can't: %c, %s\n", header.Typeflag, target)
+			log.Printf("Can't extract to %s: unknown typeflag %c\n", target, header.Typeflag)
 		}
 	}
 	return nil
