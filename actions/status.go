@@ -24,9 +24,28 @@ import (
 func StatusCommand(c *cli.Context) {
 	jsonOutput := c.Bool("json")
 	if utils.CheckContainerStatus() {
+		// STARTED
 		hostname, port := utils.GetPFEHostAndPort()
 		if jsonOutput {
-			output, _ := json.Marshal(map[string]string{"status": "started", "url": "http://" + hostname + ":" + port})
+
+			type status struct {
+				Status   string   `json:"status"`
+				URL      string   `json:"url"`
+				Versions []string `json:"installed-versions"`
+				Started  []string `json:"started"`
+			}
+
+			tagArr := utils.GetImageTag()
+			startedArr := utils.GetStartedTag()
+			resp := &status{
+				Status:   "started",
+				URL:      "http://" + hostname + ":" + port,
+				Versions: tagArr,
+				Started:  startedArr,
+			}
+
+			//output, _ := json.Marshal(map[string]string{"status": "started", "url": "http://" + hostname + ":" + port})
+			output, _ := json.Marshal(resp)
 			fmt.Println(string(output))
 		} else {
 			fmt.Println("Codewind is installed and running on http://" + hostname + ":" + port)
@@ -35,18 +54,20 @@ func StatusCommand(c *cli.Context) {
 	}
 
 	if utils.CheckImageStatus() {
-
+		// INSTALLED NOT STARTED
 		if jsonOutput {
 
 			type status struct {
 				Status   string   `json:"status"`
 				Versions []string `json:"installed-versions"`
+				Started  []string `json:"started"`
 			}
 
 			tagArr := utils.GetImageTag()
 			resp := &status{
 				Status:   "stopped",
 				Versions: tagArr,
+				Started:  []string{},
 			}
 
 			output, _ := json.Marshal(resp)
@@ -56,6 +77,7 @@ func StatusCommand(c *cli.Context) {
 		}
 		os.Exit(0)
 	} else {
+		// NOT INSTALLED
 		if jsonOutput {
 			output, _ := json.Marshal(map[string]string{"status": "uninstalled"})
 			fmt.Println(string(output))
