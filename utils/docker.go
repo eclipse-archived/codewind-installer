@@ -29,6 +29,7 @@ import (
 	"github.com/docker/docker/pkg/term"
 	"github.com/eclipse/codewind-installer/errors"
 	"github.com/moby/moby/client"
+	"github.ibm.com/codewind-installer/utils"
 )
 
 // docker-compose yaml data
@@ -124,7 +125,7 @@ func DockerCompose(tag string) {
 	os.Setenv("HOST_MAVEN_OPTS", os.Getenv("MAVEN_OPTS"))
 	fmt.Printf("Attempting to find available port\n")
 	portAvailable, port := IsTCPPortAvailable(minTCPPort, maxTCPPort)
-	if (!portAvailable) {
+	if !portAvailable {
 		fmt.Printf("No available external ports in range, will default to Docker-assigned port")
 	}
 	os.Setenv("PFE_EXTERNAL_PORT", port)
@@ -322,7 +323,60 @@ func GetPFEHostAndPort() (string, string) {
 			}
 		}
 	}
-	return "",""
+	return "", ""
+}
+
+// GetImageTag of Codewind images
+func GetImageTag() []string {
+	keyArr := [3]string{}
+	keyArr[0] = "eclipse/codewind-pfe"
+	keyArr[1] = "eclipse/codewind-performance"
+	keyArr[2] = "eclipse/codewind-initialize"
+	tagArr := []string{}
+
+	images := utils.GetImageList()
+	//fmt.Println(images)
+
+	fmt.Println("Searching images for a match..")
+
+	for _, image := range images {
+		imageRepo := strings.Join(image.RepoDigests, " ")
+		imageTags := strings.Join(image.RepoTags, " ")
+		//fmt.Println(imageTags)
+		for _, key := range keyArr {
+			if strings.HasPrefix(imageRepo, key) || strings.HasPrefix(imageTags, key) {
+				if len(image.RepoTags) > 0 {
+					fmt.Println("Image + tag: ", image.RepoTags[0])
+					tag := image.RepoTags[0]
+					tag = strings.Split(tag, ":")[1]
+					tagArr = append(tagArr, tag)
+				} else {
+					fmt.Println("No tag available. Defaulting to ''.")
+					tagArr = append(tagArr, "")
+				}
+			}
+		}
+	}
+
+	//fmt.Println("FULL tag array = ", tagArr)
+
+	// Use map to record duplicates if found
+	encountered := map[string]bool{}
+	result := []string{}
+
+	for element := range tagArr {
+		if encountered[tagArr[element]] == true {
+			// Don't add duplicate
+		} else {
+			// Record said element as an encountered
+			encountered[tagArr[element]] = true
+			// Append to the new result slice
+			result = append(result, tagArr[element])
+		}
+	}
+
+	//fmt.Println("refactored result =  ", result)
+	return result
 }
 
 // IsTCPPortAvailable checks to find the next available port and returns it

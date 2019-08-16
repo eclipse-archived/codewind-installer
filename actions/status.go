@@ -12,11 +12,12 @@
 package actions
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
-	"encoding/json"
-	"github.com/urfave/cli"
+
 	"github.com/eclipse/codewind-installer/utils"
+	"github.com/urfave/cli"
 )
 
 //StatusCommand to show the status
@@ -25,7 +26,7 @@ func StatusCommand(c *cli.Context) {
 	if utils.CheckContainerStatus() {
 		hostname, port := utils.GetPFEHostAndPort()
 		if jsonOutput {
-			output, _ := json.Marshal(map[string]string{"status": "started", "url": "http://"+ hostname + ":" + port})
+			output, _ := json.Marshal(map[string]string{"status": "started", "url": "http://" + hostname + ":" + port})
 			fmt.Println(string(output))
 		} else {
 			fmt.Println("Codewind is installed and running on http://" + hostname + ":" + port)
@@ -34,10 +35,23 @@ func StatusCommand(c *cli.Context) {
 	}
 
 	if utils.CheckImageStatus() {
+
 		if jsonOutput {
-			output, _ := json.Marshal(map[string]string{"status": "stopped"})
+
+			type status struct {
+				Status   string   `json:"status"`
+				Versions []string `json:"installed-versions"`
+			}
+
+			tagArr := utils.GetImageTag()
+			resp := &status{
+				Status:   "stopped",
+				Versions: tagArr,
+			}
+
+			output, _ := json.Marshal(resp)
 			fmt.Println(string(output))
-	  } else {
+		} else {
 			fmt.Println("Codewind is installed but not running")
 		}
 		os.Exit(0)
