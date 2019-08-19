@@ -28,6 +28,9 @@ func StatusCommand(c *cli.Context) {
 		hostname, port := utils.GetPFEHostAndPort()
 		if jsonOutput {
 
+			imageTagArr := utils.GetImageTag()
+			containerTagArr := utils.GetContainerTag()
+
 			type status struct {
 				Status   string   `json:"status"`
 				URL      string   `json:"url"`
@@ -35,8 +38,6 @@ func StatusCommand(c *cli.Context) {
 				Started  []string `json:"started"`
 			}
 
-			imageTagArr := utils.GetImageTag()
-			containerTagArr := utils.GetContainerTag()
 			resp := &status{
 				Status:   "started",
 				URL:      "http://" + hostname + ":" + port,
@@ -44,7 +45,6 @@ func StatusCommand(c *cli.Context) {
 				Started:  containerTagArr,
 			}
 
-			//output, _ := json.Marshal(map[string]string{"status": "started", "url": "http://" + hostname + ":" + port})
 			output, _ := json.Marshal(resp)
 			fmt.Println(string(output))
 		} else {
@@ -54,8 +54,10 @@ func StatusCommand(c *cli.Context) {
 	}
 
 	if utils.CheckImageStatus() {
-		// INSTALLED NOT STARTED
+		// INSTALLED BUT NOT STARTED
 		if jsonOutput {
+
+			imageTagArr := utils.GetImageTag()
 
 			type status struct {
 				Status   string   `json:"status"`
@@ -63,10 +65,9 @@ func StatusCommand(c *cli.Context) {
 				Started  []string `json:"started"`
 			}
 
-			tagArr := utils.GetImageTag()
 			resp := &status{
 				Status:   "stopped",
-				Versions: tagArr,
+				Versions: imageTagArr,
 				Started:  []string{},
 			}
 
