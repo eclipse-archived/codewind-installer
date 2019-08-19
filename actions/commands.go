@@ -101,11 +101,6 @@ func Commands() {
 					Name:  "json, j",
 					Usage: "specify terminal output",
 				},
-				cli.StringFlag{
-					Name:  "tag, t",
-					Value: "latest",
-					Usage: "dockerhub image tag",
-				},
 			},
 			Action: func(c *cli.Context) error {
 				StatusCommand(c)
