@@ -27,7 +27,7 @@ spec:
 	}
 
     options {
-		timestamps() 
+		timestamps()
         skipStagesAfterUnstable()
     }
 
@@ -37,7 +37,7 @@ spec:
 	}
 
 	stages {
-		
+
 		stage ('Build') {
 			steps {
 				container('go') {
@@ -48,7 +48,7 @@ spec:
 						cd ../..
 						export GOPATH=$GOPATH:$(pwd)
 
-						# create a new directory to store the code for go compile 
+						# create a new directory to store the code for go compile
 						if [ -d $CODE_DIRECTORY_FOR_GO ]; then
 							rm -rf $CODE_DIRECTORY_FOR_GO
 						fi
@@ -56,9 +56,9 @@ spec:
 						cd $CODE_DIRECTORY_FOR_GO
 
 						# copy the code into the new directory for go compile
-						cp -r $DEFAULT_CODE_DIRECTORY/* . 
+						cp -r $DEFAULT_CODE_DIRECTORY/* .
 						echo $DEFAULT_CODE_DIRECTORY >> $DEFAULT_WORKSPACE_DIR_FILE
-						
+
 						# get dep and run it
 						wget -O - https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 						dep status
@@ -77,13 +77,13 @@ spec:
 				}
 			}
 		}
-		
+
 		stage('Test') {
             steps {
                 echo 'Testing to be defined.'
             }
         }
-        
+
         stage('Upload') {
           steps {
 				script {
@@ -93,48 +93,56 @@ spec:
 						echo $(pwd)
 						if [ -d codewind-installer ]; then
 							rm -rf codewind-installer
-						fi	
+						fi
 						mkdir codewind-installer
-						
-						TIMESTAMP="$(date +%F-%H%M)" 
+
+						TIMESTAMP="$(date +%F-%H%M)"
 						# WINDOWS EXE: Submit Windows unsigned.exe and save signed output to signed.exe
 
 	                    # only sign windows exe if not a pull request
 						if [ -z $CHANGE_ID ]; then
                         	curl -o codewind-installer/codewind-installer-win-${TIMESTAMP}.exe  -F file=@codewind-installer-win.exe http://build.eclipse.org:31338/winsign.php
-							rm codewind-installer-win.exe 
+							rm codewind-installer-win.exe
 						fi
 						# move other executable to codewind-installer directoryand add timestamp to the name
 						for fileid in codewind-installer-*; do
-        					mv -v $fileid codewind-installer/${fileid}-$TIMESTAMP      
+        					mv -v $fileid codewind-installer/${fileid}-$TIMESTAMP
 						done
 
 						DEFAULT_WORKSPACE_DIR=$(cat $DEFAULT_WORKSPACE_DIR_FILE)
-						cp -r codewind-installer $DEFAULT_WORKSPACE_DIR 
-						
+						cp -r codewind-installer $DEFAULT_WORKSPACE_DIR
+
 					'''
 					// stash the executables so they are avaialable outside of this agent
 					dir('codewind-installer') {
 						stash includes: '**', name: 'EXECUTABLES'
-					}	
-				}		 
+					}
+				}
 			}
         }
 		stage('Deploy') {
-			agent any	
+			// This when clause disables PR build uploads; you may comment this out if you want your build uploaded.
+            when {
+                beforeAgent true
+                not {
+                    changeRequest()
+                }
+            }
+
+			agent any
            	steps {
                	sshagent ( ['projects-storage.eclipse.org-bot-ssh']) {
-                println("Deploying codewind-installer to downoad area...")
+                println("Deploying codewind-installer to download area...")
 				sh '''
 		 			if [ -d codewind-installer ]; then
 						rm -rf codewind-installer
-					fi	
+					fi
 		 			mkdir codewind-installer
-				'''	
-				// get the stashed executables 
-		 		dir ('codewind-installer') {     
+				'''
+				// get the stashed executables
+		 		dir ('codewind-installer') {
 		 			unstash 'EXECUTABLES'
-		 		}	 
+		 		}
                 sh '''
 					WORKSPACE=$PWD
 					ls -la ${WORKSPACE}/codewind-installer/*
@@ -152,7 +160,7 @@ spec:
 		}
 
 	}
-	
+
 	post {
         success {
 			echo 'Build SUCCESS'
