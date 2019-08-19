@@ -372,6 +372,8 @@ func IsTCPPortAvailable(minTCPPort int, maxTCPPort int) (bool, string) {
 		}
 	}
 	return false, ""
+}
+
 // GetContainerTag of the Codewind version(s) currently running
 func GetContainerTag() []string {
 	containerArr := [2]string{}
