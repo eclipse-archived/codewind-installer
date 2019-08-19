@@ -16,7 +16,9 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path"
 	"testing"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -28,22 +30,22 @@ func TestDetermineProjectInfo(t *testing.T) {
 		wantedErr     error
 	}{
 		"success case: liberty project": {
-			in:            "../resources/test/liberty-project",
+			in:            path.Join("..", "resources", "test", "liberty-project"),
 			wantLanguage:  "java",
 			wantBuildType: "liberty",
 		},
 		"success case: spring project": {
-			in:            "../resources/test/spring-project",
+			in:            path.Join("..", "resources", "test", "spring-project"),
 			wantLanguage:  "java",
 			wantBuildType: "spring",
 		},
 		"success case: node.js project": {
-			in:            "../resources/test/node-project",
+			in:            path.Join("..", "resources", "test", "node-project"),
 			wantLanguage:  "node",
 			wantBuildType: "node",
 		},
 		"success case: swift project": {
-			in:            "../resources/test/swift-project",
+			in:            path.Join("..", "resources", "test", "swift-project"),
 			wantLanguage:  "swift",
 			wantBuildType: "swift",
 		},
@@ -59,10 +61,10 @@ func TestDetermineProjectInfo(t *testing.T) {
 }
 
 func TestWriteNewCwSettings(t *testing.T) {
-	defaultValue := ""
+	defaultInternalDebugPort := ""
 	tests := map[string]struct {
-		inProjectPath   string
-		inBuildType     string
+		inProjectPath  string
+		inBuildType    string
 		wantCwSettings CWSettings
 	}{
 		"success case: node project": {
@@ -73,7 +75,7 @@ func TestWriteNewCwSettings(t *testing.T) {
 				InternalPort:      "",
 				HealthCheck:       "",
 				IgnoredPaths:      []string{""},
-				InternalDebugPort: &defaultValue,
+				InternalDebugPort: &defaultInternalDebugPort,
 			},
 		},
 		"success case: liberty project": {
@@ -84,7 +86,7 @@ func TestWriteNewCwSettings(t *testing.T) {
 				InternalPort:      "",
 				HealthCheck:       "",
 				IgnoredPaths:      []string{""},
-				InternalDebugPort: &defaultValue,
+				InternalDebugPort: &defaultInternalDebugPort,
 				MavenProfiles:     []string{""},
 				MavenProperties:   []string{""},
 			},
@@ -97,11 +99,11 @@ func TestWriteNewCwSettings(t *testing.T) {
 				InternalPort:      "",
 				HealthCheck:       "",
 				IgnoredPaths:      []string{""},
-				InternalDebugPort: &defaultValue,
+				InternalDebugPort: &defaultInternalDebugPort,
 				MavenProfiles:     []string{""},
 				MavenProperties:   []string{""},
 			},
-		},
+	},
 		"success case: swift project": {
 			inProjectPath: "../resources/test/swift-project/.cw-settings",
 			inBuildType:   "swift",
@@ -125,8 +127,8 @@ func TestWriteNewCwSettings(t *testing.T) {
 	}
 }
 
-func readCwSettings(path string) CWSettings {
-	cwSettingsFile, err := ioutil.ReadFile(path)
+func readCwSettings(filepath string) CWSettings {
+	cwSettingsFile, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		log.Println(err)
 		return CWSettings{}

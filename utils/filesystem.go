@@ -86,7 +86,7 @@ func DeleteTempFile(tempFilePath string) (boolean bool, err error) {
 	return true, nil
 }
 
-// PingHealth - pings environment api over a 15 second to check if containers started
+// PingHealth - pings environment api every 15 seconds to check if containers started
 func PingHealth(healthEndpoint string) bool {
 	var started = false
 	fmt.Println("Waiting for Codewind to start")
@@ -188,7 +188,7 @@ func UnZip(zipFileName, fileDestination string) {
 
 // PathExists returns whether a path exists on the local file system.
 func PathExists(path string) bool {
-	if _,err := os.Stat(path); err == nil {
+	if _, err := os.Stat(path); err == nil {
 		return true
 	}
 	return false
