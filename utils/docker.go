@@ -28,8 +28,8 @@ import (
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
 	"github.com/eclipse/codewind-installer/errors"
+	"github.com/eclipse/codewind-installer/utils"
 	"github.com/moby/moby/client"
-	"github.ibm.com/codewind-installer/utils"
 )
 
 // docker-compose yaml data
