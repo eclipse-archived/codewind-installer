@@ -62,13 +62,11 @@ func StatusCommand(c *cli.Context) {
 			type status struct {
 				Status   string   `json:"status"`
 				Versions []string `json:"installed-versions"`
-				Started  []string `json:"started"`
 			}
 
 			resp := &status{
 				Status:   "stopped",
 				Versions: imageTagArr,
-				Started:  []string{},
 			}
 
 			output, _ := json.Marshal(resp)
