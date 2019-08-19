@@ -13,6 +13,8 @@ package utils
 
 import (
 	"archive/zip"
+	"archive/tar"
+	"compress/gzip"
 	"context"
 	"fmt"
 	"io"
@@ -30,17 +32,16 @@ import (
 )
 
 // CreateTempFile in the same directory as the binary for docker compose
-func CreateTempFile(tempFilePath string) bool {
-
-	var _, err = os.Stat(tempFilePath)
+func CreateTempFile(filePath string) bool {
+	var _, err = os.Stat(filePath)
 
 	// create file if not exists
 	if os.IsNotExist(err) {
-		var file, err = os.Create(tempFilePath)
+		var file, err = os.Create(filePath)
 		errors.CheckErr(err, 201, "")
 		defer file.Close()
 
-		fmt.Println("==> created file", tempFilePath)
+		fmt.Println("==> created file", filePath)
 		return true
 	}
 	return false
@@ -61,7 +62,7 @@ func WriteToComposeFile(tempFilePath string, debug bool) bool {
 	errors.CheckErr(err, 203, "")
 
 	if debug == true {
-		fmt.Printf("==> "+tempFilePath+" structure is: \n%s\n\n", string(marshalledData))
+		fmt.Printf("==> %s structure is: \n%s\n\n", tempFilePath, string(marshalledData))
 	} else {
 		fmt.Println("==> environment structure written to " + tempFilePath)
 	}
@@ -72,17 +73,16 @@ func WriteToComposeFile(tempFilePath string, debug bool) bool {
 }
 
 // DeleteTempFile once the the Codewind environment has been created
-func DeleteTempFile(tempFilePath string) (boolean bool, err error) {
-
-	var _, file = os.Stat(tempFilePath)
+func DeleteTempFile(filePath string) (bool, error) {
+	var _, file = os.Stat(filePath)
 
 	if os.IsNotExist(file) {
 		errors.CheckErr(file, 206, "No files to delete")
 		return false, file
 	}
 
-	os.Remove(tempFilePath)
-	fmt.Println("==> finished deleting file " + tempFilePath)
+	os.Remove(filePath)
+	// fmt.Printf("==> Deleted file: %s\n", filePath)
 	return true, nil
 }
 
@@ -112,64 +112,72 @@ func PingHealth(healthEndpoint string) bool {
 	return started
 }
 
-//GetZipURL from github api /repos/:owner/:repo/:archive_format/:ref
-func GetZipURL(owner, repo, branch string) string {
+// GetZipURL from github api /repos/:owner/:repo/:archive_format/:ref
+func GetZipURL(owner, repo, branch string) (string, error) {
 	client := github.NewClient(nil)
 
 	opt := &github.RepositoryContentGetOptions{Ref: branch}
 
 	URL, _, err := client.Repositories.GetArchiveLink(context.Background(), owner, repo, "zipball", opt)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 	url := URL.String()
-	fmt.Println("Repository archive link - ", URL)
-	return url
+	return url, nil
 }
 
-//DownloadFile into /temp dir using the git archive link
-func DownloadFile(zipFileName, url string) error {
-
+// DownloadFile from URL to file destination
+func DownloadFile(URL, destination string) error {
 	// Get the data
-	resp, err := http.Get(url)
-	errors.CheckErr(err, 400, "")
+	resp, err := http.Get(URL)
+	if err != nil {
+		return err
+	}
 	defer resp.Body.Close()
 
 	// Create the file
-	file, err := os.Create(zipFileName)
-	errors.CheckErr(err, 401, "")
+	file, err := os.Create(destination)
+	if err != nil {
+		return err
+	}
 	defer file.Close()
 
 	// Write body to file
 	_, err = io.Copy(file, resp.Body)
-	fmt.Println(zipFileName)
+	fmt.Printf("Downloaded file from '%s' to '%s'\n", URL, destination)
 
 	return err
 }
 
-//UnZip downloaded file
-func UnZip(zipFileName, fileDestination string) {
-	zipReader, _ := zip.OpenReader(zipFileName)
+// UnZip unzips a file to a destination
+func UnZip(filePath, destination string) error {
+	zipReader, _ := zip.OpenReader(filePath)
+	if zipReader == nil {
+		return fmt.Errorf("file '%s' is empty", filePath)
+	}
 
-	var extractedFilePath = ""
-	for _, file := range zipReader.Reader.File {
+	var extractedFilePath string
+	zipFiles := zipReader.Reader.File
+	for _, file := range zipFiles {
 
 		zippedFile, err := file.Open()
 		errors.CheckErr(err, 402, "")
 		defer zippedFile.Close()
 
 		fileNameArr := strings.Split(file.Name, "/")
-		extractedFilePath = fileDestination
+		extractedFilePath = destination
 
 		for i := 1; i < len(fileNameArr); i++ {
 			extractedFilePath = filepath.Join(extractedFilePath, fileNameArr[i])
 		}
 
 		if file.FileInfo().IsDir() {
-			log.Println("Directory Created:", extractedFilePath)
+			// For debug:
+			// fmt.Println("Directory Created:", extractedFilePath)
 			os.MkdirAll(extractedFilePath, file.Mode())
 		} else {
-			log.Println("File extracted:", file.Name)
+			// For debug:
+			// fmt.Println("File extracted:", file.Name)
 
 			outputFile, err := os.OpenFile(
 				extractedFilePath,
@@ -183,5 +191,69 @@ func UnZip(zipFileName, fileDestination string) {
 			errors.CheckErr(err, 404, "")
 		}
 	}
-	log.Println("File extracted:", zipFileName)
+	fmt.Printf("Extracted file from '%s' to '%s'\n", filePath, destination)
+	return nil
+}
+
+// UnTar unpacks a tar.gz file to a destination
+func UnTar(pathToTarFile, destination string) error {
+	fileReader, err := readFile(pathToTarFile)
+	if err != nil {
+		return err
+	}
+	defer fileReader.Close()
+	gzipReader, err := gzip.NewReader(fileReader)
+	if err != nil {
+		return err
+	}
+	defer gzipReader.Close()
+	tarReader := tar.NewReader(gzipReader)
+	for {
+		header, err := tarReader.Next()
+		if err == io.EOF {
+			// end of tar archive
+			break
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+		target := filepath.Join(destination, header.Name)
+		switch header.Typeflag {
+		case tar.TypeDir:
+			if err := os.MkdirAll(target, os.FileMode(header.Mode)); err != nil {
+				log.Fatal(err)
+			}
+		case tar.TypeReg:
+			fileToOverwrite, err := overwriteFile(target)
+			defer fileToOverwrite.Close()
+			if err != nil {
+				log.Fatal(err)
+			}
+			if _, err := io.Copy(fileToOverwrite, tarReader); err != nil {
+				log.Fatal(err)
+			}
+		default:
+			log.Printf("Can't extract to %s: unknown typeflag %c\n", target, header.Typeflag)
+		}
+	}
+	return nil
+}
+
+func overwriteFile(filePath string) (*os.File, error) {
+	file, err := os.OpenFile(filePath, os.O_RDWR|os.O_TRUNC, 0777) // gives everyone rwx permission
+	if err != nil {
+		file, err = os.Create(filePath)
+		if err != nil {
+			return file, err
+		}
+	}
+	return file, nil
+}
+
+func readFile(filePath string) (*os.File, error) {
+	file, err := os.OpenFile(filePath, os.O_RDONLY, 0444) // gives everyone read permission
+	if err != nil {
+		return file, err
+	}
+	return file, nil
 }

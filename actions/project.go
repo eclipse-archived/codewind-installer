@@ -17,9 +17,6 @@ import (
 	"log"
 	"os"
 	"path"
-	"runtime"
-	"strings"
-	"time"
 
 	"github.com/eclipse/codewind-installer/errors"
 	"github.com/eclipse/codewind-installer/utils"
@@ -49,43 +46,12 @@ func DownloadTemplate(c *cli.Context) {
 		log.Fatal("destination not set")
 	}
 
-	repoURL := c.String("r")
+	url := c.String("u")
 
-	// expecting string in format 'https://github.com/<owner>/<repo>'
-	if strings.HasPrefix(repoURL, "https://") {
-		repoURL = strings.TrimPrefix(repoURL, "https://")
-	}
-
-	repoArray := strings.Split(repoURL, "/")
-	owner := repoArray[1]
-	repo := repoArray[2]
-	branch := "master"
-
-	var tempPath = ""
-	const GOOS string = runtime.GOOS
-	if GOOS == "windows" {
-		tempPath = os.Getenv("TEMP") + "\\"
-	} else {
-		tempPath = "/tmp/"
-	}
-
-	zipURL := utils.GetZipURL(owner, repo, branch)
-
-	time := time.Now().Format(time.RFC3339)
-	time = strings.Replace(time, ":", "-", -1) // ":" is illegal char in windows
-	tempName := tempPath + branch + "_" + time
-	zipFileName := tempName + ".zip"
-
-	// download files in zip format
-	if err := utils.DownloadFile(zipFileName, zipURL); err != nil {
+	err := utils.DownloadFromURLThenExtract(url, destination)
+	if err != nil {
 		log.Fatal(err)
 	}
-
-	// unzip into /tmp dir
-	utils.UnZip(zipFileName, destination)
-
-	//delete zip file
-	utils.DeleteTempFile(zipFileName)
 }
 
 // ValidateProject returns the language and buildType for a project at given filesystem path,
