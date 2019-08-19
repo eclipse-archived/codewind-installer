@@ -358,25 +358,8 @@ func GetImageTag() []string {
 		}
 	}
 
-	//fmt.Println("FULL tag array = ", tagArr)
-
-	// Use map to record duplicates if found
-	encountered := map[string]bool{}
-	result := []string{}
-
-	for element := range tagArr {
-		if encountered[tagArr[element]] == true {
-			// Don't add duplicate
-		} else {
-			// Record said element as an encountered
-			encountered[tagArr[element]] = true
-			// Append to the new result slice
-			result = append(result, tagArr[element])
-		}
-	}
-
-	//fmt.Println("refactored result =  ", result)
-	return result
+	tagArr = RemoveArrayDuplicate(tagArr)
+	return tagArr
 }
 
 // IsTCPPortAvailable checks to find the next available port and returns it
@@ -394,4 +377,26 @@ func IsTCPPortAvailable(minTCPPort int, maxTCPPort int) (bool, string) {
 		}
 	}
 	return false, ""
+// GetContainerTag of the Codewind version(s) currently running
+func GetContainerTag() []string {
+	containerArr := [2]string{}
+	containerArr[0] = "codewind-pfe"
+	containerArr[1] = "codewind-performance"
+	tagArr := []string{}
+
+	containers := GetContainerList()
+
+	for _, container := range containers {
+		for _, key := range containerArr {
+			if strings.HasPrefix(container.Image, key) {
+				fmt.Println(container.Image)
+				tag := strings.Split(container.Image, ":")[1]
+				fmt.Println("container tag: ", tag)
+				tagArr = append(tagArr, tag)
+			}
+		}
+	}
+
+	tagArr = RemoveArrayDuplicate(tagArr)
+	return tagArr
 }

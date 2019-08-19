@@ -35,13 +35,13 @@ func StatusCommand(c *cli.Context) {
 				Started  []string `json:"started"`
 			}
 
-			tagArr := utils.GetImageTag()
-			startedArr := utils.GetStartedTag()
+			imageTagArr := utils.GetImageTag()
+			containerTagArr := utils.GetContainerTag()
 			resp := &status{
 				Status:   "started",
 				URL:      "http://" + hostname + ":" + port,
-				Versions: tagArr,
-				Started:  startedArr,
+				Versions: imageTagArr,
+				Started:  containerTagArr,
 			}
 
 			//output, _ := json.Marshal(map[string]string{"status": "started", "url": "http://" + hostname + ":" + port})
