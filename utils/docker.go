@@ -328,10 +328,10 @@ func GetPFEHostAndPort() (string, string) {
 
 // GetImageTag of Codewind images
 func GetImageTag() []string {
-	keyArr := [3]string{}
-	keyArr[0] = "eclipse/codewind-pfe"
-	keyArr[1] = "eclipse/codewind-performance"
-	keyArr[2] = "eclipse/codewind-initialize"
+	imageArr := [3]string{}
+	imageArr[0] = "eclipse/codewind-pfe"
+	imageArr[1] = "eclipse/codewind-performance"
+	imageArr[2] = "eclipse/codewind-initialize"
 	tagArr := []string{}
 
 	images := utils.GetImageList()
@@ -339,7 +339,7 @@ func GetImageTag() []string {
 	for _, image := range images {
 		imageRepo := strings.Join(image.RepoDigests, " ")
 		imageTags := strings.Join(image.RepoTags, " ")
-		for _, key := range keyArr {
+		for _, key := range imageArr {
 			if strings.HasPrefix(imageRepo, key) || strings.HasPrefix(imageTags, key) {
 				if len(image.RepoTags) > 0 {
 					tag := image.RepoTags[0]
