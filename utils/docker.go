@@ -28,7 +28,6 @@ import (
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
 	"github.com/eclipse/codewind-installer/errors"
-	"github.com/eclipse/codewind-installer/utils"
 	"github.com/moby/moby/client"
 )
 
@@ -334,7 +333,7 @@ func GetImageTag() []string {
 	imageArr[2] = "eclipse/codewind-initialize"
 	tagArr := []string{}
 
-	images := utils.GetImageList()
+	images := GetImageList()
 
 	for _, image := range images {
 		imageRepo := strings.Join(image.RepoDigests, " ")
