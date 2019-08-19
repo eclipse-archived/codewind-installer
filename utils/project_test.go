@@ -17,7 +17,6 @@ import (
 	"log"
 	"os"
 	"testing"
-
 	"github.com/stretchr/testify/assert"
 )
 
@@ -29,22 +28,22 @@ func TestDetermineProjectInfo(t *testing.T) {
 		wantedErr     error
 	}{
 		"success case: liberty project": {
-			in:            "../resources/liberty-test",
+			in:            "../resources/test/liberty-project",
 			wantLanguage:  "java",
 			wantBuildType: "liberty",
 		},
 		"success case: spring project": {
-			in:            "../resources/spring-test",
+			in:            "../resources/test/spring-project",
 			wantLanguage:  "java",
 			wantBuildType: "spring",
 		},
 		"success case: node.js project": {
-			in:            "../resources/node-test",
+			in:            "../resources/test/node-project",
 			wantLanguage:  "node",
 			wantBuildType: "node",
 		},
 		"success case: swift project": {
-			in:            "../resources/swift-test",
+			in:            "../resources/test/swift-project",
 			wantLanguage:  "swift",
 			wantBuildType: "swift",
 		},
@@ -52,6 +51,7 @@ func TestDetermineProjectInfo(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			gotLanguage, gotBuildType := DetermineProjectInfo(test.in)
+
 			assert.Equal(t, test.wantLanguage, gotLanguage)
 			assert.Equal(t, test.wantBuildType, gotBuildType)
 		})
@@ -63,12 +63,12 @@ func TestWriteNewCwSettings(t *testing.T) {
 	tests := map[string]struct {
 		inProjectPath   string
 		inBuildType     string
-		defaultSettings CWSettings
+		wantCwSettings CWSettings
 	}{
 		"success case: node project": {
-			inProjectPath: "../resources/node-test/.cw-settings",
+			inProjectPath: "../resources/test/node-project/.cw-settings",
 			inBuildType:   "nodejs",
-			defaultSettings: CWSettings{
+			wantCwSettings: CWSettings{
 				ContextRoot:       "",
 				InternalPort:      "",
 				HealthCheck:       "",
@@ -77,9 +77,9 @@ func TestWriteNewCwSettings(t *testing.T) {
 			},
 		},
 		"success case: liberty project": {
-			inProjectPath: "../resources/liberty-test/.cw-settings",
+			inProjectPath: "../resources/test/liberty-project/.cw-settings",
 			inBuildType:   "liberty",
-			defaultSettings: CWSettings{
+			wantCwSettings: CWSettings{
 				ContextRoot:       "",
 				InternalPort:      "",
 				HealthCheck:       "",
@@ -90,9 +90,9 @@ func TestWriteNewCwSettings(t *testing.T) {
 			},
 		},
 		"success case: spring project": {
-			inProjectPath: "../resources/spring-test/.cw-settings",
+			inProjectPath: "../resources/test/spring-project/.cw-settings",
 			inBuildType:   "spring",
-			defaultSettings: CWSettings{
+			wantCwSettings: CWSettings{
 				ContextRoot:       "",
 				InternalPort:      "",
 				HealthCheck:       "",
@@ -103,9 +103,9 @@ func TestWriteNewCwSettings(t *testing.T) {
 			},
 		},
 		"success case: swift project": {
-			inProjectPath: "../resources/swift-test/.cw-settings",
+			inProjectPath: "../resources/test/swift-project/.cw-settings",
 			inBuildType:   "swift",
-			defaultSettings: CWSettings{
+			wantCwSettings: CWSettings{
 				ContextRoot:  "",
 				InternalPort: "",
 				HealthCheck:  "",
@@ -116,9 +116,11 @@ func TestWriteNewCwSettings(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			WriteNewCwSettings(test.inProjectPath, test.inBuildType)
+
 			cwSettings := readCwSettings(test.inProjectPath)
-			assert.Equal(t, test.defaultSettings, cwSettings)
-			deleteFile(test.inProjectPath)
+			assert.Equal(t, test.wantCwSettings, cwSettings)
+
+			os.Remove(test.inProjectPath)
 		})
 	}
 }
@@ -130,17 +132,6 @@ func readCwSettings(path string) CWSettings {
 		return CWSettings{}
 	}
 	var cwSettings CWSettings
-	err = json.Unmarshal(cwSettingsFile, &cwSettings)
-	if err != nil {
-		log.Println(err)
-		return CWSettings{}
-	}
+	json.Unmarshal(cwSettingsFile, &cwSettings)
 	return cwSettings
-}
-
-func deleteFile(path string) {
-	var err = os.Remove(path)
-	if err != nil {
-		log.Println(err)
-	}
 }
