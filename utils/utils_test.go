@@ -14,6 +14,7 @@ package utils
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -106,4 +107,15 @@ func TestDeleteTempFileFail(t *testing.T) {
 	errString := "stat TestFile.yaml: no such file or directory"
 	_, err := DeleteTempFile("TestFile.yaml")
 	assert.EqualError(t, err, errString)
+}
+
+func TestRemoveArrayDuplicate(t *testing.T) {
+	dupArr := []string{"test", "test", "test"}
+	result := RemoveArrayDuplicate(dupArr)
+	fmt.Println(result)
+
+	if len(result) != 1 {
+		log.Fatal("Failed to delete duplicate array index")
+	}
+
 }
