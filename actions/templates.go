@@ -16,6 +16,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/eclipse/codewind-installer/config"
 )
 
 // Template represents a template.
@@ -41,7 +43,7 @@ func ListTemplates() {
 // then gets the template descriptions from those URLs,
 // then formats the descriptions into template objects.
 func GetTemplates() ([]Template, error) {
-	resp, err := http.Get("http://localhost:9090/api/v1/templates")
+	resp, err := http.Get(config.PFEApiRoute + "templates")
 	if err != nil {
 		return nil, err
 	}
