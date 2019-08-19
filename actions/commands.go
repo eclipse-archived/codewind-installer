@@ -135,6 +135,22 @@ func Commands() {
 				return nil
 			},
 		},
+
+		{
+			Name:    "templates",
+			Usage:   "Manage project templates",
+			Subcommands: []cli.Command{
+				{
+					Name:  "list",
+					Aliases: []string{"ls"},
+					Usage: "list available template repositories",
+					Action: func(c *cli.Context) error {
+						ListTemplates()
+						return nil
+					},
+				},
+			},
+		},
 	}
 
 	// Start application
