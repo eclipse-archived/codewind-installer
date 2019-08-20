@@ -28,8 +28,8 @@ func StatusCommand(c *cli.Context) {
 		hostname, port := utils.GetPFEHostAndPort()
 		if jsonOutput {
 
-			imageTagArr := utils.GetImageTag()
-			containerTagArr := utils.GetContainerTag()
+			imageTagArr := utils.GetImageTags()
+			containerTagArr := utils.GetContainerTags()
 
 			type status struct {
 				Status   string   `json:"status"`
@@ -57,7 +57,7 @@ func StatusCommand(c *cli.Context) {
 		// INSTALLED BUT NOT STARTED
 		if jsonOutput {
 
-			imageTagArr := utils.GetImageTag()
+			imageTagArr := utils.GetImageTags()
 
 			type status struct {
 				Status   string   `json:"status"`

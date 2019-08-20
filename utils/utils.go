@@ -11,21 +11,22 @@
 
 package utils
 
-// RemoveArrayDuplicate elements
-func RemoveArrayDuplicate(tagArr []string) []string {
-	// Use map to record duplicates if found
-	encountered := map[string]bool{}
+// RemoveDuplicateEntries elements
+func RemoveDuplicateEntries(inputArr []string) []string {
+
+	encounteredElement := map[string]bool{}
 	result := []string{}
 
-	for element := range tagArr {
-		if encountered[tagArr[element]] == true {
-			// Don't add duplicate
-		} else {
-			// Record said element as an encountered
-			encountered[tagArr[element]] = true
-			// Append to the new result slice
-			result = append(result, tagArr[element])
+	// Populate map if element != ""
+	for _, element := range inputArr {
+		if element != "" {
+			encounteredElement[element] = true
 		}
+	}
+
+	// Convert map => slice
+	for key := range encounteredElement {
+		result = append(result, key)
 	}
 
 	return result

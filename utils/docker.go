@@ -325,8 +325,8 @@ func GetPFEHostAndPort() (string, string) {
 	return "", ""
 }
 
-// GetImageTag of Codewind images
-func GetImageTag() []string {
+// GetImageTags of Codewind images
+func GetImageTags() []string {
 	imageArr := [3]string{}
 	imageArr[0] = "eclipse/codewind-pfe"
 	imageArr[1] = "eclipse/codewind-performance"
@@ -352,7 +352,7 @@ func GetImageTag() []string {
 		}
 	}
 
-	tagArr = RemoveArrayDuplicate(tagArr)
+	tagArr = RemoveDuplicateEntries(tagArr)
 	return tagArr
 }
 
@@ -373,8 +373,8 @@ func IsTCPPortAvailable(minTCPPort int, maxTCPPort int) (bool, string) {
 	return false, ""
 }
 
-// GetContainerTag of the Codewind version(s) currently running
-func GetContainerTag() []string {
+// GetContainerTags of the Codewind version(s) currently running
+func GetContainerTags() []string {
 	containerArr := [2]string{}
 	containerArr[0] = "codewind-pfe"
 	containerArr[1] = "codewind-performance"
@@ -391,6 +391,6 @@ func GetContainerTag() []string {
 		}
 	}
 
-	tagArr = RemoveArrayDuplicate(tagArr)
+	tagArr = RemoveDuplicateEntries(tagArr)
 	return tagArr
 }
