@@ -14,7 +14,6 @@ package utils
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -109,13 +108,23 @@ func TestDeleteTempFileFail(t *testing.T) {
 	assert.EqualError(t, err, errString)
 }
 
-func TestRemoveArrayDuplicate(t *testing.T) {
+func TestRemoveDuplicateEntries(t *testing.T) {
 	dupArr := []string{"test", "test", "test"}
-	result := RemoveArrayDuplicate(dupArr)
-	fmt.Println(result)
+	result := RemoveDuplicateEntries(dupArr)
 
 	if len(result) != 1 {
-		log.Fatal("Failed to delete duplicate array index")
+		log.Fatal("Test 1: Failed to delete duplicate array index")
 	}
 
+	dupArr = []string{"", "test", "test"}
+	result = RemoveDuplicateEntries(dupArr)
+	if len(result) != 1 {
+		log.Fatal("Test 2: Failed to delete duplicate array index")
+	}
+
+	dupArr = []string{"", "", ""}
+	result = RemoveDuplicateEntries(dupArr)
+	if len(result) != 0 {
+		log.Fatal("Test 3: Failed to identify empty array values")
+	}
 }
