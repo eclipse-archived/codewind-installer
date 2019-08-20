@@ -23,7 +23,7 @@ func TestGetTemplates(t *testing.T) {
 			got, err := GetTemplates()
 			assert.IsType(t, test.wantedType, got)
 			assert.Equal(t, test.wantedLength, len(got))
-			assert.IsType(t, test.wantedErr, err)
+			assert.Equal(t, test.wantedErr, err)
 		})
 	}
 }
