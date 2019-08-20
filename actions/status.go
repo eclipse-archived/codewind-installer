@@ -12,20 +12,40 @@
 package actions
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
-	"encoding/json"
-	"github.com/urfave/cli"
+
 	"github.com/eclipse/codewind-installer/utils"
+	"github.com/urfave/cli"
 )
 
 //StatusCommand to show the status
 func StatusCommand(c *cli.Context) {
 	jsonOutput := c.Bool("json")
 	if utils.CheckContainerStatus() {
+		// STARTED
 		hostname, port := utils.GetPFEHostAndPort()
 		if jsonOutput {
-			output, _ := json.Marshal(map[string]string{"status": "started", "url": "http://"+ hostname + ":" + port})
+
+			imageTagArr := utils.GetImageTags()
+			containerTagArr := utils.GetContainerTags()
+
+			type status struct {
+				Status   string   `json:"status"`
+				URL      string   `json:"url"`
+				Versions []string `json:"installed-versions"`
+				Started  []string `json:"started"`
+			}
+
+			resp := &status{
+				Status:   "started",
+				URL:      "http://" + hostname + ":" + port,
+				Versions: imageTagArr,
+				Started:  containerTagArr,
+			}
+
+			output, _ := json.Marshal(resp)
 			fmt.Println(string(output))
 		} else {
 			fmt.Println("Codewind is installed and running on http://" + hostname + ":" + port)
@@ -34,14 +54,29 @@ func StatusCommand(c *cli.Context) {
 	}
 
 	if utils.CheckImageStatus() {
+		// INSTALLED BUT NOT STARTED
 		if jsonOutput {
-			output, _ := json.Marshal(map[string]string{"status": "stopped"})
+
+			imageTagArr := utils.GetImageTags()
+
+			type status struct {
+				Status   string   `json:"status"`
+				Versions []string `json:"installed-versions"`
+			}
+
+			resp := &status{
+				Status:   "stopped",
+				Versions: imageTagArr,
+			}
+
+			output, _ := json.Marshal(resp)
 			fmt.Println(string(output))
-	  } else {
+		} else {
 			fmt.Println("Codewind is installed but not running")
 		}
 		os.Exit(0)
 	} else {
+		// NOT INSTALLED
 		if jsonOutput {
 			output, _ := json.Marshal(map[string]string{"status": "uninstalled"})
 			fmt.Println(string(output))

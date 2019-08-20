@@ -107,3 +107,24 @@ func TestDeleteTempFileFail(t *testing.T) {
 	_, err := DeleteTempFile("TestFile.yaml")
 	assert.EqualError(t, err, errString)
 }
+
+func TestRemoveDuplicateEntries(t *testing.T) {
+	dupArr := []string{"test", "test", "test"}
+	result := RemoveDuplicateEntries(dupArr)
+
+	if len(result) != 1 {
+		log.Fatal("Test 1: Failed to delete duplicate array index")
+	}
+
+	dupArr = []string{"", "test", "test"}
+	result = RemoveDuplicateEntries(dupArr)
+	if len(result) != 1 {
+		log.Fatal("Test 2: Failed to delete duplicate array index")
+	}
+
+	dupArr = []string{"", "", ""}
+	result = RemoveDuplicateEntries(dupArr)
+	if len(result) != 0 {
+		log.Fatal("Test 3: Failed to identify empty array values")
+	}
+}

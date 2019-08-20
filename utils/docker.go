@@ -124,7 +124,7 @@ func DockerCompose(tag string) {
 	os.Setenv("HOST_MAVEN_OPTS", os.Getenv("MAVEN_OPTS"))
 	fmt.Printf("Attempting to find available port\n")
 	portAvailable, port := IsTCPPortAvailable(minTCPPort, maxTCPPort)
-	if (!portAvailable) {
+	if !portAvailable {
 		fmt.Printf("No available external ports in range, will default to Docker-assigned port")
 	}
 	os.Setenv("PFE_EXTERNAL_PORT", port)
@@ -322,7 +322,38 @@ func GetPFEHostAndPort() (string, string) {
 			}
 		}
 	}
-	return "",""
+	return "", ""
+}
+
+// GetImageTags of Codewind images
+func GetImageTags() []string {
+	imageArr := [3]string{}
+	imageArr[0] = "eclipse/codewind-pfe"
+	imageArr[1] = "eclipse/codewind-performance"
+	imageArr[2] = "eclipse/codewind-initialize"
+	tagArr := []string{}
+
+	images := GetImageList()
+
+	for _, image := range images {
+		imageRepo := strings.Join(image.RepoDigests, " ")
+		imageTags := strings.Join(image.RepoTags, " ")
+		for _, key := range imageArr {
+			if strings.HasPrefix(imageRepo, key) || strings.HasPrefix(imageTags, key) {
+				if len(image.RepoTags) > 0 {
+					tag := image.RepoTags[0]
+					tag = strings.Split(tag, ":")[1]
+					tagArr = append(tagArr, tag)
+				} else {
+					fmt.Println("No tag available. Defaulting to ''.")
+					tagArr = append(tagArr, "")
+				}
+			}
+		}
+	}
+
+	tagArr = RemoveDuplicateEntries(tagArr)
+	return tagArr
 }
 
 // IsTCPPortAvailable checks to find the next available port and returns it
@@ -340,4 +371,26 @@ func IsTCPPortAvailable(minTCPPort int, maxTCPPort int) (bool, string) {
 		}
 	}
 	return false, ""
+}
+
+// GetContainerTags of the Codewind version(s) currently running
+func GetContainerTags() []string {
+	containerArr := [2]string{}
+	containerArr[0] = "codewind-pfe"
+	containerArr[1] = "codewind-performance"
+	tagArr := []string{}
+
+	containers := GetContainerList()
+
+	for _, container := range containers {
+		for _, key := range containerArr {
+			if strings.HasPrefix(container.Image, key) {
+				tag := strings.Split(container.Image, ":")[1]
+				tagArr = append(tagArr, tag)
+			}
+		}
+	}
+
+	tagArr = RemoveDuplicateEntries(tagArr)
+	return tagArr
 }
