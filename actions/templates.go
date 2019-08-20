@@ -20,7 +20,7 @@ import (
 	"github.com/eclipse/codewind-installer/config"
 )
 
-// Template represents a template.
+// Template represents a project template.
 type Template struct {
 	Label       string `json:"label"`
 	Description string `json:"description"`
@@ -29,7 +29,7 @@ type Template struct {
 	ProjectType string `json:"projectType"`
 }
 
-// ListTemplates lists all templates Codewind is aware of.
+// ListTemplates lists all project templates Codewind is aware of.
 func ListTemplates() {
 	templates, err := GetTemplates()
 	if err != nil {
