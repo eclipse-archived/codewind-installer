@@ -149,6 +149,21 @@ func Commands() {
 						return nil
 					},
 				},
+				{
+					Name:  "styles",
+					Usage: "list available template styles",
+					Subcommands: []cli.Command{
+						{
+							Name:  "list",
+							Aliases: []string{"ls"},
+							Usage: "list available template styles",
+							Action: func(c *cli.Context) error {
+								ListTemplateStyles()
+								return nil
+							},
+						},
+					},
+				},
 			},
 		},
 	}

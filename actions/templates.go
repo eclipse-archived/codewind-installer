@@ -39,6 +39,17 @@ func ListTemplates() {
 	PrettyPrintJSON(templates)
 }
 
+
+// ListTemplateStyles lists all template styles Codewind of which is aware.
+func ListTemplateStyles() {
+	styles, err := GetTemplateStyles()
+	if err != nil {
+		fmt.Printf("Error getting template styles: %q", err)
+		return
+	}
+	PrettyPrintJSON(styles)
+}
+
 // GetTemplates gets all project templates from PFE's REST API
 func GetTemplates() ([]Template, error) {
 	resp, err := http.Get(config.PFEApiRoute + "templates")
@@ -57,6 +68,26 @@ func GetTemplates() ([]Template, error) {
 	json.Unmarshal(byteArray, &templates)
 
 	return templates, nil
+}
+
+// GetTemplateStyles gets all template styles from PFE's REST API
+func GetTemplateStyles() ([]string, error) {
+	resp, err := http.Get(config.PFEApiRoute + "templates/styles")
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	byteArray, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var styles []string
+	json.Unmarshal(byteArray, &styles)
+
+	return styles, nil
 }
 
 // PrettyPrintJSON prints JSON prettily.
