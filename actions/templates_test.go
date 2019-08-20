@@ -46,3 +46,25 @@ func TestGetTemplateStyles(t *testing.T) {
 		})
 	}
 }
+
+func TestGetTemplateRepos(t *testing.T) {
+	tests := map[string]struct {
+		wantedType   []TemplateRepo
+		wantedLength int
+		wantedErr    error
+	}{
+		"success case": {
+			wantedType:   []TemplateRepo{},
+			wantedLength: 1,
+			wantedErr:    nil,
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			got, err := GetTemplateRepos()
+			assert.IsType(t, test.wantedType, got)
+			assert.Equal(t, test.wantedLength, len(got))
+			assert.Equal(t, test.wantedErr, err)
+		})
+	}
+}

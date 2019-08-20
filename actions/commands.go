@@ -164,6 +164,21 @@ func Commands() {
 						},
 					},
 				},
+				{
+					Name:  "repos",
+					Usage: "list available template repos",
+					Subcommands: []cli.Command{
+						{
+							Name:  "list",
+							Aliases: []string{"ls"},
+							Usage: "list available template repos",
+							Action: func(c *cli.Context) error {
+								ListTemplateRepos()
+								return nil
+							},
+						},
+					},
+				},
 			},
 		},
 	}
