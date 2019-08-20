@@ -73,17 +73,11 @@ $ brew upgrade dep
 
 ## Bats-core testing
 
-1. Clone the `codewind-installer` repository.
-2. Use the `cd` command to go to the top level project directory.
-3. Ensure your system environment is clean by having no Codewind images installed or containers running.
-4. To run the tests, enter the `bats integration.bats` command in the command line window and wait for the tests to finish.
-
-## Contributing
-
-Submit issues and contributions:
-
-1. [Submitting issues](https://github.com/eclipse/codewind/issues)
-2. [Contributing](CONTRIBUTING.md)
+1. Set up your environment by installing bats-core as per the bats-core instructions found at <https://github.com/bats-core/bats-core>.
+2. Clone the `codewind-installer` repository.
+3. Use the `cd` command to go to the top level project directory.
+4. Ensure your system environment is clean by having no Codewind images installed or containers running.
+5. To run the tests, enter the `bats integration.bats` command in the command line window and wait for the tests to finish.
 
 ## CLI Commands
 
@@ -134,3 +128,10 @@ Submit issues and contributions:
 ### help
 
 `--help/-h` - Shows a list of commands or help for one command
+
+## Contributing
+
+Submit issues and contributions:
+
+1. [Submitting issues](https://github.com/eclipse/codewind/issues)
+2. [Contributing](CONTRIBUTING.md)
