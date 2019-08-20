@@ -39,8 +39,8 @@ func Commands() {
 			Usage: "Manage Codewind projects",
 			Flags: []cli.Flag{
 				cli.StringFlag{
-					Name:  "r",
-					Usage: "repository url",
+					Name:  "url, u",
+					Usage: "URL of project to download",
 				},
 			},
 			Action: func(c *cli.Context) error {
