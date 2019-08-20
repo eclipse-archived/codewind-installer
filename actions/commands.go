@@ -143,7 +143,7 @@ func Commands() {
 				{
 					Name:  "list",
 					Aliases: []string{"ls"},
-					Usage: "list available template repositories",
+					Usage: "list available templates",
 					Action: func(c *cli.Context) error {
 						ListTemplates()
 						return nil
