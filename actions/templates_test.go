@@ -12,7 +12,7 @@ func TestGetTemplates(t *testing.T) {
 		wantedLength int
 		wantedErr    error
 	}{
-		"success case: no input": {
+		"success case": {
 			wantedType:   []Template{},
 			wantedLength: 8,
 			wantedErr:    nil,
