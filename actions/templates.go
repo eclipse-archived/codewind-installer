@@ -29,7 +29,7 @@ type Template struct {
 	ProjectType string `json:"projectType"`
 }
 
-// ListTemplates lists all project templates Codewind is aware of.
+// ListTemplates lists all project templates Codewind of which is aware.
 func ListTemplates() {
 	templates, err := GetTemplates()
 	if err != nil {
@@ -39,9 +39,7 @@ func ListTemplates() {
 	PrettyPrintJSON(templates)
 }
 
-// GetTemplates extracts URLs from the file at the provided path,
-// then gets the template descriptions from those URLs,
-// then formats the descriptions into template objects.
+// GetTemplates gets all project templates from PFE's REST API
 func GetTemplates() ([]Template, error) {
 	resp, err := http.Get(config.PFEApiRoute + "templates")
 	if err != nil {
