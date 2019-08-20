@@ -67,9 +67,16 @@ $ brew upgrade dep
 ## Unit testing
 
 1. Clone the `codewind-installer` repository.
-2. Use the `cd` command to go to the test directory. The `utils.go` tests are located in the `utils/utils_test.go` file.
+2. Use the `cd` command to go to a directory with test files in. For example, the `utils.go` tests are located in the `utils/utils_test.go` file.
 3. To run the tests, enter the `go test -v` command in the command line window and wait for the tests to finish.
 4. For any other unit tests, the same steps apply, but the directory might change.
+
+## Bats-core testing
+
+1. Clone the `codewind-installer` repository.
+2. Use the `cd` command to go to the top level project directory.
+3. Ensure your system environment is clean by having no Codewind images installed or containers running.
+4. To run the tests, enter the `bats integration.bats` command in the command line window and wait for the tests to finish.
 
 ## Contributing
 
@@ -77,3 +84,53 @@ Submit issues and contributions:
 
 1. [Submitting issues](https://github.com/eclipse/codewind/issues)
 2. [Contributing](CONTRIBUTING.md)
+
+## CLI Commands
+
+|Command         |Alias         |Usage                                                           |
+|----------------|--------------|----------------------------------------------------------------|
+|project         |-             |'Manage Codewind projects'                                      |
+|install         |`in`          |'Pull pfe, performance & initialize images from dockerhub'      |
+|start           |-             |'Start the Codewind containers'                                 |
+|status          |-             |'Print the installation status of Codewind'                     |
+|stop            |-             |'Stop the running Codewind containers'                          |
+|stop-all        |-             |'Stop all of the Codewind and project containers'               |
+|remove          |`rm`          |'Remove Codewind/Project docker images and the codewind network'|
+|help            |`h`           |'Shows a list of commands or help for one command'              |
+
+## CLI Command Options
+
+### project
+
+`--url/-u` - URL of project to download
+
+### install
+
+`--tag/t` - Dockerhub image tag (default: "latest")</br>
+`--json/-j` - Specify terminal output
+
+### start
+
+`--tag/-t` - Dockerhub image tag (default: "latest")</br>
+`--debug/-d` - Add debug output
+
+### status
+
+`--json/-j` - Specify terminal output
+
+### stop
+
+>**Note:** No additional flags
+
+### stop-all
+
+>**Note:** No additional flags
+
+### remove
+
+`--tag/-t` - Dockerhub image tag </br>
+>**Note:** Specifying no tag will remove all Codewind images installed on the host machine 
+
+### help
+
+`--help/-h` - Shows a list of commands or help for one command
