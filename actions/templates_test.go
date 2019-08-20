@@ -30,12 +30,12 @@ func TestGetTemplates(t *testing.T) {
 
 func TestGetTemplateStyles(t *testing.T) {
 	tests := map[string]struct {
-		want []string
-		wantedErr    error
+		want      []string
+		wantedErr error
 	}{
 		"success case": {
-			want:   []string{"Codewind"},
-			wantedErr:    nil,
+			want:      []string{"Codewind"},
+			wantedErr: nil,
 		},
 	}
 	for name, test := range tests {
