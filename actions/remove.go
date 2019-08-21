@@ -16,16 +16,27 @@ import (
 	"strings"
 
 	"github.com/eclipse/codewind-installer/utils"
+	"github.com/urfave/cli"
 )
 
 //RemoveCommand to remove all codewind and project images
-func RemoveCommand() {
+func RemoveCommand(c *cli.Context) {
+	tag := c.String("tag")
 	imageArr := [4]string{}
 	imageArr[0] = "eclipse/codewind-pfe"
 	imageArr[1] = "eclipse/codewind-performance"
 	imageArr[2] = "eclipse/codewind-initialize"
 	imageArr[3] = "cw-"
 	networkName := "codewind"
+
+	if tag != "" {
+		for i := 0; i < len(imageArr); i++ {
+			if i == 3 {
+				break
+			}
+			imageArr[i] = imageArr[i] + "-amd64:" + tag
+		}
+	}
 
 	images := utils.GetImageList()
 
