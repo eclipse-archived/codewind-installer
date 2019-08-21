@@ -83,14 +83,14 @@ $ brew upgrade dep
 
 |Command         |Alias         |Usage                                                           |
 |----------------|--------------|----------------------------------------------------------------|
-|project         |`-`           |'Manage Codewind projects'                                      |
+|project         |              |'Manage Codewind projects'                                      |
 |install         |`in`          |'Pull pfe, performance & initialize images from dockerhub'      |
-|start           |`-`           |'Start the Codewind containers'                                 |
-|status          |`-`           |'Print the installation status of Codewind'                     |
-|stop            |`-`           |'Stop the running Codewind containers'                          |
-|stop-all        |`-`           |'Stop all of the Codewind and project containers'               |
+|start           |              |'Start the Codewind containers'                                 |
+|status          |              |'Print the installation status of Codewind'                     |
+|stop            |              |'Stop the running Codewind containers'                          |
+|stop-all        |              |'Stop all of the Codewind and project containers'               |
 |remove          |`rm`          |'Remove Codewind/Project docker images and the codewind network'|
-|templates       |`-`           |'Manage project templates'                                      |
+|templates       |              |'Manage project templates'                                      |
 |help            |`h`           |'Shows a list of commands or help for one command'              |
 
 ## CLI Command Options
@@ -101,7 +101,7 @@ $ brew upgrade dep
 
 ## install
 
-`--tag/t <value>` - Dockerhub image tag (default: "latest")</br>
+`--tag/-t <value>` - Dockerhub image tag (default: "latest")</br>
 `--json/-j` - Specify terminal output
 
 ## start
