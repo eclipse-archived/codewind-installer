@@ -62,7 +62,7 @@ func ListTemplateStyles() {
 func ListTemplateRepos() {
 	repos, err := GetTemplateRepos()
 	if err != nil {
-		fmt.Printf("Error getting template repos: %q", err)
+		log.Printf("Error getting template repos: %q", err)
 		return
 	}
 	PrettyPrintJSON(repos)
