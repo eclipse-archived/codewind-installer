@@ -15,6 +15,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 
 	"github.com/eclipse/codewind-installer/config"
@@ -41,18 +42,17 @@ type (
 func ListTemplates() {
 	templates, err := GetTemplates()
 	if err != nil {
-		fmt.Printf("Error getting templates: %q", err)
+		log.Printf("Error getting templates: %q", err)
 		return
 	}
 	PrettyPrintJSON(templates)
 }
 
-
 // ListTemplateStyles lists all template styles of which Codewind is aware.
 func ListTemplateStyles() {
 	styles, err := GetTemplateStyles()
 	if err != nil {
-		fmt.Printf("Error getting template styles: %q", err)
+		log.Printf("Error getting template styles: %q", err)
 		return
 	}
 	PrettyPrintJSON(styles)
