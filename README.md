@@ -83,49 +83,58 @@ $ brew upgrade dep
 
 |Command         |Alias         |Usage                                                           |
 |----------------|--------------|----------------------------------------------------------------|
-|project         |-             |'Manage Codewind projects'                                      |
+|project         |`-`           |'Manage Codewind projects'                                      |
 |install         |`in`          |'Pull pfe, performance & initialize images from dockerhub'      |
-|start           |-             |'Start the Codewind containers'                                 |
-|status          |-             |'Print the installation status of Codewind'                     |
-|stop            |-             |'Stop the running Codewind containers'                          |
-|stop-all        |-             |'Stop all of the Codewind and project containers'               |
+|start           |`-`           |'Start the Codewind containers'                                 |
+|status          |`-`           |'Print the installation status of Codewind'                     |
+|stop            |`-`           |'Stop the running Codewind containers'                          |
+|stop-all        |`-`           |'Stop all of the Codewind and project containers'               |
 |remove          |`rm`          |'Remove Codewind/Project docker images and the codewind network'|
+|templates       |`-`           |'Manage project templates'                                      |
 |help            |`h`           |'Shows a list of commands or help for one command'              |
 
 ## CLI Command Options
 
-### project
+## project
 
-`--url/-u` - URL of project to download
+`--url/-u <value>` - URL of project to download
 
-### install
+## install
 
-`--tag/t` - Dockerhub image tag (default: "latest")</br>
+`--tag/t <value>` - Dockerhub image tag (default: "latest")</br>
 `--json/-j` - Specify terminal output
 
-### start
+## start
 
-`--tag/-t` - Dockerhub image tag (default: "latest")</br>
+`--tag/-t <value>` - Dockerhub image tag (default: "latest")</br>
 `--debug/-d` - Add debug output
 
-### status
+## status
 
 `--json/-j` - Specify terminal output
 
-### stop
+## stop
 
 >**Note:** No additional flags
 
-### stop-all
+## stop-all
 
 >**Note:** No additional flags
 
-### remove
+## remove
 
-`--tag/-t` - Dockerhub image tag </br>
->**Note:** Specifying no tag will remove all Codewind images installed on the host machine 
+`--tag/-t <value>` - Dockerhub image tag.</br>
+**Note:** Failing to specify a `--tag`, will remove all Codewind images on the host machine.
 
-### help
+## templates
+
+>**Note:** No additional flags
+
+Subcommands:</br>
+
+`list/ls` - Shows a list of commands or help for one command
+
+## help
 
 `--help/-h` - Shows a list of commands or help for one command
 
