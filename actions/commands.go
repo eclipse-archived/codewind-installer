@@ -27,7 +27,7 @@ const healthEndpoint = "/api/v1/environment"
 //Commands for the installer
 func Commands() {
 	app := cli.NewApp()
-	app.Name = "Codewind Installer"
+	app.Name = "codewind-installer"
 	app.Version = versionNum
 	app.Usage = "Start, Stop and Remove Codewind"
 
@@ -159,7 +159,7 @@ func Commands() {
 					Aliases: []string{"ls"},
 					Usage:   "list available templates",
 					Action: func(c *cli.Context) error {
-						ListTemplates()
+						ListTemplates(c)
 						return nil
 					},
 				},

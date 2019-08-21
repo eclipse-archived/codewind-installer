@@ -19,22 +19,45 @@ import (
 
 func TestGetTemplates(t *testing.T) {
 	tests := map[string]struct {
-		wantedType   []Template
-		wantedLength int
-		wantedErr    error
+		inProjectStyle string
+		inShowEnabledOnly string
+		wantedType     []Template
+		wantedLength   int
 	}{
-		"success case": {
+		"get templates of all styles": {
+			inProjectStyle: "",
+			inShowEnabledOnly: "",
+			wantedType:     []Template{},
+			wantedLength:   8,
+		},
+		"filter templates by known style": {
+			inProjectStyle: "Codewind",
 			wantedType:   []Template{},
 			wantedLength: 8,
-			wantedErr:    nil,
+		},
+		"filter templates by unknown style": {
+			inProjectStyle: "Appsody",
+			wantedType:   []Template{},
+			wantedLength: 0,
+		},
+		"filter templates by enabled templates": {
+			inShowEnabledOnly: "true",
+			wantedType:   []Template{},
+			wantedLength: 8,
+		},
+		"filter templates by enabled templates of unknown style": {
+			inProjectStyle: "Appsody",
+			inShowEnabledOnly: "false",
+			wantedType:     []Template{},
+			wantedLength:   0,
 		},
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := GetTemplates()
+			got, err := GetTemplates(test.inProjectStyle, test.inShowEnabledOnly)
 			assert.IsType(t, test.wantedType, got)
 			assert.Equal(t, test.wantedLength, len(got))
-			assert.Equal(t, test.wantedErr, err)
+			assert.Nil(t, err)
 		})
 	}
 }
