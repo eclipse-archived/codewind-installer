@@ -132,7 +132,7 @@ $ brew upgrade dep
 
 Subcommands:</br>
 
-`list/ls` - Shows a list of commands or help for one command
+`list/ls` - List available templates
 
 ## help
 
