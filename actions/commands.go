@@ -152,31 +152,17 @@ func Commands() {
 				{
 					Name:  "styles",
 					Usage: "list available template styles",
-					Subcommands: []cli.Command{
-						{
-							Name:  "list",
-							Aliases: []string{"ls"},
-							Usage: "list available template styles",
-							Action: func(c *cli.Context) error {
-								ListTemplateStyles()
-								return nil
-							},
-						},
+					Action: func(c *cli.Context) error {
+						ListTemplateStyles()
+						return nil
 					},
 				},
 				{
 					Name:  "repos",
 					Usage: "list available template repos",
-					Subcommands: []cli.Command{
-						{
-							Name:  "list",
-							Aliases: []string{"ls"},
-							Usage: "list available template repos",
-							Action: func(c *cli.Context) error {
-								ListTemplateRepos()
-								return nil
-							},
-						},
+					Action: func(c *cli.Context) error {
+						ListTemplateRepos()
+						return nil
 					},
 				},
 			},
