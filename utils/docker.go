@@ -345,7 +345,7 @@ func GetImageTags() []string {
 					tag = strings.Split(tag, ":")[1]
 					tagArr = append(tagArr, tag)
 				} else {
-					fmt.Println("No tag available. Defaulting to ''.")
+					log.Println("No tag available. Defaulting to ''")
 					tagArr = append(tagArr, "")
 				}
 			}
