@@ -39,7 +39,8 @@ type (
 	}
 )
 
-// ListTemplates lists all project templates of which Codewind is aware.
+// ListTemplates lists project templates of which Codewind is aware.
+// Filter them by providing flags
 func ListTemplates(c *cli.Context) {
 	templates, err := GetTemplates(
 		c.String("projectStyle"),
@@ -72,7 +73,8 @@ func ListTemplateRepos() {
 	PrettyPrintJSON(repos)
 }
 
-// GetTemplates gets project templates from PFE's REST API
+// GetTemplates gets project templates from PFE's REST API.
+// Filter them using the function arguments
 func GetTemplates(projectStyle string, showEnabledOnly string) ([]Template, error) {
 	req, err := http.NewRequest("GET", config.PFEApiRoute + "templates", nil)
 	if err != nil {
