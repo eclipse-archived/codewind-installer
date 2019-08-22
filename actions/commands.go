@@ -155,6 +155,22 @@ func Commands() {
 						return nil
 					},
 				},
+				{
+					Name:  "styles",
+					Usage: "list available template styles",
+					Action: func(c *cli.Context) error {
+						ListTemplateStyles()
+						return nil
+					},
+				},
+				{
+					Name:  "repos",
+					Usage: "list available template repos",
+					Action: func(c *cli.Context) error {
+						ListTemplateRepos()
+						return nil
+					},
+				},
 			},
 		},
 	}
