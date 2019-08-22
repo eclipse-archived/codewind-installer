@@ -83,7 +83,7 @@ spec:
                echo 'Starting bats tests '
 				sh '''
 				# install bats
-				wget -0 - https://github.com/bats-core/bats-core/blob/master/install.sh | sh
+				wget -O - https://github.com/bats-core/bats-core/blob/master/install.sh | sh
  				# run bats test file
 				bats integration.bats
 				'''
