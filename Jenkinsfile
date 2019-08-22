@@ -80,7 +80,7 @@ spec:
 
 		stage('Test') {
             steps {
-               echo 'Starting bats tests'
+               echo 'Starting bats tests '
 				sh '''
 				# install bats
 				wget -0 - https://github.com/bats-core/bats-core/blob/master/install.sh | sh
