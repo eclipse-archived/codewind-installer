@@ -82,6 +82,15 @@ spec:
         stage('Test') {
             steps {
                 echo 'Testing to be defined.'
+				sh '''
+				# install bats
+				sudo add-apt-repository ppa:duggan/bats
+				sudo apt-get update
+				sudo apt-get install bats
+
+				# run bats test file
+				bats integration.bats
+				'''
             }
         }
 
