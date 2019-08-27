@@ -157,7 +157,19 @@ func Commands() {
 				{
 					Name:    "list",
 					Aliases: []string{"ls"},
-					Usage:   "list available templates",
+					Usage: "List available templates",
+					Flags: []cli.Flag{
+						cli.StringFlag{
+							Name:  "projectStyle",
+							Value: "Codewind",
+							Usage: "Filter by project style",
+						},
+						cli.StringFlag{
+							Name:  "showEnabledOnly",
+							Value: "false",
+							Usage: "Filter by whether a template is enabled or not",
+						},
+					},
 					Action: func(c *cli.Context) error {
 						ListTemplates(c)
 						return nil
@@ -165,7 +177,7 @@ func Commands() {
 				},
 				{
 					Name:  "styles",
-					Usage: "list available template styles",
+					Usage: "List available template styles",
 					Action: func(c *cli.Context) error {
 						ListTemplateStyles()
 						return nil
@@ -173,7 +185,7 @@ func Commands() {
 				},
 				{
 					Name:  "repos",
-					Usage: "list available template repos",
+					Usage: "List available template repos",
 					Action: func(c *cli.Context) error {
 						ListTemplateRepos()
 						return nil
