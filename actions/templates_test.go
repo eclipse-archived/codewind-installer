@@ -17,6 +17,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var numCodewindTemplates int = 8
+var numAppsodyTemplates int = 8
+var numTemplates int = numCodewindTemplates + numAppsodyTemplates
+
 func TestGetTemplates(t *testing.T) {
 	tests := map[string]struct {
 		inProjectStyle string
@@ -28,25 +32,25 @@ func TestGetTemplates(t *testing.T) {
 			inProjectStyle: "",
 			inShowEnabledOnly: "",
 			wantedType:     []Template{},
-			wantedLength:   8,
+			wantedLength:   numTemplates,
 		},
 		"filter templates by known style": {
 			inProjectStyle: "Codewind",
 			wantedType:   []Template{},
-			wantedLength: 8,
+			wantedLength: numCodewindTemplates,
 		},
 		"filter templates by unknown style": {
-			inProjectStyle: "Appsody",
+			inProjectStyle: "unknownStyle",
 			wantedType:   []Template{},
 			wantedLength: 0,
 		},
 		"filter templates by enabled templates": {
 			inShowEnabledOnly: "true",
 			wantedType:   []Template{},
-			wantedLength: 8,
+			wantedLength: numTemplates,
 		},
 		"filter templates by enabled templates of unknown style": {
-			inProjectStyle: "Appsody",
+			inProjectStyle: "unknownStyle",
 			inShowEnabledOnly: "false",
 			wantedType:     []Template{},
 			wantedLength:   0,
@@ -68,7 +72,7 @@ func TestGetTemplateStyles(t *testing.T) {
 		wantedErr error
 	}{
 		"success case": {
-			want:      []string{"Codewind"},
+			want:      []string{"Appsody", "Codewind"},
 			wantedErr: nil,
 		},
 	}
