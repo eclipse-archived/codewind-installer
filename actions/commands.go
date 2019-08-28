@@ -100,7 +100,7 @@ func Commands() {
 					Aliases: []string{""},
 					Usage: "synchronize a project to codewind for building",
 					Action: func(c *cli.Context) error {
-						// BindProject(c)
+						// SyncProject(c)
 						return nil
 					},
 				},

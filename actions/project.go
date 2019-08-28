@@ -13,6 +13,8 @@ package actions
 
 import (
 	"bytes"
+	"compress/zlib"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -20,6 +22,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/eclipse/codewind-installer/config"
 	"github.com/eclipse/codewind-installer/errors"
@@ -35,10 +38,16 @@ type (
 	}
 
 	BindRequest struct {
-		Language  string `json:"language"`
+		Language    string `json:"language"`
 		ProjectType string `json:"projectType"`
-		Name string `json:"name"`
-		Path string `json:"path"`
+		Name        string `json:"name"`
+		Path        string `json:"path"`
+	}
+
+	FileUploadMsg struct {
+		IsDirectory  bool   `json:"isDirectory"`
+		RelativePath string `json:"path"`
+		Message      string `json:"msg"`
 	}
 
 	// ValidationResponse represents the response to validating a project on the users filesystem.
@@ -84,23 +93,23 @@ func ValidateProject(c *cli.Context) {
 	fmt.Println(string(projectInfo))
 }
 
-func BindProject(projectPath string, Name string, Language string, BuildType string ) {
+func BindProject(projectPath string, Name string, Language string, BuildType string) {
 
 	bindRequest := BindRequest{
-		Language: Language,
-		Name: Name,
+		Language:    Language,
+		Name:        Name,
 		ProjectType: BuildType,
-		Path: projectPath,
+		Path:        projectPath,
 	}
 	buf := new(bytes.Buffer)
 	json.NewEncoder(buf).Encode(bindRequest)
 
 	fmt.Println("Posting to: " + config.PFEApiRoute + "projects/remote-bind/start")
 	fmt.Println(buf)
-	resp, err := http.Post(config.PFEApiRoute + "projects/remote-bind/start", "application/json", buf)
-	
+	// Make the request to start the remote bind process.
+	resp, err := http.Post(config.PFEApiRoute+"projects/remote-bind/start", "application/json", buf)
 
-	fmt.Println(resp);
+	fmt.Println(resp)
 	defer resp.Body.Close()
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	body := string(bodyBytes)
@@ -110,8 +119,69 @@ func BindProject(projectPath string, Name string, Language string, BuildType str
 		errors.CheckErr(err, 200, "")
 	}
 
+	var projectInfo map[string]interface{}
+	// err = json.Unmarshal(bodyBytes, &projectInfo); 
+	if err := json.Unmarshal(bodyBytes, &projectInfo); err != nil {
+		panic(err)
+		// TODO - Need to handle this gracefully.
+	}
 
+	projectID := projectInfo["projectID"].(string)
 
+	SyncProject(projectPath, projectID)
+
+}
+
+func SyncProject(projectPath string, projectId string) {
+
+	projectUploadUrl := config.PFEApiRoute + "projects/" + projectId + "/remote-bind/upload"
+	client := &http.Client{}
+	fmt.Println("Uploading to " + projectUploadUrl)
+
+	err := filepath.Walk(projectPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			// TODO - How to handle *some* files being unreadable
+		}
+
+		relativePath := path[len(projectPath):]
+
+		fileUploadBody := FileUploadMsg{
+			IsDirectory:  info.IsDir(),
+			RelativePath: relativePath,
+			Message:      "",
+		}
+
+		if !info.IsDir() {
+			// Process file.
+			fmt.Printf("Found file: %q\n", relativePath)
+			fileContent, err := ioutil.ReadFile(path)
+			jsonContent, err := json.Marshal(string(fileContent))
+			// Skip this file if there is an error reading it.
+			if err != nil {
+				return nil
+			}
+			var buffer bytes.Buffer
+			zWriter := zlib.NewWriter(&buffer)
+			zWriter.Write(jsonContent)
+			zWriter.Close()
+			encoded := base64.StdEncoding.EncodeToString(buffer.Bytes())
+			fileUploadBody.Message = encoded
+
+		}
+		buf := new(bytes.Buffer)
+		json.NewEncoder(buf).Encode(fileUploadBody)
+
+		// TODO - How do we handle partial success?
+		request, err := http.NewRequest("PUT", projectUploadUrl, bytes.NewReader(buf.Bytes()))
+		request.Header.Set("Content-Type", "application/json")
+    resp, err := client.Do(request)
+		fmt.Println("Upload status:" + resp.Status + " for file: " + relativePath)
+		return nil
+	})
+	if err != nil {
+		fmt.Printf("error walking the path %q: %v\n", projectPath, err)
+		return
+	}
 }
 
 func writeCwSettingsIfNotInProject(projectPath string, BuildType string) {
