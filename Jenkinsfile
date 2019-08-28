@@ -174,13 +174,14 @@ spec:
                     mv ${WORKSPACE}/$REPO_NAME/$INSTALLER_MACOS-* ${WORKSPACE}/$REPO_NAME/$INSTALLER_MACOS
                     mv ${WORKSPACE}/$REPO_NAME/$INSTALLER_WIN-* ${WORKSPACE}/$REPO_NAME/$INSTALLER_WIN.exe
 
-                    SHA1_LINUX=$(sha1sum $INSTALLER_LINUX | cut -d ' ' -f 1)
+                    echo "build_info.url=$BUILD_URL" >> ${WORKSPACE}/$REPO_NAME/$BUILD_INFO
+                    SHA1_LINUX=$(sha1sum ${WORKSPACE}/$REPO_NAME/$INSTALLER_LINUX | cut -d ' ' -f 1)
                     echo "build_info.linux.SHA-1=${SHA1_LINUX}" >> ${WORKSPACE}/$REPO_NAME/$BUILD_INFO
 
-                    SHA1_MACOS=$(sha1sum $INSTALLER_MACOS | cut -d ' ' -f 1)
+                    SHA1_MACOS=$(sha1sum ${WORKSPACE}/$REPO_NAME/$INSTALLER_MACOS | cut -d ' ' -f 1)
                     echo "build_info.macos.SHA-1=${SHA1_MACOS}" >> ${WORKSPACE}/$REPO_NAME/$BUILD_INFO
 
-                    SHA1_WIN=$(sha1sum $INSTALLER_WIN.exe | cut -d ' ' -f 1)
+                    SHA1_WIN=$(sha1sum ${WORKSPACE}/$REPO_NAME/$INSTALLER_WIN.exe | cut -d ' ' -f 1)
                     echo "build_info.win.SHA-1=${SHA1_WIN}" >> ${WORKSPACE}/$REPO_NAME/$BUILD_INFO
 
                     scp -r ${WORKSPACE}/$REPO_NAME/* $sshHost:$deployDir/$GIT_BRANCH/$LATEST_DIR
