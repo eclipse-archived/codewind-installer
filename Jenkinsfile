@@ -41,8 +41,9 @@ spec:
 		stage ('Build') {
 			steps {
 				container('go') {
-					sh 'echo "starting preInstall.....: GOPATH=$GOPATH"'
 					sh '''
+						echo "starting preInstall.....: GOPATH=$GOPATH"
+
 						# add the base directory to the gopath
 						DEFAULT_CODE_DIRECTORY=$PWD
 						cd ../..
@@ -144,16 +145,29 @@ spec:
 		 			unstash 'EXECUTABLES'
 		 		}
                 sh '''
+					export REPO_NAME="codewind-installer"
+					export OUTPUT_DIR="$WORKSPACE/dev/ant_build/artifacts"
+                	export DOWNLOAD_AREA_URL="https://download.eclipse.org/codewind/$REPO_NAME"
+					export LATEST_DIR="latest"
+					export BUILD_INFO="build_info.properties"
+					export sshHost="genie.codewind@projects-storage.eclipse.org"
+					export deployDir="/home/data/httpd/download.eclipse.org/codewind/$REPO_NAME"
+
 					WORKSPACE=$PWD
+   
 					ls -la ${WORKSPACE}/codewind-installer/*
-					if [ -z $CHANGE_ID ]; then
-    					UPLOAD_DIR="$GIT_BRANCH/$BUILD_ID"
-					else
-    					UPLOAD_DIR="pr/$CHANGE_ID/$BUILD_ID"
-					fi
-                 	ssh genie.codewind@projects-storage.eclipse.org rm -rf /home/data/httpd/download.eclipse.org/codewind/codewind-installer/${UPLOAD_DIR}
-            		ssh genie.codewind@projects-storage.eclipse.org mkdir -p /home/data/httpd/download.eclipse.org/codewind/codewind-installer/${UPLOAD_DIR}
-                    scp -r ${WORKSPACE}/codewind-installer/* genie.codewind@projects-storage.eclipse.org:/home/data/httpd/download.eclipse.org/codewind/codewind-installer/${UPLOAD_DIR}
+					
+					UPLOAD_DIR="$GIT_BRANCH/$BUILD_ID"
+					BUILD_URL="$DOWNLOAD_AREA_URL/$UPLOAD_DIR"
+					
+                 	ssh $sshHost rm -rf $deployDir/${UPLOAD_DIR}
+            		ssh $sshHost mkdir -p $deployDir/${UPLOAD_DIR}
+
+					ssh $sshHost rm -rf $deployDir/$GIT_BRANCH/$LATEST_DIR
+                    ssh $sshHost mkdir -p $deployDir/$GIT_BRANCH/$LATEST_DIR
+
+                    scp -r ${WORKSPACE}/codewind-installer $sshHost:$deployDir/${UPLOAD_DIR}
+					scp -r ${WORKSPACE}/codewind-installer $sshHost:$deployDir/$GIT_BRANCH/$LATEST_DIR
                   '''
                }
            }
