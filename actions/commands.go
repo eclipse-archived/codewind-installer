@@ -13,6 +13,7 @@ package actions
 
 import (
 	"os"
+	"log"
 
 	"github.com/eclipse/codewind-installer/errors"
 
@@ -37,18 +38,72 @@ func Commands() {
 		{
 			Name:  "project",
 			Usage: "Manage Codewind projects",
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "url, u",
-					Usage: "URL of project to download",
+			Subcommands: []cli.Command{
+				{
+					Name:  "create",
+					Aliases: []string{""},
+					Usage: "create a project on disk",
+					Flags: []cli.Flag{
+						cli.StringFlag{
+							Name:  "url, u",
+							Usage: "URL of project to download",
+						},
+					},
+					Action: func(c *cli.Context) error {
+						if c.NumFlags() != 0 {
+							DownloadTemplate(c)
+						}
+						ValidateProject(c)
+						return nil
+					},
 				},
-			},
-			Action: func(c *cli.Context) error {
-				if c.NumFlags() != 0 {
-					DownloadTemplate(c)
-				}
-				ValidateProject(c)
-				return nil
+				{
+					Name:  "validate",
+					Aliases: []string{""},
+					Usage: "validate an existing project on disk",
+					Action: func(c *cli.Context) error {
+						ValidateProject(c)
+						return nil
+					},
+				},
+				{
+					Name:  "bind",
+					Aliases: []string{""},
+					Usage: "bind a project to codewind for building and running",
+					Flags: []cli.Flag{
+						cli.StringFlag{
+							Name:  "name, n",
+							Usage: "the name of the project",
+						},
+						cli.StringFlag{
+							Name:  "language, l",
+							Usage: "the project language",
+						},
+						cli.StringFlag{
+							Name:  "type, t",
+							Usage: "the type of the project",
+						},
+					},
+					Action: func(c *cli.Context) error {
+						if c.NArg() == 0 {
+							log.Fatal("path to source not set")
+						}
+						if c.NArg() > 1 {
+							log.Fatal("too many arguments")
+						}
+						BindProject(c.Args().Get(0), c.String("name"), c.String("language"), c.String("type"))
+						return nil
+					},
+				},
+				{
+					Name:  "sync",
+					Aliases: []string{""},
+					Usage: "synchronize a project to codewind for building",
+					Action: func(c *cli.Context) error {
+						// BindProject(c)
+						return nil
+					},
+				},
 			},
 		},
 

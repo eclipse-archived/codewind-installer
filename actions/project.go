@@ -12,12 +12,16 @@
 package actions
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"path"
 
+	"github.com/eclipse/codewind-installer/config"
 	"github.com/eclipse/codewind-installer/errors"
 	"github.com/eclipse/codewind-installer/utils"
 	"github.com/urfave/cli"
@@ -28,6 +32,13 @@ type (
 	ProjectType struct {
 		Language  string `json:"language"`
 		BuildType string `json:"buildType"`
+	}
+
+	BindRequest struct {
+		Language  string `json:"language"`
+		ProjectType string `json:"projectType"`
+		Name string `json:"name"`
+		Path string `json:"path"`
 	}
 
 	// ValidationResponse represents the response to validating a project on the users filesystem.
@@ -71,6 +82,36 @@ func ValidateProject(c *cli.Context) {
 	errors.CheckErr(err, 203, "")
 	writeCwSettingsIfNotInProject(projectPath, buildType)
 	fmt.Println(string(projectInfo))
+}
+
+func BindProject(projectPath string, Name string, Language string, BuildType string ) {
+
+	bindRequest := BindRequest{
+		Language: Language,
+		Name: Name,
+		ProjectType: BuildType,
+		Path: projectPath,
+	}
+	buf := new(bytes.Buffer)
+	json.NewEncoder(buf).Encode(bindRequest)
+
+	fmt.Println("Posting to: " + config.PFEApiRoute + "projects/remote-bind/start")
+	fmt.Println(buf)
+	resp, err := http.Post(config.PFEApiRoute + "projects/remote-bind/start", "application/json", buf)
+	
+
+	fmt.Println(resp);
+	defer resp.Body.Close()
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	body := string(bodyBytes)
+	fmt.Println(string(body))
+
+	if resp.StatusCode != 202 {
+		errors.CheckErr(err, 200, "")
+	}
+
+
+
 }
 
 func writeCwSettingsIfNotInProject(projectPath string, BuildType string) {
