@@ -31,6 +31,14 @@ func Commands() {
 	app.Version = versionNum
 	app.Usage = "Start, Stop and Remove Codewind"
 
+	// Global Flags
+	app.Flags = []cli.Flag{
+		cli.BoolFlag{
+			Name:  "insecure",
+			Usage: "disable certificate checking",
+		},
+	}
+
 	// create commands
 	app.Commands = []cli.Command{
 
@@ -143,13 +151,13 @@ func Commands() {
 		},
 
 		{
-			Name:    "templates",
-			Usage:   "Manage project templates",
+			Name:  "templates",
+			Usage: "Manage project templates",
 			Subcommands: []cli.Command{
 				{
-					Name:  "list",
+					Name:    "list",
 					Aliases: []string{"ls"},
-					Usage: "list available templates",
+					Usage:   "list available templates",
 					Action: func(c *cli.Context) error {
 						ListTemplates()
 						return nil
@@ -168,6 +176,77 @@ func Commands() {
 					Usage: "list available template repos",
 					Action: func(c *cli.Context) error {
 						ListTemplateRepos()
+						return nil
+					},
+				},
+			},
+		},
+
+		//  Deployment maintenance //
+		{
+			Name:    "deployments",
+			Aliases: []string{"dep"},
+			Usage:   "Maintain local deployments list",
+			Subcommands: []cli.Command{
+				{
+					Name:    "add",
+					Aliases: []string{"a"},
+					Usage:   "Add a new deployment to the list",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "name", Usage: "A reference name", Required: true},
+						cli.StringFlag{Name: "label", Usage: "A displayable name", Required: false},
+						cli.StringFlag{Name: "url", Usage: "The ingress url of the PFE instance", Required: true},
+					},
+					Action: func(c *cli.Context) error {
+						AddDeploymentToList(c)
+						return nil
+					},
+				},
+				{
+					Name:    "remove",
+					Aliases: []string{"rm"},
+					Usage:   "Remove a deployment from the list",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "name", Usage: "The reference name of the deployment to be removed", Required: true},
+					},
+					Action: func(c *cli.Context) error {
+						if c.NumFlags() != 1 {
+						} else {
+							RemoveDeploymentFromList(c)
+						}
+						return nil
+					},
+				},
+				{
+					Name:    "target",
+					Aliases: []string{"t"},
+					Usage:   "Show/Change the current target deployment",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "name", Usage: "The deployment name of a new target"},
+					},
+					Action: func(c *cli.Context) error {
+						if c.NumFlags() == 0 {
+							ListTargetDeployment()
+						} else {
+							SetTargetDeployment(c)
+						}
+						return nil
+					},
+				},
+				{
+					Name:    "list",
+					Aliases: []string{"ls"},
+					Usage:   "List known deployments",
+					Action: func(c *cli.Context) error {
+						ListDeployments()
+						return nil
+					},
+				},
+				{
+					Name:  "reset",
+					Usage: "Resets the deployments list",
+					Action: func(c *cli.Context) error {
+						ResetDeploymentsFile()
 						return nil
 					},
 				},
