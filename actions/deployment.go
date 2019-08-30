@@ -230,11 +230,19 @@ func RemoveDeploymentFromList(c *cli.Context) {
 // Display the deployment details for the current target deployment
 func ListTargetDeployment() {
 	targetDeployment := FindTargetDeployment()
-	utils.PrettyPrintJSON(targetDeployment)
+	if targetDeployment != nil {
+		utils.PrettyPrintJSON(targetDeployment)
+	} else {
+		log.Fatal("Unable to find a matching target - set one now using the target command")
+	}
 }
 
 // Display saved deployments
 func ListDeployments() {
-	targetDeployment := GetDeploymentsConfig()
-	utils.PrettyPrintJSON(targetDeployment)
+	deploymentConfig := GetDeploymentsConfig()
+	if deploymentConfig != nil && deploymentConfig.Deployments != nil && len(deploymentConfig.Deployments) > 0 {
+		utils.PrettyPrintJSON(deploymentConfig)
+	} else {
+		log.Fatal("Unable to any deployments - please run the reset command")
+	}
 }
