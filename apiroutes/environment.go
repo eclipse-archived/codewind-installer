@@ -35,7 +35,7 @@ func GetAPIEnvironment(c *cli.Context, host string) (*Environment, error) {
 		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	}
 
-	resp, err := http.Get(host + "/api/v1/environment")
+	resp, err := http.Get(host + "api/v1/environment")
 	if err != nil {
 		return nil, err
 	}
