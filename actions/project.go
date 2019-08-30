@@ -30,11 +30,12 @@ type (
 		BuildType string `json:"projectType"`
 	}
 
-	// ValidationResponse represents the response to validating a project on the users filesystem.
+	// ValidationResponse represents the response to validating a project on the users filesystem
+	// result is an interface as it could be ProjectType or string depending on success or failure.
 	ValidationResponse struct {
 		Status string      `json:"status"`
 		Path   string      `json:"projectPath"`
-		Result ProjectType `json:"result"`
+		Result interface{} `json:"result"`
 	}
 )
 
@@ -59,12 +60,26 @@ func DownloadTemplate(c *cli.Context) {
 func ValidateProject(c *cli.Context) {
 	projectPath := c.Args().Get(0)
 	utils.CheckProjectPath(projectPath)
+	validationStatus := "success"
+	// result could be ProjectType or string, so define as an interface
+	var validationResult interface{}
+	language, buildType, isAppsody := utils.DetermineProjectInfo(projectPath)
+	validationResult = ProjectType{
+		Language: language,
+		BuildType: buildType,
+	}
+	if isAppsody {
+		validated, err := utils.SuccessfullyCallAppsodyInit(projectPath)
+		if !validated {
+			validationStatus = "failed"
+			validationResult = err.Error()
+		}
+	}
 
-	language, buildType := utils.DetermineProjectInfo(projectPath)
 	response := ValidationResponse{
-		Status: "success",
-		Result: ProjectType{language, buildType},
+		Status: validationStatus,
 		Path:   projectPath,
+		Result: validationResult,
 	}
 	projectInfo, err := json.Marshal(response)
 
