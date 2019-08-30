@@ -14,6 +14,7 @@ package actions
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -49,6 +50,7 @@ func StatusCommandRemoteDeployment(c *cli.Context, d *Deployment) {
 			fmt.Println(string(output))
 		} else {
 			fmt.Println("Codewind remote deployment did not respond on " + d.Url)
+			log.Println(err)
 		}
 		os.Exit(0)
 	}

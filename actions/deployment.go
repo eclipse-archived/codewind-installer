@@ -128,7 +128,9 @@ func FindTargetDeployment() *Deployment {
 	activeID := data.Active
 	for i := 0; i < len(data.Deployments); i++ {
 		if strings.EqualFold(activeID, data.Deployments[i].Name) {
-			return &data.Deployments[i]
+			targetDeployment := data.Deployments[i]
+			targetDeployment.Url = strings.TrimSuffix(targetDeployment.Url, "/")
+			return &targetDeployment
 		}
 	}
 	return nil
@@ -176,9 +178,12 @@ func SetTargetDeployment(c *cli.Context) {
  * Adds a new deployment to the deployment config
  */
 func AddDeploymentToList(c *cli.Context) {
-	name := strings.ToLower(c.String("name"))
-	label := c.String("label")
+	name := strings.TrimSpace(strings.ToLower(c.String("name")))
+	label := strings.TrimSpace(c.String("label"))
 	url := c.String("url")
+	if url != "" && len(strings.TrimSpace(url)) > 0 {
+		url = strings.TrimSuffix(url, "/")
+	}
 
 	data, err, errCode := loadDeploymentsConfigFile()
 	errors.CheckErr(err, errCode, "Unable to process the deployments config file")
