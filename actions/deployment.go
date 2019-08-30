@@ -48,9 +48,9 @@ type Deployment struct {
 }
 
 /**
-* Check the file exist, if it does not, create a new configuration
+* Check the config file exist, if it does not then create a new default configuration
  */
-func initDeploymentConfigIfRequired() {
+func InitDeploymentConfigIfRequired() {
 	_, err, code := loadDeploymentsConfigFile()
 	if err != nil && code == 207 {
 		ResetDeploymentsFile()

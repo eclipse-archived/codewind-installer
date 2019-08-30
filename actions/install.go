@@ -37,6 +37,4 @@ func InstallCommand(c *cli.Context) {
 	}
 
 	fmt.Println("Image Tagging Successful")
-
-	initDeploymentConfigIfRequired()
 }
