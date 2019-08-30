@@ -25,7 +25,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-func getDeploymentConfigFilename() string {
+func getDeploymentConfigPath() string {
 	const GOOS string = runtime.GOOS
 	homeDir := ""
 	if GOOS == "windows" {
@@ -33,7 +33,11 @@ func getDeploymentConfigFilename() string {
 	} else {
 		homeDir = os.Getenv("HOME")
 	}
-	return path.Join(homeDir, ".codewind", "config", "deployments.json")
+	return path.Join(homeDir, ".codewind", "config")
+}
+
+func getDeploymentConfigFilename() string {
+	return path.Join(getDeploymentConfigPath(), "deployments.json")
 }
 
 type DeploymentConfig struct {
@@ -51,8 +55,9 @@ type Deployment struct {
 * Check the config file exist, if it does not then create a new default configuration
  */
 func InitDeploymentConfigIfRequired() {
-	_, err, code := loadDeploymentsConfigFile()
-	if err != nil && code == 207 {
+	_, err := os.Stat(getDeploymentConfigFilename())
+	if os.IsNotExist(err) {
+		os.Mkdir(getDeploymentConfigPath(), 0777)
 		ResetDeploymentsFile()
 	}
 }
