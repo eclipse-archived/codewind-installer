@@ -138,13 +138,14 @@ func DownloadFile(URL, destination string) error {
 	// Create the file
 	file, err := os.Create(destination)
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 	defer file.Close()
 
 	// Write body to file
 	_, err = io.Copy(file, resp.Body)
-	fmt.Printf("Downloaded file from '%s' to '%s'\n", URL, destination)
+	log.Printf("Downloaded file from '%s' to '%s'\n", URL, destination)
 
 	return err
 }
@@ -191,7 +192,7 @@ func UnZip(filePath, destination string) error {
 			errors.CheckErr(err, 404, "")
 		}
 	}
-	fmt.Printf("Extracted file from '%s' to '%s'\n", filePath, destination)
+	log.Printf("Extracted file from '%s' to '%s'\n", filePath, destination)
 	return nil
 }
 
