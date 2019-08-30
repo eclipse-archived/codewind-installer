@@ -156,8 +156,7 @@ func SetTargetDeployment(c *cli.Context) {
 		}
 	}
 	if foundName == "" {
-		log.Println("Unable to change deployment. '" + newTargetName + "' has no matching configuration")
-		os.Exit(1)
+		log.Fatal("Unable to change deployment. '" + newTargetName + "' has no matching configuration")
 	}
 
 	data.Active = foundName
@@ -182,8 +181,7 @@ func AddDeploymentToList(c *cli.Context) {
 	// check the name is not already in use
 	for i := 0; i < len(data.Deployments); i++ {
 		if strings.EqualFold(name, data.Deployments[i].Name) {
-			log.Println("Deployment '" + name + "' already exists, to update:  first remove, then add")
-			os.Exit(1)
+			log.Fatal("Deployment '" + name + "' already exists, to update:  first remove, then add")
 		}
 	}
 
@@ -209,8 +207,7 @@ func AddDeploymentToList(c *cli.Context) {
 func RemoveDeploymentFromList(c *cli.Context) {
 	name := c.String("name")
 	if strings.EqualFold(name, "local") {
-		log.Println("Local is a required deployment and can not be removed")
-		os.Exit(1)
+		log.Fatal("Local is a required deployment and can not be removed")
 	}
 	data, err, errCode := loadDeploymentsConfigFile()
 	errors.CheckErr(err, errCode, "Unable to process the deployments config file")
