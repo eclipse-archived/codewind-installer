@@ -14,5 +14,6 @@ package main
 import "github.com/eclipse/codewind-installer/actions"
 
 func main() {
+	actions.InitDeploymentConfigIfRequired()
 	actions.Commands()
 }
