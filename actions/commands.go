@@ -143,13 +143,13 @@ func Commands() {
 		},
 
 		{
-			Name:    "templates",
-			Usage:   "Manage project templates",
+			Name:  "templates",
+			Usage: "Manage project templates",
 			Subcommands: []cli.Command{
 				{
-					Name:  "list",
+					Name:    "list",
 					Aliases: []string{"ls"},
-					Usage: "list available templates",
+					Usage:   "list available templates",
 					Action: func(c *cli.Context) error {
 						ListTemplates()
 						return nil

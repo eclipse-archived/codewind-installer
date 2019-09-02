@@ -67,9 +67,76 @@ $ brew upgrade dep
 ## Unit testing
 
 1. Clone the `codewind-installer` repository.
-2. Use the `cd` command to go to the test directory. The `utils.go` tests are located in the `utils/utils_test.go` file.
+2. Use the `cd` command to go to a directory with test files in. For example, the `utils.go` tests are located in the `utils/utils_test.go` file.
 3. To run the tests, enter the `go test -v` command in the command line window and wait for the tests to finish.
 4. For any other unit tests, the same steps apply, but the directory might change.
+
+## Bats-core testing
+
+1. Set up your environment by installing bats-core as per the bats-core instructions found at <https://github.com/bats-core/bats-core>.
+2. Clone the `codewind-installer` repository.
+3. Use the `cd` command to go to the top level project directory.
+4. Ensure your system environment is clean by having no Codewind images installed or containers running.
+5. To run the tests, enter the `bats integration.bats` command in the command line window and wait for the tests to finish.
+
+## CLI Commands
+
+|Command         |Alias         |Usage                                                           |
+|----------------|--------------|----------------------------------------------------------------|
+|project         |              |'Manage Codewind projects'                                      |
+|install         |`in`          |'Pull pfe, performance & initialize images from dockerhub'      |
+|start           |              |'Start the Codewind containers'                                 |
+|status          |              |'Print the installation status of Codewind'                     |
+|stop            |              |'Stop the running Codewind containers'                          |
+|stop-all        |              |'Stop all of the Codewind and project containers'               |
+|remove          |`rm`          |'Remove Codewind/Project docker images and the codewind network'|
+|templates       |              |'Manage project templates'                                      |
+|help            |`h`           |'Shows a list of commands or help for one command'              |
+
+## CLI Command Options
+
+## project
+
+`--url/-u <value>` - URL of project to download
+
+## install
+
+`--tag/-t <value>` - Dockerhub image tag (default: "latest")</br>
+`--json/-j` - Specify terminal output
+
+## start
+
+`--tag/-t <value>` - Dockerhub image tag (default: "latest")</br>
+`--debug/-d` - Add debug output
+
+## status
+
+`--json/-j` - Specify terminal output
+
+## stop
+
+>**Note:** No additional flags
+
+## stop-all
+
+>**Note:** No additional flags
+
+## remove
+
+`--tag/-t <value>` - Dockerhub image tag.</br>
+**Note:** Failing to specify a `--tag`, will remove all Codewind images on the host machine.
+
+## templates
+
+>**Note:** No additional flags
+
+Subcommands:</br>
+
+`list/ls` - List available templates
+
+## help
+
+`--help/-h` - Shows a list of commands or help for one command
 
 ## Contributing
 
