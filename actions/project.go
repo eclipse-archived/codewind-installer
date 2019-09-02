@@ -27,13 +27,13 @@ type (
 	// ProjectType represents the information Codewind requires to build a project.
 	ProjectType struct {
 		Language  string `json:"language"`
-		BuildType string `json:"buildType"`
+		BuildType string `json:"projectType"`
 	}
 
 	// ValidationResponse represents the response to validating a project on the users filesystem.
 	ValidationResponse struct {
 		Status string      `json:"status"`
-		Path   string      `json:"path"`
+		Path   string      `json:"projectPath"`
 		Result ProjectType `json:"result"`
 	}
 )
