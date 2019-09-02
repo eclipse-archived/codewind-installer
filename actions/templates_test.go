@@ -17,24 +17,51 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var numCodewindTemplates int = 8
+var numAppsodyTemplates int = 8
+var numTemplates int = numCodewindTemplates + numAppsodyTemplates
+
 func TestGetTemplates(t *testing.T) {
 	tests := map[string]struct {
-		wantedType   []Template
-		wantedLength int
-		wantedErr    error
+		inProjectStyle string
+		inShowEnabledOnly string
+		wantedType     []Template
+		wantedLength   int
 	}{
-		"success case": {
+		"get templates of all styles": {
+			inProjectStyle: "",
+			inShowEnabledOnly: "",
+			wantedType:     []Template{},
+			wantedLength:   numTemplates,
+		},
+		"filter templates by known style": {
+			inProjectStyle: "Codewind",
 			wantedType:   []Template{},
-			wantedLength: 8,
-			wantedErr:    nil,
+			wantedLength: numCodewindTemplates,
+		},
+		"filter templates by unknown style": {
+			inProjectStyle: "unknownStyle",
+			wantedType:   []Template{},
+			wantedLength: 0,
+		},
+		"filter templates by enabled templates": {
+			inShowEnabledOnly: "true",
+			wantedType:   []Template{},
+			wantedLength: numTemplates,
+		},
+		"filter templates by enabled templates of unknown style": {
+			inProjectStyle: "unknownStyle",
+			inShowEnabledOnly: "false",
+			wantedType:     []Template{},
+			wantedLength:   0,
 		},
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := GetTemplates()
+			got, err := GetTemplates(test.inProjectStyle, test.inShowEnabledOnly)
 			assert.IsType(t, test.wantedType, got)
 			assert.Equal(t, test.wantedLength, len(got))
-			assert.Equal(t, test.wantedErr, err)
+			assert.Nil(t, err)
 		})
 	}
 }
@@ -45,7 +72,7 @@ func TestGetTemplateStyles(t *testing.T) {
 		wantedErr error
 	}{
 		"success case": {
-			want:      []string{"Codewind"},
+			want:      []string{"Appsody", "Codewind"},
 			wantedErr: nil,
 		},
 	}

@@ -19,6 +19,7 @@ import (
 	"net/http"
 
 	"github.com/eclipse/codewind-installer/config"
+	"github.com/urfave/cli"
 )
 
 type (
@@ -38,9 +39,13 @@ type (
 	}
 )
 
-// ListTemplates lists all project templates of which Codewind is aware.
-func ListTemplates() {
-	templates, err := GetTemplates()
+// ListTemplates lists project templates of which Codewind is aware.
+// Filter them by providing flags
+func ListTemplates(c *cli.Context) {
+	templates, err := GetTemplates(
+		c.String("projectStyle"),
+		c.String("showEnabledOnly"),
+	)
 	if err != nil {
 		log.Printf("Error getting templates: %q", err)
 		return
@@ -68,9 +73,24 @@ func ListTemplateRepos() {
 	PrettyPrintJSON(repos)
 }
 
-// GetTemplates gets all project templates from PFE's REST API
-func GetTemplates() ([]Template, error) {
-	resp, err := http.Get(config.PFEApiRoute + "templates")
+// GetTemplates gets project templates from PFE's REST API.
+// Filter them using the function arguments
+func GetTemplates(projectStyle string, showEnabledOnly string) ([]Template, error) {
+	req, err := http.NewRequest("GET", config.PFEApiRoute + "templates", nil)
+	if err != nil {
+		return nil, err
+	}
+	query := req.URL.Query()
+	if projectStyle != "" {
+		query.Add("projectStyle", projectStyle)
+	}
+	if showEnabledOnly != "" {
+		query.Add("showEnabledOnly", showEnabledOnly)
+	}
+    req.URL.RawQuery = query.Encode()
+
+	client := &http.Client{}
+    resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
