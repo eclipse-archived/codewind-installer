@@ -57,7 +57,7 @@ type Deployment struct {
 func InitDeploymentConfigIfRequired() {
 	_, err := os.Stat(getDeploymentConfigFilename())
 	if os.IsNotExist(err) {
-		os.Mkdir(getDeploymentConfigPath(), 0777)
+		os.MkdirAll(getDeploymentConfigPath(), 0777)
 		ResetDeploymentsFile()
 	}
 }
