@@ -36,7 +36,7 @@ type CWSettings struct {
 // DetermineProjectInfo returns the language and build-type of a project, as well as if it's an Appsody project
 func DetermineProjectInfo(projectPath string) (string, string, bool) {
 	language, buildType, isAppsody := "unknown", "docker", false
-	if _, err := os.Stat(path.Join(projectPath, "pom.xml")); err == nil {
+	if PathExists(path.Join(projectPath, "pom.xml")) {
 		language = "java"
 		buildType = determineJavaBuildType(projectPath)
 	}
@@ -48,10 +48,10 @@ func DetermineProjectInfo(projectPath string) (string, string, bool) {
 		language = "swift"
 		buildType = "swift"
 	}
-	if _, err := os.Stat(path.Join(projectPath, "stack.yaml")); err == nil {
+	if PathExists(path.Join(projectPath, "stack.yaml")) {
 		isAppsody = true
 	}
-	if _, err := os.Stat(path.Join(projectPath, ".appsody-config.yaml")); err == nil {
+	if PathExists(path.Join(projectPath, ".appsody-config.yaml")) {
 		isAppsody = true
 	}
 	return language, buildType, isAppsody

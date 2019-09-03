@@ -13,7 +13,6 @@
 
  import (
 	"bytes"
-	"fmt"
 	"os/exec"
 	"log"
 )
@@ -29,9 +28,9 @@
 		log.Println("There was a problem initializing the Appsody project: ", err, ". Project was not initialized.")
 		return false, err
 	}
-	fmt.Printf("Please wait while the Appsody project is initialized... %s \n", output.String())
+	log.Printf("Please wait while the Appsody project is initialized... %s \n", output.String())
 	cmd.Wait()
-	fmt.Printf(output.String()) // Wait to finish execution, so we can read all output
+	log.Println(output.String()) // Wait to finish execution, so we can read all output
 	return true, nil
  }
  
