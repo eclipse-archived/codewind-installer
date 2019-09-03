@@ -185,10 +185,51 @@ func Commands() {
 				},
 				{
 					Name:  "repos",
-					Usage: "List available template repos",
-					Action: func(c *cli.Context) error {
-						ListTemplateRepos()
-						return nil
+					Usage: "Manage template repos",
+					Subcommands: []cli.Command{
+						{
+							Name:    "list",
+							Aliases: []string{"ls"},
+							Usage: "List available template repos",
+							Action: func(c *cli.Context) error {
+								ListTemplateRepos()
+								return nil
+							},
+						},
+						{
+							Name:  "add",
+							Usage: "Add a template repo",
+							Flags: []cli.Flag{
+								cli.StringFlag{
+									Name:  "URL",
+									Usage: "URL of the template repo",
+								},
+								cli.StringFlag{
+									Name:  "description",
+									Value: "",
+									Usage: "Description of the template repo",
+								},
+							},
+							Action: func(c *cli.Context) error {
+								CmdToAddTemplateRepo(c)
+								return nil
+							},
+						},
+						{
+							Name:  "remove",
+							Aliases: []string{"rm"},
+							Usage: "Remove a template repo",
+							Flags: []cli.Flag{
+								cli.StringFlag{
+									Name:  "URL",
+									Usage: "URL of the template repo",
+								},
+							},
+							Action: func(c *cli.Context) error {
+								CmdToDeleteTemplateRepo(c)
+								return nil
+							},
+						},
 					},
 				},
 			},
