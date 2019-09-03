@@ -9,7 +9,7 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 
-package actions
+package apiroutes
 
 import (
 	"errors"

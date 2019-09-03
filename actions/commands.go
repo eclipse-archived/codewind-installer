@@ -157,7 +157,7 @@ func Commands() {
 				{
 					Name:    "list",
 					Aliases: []string{"ls"},
-					Usage: "List available templates",
+					Usage:   "List available templates",
 					Flags: []cli.Flag{
 						cli.StringFlag{
 							Name:  "projectStyle",
@@ -190,7 +190,7 @@ func Commands() {
 						{
 							Name:    "list",
 							Aliases: []string{"ls"},
-							Usage: "List available template repos",
+							Usage:   "List available template repos",
 							Action: func(c *cli.Context) error {
 								ListTemplateRepos()
 								return nil
@@ -211,14 +211,14 @@ func Commands() {
 								},
 							},
 							Action: func(c *cli.Context) error {
-								CmdToAddTemplateRepo(c)
+								AddTemplateRepo(c)
 								return nil
 							},
 						},
 						{
-							Name:  "remove",
+							Name:    "remove",
 							Aliases: []string{"rm"},
-							Usage: "Remove a template repo",
+							Usage:   "Remove a template repo",
 							Flags: []cli.Flag{
 								cli.StringFlag{
 									Name:  "URL",
@@ -226,7 +226,7 @@ func Commands() {
 								},
 							},
 							Action: func(c *cli.Context) error {
-								CmdToDeleteTemplateRepo(c)
+								DeleteTemplateRepo(c)
 								return nil
 							},
 						},
