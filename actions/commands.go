@@ -232,6 +232,22 @@ func Commands() {
 								return nil
 							},
 						},
+						{
+							Name:  "enable",
+							Usage: "Enable template repos with the given URLs",
+							Action: func(c *cli.Context) error {
+								EnableTemplateRepos(c)
+								return nil
+							},
+						},
+						{
+							Name:  "disable",
+							Usage: "Disable template repos with the given URLs",
+							Action: func(c *cli.Context) error {
+								DisableTemplateRepos(c)
+								return nil
+							},
+						},
 					},
 				},
 			},

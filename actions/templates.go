@@ -94,6 +94,26 @@ func DeleteTemplateRepo(c *cli.Context) {
 	PrettyPrintJSON(repos)
 }
 
+// EnableTemplateRepos enables templates repo of which Codewind is aware.
+func EnableTemplateRepos(c *cli.Context) {
+	repos, err := apiroutes.EnableTemplateRepos(c.Args())
+	if err != nil {
+		log.Printf("Error enabling template repos: %q", err)
+		return
+	}
+	PrettyPrintJSON(repos)
+}
+
+// DisableTemplateRepos disables templates repo of which Codewind is aware.
+func DisableTemplateRepos(c *cli.Context) {
+	repos, err := apiroutes.DisableTemplateRepos(c.Args())
+	if err != nil {
+		log.Printf("Error enabling template repos: %q", err)
+		return
+	}
+	PrettyPrintJSON(repos)
+}
+
 // PrettyPrintJSON prints JSON prettily.
 func PrettyPrintJSON(i interface{}) {
 	s, _ := json.MarshalIndent(i, "", "\t")
