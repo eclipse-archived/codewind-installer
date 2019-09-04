@@ -41,8 +41,8 @@ func DetermineProjectInfo(projectPath string) (string, string) {
 		buildType = determineJavaBuildType(projectPath)
 	}
 	if PathExists(path.Join(projectPath, "package.json")) {
-		language = "node"
-		buildType = "node"
+		language = "nodejs"
+		buildType = "nodejs"
 	}
 	if PathExists(path.Join(projectPath, "Package.swift")) {
 		language = "swift"
