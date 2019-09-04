@@ -20,10 +20,11 @@ import (
 
 //StopAllCommand to stop codewind and project containers
 func StopAllCommand() {
-	containerArr := [3]string{}
+	containerArr := [4]string{}
 	containerArr[0] = "codewind-pfe"
 	containerArr[1] = "codewind-performance"
 	containerArr[2] = "cw-"
+	containerArr[3] = "appsody"
 
 	containers := utils.GetContainerList()
 
