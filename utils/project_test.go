@@ -41,8 +41,8 @@ func TestDetermineProjectInfo(t *testing.T) {
 		},
 		"success case: node.js project": {
 			in:            path.Join("..", "resources", "test", "node-project"),
-			wantLanguage:  "node",
-			wantBuildType: "node",
+			wantLanguage:  "nodejs",
+			wantBuildType: "nodejs",
 		},
 		"success case: swift project": {
 			in:            path.Join("..", "resources", "test", "swift-project"),
