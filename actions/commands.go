@@ -21,7 +21,7 @@ import (
 
 var tempFilePath = "installer-docker-compose.yaml"
 
-const versionNum = "0.2.0"
+const versionNum = "x.x.dev"
 const healthEndpoint = "/api/v1/environment"
 
 //Commands for the installer
