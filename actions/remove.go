@@ -22,12 +22,11 @@ import (
 //RemoveCommand to remove all codewind and project images
 func RemoveCommand(c *cli.Context) {
 	tag := c.String("tag")
-	imageArr := [5]string{}
+	imageArr := [4]string{}
 	imageArr[0] = "eclipse/codewind-pfe"
 	imageArr[1] = "eclipse/codewind-performance"
 	imageArr[2] = "eclipse/codewind-initialize"
 	imageArr[3] = "cw-"
-	imageArr[4] = "appsody"
 	networkName := "codewind"
 
 	if tag != "" {
