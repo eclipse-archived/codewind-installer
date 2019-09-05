@@ -20,11 +20,11 @@ import (
 
 //StopAllCommand to stop codewind and project containers
 func StopAllCommand() {
-	containerArr := [4]string{}
+	containerArr := [2]string{}
 	containerArr[0] = "codewind-pfe"
 	containerArr[1] = "codewind-performance"
-	containerArr[2] = "cw-"
-	containerArr[3] = "appsody"
+	containerArr[0] = "cw-"
+	containerArr[1] = "appsody"
 
 	containers := utils.GetContainerList()
 
@@ -32,8 +32,12 @@ func StopAllCommand() {
 	for _, container := range containers {
 		for _, key := range containerArr {
 			if strings.HasPrefix(container.Image, key) {
-				fmt.Println("Stopping container ", container.Names, "... ")
-				utils.StopContainer(container)
+				fmt.Println(container)
+				// stop appsody containers with "cw-" in their name, and all other cw containers
+				if key != "appsody" || strings.Contains(container.Names[0], "cw-") {
+					fmt.Println("Stopping container ", container.Names, "... ")
+					utils.StopContainer(container)
+				}
 			}
 		}
 	}
