@@ -32,9 +32,11 @@ func StopAllCommand() {
 	for _, container := range containers {
 		for _, key := range containerArr {
 			if strings.HasPrefix(container.Image, key) {
-				fmt.Println("Stopping container ", container.Names[0], "... ")
-				utils.StopContainer(container)
-				break
+				if key != "appsody" || strings.Contains(container.Names[0], "cw-") {
+					fmt.Println("Stopping container ", container.Names[0], "... ")
+					utils.StopContainer(container)
+					break
+				}
 			}
 		}
 	}
