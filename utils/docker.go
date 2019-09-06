@@ -291,9 +291,13 @@ func StopContainer(container types.Container) {
 		errors.CheckErr(err, 108, "")
 	}
 
-	// Remove the container so it isnt lingering in the background
-	if err := cli.ContainerRemove(ctx, container.ID, types.ContainerRemoveOptions{}); err != nil {
-		errors.CheckErr(err, 108, "")
+	// Do not attempt to remove appsody images as that happens automatically
+	// when an appsody container stops
+	if !strings.HasPrefix(container.Image, "appsody") {
+		// Remove the container so it isnt lingering in the background
+		if err := cli.ContainerRemove(ctx, container.ID, types.ContainerRemoveOptions{}); err != nil {
+			errors.CheckErr(err, 108, "")
+		}
 	}
 }
 
