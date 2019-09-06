@@ -22,21 +22,13 @@ import (
 //RemoveCommand to remove all codewind and project images
 func RemoveCommand(c *cli.Context) {
 	tag := c.String("tag")
-	imageArr := [4]string{}
-	imageArr[0] = "eclipse/codewind-pfe"
-	imageArr[1] = "eclipse/codewind-performance"
-	imageArr[2] = "eclipse/codewind-initialize"
-	imageArr[3] = "cw-"
+	imageArr := []string{
+        "eclipse/codewind-pfe-amd64:" + tag,
+        "eclipse/codewind-performance-amd64:" + tag,
+        "eclipse/codewind-initialize-amd64:" + tag,
+        "cw-",
+    }
 	networkName := "codewind"
-
-	if tag != "" {
-		for i := 0; i < len(imageArr); i++ {
-			if i == 3 {
-				break
-			}
-			imageArr[i] = imageArr[i] + "-amd64:" + tag
-		}
-	}
 
 	images := utils.GetImageList()
 
