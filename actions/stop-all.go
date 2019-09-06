@@ -31,13 +31,10 @@ func StopAllCommand() {
 	fmt.Println("Stopping Codewind and Project containers")
 	for _, container := range containers {
 		for _, key := range containerArr {
-			fmt.Println(" container ", container.Names[0],  "key ", key)
 			if strings.HasPrefix(container.Image, key) {
-				//if strings.(container.Names[0], "cw-") {
-					fmt.Println("Stopping container ", container.Names[0], "... ")
-					utils.StopContainer(container)
-					break
-				 //}
+				fmt.Println("Stopping container ", container.Names[0], "... ")
+				utils.StopContainer(container)
+				break
 			}
 		}
 	}
