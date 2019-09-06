@@ -17,6 +17,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"regexp"
 
 	"github.com/eclipse/codewind-installer/errors"
 	"github.com/eclipse/codewind-installer/utils"
@@ -46,9 +47,23 @@ func DownloadTemplate(c *cli.Context) {
 		log.Fatal("destination not set")
 	}
 
+	projectDir := path.Base(destination)
+
+	// Remove invalid characters from the string we will use
+	// as the project name in the template.
+	r := regexp.MustCompile("[^a-zA-Z0-9._-]");
+	projectName := r.ReplaceAllString(projectDir, "");
+	if (len(projectName) == 0){
+		projectName = "PROJ_NAME_PLACEHOLDER"
+	}
+
 	url := c.String("u")
 
 	err := utils.DownloadFromURLThenExtract(url, destination)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = utils.ReplaceInFiles(destination, "[PROJ_NAME_PLACEHOLDER]", projectName)
 	if err != nil {
 		log.Fatal(err)
 	}

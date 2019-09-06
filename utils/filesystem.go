@@ -14,6 +14,7 @@ package utils
 import (
 	"archive/zip"
 	"archive/tar"
+	"bytes"
 	"compress/gzip"
 	"context"
 	"fmt"
@@ -265,4 +266,30 @@ func PathExists(path string) bool {
 		return true
 	}
 	return false
+}
+
+func ReplaceInFiles(projectPath string, oldStr string, newStr string) error {
+
+	oldBytes := []byte(oldStr)
+	newBytes := []byte(newStr)
+	lastError := error(nil)
+	filepath.Walk(projectPath, func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() {
+			return nil
+		}
+
+		content, err := ioutil.ReadFile(path)
+		if err != nil {
+			lastError = err
+			return nil
+		}
+		newContent := bytes.Replace(content, []byte(oldBytes), []byte(newBytes), -1)
+		if err = ioutil.WriteFile(path, newContent, info.Mode()); err != nil {
+			lastError = err
+			return nil
+		}
+		return nil
+	})
+
+	return lastError
 }
