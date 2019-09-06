@@ -12,8 +12,9 @@
 package utils
 
 import (
-	"archive/zip"
 	"archive/tar"
+	"archive/zip"
+	"bytes"
 	"compress/gzip"
 	"context"
 	"fmt"
@@ -22,6 +23,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -265,4 +267,45 @@ func PathExists(path string) bool {
 		return true
 	}
 	return false
+}
+
+func ReplaceInFiles(projectPath string, oldStr string, newStr string) error {
+
+	oldBytes := []byte(oldStr)
+	newBytes := []byte(newStr)
+
+	pathsToRename := []string{}
+
+	lastError := error(nil)
+	filepath.Walk(projectPath, func(pathName string, info os.FileInfo, err error) error {
+
+		if strings.Contains(path.Base(pathName), oldStr) {
+			// Keep track of files we need to rename but don't rename
+			// them until the filepath.Walk is complete.
+			pathsToRename = append(pathsToRename, pathName);
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		content, err := ioutil.ReadFile(pathName)
+		if err != nil {
+			lastError = err
+			return nil
+		}
+		newContent := bytes.Replace(content, []byte(oldBytes), []byte(newBytes), -1)
+		if err = ioutil.WriteFile(pathName, newContent, info.Mode()); err != nil {
+			lastError = err
+			return nil
+		}
+		return nil
+	})
+
+	for _, pathName := range pathsToRename {
+		newPath := strings.Replace(pathName, oldStr, newStr, -1)
+		os.Rename(pathName, newPath)
+	}
+
+	return lastError
 }
