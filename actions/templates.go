@@ -14,11 +14,9 @@ package actions
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
-	"net/http"
 
-	"github.com/eclipse/codewind-installer/config"
+	"github.com/eclipse/codewind-installer/apiroutes"
 	"github.com/urfave/cli"
 )
 
@@ -42,7 +40,7 @@ type (
 // ListTemplates lists project templates of which Codewind is aware.
 // Filter them by providing flags
 func ListTemplates(c *cli.Context) {
-	templates, err := GetTemplates(
+	templates, err := apiroutes.GetTemplates(
 		c.String("projectStyle"),
 		c.String("showEnabledOnly"),
 	)
@@ -55,7 +53,7 @@ func ListTemplates(c *cli.Context) {
 
 // ListTemplateStyles lists all template styles of which Codewind is aware.
 func ListTemplateStyles() {
-	styles, err := GetTemplateStyles()
+	styles, err := apiroutes.GetTemplateStyles()
 	if err != nil {
 		log.Printf("Error getting template styles: %q", err)
 		return
@@ -65,7 +63,7 @@ func ListTemplateStyles() {
 
 // ListTemplateRepos lists all template repos of which Codewind is aware.
 func ListTemplateRepos() {
-	repos, err := GetTemplateRepos()
+	repos, err := apiroutes.GetTemplateRepos()
 	if err != nil {
 		log.Printf("Error getting template repos: %q", err)
 		return
@@ -73,79 +71,27 @@ func ListTemplateRepos() {
 	PrettyPrintJSON(repos)
 }
 
-// GetTemplates gets project templates from PFE's REST API.
-// Filter them using the function arguments
-func GetTemplates(projectStyle string, showEnabledOnly string) ([]Template, error) {
-	req, err := http.NewRequest("GET", config.PFEApiRoute + "templates", nil)
+// AddTemplateRepo adds the provided template repo to PFE.
+func AddTemplateRepo(c *cli.Context) {
+	repos, err := apiroutes.AddTemplateRepo(
+		c.String("URL"),
+		c.String("description"),
+	)
 	if err != nil {
-		return nil, err
+		log.Printf("Error adding template repo: %q", err)
+		return
 	}
-	query := req.URL.Query()
-	if projectStyle != "" {
-		query.Add("projectStyle", projectStyle)
-	}
-	if showEnabledOnly != "" {
-		query.Add("showEnabledOnly", showEnabledOnly)
-	}
-    req.URL.RawQuery = query.Encode()
-
-	client := &http.Client{}
-    resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-
-	defer resp.Body.Close()
-
-	byteArray, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	var templates []Template
-	json.Unmarshal(byteArray, &templates)
-
-	return templates, nil
+	PrettyPrintJSON(repos)
 }
 
-// GetTemplateStyles gets all template styles from PFE's REST API
-func GetTemplateStyles() ([]string, error) {
-	resp, err := http.Get(config.PFEApiRoute + "templates/styles")
+// DeleteTemplateRepo deletes the provided template repo from PFE.
+func DeleteTemplateRepo(c *cli.Context) {
+	repos, err := apiroutes.DeleteTemplateRepo(c.String("URL"))
 	if err != nil {
-		return nil, err
+		log.Printf("Error deleting template repo: %q", err)
+		return
 	}
-
-	defer resp.Body.Close()
-
-	byteArray, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	var styles []string
-	json.Unmarshal(byteArray, &styles)
-
-	return styles, nil
-}
-
-// GetTemplateRepos gets all template repos from PFE's REST API
-func GetTemplateRepos() ([]TemplateRepo, error) {
-	resp, err := http.Get(config.PFEApiRoute + "templates/repositories")
-	if err != nil {
-		return nil, err
-	}
-
-	defer resp.Body.Close()
-
-	byteArray, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	var repos []TemplateRepo
-	json.Unmarshal(byteArray, &repos)
-
-	return repos, nil
+	PrettyPrintJSON(repos)
 }
 
 // PrettyPrintJSON prints JSON prettily.
