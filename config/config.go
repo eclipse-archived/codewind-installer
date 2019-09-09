@@ -15,19 +15,18 @@ import (
 	"github.com/eclipse/codewind-installer/utils"
 )
 
-var hostname, port = utils.GetPFEHostAndPort()
-
-// PFEHostname is the hostname at which PFE is running, e.g. "127.0.0.1"
-var PFEHostname = hostname
-
-// PFEPort is the port on which PFE is running, e.g. "9090"
-var PFEPort = port
-
 // PFEHost is the host at which PFE is running, e.g. "127.0.0.1:9090"
-var PFEHost = hostname + ":" + port
+func PFEHost() string {
+	hostname, port := utils.GetPFEHostAndPort()
+	return hostname + ":" + port
+}
 
 // PFEOrigin is the origin from which PFE is running, e.g. "http://127.0.0.1:9090"
-var PFEOrigin = "http://" + PFEHost
+func PFEOrigin() string {
+	return "http://" + PFEHost()
+}
 
 // PFEApiRoute is the API route at which the PFE REST API can be accessed, e.g. "http://127.0.0.1:9090/api/v1/"
-var PFEApiRoute = PFEOrigin + "/api/v1/"
+func PFEApiRoute() string {
+	return PFEOrigin() + "/api/v1/"
+}
