@@ -42,7 +42,7 @@ type (
 // GetTemplates gets project templates from PFE's REST API.
 // Filter them using the function arguments
 func GetTemplates(projectStyle string, showEnabledOnly string) ([]Template, error) {
-	req, err := http.NewRequest("GET", config.PFEApiRoute+"templates", nil)
+	req, err := http.NewRequest("GET", config.PFEApiRoute() + "templates", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func GetTemplates(projectStyle string, showEnabledOnly string) ([]Template, erro
 
 // GetTemplateStyles gets all template styles from PFE's REST API
 func GetTemplateStyles() ([]string, error) {
-	resp, err := http.Get(config.PFEApiRoute + "templates/styles")
+	resp, err := http.Get(config.PFEApiRoute() + "templates/styles")
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +96,7 @@ func GetTemplateStyles() ([]string, error) {
 
 // GetTemplateRepos gets all template repos from PFE's REST API
 func GetTemplateRepos() ([]TemplateRepo, error) {
-	resp, err := http.Get(config.PFEApiRoute + "templates/repositories")
+	resp, err := http.Get(config.PFEApiRoute() + "templates/repositories")
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func AddTemplateRepo(URL, description string) ([]TemplateRepo, error) {
 	jsonValue, _ := json.Marshal(values)
 
 	resp, err := http.Post(
-		config.PFEApiRoute+"templates/repositories",
+		config.PFEApiRoute() + "templates/repositories",
 		"application/json",
 		bytes.NewBuffer(jsonValue),
 	)
@@ -164,7 +164,7 @@ func DeleteTemplateRepo(URL string) ([]TemplateRepo, error) {
 
 	req, err := http.NewRequest(
 		"DELETE",
-		config.PFEApiRoute+"templates/repositories",
+		config.PFEApiRoute() + "templates/repositories",
 		bytes.NewBuffer(jsonValue),
 	)
 	req.Header.Set("Content-Type", "application/json")
