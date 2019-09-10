@@ -27,6 +27,7 @@ func TestDetermineProjectInfo(t *testing.T) {
 		in            string
 		wantLanguage  string
 		wantBuildType string
+		wantIsAppsody bool
 		wantedErr     error
 	}{
 		"success case: liberty project": {
@@ -52,10 +53,11 @@ func TestDetermineProjectInfo(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			gotLanguage, gotBuildType := DetermineProjectInfo(test.in)
+			gotLanguage, gotBuildType, gotIsAppsody := DetermineProjectInfo(test.in)
 
 			assert.Equal(t, test.wantLanguage, gotLanguage)
 			assert.Equal(t, test.wantBuildType, gotBuildType)
+			assert.Equal(t, test.wantIsAppsody, gotIsAppsody)
 		})
 	}
 }
