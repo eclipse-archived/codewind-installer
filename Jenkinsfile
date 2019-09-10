@@ -71,7 +71,7 @@ spec:
                         export GOARCH=amd64
                         GOOS=darwin go build -ldflags="-s -w" -o codewind-installer-macos
                         GOOS=windows go build -ldflags="-s -w" -o codewind-installer-win.exe
-                        GOOS=linux go build -ldflags="-s -w" -o codewind-installer-linux
+                        CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o codewind-installer-linux
                         chmod -v +x codewind-installer-*
 
                     '''
