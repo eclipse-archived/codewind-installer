@@ -17,21 +17,23 @@
 	"os/exec"
 	"log"
 	"runtime"
+	"path/filepath"
 )
  
  // SuccessfullyCallAppsodyInit calls Appsody Init to initialise Appsody projects and returns a boolean to indicate success
  func SuccessfullyCallAppsodyInit(projectPath string) (bool, error) {
-	cwd, err := os.Getwd()
+	cwd, err := os.Executable()
 	if err != nil {
 		log.Println("There was a problem with locating appsody binary")
 		return false, err
 	}
 	const GOOS string = runtime.GOOS
+	installerPath := filepath.Dir(cwd)
 	appsodyBinPath := "/appsody"
 	if GOOS == "windows" {
 		appsodyBinPath = "/appsody.exe"
 	}
-	appsodyBin := cwd + appsodyBinPath
+	appsodyBin := installerPath + appsodyBinPath
 	cmd := exec.Command(appsodyBin, "init")
 	cmd.Dir = projectPath
 	output := new(bytes.Buffer)
