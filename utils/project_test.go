@@ -34,21 +34,25 @@ func TestDetermineProjectInfo(t *testing.T) {
 			in:            path.Join("..", "resources", "test", "liberty-project"),
 			wantLanguage:  "java",
 			wantBuildType: "liberty",
+			wantIsAppsody: false,
 		},
 		"success case: spring project": {
 			in:            path.Join("..", "resources", "test", "spring-project"),
 			wantLanguage:  "java",
 			wantBuildType: "spring",
+			wantIsAppsody: false,
 		},
 		"success case: node.js project": {
 			in:            path.Join("..", "resources", "test", "node-project"),
 			wantLanguage:  "nodejs",
 			wantBuildType: "nodejs",
+			wantIsAppsody: false,
 		},
 		"success case: swift project": {
 			in:            path.Join("..", "resources", "test", "swift-project"),
 			wantLanguage:  "swift",
 			wantBuildType: "swift",
+			wantIsAppsody: false,
 		},
 	}
 	for name, test := range tests {
