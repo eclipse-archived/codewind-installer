@@ -28,10 +28,7 @@ type CWSettings struct {
 	InternalPort      string   `json:"internalPort"`
 	HealthCheck       string   `json:"healthCheck"`
 	InternalDebugPort *string  `json:"internalDebugPort,omitempty"`
-<<<<<<< HEAD
-=======
 	IsHTTPS           bool     `json:"isHttps"`
->>>>>>> isHttps in cw-settings
 	IgnoredPaths      []string `json:"ignoredPaths"`
 	MavenProfiles     []string `json:"mavenProfiles,omitempty"`
 	MavenProperties   []string `json:"mavenProperties,omitempty"`
