@@ -28,6 +28,7 @@ type CWSettings struct {
 	InternalPort      string   `json:"internalPort"`
 	HealthCheck       string   `json:"healthCheck"`
 	InternalDebugPort *string  `json:"internalDebugPort,omitempty"`
+	IsHTTPS           bool     `json:"isHttps"`
 	IgnoredPaths      []string `json:"ignoredPaths"`
 	MavenProfiles     []string `json:"mavenProfiles,omitempty"`
 	MavenProperties   []string `json:"mavenProperties,omitempty"`
@@ -108,6 +109,7 @@ func getDefaultCwSettings() CWSettings {
 		ContextRoot:  "",
 		InternalPort: "",
 		HealthCheck:  "",
+		IsHTTPS:      false,
 		IgnoredPaths: []string{""},
 	}
 }
