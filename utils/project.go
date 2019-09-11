@@ -27,7 +27,7 @@ type CWSettings struct {
 	ContextRoot       string   `json:"contextRoot"`
 	InternalPort      string   `json:"internalPort"`
 	HealthCheck       string   `json:"healthCheck"`
-	InternalDebugPort *string  `json:"internalDebugPort"`
+	InternalDebugPort *string  `json:"internalDebugPort,omitempty"`
 	IgnoredPaths      []string `json:"ignoredPaths"`
 	MavenProfiles     []string `json:"mavenProfiles,omitempty"`
 	MavenProperties   []string `json:"mavenProperties,omitempty"`
