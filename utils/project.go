@@ -80,7 +80,10 @@ func determineJavaBuildType(projectPath string) string {
 	if strings.Contains(pomXMLString, "<groupId>org.springframework.boot</groupId>") {
 		return "spring"
 	}
-	if strings.Contains(pomXMLString, "<groupId>org.eclipse.microprofile</groupId>") {
+	pathToDockerfile := path.Join(projectPath, "Dockerfile")
+	dockerfileContents, err := ioutil.ReadFile(pathToDockerfile)
+	dockerfileString := string(dockerfileContents)
+	if strings.Contains(dockerfileString, "FROM websphere-liberty") {
 		return "liberty"
 	}
 	return "docker"
