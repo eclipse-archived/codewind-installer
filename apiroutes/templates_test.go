@@ -13,7 +13,6 @@ package apiroutes
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"testing"
 
@@ -21,7 +20,7 @@ import (
 )
 
 var numCodewindTemplates int = 8
-var numAppsodyTemplates int = 8
+var numAppsodyTemplates int = 9
 var numTemplates int = numCodewindTemplates + numAppsodyTemplates
 
 var URLOfExistingRepo string = "https://raw.githubusercontent.com/kabanero-io/codewind-templates/master/devfiles/index.json"
@@ -101,7 +100,7 @@ func TestGetTemplateRepos(t *testing.T) {
 	}{
 		"success case": {
 			wantedType:   []TemplateRepo{},
-			wantedLength: 1,
+			wantedLength: 2,
 			wantedErr:    nil,
 		},
 	}
