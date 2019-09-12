@@ -210,6 +210,10 @@ func DeleteTemplateRepo(URL string) ([]TemplateRepo, error) {
 // EnableTemplateRepos enables a template repo in PFE and
 // returns the new list of template repos
 func EnableTemplateRepos(repoURLs []string) ([]TemplateRepo, error) {
+	if repoURLs == nil {
+		return nil, fmt.Errorf("Error: '%s' is not a valid URL", repoURLs)
+	}
+
 	var operations []RepoOperation
 	for _, URL := range repoURLs {
 		if _, err := url.ParseRequestURI(URL); err != nil {
@@ -238,6 +242,10 @@ func EnableTemplateRepos(repoURLs []string) ([]TemplateRepo, error) {
 // DisableTemplateRepos enables a template repo in PFE and
 // returns the new list of template repos
 func DisableTemplateRepos(repoURLs []string) ([]TemplateRepo, error) {
+	if repoURLs == nil {
+		return nil, fmt.Errorf("Error: '%s' is not a valid URL", repoURLs)
+	}
+
 	var operations []RepoOperation
 	for _, URL := range repoURLs {
 		if _, err := url.ParseRequestURI(URL); err != nil {

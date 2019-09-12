@@ -202,6 +202,11 @@ func TestFailuresEnableTemplateRepos(t *testing.T) {
 		wantedType []TemplateRepo
 		wantedErr  error
 	}{
+		"nil repo URL": {
+			in:         nil,
+			wantedType: nil,
+			wantedErr:  errors.New("Error: '[]' is not a valid URL"),
+		},
 		"invalid repo URL": {
 			in:         []string{"invalidURL"},
 			wantedType: nil,
@@ -233,6 +238,11 @@ func TestFailuresDisableTemplateRepos(t *testing.T) {
 		wantedType []TemplateRepo
 		wantedErr  error
 	}{
+		"nil repo URL": {
+			in:         nil,
+			wantedType: nil,
+			wantedErr:  errors.New("Error: '[]' is not a valid URL"),
+		},
 		"invalid repo URL": {
 			in:         []string{"invalidURL"},
 			wantedType: nil,
