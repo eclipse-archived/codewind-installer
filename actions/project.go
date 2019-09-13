@@ -71,7 +71,7 @@ func DownloadTemplate(c *cli.Context) {
 	}
 }
 
-// testIsExtension tests if a project an extension project and run associated commands if necessary
+// testIsExtension tests if a project is an extension project and run associated commands as necessary
 func testIsExtension(projectPath string) (string, error) {
 
 	extensions, err := apiroutes.GetExtensions()
