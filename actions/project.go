@@ -19,6 +19,7 @@ import (
 	"path"
 	"regexp"
 
+	"github.com/eclipse/codewind-installer/apiroutes"
 	"github.com/eclipse/codewind-installer/errors"
 	"github.com/eclipse/codewind-installer/utils"
 	"github.com/urfave/cli"
@@ -52,9 +53,9 @@ func DownloadTemplate(c *cli.Context) {
 
 	// Remove invalid characters from the string we will use
 	// as the project name in the template.
-	r := regexp.MustCompile("[^a-zA-Z0-9._-]");
-	projectName := r.ReplaceAllString(projectDir, "");
-	if (len(projectName) == 0){
+	r := regexp.MustCompile("[^a-zA-Z0-9._-]")
+	projectName := r.ReplaceAllString(projectDir, "")
+	if len(projectName) == 0 {
 		projectName = "PROJ_NAME_PLACEHOLDER"
 	}
 
@@ -70,6 +71,24 @@ func DownloadTemplate(c *cli.Context) {
 	}
 }
 
+// testIsExtension tests if a project an extension project and run associated commands if necessary
+func testIsExtension(projectPath string) (string, error) {
+
+	extensions, err := apiroutes.GetExtensions()
+	if err != nil {
+		return "", err
+	}
+
+	for _, extension := range extensions {
+		// check if project contains the detection file an extension defines
+		if extension.Detection != "" && utils.PathExists(path.Join(projectPath, extension.Detection)) {
+			return extension.ProjectType, nil
+		}
+	}
+
+	return "", nil
+}
+
 // ValidateProject returns the language and buildType for a project at given filesystem path,
 // and writes a default .cw-settings file to that project
 func ValidateProject(c *cli.Context) {
@@ -80,16 +99,21 @@ func ValidateProject(c *cli.Context) {
 	var validationResult interface{}
 	language, buildType := utils.DetermineProjectInfo(projectPath)
 	validationResult = ProjectType{
-		Language: language,
+		Language:  language,
 		BuildType: buildType,
 	}
-	// if isAppsody {
-	// 	validated, err := utils.SuccessfullyCallAppsodyInit(projectPath)
-	// 	if !validated {
-	// 		validationStatus = "failed"
-	// 		validationResult = err.Error()
-	// 	}
-	// }
+	extensionType, err := testIsExtension(projectPath)
+	if extensionType != "" {
+		if err == nil {
+			validationResult = ProjectType{
+				Language:  language,
+				BuildType: extensionType,
+			}
+		} else {
+			validationStatus = "failed"
+			validationResult = err.Error()
+		}
+	}
 
 	response := ValidationResponse{
 		Status: validationStatus,
