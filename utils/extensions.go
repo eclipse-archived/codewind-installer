@@ -17,34 +17,37 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 )
 
-// SuccessfullyCallAppsodyInit calls Appsody Init to initialise Appsody projects and returns a boolean to indicate success
-func SuccessfullyCallAppsodyInit(projectPath string) (bool, error) {
+type (
+	// ExtensionCommand represents a command defined by a project extension
+	ExtensionCommand struct {
+		Name    string   `json:"name"`
+		Command string   `json:"command"`
+		Args    []string `json:"args"`
+	}
+)
+
+// RunCommand runs a command defined by an extension
+func RunCommand(projectPath string, command ExtensionCommand) error {
 	cwd, err := os.Executable()
 	if err != nil {
-		log.Println("There was a problem with locating appsody binary")
-		return false, err
+		log.Println("There was a problem with locating the command directory")
+		return err
 	}
-	const GOOS string = runtime.GOOS
 	installerPath := filepath.Dir(cwd)
-	appsodyBinPath := "/appsody"
-	if GOOS == "windows" {
-		appsodyBinPath = "/appsody.exe"
-	}
-	appsodyBin := installerPath + appsodyBinPath
-	cmd := exec.Command(appsodyBin, "init")
+	commandBin := filepath.Join(installerPath, command.Command)
+	cmd := exec.Command(commandBin, command.Args...)
 	cmd.Dir = projectPath
 	output := new(bytes.Buffer)
 	cmd.Stdout = output
 	cmd.Stderr = output
 	if err := cmd.Start(); err != nil { // after 'Start' the program is continued and script is executing in background
-		log.Println("There was a problem initializing the Appsody project: ", err, ". Project was not initialized.")
-		return false, err
+		log.Println("There was a problem running the command:", command.Command)
+		return err
 	}
-	log.Printf("Please wait while the Appsody project is initialized... %s \n", output.String())
+	log.Printf("Please wait while the project is initialized... %s", output.String())
 	cmd.Wait()
 	log.Println(output.String()) // Wait to finish execution, so we can read all output
-	return true, nil
+	return nil
 }
