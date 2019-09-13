@@ -34,9 +34,9 @@ type CWSettings struct {
 	MavenProperties   []string `json:"mavenProperties,omitempty"`
 }
 
-// DetermineProjectInfo returns the language and build-type of a project, as well as if it's an Appsody project
-func DetermineProjectInfo(projectPath string) (string, string, bool) {
-	language, buildType, isAppsody := "unknown", "docker", false
+// DetermineProjectInfo returns the language and build-type of a project
+func DetermineProjectInfo(projectPath string) (string, string) {
+	language, buildType := "unknown", "docker"
 	if PathExists(path.Join(projectPath, "pom.xml")) {
 		language = "java"
 		buildType = determineJavaBuildType(projectPath)
@@ -49,13 +49,7 @@ func DetermineProjectInfo(projectPath string) (string, string, bool) {
 		language = "swift"
 		buildType = "swift"
 	}
-	if PathExists(path.Join(projectPath, "stack.yaml")) {
-		isAppsody = true
-	}
-	if PathExists(path.Join(projectPath, ".appsody-config.yaml")) {
-		isAppsody = true
-	}
-	return language, buildType, isAppsody
+	return language, buildType
 }
 
 // CheckProjectPath will stop the process and return an error if path does not

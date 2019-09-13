@@ -78,18 +78,18 @@ func ValidateProject(c *cli.Context) {
 	validationStatus := "success"
 	// result could be ProjectType or string, so define as an interface
 	var validationResult interface{}
-	language, buildType, isAppsody := utils.DetermineProjectInfo(projectPath)
+	language, buildType := utils.DetermineProjectInfo(projectPath)
 	validationResult = ProjectType{
 		Language: language,
 		BuildType: buildType,
 	}
-	if isAppsody {
-		validated, err := utils.SuccessfullyCallAppsodyInit(projectPath)
-		if !validated {
-			validationStatus = "failed"
-			validationResult = err.Error()
-		}
-	}
+	// if isAppsody {
+	// 	validated, err := utils.SuccessfullyCallAppsodyInit(projectPath)
+	// 	if !validated {
+	// 		validationStatus = "failed"
+	// 		validationResult = err.Error()
+	// 	}
+	// }
 
 	response := ValidationResponse{
 		Status: validationStatus,
