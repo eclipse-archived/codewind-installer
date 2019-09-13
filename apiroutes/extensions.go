@@ -17,20 +17,15 @@ import (
 	"net/http"
 
 	"github.com/eclipse/codewind-installer/config"
+	"github.com/eclipse/codewind-installer/utils"
 )
 
 type (
-	// ExtensionCommand represents a command defined by a project extension
-	ExtensionCommand struct {
-		Name    string `json:"name"`
-		Command string `json:"command"`
-	}
-
 	// Extension represents a project extension defined by codewind.yaml
 	Extension struct {
-		ProjectType string             `json:"projectType"`
-		Detection   string             `json:"detection"`
-		Commands    []ExtensionCommand `json:"commands"`
+		ProjectType string                   `json:"projectType"`
+		Detection   string                   `json:"detection"`
+		Commands    []utils.ExtensionCommand `json:"commands"`
 	}
 )
 

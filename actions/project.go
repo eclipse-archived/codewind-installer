@@ -80,9 +80,21 @@ func testIsExtension(projectPath string) (string, error) {
 	}
 
 	for _, extension := range extensions {
+
 		// check if project contains the detection file an extension defines
 		if extension.Detection != "" && utils.PathExists(path.Join(projectPath, extension.Detection)) {
-			return extension.ProjectType, nil
+
+			var cmdErr error
+
+			// check if there are any commands to run
+			for _, command := range extension.Commands {
+				if command.Name == "postProjectValidate" {
+					cmdErr = utils.RunCommand(projectPath, command)
+					break
+				}
+			}
+
+			return extension.ProjectType, cmdErr
 		}
 	}
 
