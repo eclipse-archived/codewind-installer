@@ -9,19 +9,19 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 
- package utils
+package utils
 
- import (
+import (
 	"bytes"
+	"log"
 	"os"
 	"os/exec"
-	"log"
-	"runtime"
 	"path/filepath"
+	"runtime"
 )
- 
- // SuccessfullyCallAppsodyInit calls Appsody Init to initialise Appsody projects and returns a boolean to indicate success
- func SuccessfullyCallAppsodyInit(projectPath string) (bool, error) {
+
+// SuccessfullyCallAppsodyInit calls Appsody Init to initialise Appsody projects and returns a boolean to indicate success
+func SuccessfullyCallAppsodyInit(projectPath string) (bool, error) {
 	cwd, err := os.Executable()
 	if err != nil {
 		log.Println("There was a problem with locating appsody binary")
@@ -47,5 +47,4 @@
 	cmd.Wait()
 	log.Println(output.String()) // Wait to finish execution, so we can read all output
 	return true, nil
- }
- 
+}
