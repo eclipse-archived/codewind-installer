@@ -18,6 +18,7 @@ import (
 )
 
 func Test_GetActiveDeployment(t *testing.T) {
+	InitDeploymentConfigIfRequired()
 	t.Run("ActiveDeployment", func(t *testing.T) {
 		ResetDeploymentsFile()
 		result := FindTargetDeployment()
