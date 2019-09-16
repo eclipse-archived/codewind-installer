@@ -80,10 +80,10 @@ spec:
 
 		stage('Test') {
 			options {
-                timeout(time: 2, unit: 'HOURS') 
-            }
-            steps {
-                echo 'Starting bats tests '
+                		timeout(time: 2, unit: 'HOURS') 
+            		}
+            		steps {
+                		echo 'Starting bats tests '
 				sh '''
 				    # install bats
 				    wget -O - https://github.com/bats-core/bats-core/blob/master/install.sh | sh
@@ -91,11 +91,11 @@ spec:
 				    bats integration.bats
 					  
 				'''
-            }
-        }
+            		}
+        	}
 
-        stage('Upload') {
-          steps {
+        	stage('Upload') {
+          		steps {
 				script {
 					sh '''
 						# switch to the code go directory
@@ -109,9 +109,9 @@ spec:
 						TIMESTAMP="$(date +%F-%H%M)"
 						# WINDOWS EXE: Submit Windows unsigned.exe and save signed output to signed.exe
 
-	                    # only sign windows exe if not a pull request
+	                    			# only sign windows exe if not a pull request
 						if [ -z $CHANGE_ID ]; then
-                        	curl -o codewind-installer/codewind-installer-win-${TIMESTAMP}.exe  -F file=@codewind-installer-win.exe http://build.eclipse.org:31338/winsign.php
+                        			curl -o codewind-installer/codewind-installer-win-${TIMESTAMP}.exe  -F file=@codewind-installer-win.exe http://build.eclipse.org:31338/winsign.php
 							rm codewind-installer-win.exe
 						fi
 						# move other executable to codewind-installer directoryand add timestamp to the name
@@ -129,20 +129,20 @@ spec:
 					}
 				}
 			}
-        }
+        	}
 		stage('Deploy') {
 			// This when clause disables PR build uploads; you may comment this out if you want your build uploaded.
-            when {
-                beforeAgent true
-                not {
-                    changeRequest()
-                }
-            }
+            		when {
+                		beforeAgent true
+                		not {
+                    			changeRequest()
+                		}
+            		}
 
 			agent any
-           	steps {
-               	sshagent ( ['projects-storage.eclipse.org-bot-ssh']) {
-                println("Deploying codewind-installer to download area...")
+           		steps {
+               			sshagent ( ['projects-storage.eclipse.org-bot-ssh']) {
+                		println("Deploying codewind-installer to download area...")
 				sh '''
 		 			if [ -d codewind-installer ]; then
 						rm -rf codewind-installer
@@ -153,7 +153,7 @@ spec:
 		 		dir ('codewind-installer') {
 		 			unstash 'EXECUTABLES'
 		 		}
-                sh '''
+                		sh '''
 					WORKSPACE=$PWD
 					ls -la ${WORKSPACE}/codewind-installer/*
 					if [ -z $CHANGE_ID ]; then
