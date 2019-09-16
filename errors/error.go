@@ -52,6 +52,10 @@ func CheckErr(err error, code int, optMsg string) {
 		case 206:
 			// Do not want to exit if this is thrown
 			log.Print("DELETE_FILE_ERROR", "[", code, "]: ", err, ". ", optMsg)
+		case 207:
+			log.Fatal("READ_FILE_ERROR", "[", code, "]: ", err, ". ", optMsg)
+		case 208:
+			log.Fatal("PARSING_ERROR", "[", code, "]: ", err, ". ", optMsg)
 		case 300:
 			log.Fatal("APPLICATION_ERROR", "[", code, "]: ", err, ". ", optMsg)
 		case 400:

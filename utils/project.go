@@ -18,6 +18,7 @@ import (
 	"os"
 	"path"
 	"strings"
+
 	"github.com/eclipse/codewind-installer/errors"
 )
 
@@ -26,54 +27,64 @@ type CWSettings struct {
 	ContextRoot       string   `json:"contextRoot"`
 	InternalPort      string   `json:"internalPort"`
 	HealthCheck       string   `json:"healthCheck"`
-	InternalDebugPort *string  `json:"internalDebugPort"`
+	InternalDebugPort *string  `json:"internalDebugPort,omitempty"`
+	IsHTTPS           bool     `json:"isHttps"`
 	IgnoredPaths      []string `json:"ignoredPaths"`
 	MavenProfiles     []string `json:"mavenProfiles,omitempty"`
 	MavenProperties   []string `json:"mavenProperties,omitempty"`
 }
 
-// DetermineProjectInfo returns the language and build-type of a project
-func DetermineProjectInfo(projectPath string) (string, string) {
-	language, buildType := "unknown", "docker"
-	if _, err := os.Stat(path.Join(projectPath, "pom.xml")); err == nil {
+// DetermineProjectInfo returns the language and build-type of a project, as well as if it's an Appsody project
+func DetermineProjectInfo(projectPath string) (string, string, bool) {
+	language, buildType, isAppsody := "unknown", "docker", false
+	if PathExists(path.Join(projectPath, "pom.xml")) {
 		language = "java"
 		buildType = determineJavaBuildType(projectPath)
 	}
-	if _, err := os.Stat(path.Join(projectPath, "package.json")); err == nil {
+	if PathExists(path.Join(projectPath, "package.json")) {
 		language = "nodejs"
 		buildType = "nodejs"
 	}
-	if _, err := os.Stat(path.Join(projectPath, "Package.swift")); err == nil {
+	if PathExists(path.Join(projectPath, "Package.swift")) {
 		language = "swift"
 		buildType = "swift"
 	}
-	return language, buildType
+	if PathExists(path.Join(projectPath, "stack.yaml")) {
+		isAppsody = true
+	}
+	if PathExists(path.Join(projectPath, ".appsody-config.yaml")) {
+		isAppsody = true
+	}
+	return language, buildType, isAppsody
 }
 
 // CheckProjectPath will stop the process and return an error if path does not
 // exist or is invalid
 func CheckProjectPath(projectPath string) {
 	if projectPath == "" {
-		log.Fatal("Project path has not been set")
+		log.Fatal("Project path not given")
 	}
 
-	if _, err := os.Stat(projectPath); os.IsNotExist(err) {
+	if !PathExists(projectPath) {
 		log.Fatal("Project not found at given path")
 	}
 }
 
 func determineJavaBuildType(projectPath string) string {
 	pathToPomXML := path.Join(projectPath, "pom.xml")
-	pomXMLContents, _err := ioutil.ReadFile(pathToPomXML)
+	pomXMLContents, err := ioutil.ReadFile(pathToPomXML)
 	// if there is an error reading the pom.xml, we build as docker
-	if _err != nil {
+	if err != nil {
 		return "docker"
 	}
 	pomXMLString := string(pomXMLContents)
 	if strings.Contains(pomXMLString, "<groupId>org.springframework.boot</groupId>") {
 		return "spring"
 	}
-	if strings.Contains(pomXMLString, "<groupId>org.eclipse.microprofile</groupId>") {
+	pathToDockerfile := path.Join(projectPath, "Dockerfile")
+	dockerfileContents, err := ioutil.ReadFile(pathToDockerfile)
+	dockerfileString := string(dockerfileContents)
+	if strings.Contains(dockerfileString, "FROM websphere-liberty") {
 		return "liberty"
 	}
 	return "docker"
@@ -81,11 +92,12 @@ func determineJavaBuildType(projectPath string) string {
 
 // WriteNewCwSettings writes a default .cw-settings file to the given path,
 // dependant on the build type of the project
-func WriteNewCwSettings(pathToCwSettings string, BuildType string,) {
+func WriteNewCwSettings(pathToCwSettings string, BuildType string) {
 	defaultCwSettings := getDefaultCwSettings()
 	cwSettings := addNonDefaultFieldsToCwSettings(defaultCwSettings, BuildType)
 	settings, err := json.MarshalIndent(cwSettings, "", "")
 	errors.CheckErr(err, 203, "")
+	// File permission 0644 grants read and write access to the owner
 	err = ioutil.WriteFile(pathToCwSettings, settings, 0644)
 }
 
@@ -100,6 +112,7 @@ func getDefaultCwSettings() CWSettings {
 		ContextRoot:  "",
 		InternalPort: "",
 		HealthCheck:  "",
+		IsHTTPS:      false,
 		IgnoredPaths: []string{""},
 	}
 }
@@ -119,8 +132,8 @@ func addNonDefaultFieldsToCwSettings(cwSettings CWSettings, ProjectType string) 
 	return cwSettings
 }
 
-func stringInSlice(a string, list []string) bool {
-	for _, b := range list {
+func stringInSlice(a string, slice []string) bool {
+	for _, b := range slice {
 		if b == a {
 			return true
 		}
