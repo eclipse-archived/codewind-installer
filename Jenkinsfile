@@ -79,6 +79,9 @@ spec:
 		}
 
 		stage('Test') {
+			options {
+                timeout(time: 2, unit: 'HOURS') 
+            }
             steps {
                 echo 'Starting bats tests '
 				sh '''
