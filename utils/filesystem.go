@@ -12,8 +12,9 @@
 package utils
 
 import (
-	"archive/zip"
 	"archive/tar"
+	"archive/zip"
+	"bytes"
 	"compress/gzip"
 	"context"
 	"fmt"
@@ -22,6 +23,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -86,7 +88,7 @@ func DeleteTempFile(filePath string) (bool, error) {
 	return true, nil
 }
 
-// PingHealth - pings environment api over a 15 second to check if containers started
+// PingHealth - pings environment api every 15 seconds to check if containers started
 func PingHealth(healthEndpoint string) bool {
 	var started = false
 	fmt.Println("Waiting for Codewind to start")
@@ -138,13 +140,14 @@ func DownloadFile(URL, destination string) error {
 	// Create the file
 	file, err := os.Create(destination)
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 	defer file.Close()
 
 	// Write body to file
 	_, err = io.Copy(file, resp.Body)
-	fmt.Printf("Downloaded file from '%s' to '%s'\n", URL, destination)
+	log.Printf("Downloaded file from '%s' to '%s'\n", URL, destination)
 
 	return err
 }
@@ -191,7 +194,7 @@ func UnZip(filePath, destination string) error {
 			errors.CheckErr(err, 404, "")
 		}
 	}
-	fmt.Printf("Extracted file from '%s' to '%s'\n", filePath, destination)
+	log.Printf("Extracted file from '%s' to '%s'\n", filePath, destination)
 	return nil
 }
 
@@ -256,4 +259,53 @@ func readFile(filePath string) (*os.File, error) {
 		return file, err
 	}
 	return file, nil
+}
+
+// PathExists returns whether a path exists on the local file system.
+func PathExists(path string) bool {
+	if _, err := os.Stat(path); err == nil {
+		return true
+	}
+	return false
+}
+
+func ReplaceInFiles(projectPath string, oldStr string, newStr string) error {
+
+	oldBytes := []byte(oldStr)
+	newBytes := []byte(newStr)
+
+	pathsToRename := []string{}
+
+	lastError := error(nil)
+	filepath.Walk(projectPath, func(pathName string, info os.FileInfo, err error) error {
+
+		if strings.Contains(path.Base(pathName), oldStr) {
+			// Keep track of files we need to rename but don't rename
+			// them until the filepath.Walk is complete.
+			pathsToRename = append(pathsToRename, pathName);
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		content, err := ioutil.ReadFile(pathName)
+		if err != nil {
+			lastError = err
+			return nil
+		}
+		newContent := bytes.Replace(content, []byte(oldBytes), []byte(newBytes), -1)
+		if err = ioutil.WriteFile(pathName, newContent, info.Mode()); err != nil {
+			lastError = err
+			return nil
+		}
+		return nil
+	})
+
+	for _, pathName := range pathsToRename {
+		newPath := strings.Replace(pathName, oldStr, newStr, -1)
+		os.Rename(pathName, newPath)
+	}
+
+	return lastError
 }
