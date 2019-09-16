@@ -71,7 +71,7 @@ func DownloadFromRepoURL(repoURL string, destination string) error {
 func DownloadAndExtractZip(zipURL string, destination string) error {
 	time := time.Now().Format(time.RFC3339)
 	time = strings.Replace(time, ":", "-", -1) // ":" is illegal char in windows
-	pathToTempZipFile := os.TempDir() + "_" + time + ".zip"
+	pathToTempZipFile := path.Join(os.TempDir(), "_" + time + ".zip")
 
 	err := DownloadFile(zipURL, pathToTempZipFile)
 	if err != nil {

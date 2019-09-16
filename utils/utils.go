@@ -11,6 +11,11 @@
 
 package utils
 
+import (
+	"encoding/json"
+	"fmt"
+)
+
 // RemoveDuplicateEntries elements
 func RemoveDuplicateEntries(inputArr []string) []string {
 
@@ -30,4 +35,9 @@ func RemoveDuplicateEntries(inputArr []string) []string {
 	}
 
 	return result
+}
+
+func PrettyPrintJSON(i interface{}) {
+	s, _ := json.MarshalIndent(i, "", "\t")
+	fmt.Println(string(s))
 }

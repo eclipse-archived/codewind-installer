@@ -17,6 +17,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"regexp"
 
 	"github.com/eclipse/codewind-installer/errors"
 	"github.com/eclipse/codewind-installer/utils"
@@ -27,14 +28,15 @@ type (
 	// ProjectType represents the information Codewind requires to build a project.
 	ProjectType struct {
 		Language  string `json:"language"`
-		BuildType string `json:"buildType"`
+		BuildType string `json:"projectType"`
 	}
 
-	// ValidationResponse represents the response to validating a project on the users filesystem.
+	// ValidationResponse represents the response to validating a project on the users filesystem
+	// result is an interface as it could be ProjectType or string depending on success or failure.
 	ValidationResponse struct {
 		Status string      `json:"status"`
-		Path   string      `json:"path"`
-		Result ProjectType `json:"result"`
+		Path   string      `json:"projectPath"`
+		Result interface{} `json:"result"`
 	}
 )
 
@@ -46,9 +48,23 @@ func DownloadTemplate(c *cli.Context) {
 		log.Fatal("destination not set")
 	}
 
+	projectDir := path.Base(destination)
+
+	// Remove invalid characters from the string we will use
+	// as the project name in the template.
+	r := regexp.MustCompile("[^a-zA-Z0-9._-]");
+	projectName := r.ReplaceAllString(projectDir, "");
+	if (len(projectName) == 0){
+		projectName = "PROJ_NAME_PLACEHOLDER"
+	}
+
 	url := c.String("u")
 
 	err := utils.DownloadFromURLThenExtract(url, destination)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = utils.ReplaceInFiles(destination, "[PROJ_NAME_PLACEHOLDER]", projectName)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -59,12 +75,26 @@ func DownloadTemplate(c *cli.Context) {
 func ValidateProject(c *cli.Context) {
 	projectPath := c.Args().Get(0)
 	utils.CheckProjectPath(projectPath)
+	validationStatus := "success"
+	// result could be ProjectType or string, so define as an interface
+	var validationResult interface{}
+	language, buildType, isAppsody := utils.DetermineProjectInfo(projectPath)
+	validationResult = ProjectType{
+		Language: language,
+		BuildType: buildType,
+	}
+	if isAppsody {
+		validated, err := utils.SuccessfullyCallAppsodyInit(projectPath)
+		if !validated {
+			validationStatus = "failed"
+			validationResult = err.Error()
+		}
+	}
 
-	language, buildType := utils.DetermineProjectInfo(projectPath)
 	response := ValidationResponse{
-		Status: "success",
-		Result: ProjectType{language, buildType},
+		Status: validationStatus,
 		Path:   projectPath,
+		Result: validationResult,
 	}
 	projectInfo, err := json.Marshal(response)
 
