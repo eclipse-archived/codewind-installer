@@ -84,7 +84,7 @@ spec:
 				sh '''
 				    # install bats
 				    wget -O - https://github.com/bats-core/bats-core/blob/master/install.sh | sh
- 				    # run bats test file
+                    # run bats test file
 				    bats integration.bats
 					  
 				'''
