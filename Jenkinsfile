@@ -173,7 +173,8 @@ spec:
                     mv ${WORKSPACE}/$REPO_NAME/$INSTALLER_LINUX-* ${WORKSPACE}/$REPO_NAME/$INSTALLER_LINUX
                     mv ${WORKSPACE}/$REPO_NAME/$INSTALLER_MACOS-* ${WORKSPACE}/$REPO_NAME/$INSTALLER_MACOS
                     mv ${WORKSPACE}/$REPO_NAME/$INSTALLER_WIN-* ${WORKSPACE}/$REPO_NAME/$INSTALLER_WIN.exe
-
+                    
+                    echo "# Build date: $(date +%F-%T)" >> ${WORKSPACE}/$REPO_NAME/$BUILD_INFO
                     echo "build_info.url=$BUILD_URL" >> ${WORKSPACE}/$REPO_NAME/$BUILD_INFO
                     SHA1_LINUX=$(sha1sum ${WORKSPACE}/$REPO_NAME/$INSTALLER_LINUX | cut -d ' ' -f 1)
                     echo "build_info.linux.SHA-1=${SHA1_LINUX}" >> ${WORKSPACE}/$REPO_NAME/$BUILD_INFO
