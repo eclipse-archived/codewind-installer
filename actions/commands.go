@@ -22,7 +22,7 @@ import (
 var tempFilePath = "installer-docker-compose.yaml"
 
 
-const versionNum = "x.x.dev"
+const versionNum = "0.4.0"
 
 const healthEndpoint = "/api/v1/environment"
 
