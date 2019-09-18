@@ -77,7 +77,7 @@ func checkIsExtension(projectPath string) (string, error) {
 	extensions, err := apiroutes.GetExtensions()
 	if err != nil {
 		log.Println("There was a problem retrieving extensions data")
-		return "", err
+		return "unknown", err
 	}
 
 	for _, extension := range extensions {
