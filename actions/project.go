@@ -76,6 +76,7 @@ func testIsExtension(projectPath string) (string, error) {
 
 	extensions, err := apiroutes.GetExtensions()
 	if err != nil {
+		log.Println("There was a problem retrieving extensions data")
 		return "", err
 	}
 
