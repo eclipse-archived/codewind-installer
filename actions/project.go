@@ -71,8 +71,8 @@ func DownloadTemplate(c *cli.Context) {
 	}
 }
 
-// testIsExtension tests if a project is an extension project and run associated commands as necessary
-func testIsExtension(projectPath string) (string, error) {
+// checkIsExtension checks if a project is an extension project and run associated commands as necessary
+func checkIsExtension(projectPath string) (string, error) {
 
 	extensions, err := apiroutes.GetExtensions()
 	if err != nil {
@@ -115,7 +115,7 @@ func ValidateProject(c *cli.Context) {
 		Language:  language,
 		BuildType: buildType,
 	}
-	extensionType, err := testIsExtension(projectPath)
+	extensionType, err := checkIsExtension(projectPath)
 	if extensionType != "" {
 		if err == nil {
 			validationResult = ProjectType{
