@@ -5,11 +5,23 @@ Prebuilt binary files are available for download [on Eclipse](https://download.e
 [![License](https://img.shields.io/badge/License-EPL%202.0-red.svg?label=license&logo=eclipse)](https://www.eclipse.org/legal/epl-2.0/)
 [![Build Status](https://ci.eclipse.org/codewind/buildStatus/icon?job=Codewind%2Fcodewind-installer%2Fmaster)](https://ci.eclipse.org/codewind/job/Codewind/job/codewind-installer/job/master/)
 
+## Table of Contents
+
+- [Before starting](#before-starting)
+- [Downloading the release binary file for](#Downloading-the-release-binary-file-for)
+- [Building and deploying locally on MacOS](#Building-and-deploying-locally-on-MacOS)
+- [Creating a cross-platform binary](#Creating-a-cross-platform-binary)
+- [Running the Tests](#running-the-tests)
+- [API](#API)
+- [Contributing](#Contributing)
+
 ## Before starting
 
 Ensure that you are logged in to Docker. Type `docker login` into a command line window and follow the instructions.
 
-## Downloading the release binary file for MacOS
+## Downloading the release binary file for:
+
+### MacOS
 
 1. Download the release binary file to a folder on your system.
 2. Use the `cd` command to go to the location of the downloaded file in the command line window.
@@ -19,7 +31,7 @@ Ensure that you are logged in to Docker. Type `docker login` into a command line
 6. Type `./codewind-installer-macos` in the command line window to run the installer.
 7. To run a command, enter `./codewind-installer-macos <command>`.
 
-## Downloading the release binary for Linux
+### Linux
 
 1. Download the release binary file to a folder on your system.
 2. Use the `cd` command to go to the location of the downloaded file in the command line window.
@@ -30,7 +42,7 @@ Ensure that you are logged in to Docker. Type `docker login` into a command line
 7. To run the installer, enter `./codewind-installer-linux` in the command line window.
 8. To run a command, enter `./codewind-installer-linux <command>`.
 
-## Downloading the release binary for Windows
+### Windows
 
 1. Download the release binary file to a folder on your system.
 2. Use the `cd` command to go to the location of the downloaded file in the command prompt.
@@ -64,14 +76,9 @@ $ brew upgrade dep
 1. Use the `go tool dist list` command to get a list of the possible `GOOS/ARCH` combinations available to build.
 2. Choose the `GOOS/ARCH` that you want to build for and then enter `GOOS=<OS> GOARCH=<ARCH> go build` to create the binary. To build a binary without the debug symbols, use the `GOOS=<OS> GOARCH=<ARCH> go build -ldflags="-s -w"` command.
 
-## Unit testing
+## Running the Tests
 
-1. Clone the `codewind-installer` repository.
-2. Use the `cd` command to go to a directory with test files in. For example, the `utils.go` tests are located in the `utils/utils_test.go` file.
-3. To run the tests, enter the `go test -v` command in the command line window and wait for the tests to finish.
-4. For any other unit tests, the same steps apply, but the directory might change.
-
-## Bats-core testing
+### Integration tests (Bats-core tests)
 
 1. Set up your environment by installing bats-core as per the bats-core instructions found at <https://github.com/bats-core/bats-core>.
 2. Clone the `codewind-installer` repository.
@@ -79,7 +86,56 @@ $ brew upgrade dep
 4. Ensure your system environment is clean by having no Codewind images installed or containers running.
 5. To run the tests, enter the `bats integration.bats` command in the command line window and wait for the tests to finish.
 
-## CLI Commands
+### Unit tests
+
+#### All tests in current directory and all of its subdirectories
+
+```bash
+$ go test ./...
+```
+
+#### All tests from a package (e.g. utils)
+
+```bash
+$ go test github.com/eclipse/codewind-installer/utils
+```
+
+#### All tests from a package (e.g. utils) whose names match a regex
+
+```bash
+$ go test github.com/eclipse/codewind-installer/utils -run ^(TestDetermineProjectInfo)$ # or ^(DetermineProjectInfo)$
+```
+
+```bash
+$ go test github.com/eclipse/codewind-installer/utils -run ^(TestDetermineProjectInfo)$
+```
+
+#### Notes
+
+##### In VSCode, the UI and Command Palette provide easy ways to run specific packages and tests
+
+##### If tests pass, `go test` will just report that tests passed
+
+E.g.:
+
+```
+PASS
+ok  	github.com/eclipse/codewind-installer/utils
+```
+
+To see more details, use `go test -v`.
+
+### Test coverage
+
+```bash
+$ ./test.sh -coverage
+```
+
+This is the same as `go test ./...`, but outputs test coverage scores for each function, package, and an overall score.
+
+## API
+
+### CLI Commands
 
 |Command         |Alias         |Usage                                                           |
 |----------------|--------------|----------------------------------------------------------------|
@@ -93,40 +149,40 @@ $ brew upgrade dep
 |templates       |              |'Manage project templates'                                      |
 |help            |`h`           |'Shows a list of commands or help for one command'              |
 
-## CLI Command Options
+### Command Options:
 
-## project
+### project
 
 `--url/-u <value>` - URL of project to download
 
-## install
+### install
 
 `--tag/-t <value>` - Dockerhub image tag (default: "latest")</br>
 `--json/-j` - Specify terminal output
 
-## start
+### start
 
 `--tag/-t <value>` - Dockerhub image tag (default: "latest")</br>
 `--debug/-d` - Add debug output
 
-## status
+### status
 
 `--json/-j` - Specify terminal output
 
-## stop
+### stop
 
 >**Note:** No additional flags
 
-## stop-all
+### stop-all
 
 >**Note:** No additional flags
 
-## remove
+### remove
 
 `--tag/-t <value>` - Dockerhub image tag.</br>
 **Note:** Failing to specify a `--tag`, will remove all Codewind images on the host machine.
 
-## templates
+### templates
 
 >**Note:** No additional flags
 
@@ -134,7 +190,7 @@ Subcommands:</br>
 
 `list/ls` - List available templates
 
-## help
+### help
 
 `--help/-h` - Shows a list of commands or help for one command
 
