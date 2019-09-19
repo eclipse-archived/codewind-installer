@@ -49,10 +49,16 @@ func DetermineProjectInfo(projectPath string) (string, string, bool) {
 		language = "swift"
 		buildType = "swift"
 	}
+	if PathExists(path.Join(projectPath, "Pipfile")) {
+		language = "python"
+		buildType = "docker"
+	}
 	if PathExists(path.Join(projectPath, "stack.yaml")) {
+		buildType = "appsodyExtension"
 		isAppsody = true
 	}
 	if PathExists(path.Join(projectPath, ".appsody-config.yaml")) {
+		buildType = "appsodyExtension"
 		isAppsody = true
 	}
 	return language, buildType, isAppsody
