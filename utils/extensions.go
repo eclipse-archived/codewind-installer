@@ -13,7 +13,6 @@ package utils
 
 import (
 	"bytes"
-	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -47,7 +46,7 @@ func RunCommand(projectPath string, command ExtensionCommand) error {
 		log.Println("There was a problem running the command:", command.Command)
 		return err
 	}
-	fmt.Printf("Please wait while the project is initialized... %s", output.String())
+	log.Printf("Please wait while the project is initialized... %s", output.String())
 	cmd.Wait()
 	log.Println(output.String()) // Wait to finish execution, so we can read all output
 	return nil
