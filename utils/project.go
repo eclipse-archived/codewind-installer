@@ -49,6 +49,10 @@ func DetermineProjectInfo(projectPath string) (string, string) {
 		language = "swift"
 		buildType = "swift"
 	}
+	if PathExists(path.Join(projectPath, "Pipfile")) {
+		language = "python"
+		buildType = "docker"
+	}
 	return language, buildType
 }
 
