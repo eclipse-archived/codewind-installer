@@ -95,7 +95,7 @@ func determineJavaBuildType(projectPath string) string {
 func WriteNewCwSettings(pathToCwSettings string, BuildType string) {
 	defaultCwSettings := getDefaultCwSettings()
 	cwSettings := addNonDefaultFieldsToCwSettings(defaultCwSettings, BuildType)
-	settings, err := json.MarshalIndent(cwSettings, "", "")
+	settings, err := json.MarshalIndent(cwSettings, "", "  ")
 	errors.CheckErr(err, 203, "")
 	// File permission 0644 grants read and write access to the owner
 	err = ioutil.WriteFile(pathToCwSettings, settings, 0644)
