@@ -36,14 +36,15 @@ func RunCommand(projectPath string, command ExtensionCommand) error {
 		return err
 	}
 	installerPath := filepath.Dir(cwd)
-	commandBin := filepath.Join(installerPath, command.Command)
+	commandName := filepath.Base(command.Command) // prevent path traversal
+	commandBin := filepath.Join(installerPath, commandName)
 	cmd := exec.Command(commandBin, command.Args...)
 	cmd.Dir = projectPath
 	output := new(bytes.Buffer)
 	cmd.Stdout = output
 	cmd.Stderr = output
 	if err := cmd.Start(); err != nil { // after 'Start' the program is continued and script is executing in background
-		log.Println("There was a problem running the command:", command.Command)
+		log.Println("There was a problem running the command:", commandName)
 		return err
 	}
 	log.Printf("Please wait while the project is initialized... %s", output.String())
