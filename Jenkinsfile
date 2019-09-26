@@ -32,7 +32,7 @@ spec:
     }
 
     environment {
-        CODE_DIRECTORY_FOR_GO = 'src/github.com/eclipse/cwctl'
+        CODE_DIRECTORY_FOR_GO = 'src/github.com/eclipse/codewind-installer'
         DEFAULT_WORKSPACE_DIR_FILE = 'temp_default_dir'
     }
 
@@ -92,29 +92,29 @@ spec:
                         # switch to the code go directory
                         cd ../../$CODE_DIRECTORY_FOR_GO
                         echo $(pwd)
-                        if [ -d cwctl ]; then
-                            rm -rf cwctl
+                        if [ -d codewind-installer ]; then
+                            rm -rf codewind-installer
                         fi
-                        mkdir cwctl
+                        mkdir codewind-installer
 
                         TIMESTAMP="$(date +%F-%H%M)"
                         # WINDOWS EXE: Submit Windows unsigned.exe and save signed output to signed.exe
 
                         # only sign windows exe if not a pull request
                         if [ -z $CHANGE_ID ]; then
-                            curl -o cwctl/cwctl-win-${TIMESTAMP}.exe  -F file=@cwctl-win.exe http://build.eclipse.org:31338/winsign.php
-                            rm cwctl-win.exe
+                            curl -o codewind-installer/cwctl-win-${TIMESTAMP}.exe  -F file=@cwctl-win.exe http://build.eclipse.org:31338/winsign.php
+                            rm codewind-installer-win.exe
                         fi
-                        # move other executable to cwctl directoryand add timestamp to the name
+                        # move other executable to codewind-installer directoryand add timestamp to the name
                         for fileid in cwctl-*; do
-                            mv -v $fileid cwctl/${fileid}-$TIMESTAMP
+                            mv -v $fileid codewind-installer/${fileid}-$TIMESTAMP
                         done
 
                         DEFAULT_WORKSPACE_DIR=$(cat $DEFAULT_WORKSPACE_DIR_FILE)
-                        cp -r cwctl $DEFAULT_WORKSPACE_DIR
+                        cp -r codewind-installer $DEFAULT_WORKSPACE_DIR
                     '''
                     // stash the executables so they are avaialable outside of this agent
-                    dir('cwctl') {
+                    dir('codewind-installer') {
                         stash includes: '**', name: 'EXECUTABLES'
                     }
                 }
@@ -132,19 +132,19 @@ spec:
             agent any
                steps {
                    sshagent ( ['projects-storage.eclipse.org-bot-ssh']) {
-                println("Deploying cwctl to download area...")
+                println("Deploying codewind-installer to download area...")
                 sh '''
-                    if [ -d cwctl ]; then
-                        rm -rf cwctl
+                    if [ -d codewind-installer ]; then
+                        rm -rf codewind-installer
                     fi
-                    mkdir cwctl
+                    mkdir codewind-installer
                 '''
                 // get the stashed executables
-                 dir ('cwctl') {
+                 dir ('codewind-installer') {
                      unstash 'EXECUTABLES'
                  }
                 sh '''
-                    export REPO_NAME="cwctl"
+                    export REPO_NAME="codewind-installer"
                     export OUTPUT_DIR="$WORKSPACE/dev/ant_build/artifacts"
                     export DOWNLOAD_AREA_URL="https://download.eclipse.org/codewind/$REPO_NAME"
                     export LATEST_DIR="latest"
