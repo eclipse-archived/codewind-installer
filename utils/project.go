@@ -120,23 +120,14 @@ func getDefaultCwSettings() CWSettings {
 func addNonDefaultFieldsToCwSettings(cwSettings CWSettings, ProjectType string) CWSettings {
 	projectTypesWithInternalDebugPort := []string{"liberty", "spring", "nodejs"}
 	projectTypesWithMavenSettings := []string{"liberty", "spring"}
-	if stringInSlice(ProjectType, projectTypesWithInternalDebugPort) {
+	if StringInSlice(ProjectType, projectTypesWithInternalDebugPort) {
 		// We use a pointer, as an empty string would be removed due to omitempty on struct
 		defaultValue := ""
 		cwSettings.InternalDebugPort = &defaultValue
 	}
-	if stringInSlice(ProjectType, projectTypesWithMavenSettings) {
+	if StringInSlice(ProjectType, projectTypesWithMavenSettings) {
 		cwSettings.MavenProfiles = []string{""}
 		cwSettings.MavenProperties = []string{""}
 	}
 	return cwSettings
-}
-
-func stringInSlice(a string, slice []string) bool {
-	for _, b := range slice {
-		if b == a {
-			return true
-		}
-	}
-	return false
 }
