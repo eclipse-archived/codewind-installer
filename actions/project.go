@@ -18,6 +18,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"strings"
 
 	"github.com/eclipse/codewind-installer/apiroutes"
 	"github.com/eclipse/codewind-installer/errors"
@@ -72,7 +73,7 @@ func DownloadTemplate(c *cli.Context) {
 }
 
 // checkIsExtension checks if a project is an extension project and run associated commands as necessary
-func checkIsExtension(projectPath string) (string, error) {
+func checkIsExtension(projectPath string, c *cli.Context) (string, error) {
 
 	extensions, err := apiroutes.GetExtensions()
 	if err != nil {
@@ -80,17 +81,40 @@ func checkIsExtension(projectPath string) (string, error) {
 		return "unknown", err
 	}
 
+	params := make(map[string]string)
+	commandName := "postProjectValidate"
+
+	// determine if type:subtype hint have been given
+	if c.String("u") == "" && c.String("t") != "" {
+		parts := strings.Split(c.String("t"), ":")
+		params["type"] = parts[0]
+		if len(parts) > 1 {
+			params["subtype"] = parts[1]
+		}
+		commandName = "postProjectValidateWithType"
+	}
+
 	for _, extension := range extensions {
 
+		var isMatch bool
+
+		if len(params) > 0 {
+			// check if extension project type matched the hinted type
+			isMatch = extension.ProjectType == params["type"]
+		} else {
+			// check if project contains the detection file an extension defines
+			isMatch = extension.Detection != "" && utils.PathExists(path.Join(projectPath, extension.Detection))
+		}
+
 		// check if project contains the detection file an extension defines
-		if extension.Detection != "" && utils.PathExists(path.Join(projectPath, extension.Detection)) {
+		if isMatch {
 
 			var cmdErr error
 
 			// check if there are any commands to run
 			for _, command := range extension.Commands {
-				if command.Name == "postProjectValidate" {
-					cmdErr = utils.RunCommand(projectPath, command)
+				if command.Name == commandName {
+					cmdErr = utils.RunCommand(projectPath, command, params)
 					break
 				}
 			}
@@ -115,7 +139,7 @@ func ValidateProject(c *cli.Context) {
 		Language:  language,
 		BuildType: buildType,
 	}
-	extensionType, err := checkIsExtension(projectPath)
+	extensionType, err := checkIsExtension(projectPath, c)
 	if extensionType != "" {
 		if err == nil {
 			validationResult = ProjectType{

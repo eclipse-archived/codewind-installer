@@ -57,7 +57,7 @@ func Commands() {
 				},
 			},
 			Action: func(c *cli.Context) error {
-				if c.String("url") != "" {
+				if c.String("u") != "" {
 					DownloadTemplate(c)
 				}
 				ValidateProject(c)
