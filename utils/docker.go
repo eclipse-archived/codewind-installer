@@ -234,6 +234,15 @@ func CheckImageStatus() bool {
 	return imageStatus
 }
 
+// CheckImageTags returns false if codewind images with given tag don't exist
+func CheckImageTags(tag string) bool {
+	tags := GetImageTags()
+	if !StringInSlice(tag, tags) {
+		return false
+	}
+	return true
+}
+
 // RemoveImage of Codewind and project
 func RemoveImage(imageID string) {
 	cmd := exec.Command("docker", "rmi", imageID, "-f")
