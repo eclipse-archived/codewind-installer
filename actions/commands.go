@@ -19,7 +19,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-var tempFilePath = "docker-compose.yaml"
+var tempFilePath = "installer-docker-compose.yaml"
 
 const versionNum = "x.x.dev"
 
@@ -51,9 +51,13 @@ func Commands() {
 					Name:  "url, u",
 					Usage: "URL of project to download",
 				},
+				cli.StringFlag{
+					Name:  "type, t",
+					Usage: "Known type and subtype of project (`type:subtype`). Ignored when URL is given",
+				},
 			},
 			Action: func(c *cli.Context) error {
-				if c.NumFlags() != 0 {
+				if c.String("url") != "" {
 					DownloadTemplate(c)
 				}
 				ValidateProject(c)
