@@ -282,7 +282,7 @@ func ReplaceInFiles(projectPath string, oldStr string, newStr string) error {
 		if strings.Contains(path.Base(pathName), oldStr) {
 			// Keep track of files we need to rename but don't rename
 			// them until the filepath.Walk is complete.
-			pathsToRename = append(pathsToRename, pathName);
+			pathsToRename = append(pathsToRename, pathName)
 		}
 
 		if info.IsDir() {
