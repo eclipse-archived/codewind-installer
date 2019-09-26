@@ -32,7 +32,7 @@ spec:
     }
 
     environment {
-        CODE_DIRECTORY_FOR_GO = 'src/github.com/eclipse/codewind-installer'
+        CODE_DIRECTORY_FOR_GO = 'src/github.com/eclipse/cwctl'
         DEFAULT_WORKSPACE_DIR_FILE = 'temp_default_dir'
     }
 
@@ -69,10 +69,10 @@ spec:
                         export HOME=$JENKINS_HOME
                         export GOCACHE="off"
                         export GOARCH=amd64
-                        GOOS=darwin go build -ldflags="-s -w" -o codewind-installer-macos
-                        GOOS=windows go build -ldflags="-s -w" -o codewind-installer-win.exe
-                        CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o codewind-installer-linux
-                        chmod -v +x codewind-installer-*
+                        GOOS=darwin go build -ldflags="-s -w" -o cwctl-macos
+                        GOOS=windows go build -ldflags="-s -w" -o cwctl-win.exe
+                        CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o cwctl-linux
+                        chmod -v +x cwctl-*
 
                     '''
                 }
@@ -92,29 +92,29 @@ spec:
                         # switch to the code go directory
                         cd ../../$CODE_DIRECTORY_FOR_GO
                         echo $(pwd)
-                        if [ -d codewind-installer ]; then
-                            rm -rf codewind-installer
+                        if [ -d cwctl ]; then
+                            rm -rf cwctl
                         fi
-                        mkdir codewind-installer
+                        mkdir cwctl
 
                         TIMESTAMP="$(date +%F-%H%M)"
                         # WINDOWS EXE: Submit Windows unsigned.exe and save signed output to signed.exe
 
                         # only sign windows exe if not a pull request
                         if [ -z $CHANGE_ID ]; then
-                            curl -o codewind-installer/codewind-installer-win-${TIMESTAMP}.exe  -F file=@codewind-installer-win.exe http://build.eclipse.org:31338/winsign.php
-                            rm codewind-installer-win.exe
+                            curl -o cwctl/cwctl-win-${TIMESTAMP}.exe  -F file=@cwctl-win.exe http://build.eclipse.org:31338/winsign.php
+                            rm cwctl-win.exe
                         fi
-                        # move other executable to codewind-installer directoryand add timestamp to the name
-                        for fileid in codewind-installer-*; do
-                            mv -v $fileid codewind-installer/${fileid}-$TIMESTAMP
+                        # move other executable to cwctl directoryand add timestamp to the name
+                        for fileid in cwctl-*; do
+                            mv -v $fileid cwctl/${fileid}-$TIMESTAMP
                         done
 
                         DEFAULT_WORKSPACE_DIR=$(cat $DEFAULT_WORKSPACE_DIR_FILE)
-                        cp -r codewind-installer $DEFAULT_WORKSPACE_DIR
+                        cp -r cwctl $DEFAULT_WORKSPACE_DIR
                     '''
                     // stash the executables so they are avaialable outside of this agent
-                    dir('codewind-installer') {
+                    dir('cwctl') {
                         stash includes: '**', name: 'EXECUTABLES'
                     }
                 }
@@ -132,28 +132,28 @@ spec:
             agent any
                steps {
                    sshagent ( ['projects-storage.eclipse.org-bot-ssh']) {
-                println("Deploying codewind-installer to download area...")
+                println("Deploying cwctl to download area...")
                 sh '''
-                    if [ -d codewind-installer ]; then
-                        rm -rf codewind-installer
+                    if [ -d cwctl ]; then
+                        rm -rf cwctl
                     fi
-                    mkdir codewind-installer
+                    mkdir cwctl
                 '''
                 // get the stashed executables
-                 dir ('codewind-installer') {
+                 dir ('cwctl') {
                      unstash 'EXECUTABLES'
                  }
                 sh '''
-                    export REPO_NAME="codewind-installer"
+                    export REPO_NAME="cwctl"
                     export OUTPUT_DIR="$WORKSPACE/dev/ant_build/artifacts"
                     export DOWNLOAD_AREA_URL="https://download.eclipse.org/codewind/$REPO_NAME"
                     export LATEST_DIR="latest"
                     export BUILD_INFO="build_info.properties"
                     export sshHost="genie.codewind@projects-storage.eclipse.org"
                     export deployDir="/home/data/httpd/download.eclipse.org/codewind/$REPO_NAME"
-                    export INSTALLER_LINUX="codewind-installer-linux"
-                    export INSTALLER_MACOS="codewind-installer-macos"
-                    export INSTALLER_WIN="codewind-installer-win"
+                    export CWCTL_LINUX="cwctl-linux"
+                    export CWCTL_MACOS="cwctl-macos"
+                    export CWCTL_WIN="cwctl-win"
                     
                     WORKSPACE=$PWD
    
@@ -170,19 +170,19 @@ spec:
 
                     scp ${WORKSPACE}/$REPO_NAME/* $sshHost:$deployDir/${UPLOAD_DIR}
 
-                    mv ${WORKSPACE}/$REPO_NAME/$INSTALLER_LINUX-* ${WORKSPACE}/$REPO_NAME/$INSTALLER_LINUX
-                    mv ${WORKSPACE}/$REPO_NAME/$INSTALLER_MACOS-* ${WORKSPACE}/$REPO_NAME/$INSTALLER_MACOS
-                    mv ${WORKSPACE}/$REPO_NAME/$INSTALLER_WIN-* ${WORKSPACE}/$REPO_NAME/$INSTALLER_WIN.exe
+                    mv ${WORKSPACE}/$REPO_NAME/$CWCTL_LINUX-* ${WORKSPACE}/$REPO_NAME/$CWCTL_LINUX
+                    mv ${WORKSPACE}/$REPO_NAME/$CWCTL_MACOS-* ${WORKSPACE}/$REPO_NAME/$CWCTL_MACOS
+                    mv ${WORKSPACE}/$REPO_NAME/$CWCTL_WIN-* ${WORKSPACE}/$REPO_NAME/$CWCTL_WIN.exe
                     
                     echo "# Build date: $(date +%F-%T)" >> ${WORKSPACE}/$REPO_NAME/$BUILD_INFO
                     echo "build_info.url=$BUILD_URL" >> ${WORKSPACE}/$REPO_NAME/$BUILD_INFO
-                    SHA1_LINUX=$(sha1sum ${WORKSPACE}/$REPO_NAME/$INSTALLER_LINUX | cut -d ' ' -f 1)
+                    SHA1_LINUX=$(sha1sum ${WORKSPACE}/$REPO_NAME/$CWCTL_LINUX | cut -d ' ' -f 1)
                     echo "build_info.linux.SHA-1=${SHA1_LINUX}" >> ${WORKSPACE}/$REPO_NAME/$BUILD_INFO
 
-                    SHA1_MACOS=$(sha1sum ${WORKSPACE}/$REPO_NAME/$INSTALLER_MACOS | cut -d ' ' -f 1)
+                    SHA1_MACOS=$(sha1sum ${WORKSPACE}/$REPO_NAME/$CWCTL_MACOS | cut -d ' ' -f 1)
                     echo "build_info.macos.SHA-1=${SHA1_MACOS}" >> ${WORKSPACE}/$REPO_NAME/$BUILD_INFO
 
-                    SHA1_WIN=$(sha1sum ${WORKSPACE}/$REPO_NAME/$INSTALLER_WIN.exe | cut -d ' ' -f 1)
+                    SHA1_WIN=$(sha1sum ${WORKSPACE}/$REPO_NAME/$CWCTL_WIN.exe | cut -d ' ' -f 1)
                     echo "build_info.win.SHA-1=${SHA1_WIN}" >> ${WORKSPACE}/$REPO_NAME/$BUILD_INFO
 
                     scp -r ${WORKSPACE}/$REPO_NAME/* $sshHost:$deployDir/$GIT_BRANCH/$LATEST_DIR

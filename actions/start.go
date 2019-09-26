@@ -31,7 +31,7 @@ func StartCommand(c *cli.Context, tempFilePath string, healthEndpoint string) {
 		utils.CreateTempFile(tempFilePath)
 		utils.WriteToComposeFile(tempFilePath, debug)
 		utils.DockerCompose(tag)
-		utils.DeleteTempFile(tempFilePath) // Remove installer-docker-compose.yaml
+		utils.DeleteTempFile(tempFilePath) // Remove docker-compose.yaml
 		utils.PingHealth(healthEndpoint)
 	}
 }
