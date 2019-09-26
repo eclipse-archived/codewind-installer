@@ -13,20 +13,29 @@ package actions
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/urfave/cli"
 )
 
-//StartCommand to start the codewind conainers
+// StartCommand to start the codewind conainers
 func StartCommand(c *cli.Context, tempFilePath string, healthEndpoint string) {
-	status := utils.CheckContainerStatus()
+	tag := c.String("tag")
 
+	if !utils.CheckImageStatus() {
+		log.Fatal("Error: Cannot find Codewind images, try running install to pull them")
+	}
+	if !utils.CheckImageTags(tag) {
+		log.Fatal(fmt.Sprintf("Cannot find Codewind images with tag %s, try running install with this tag", tag))
+	}
+
+	status := utils.CheckContainerStatus()
 	if status {
 		fmt.Println("Codewind is already running!")
 	} else {
-		tag := c.String("tag")
 		debug := c.Bool("debug")
+		tag := c.String("tag")
 		fmt.Println("Debug:", debug)
 
 		// Stop all running project containers and remove codewind networks
