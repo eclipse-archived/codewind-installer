@@ -40,7 +40,7 @@ func RunCommand(projectPath string, command ExtensionCommand, params map[string]
 	commandName := filepath.Base(command.Command) // prevent path traversal
 	commandBin := filepath.Join(installerPath, commandName)
 
-	// sub values into args
+	// check for variable substition into args, syntax: $variable
 	for i := 0; i < len(command.Args); i++ {
 		arg := command.Args[i]
 		if strings.HasPrefix(arg, "$") {

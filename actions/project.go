@@ -84,7 +84,8 @@ func checkIsExtension(projectPath string, c *cli.Context) (string, error) {
 	params := make(map[string]string)
 	commandName := "postProjectValidate"
 
-	// determine if type:subtype hint have been given
+	// determine if type:subtype hint was given
+	// but only if url was not given
 	if c.String("u") == "" && c.String("t") != "" {
 		parts := strings.Split(c.String("t"), ":")
 		params["type"] = parts[0]
@@ -106,7 +107,6 @@ func checkIsExtension(projectPath string, c *cli.Context) (string, error) {
 			isMatch = extension.Detection != "" && utils.PathExists(path.Join(projectPath, extension.Detection))
 		}
 
-		// check if project contains the detection file an extension defines
 		if isMatch {
 
 			var cmdErr error
