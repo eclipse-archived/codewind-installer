@@ -31,7 +31,7 @@ import (
 	"github.com/moby/moby/client"
 )
 
-// docker-compose yaml data
+// codewind-docker-compose.yaml data
 var data = `
 version: 2
 services:
@@ -129,12 +129,12 @@ func DockerCompose(tag string) {
 	}
 	os.Setenv("PFE_EXTERNAL_PORT", port)
 
-	cmd := exec.Command("docker-compose", "-f", "docker-compose.yaml", "up", "-d")
+	cmd := exec.Command("docker-compose", "-f", "codewind-docker-compose.yaml", "up", "-d")
 	output := new(bytes.Buffer)
 	cmd.Stdout = output
 	cmd.Stderr = output
 	if err := cmd.Start(); err != nil { // after 'Start' the program is continued and script is executing in background
-		DeleteTempFile("docker-compose.yaml")
+		DeleteTempFile("codewind-docker-compose.yaml")
 		errors.CheckErr(err, 101, "Is docker-compose installed?")
 	}
 	fmt.Printf("Please wait whilst containers initialize... %s \n", output.String())
@@ -142,12 +142,12 @@ func DockerCompose(tag string) {
 	fmt.Printf(output.String()) // Wait to finish execution, so we can read all output
 
 	if strings.Contains(output.String(), "ERROR") || strings.Contains(output.String(), "error") {
-		DeleteTempFile("docker-compose.yaml")
+		DeleteTempFile("codewind-docker-compose.yaml")
 		os.Exit(1)
 	}
 
 	if strings.Contains(output.String(), "The image for the service you're trying to recreate has been removed") {
-		DeleteTempFile("docker-compose.yaml")
+		DeleteTempFile("codewind-docker-compose.yaml")
 		os.Exit(1)
 	}
 }
