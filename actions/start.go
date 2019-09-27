@@ -26,7 +26,7 @@ func StartCommand(c *cli.Context, tempFilePath string, healthEndpoint string) {
 	if !utils.CheckImageStatus() {
 		log.Fatal("Error: Cannot find Codewind images, try running install to pull them")
 	}
-	if !utils.CheckImageTags(tag) {
+	if !utils.CheckImageTag(tag) {
 		log.Fatal(fmt.Sprintf("Cannot find Codewind images with tag %s, try running install with this tag", tag))
 	}
 

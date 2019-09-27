@@ -234,8 +234,8 @@ func CheckImageStatus() bool {
 	return imageStatus
 }
 
-// CheckImageTags returns false if codewind images with given tag don't exist
-func CheckImageTags(tag string) bool {
+// CheckImageTag returns false if codewind images with given tag don't exist
+func CheckImageTag(tag string) bool {
 	tags := GetImageTags()
 	if !StringInSlice(tag, tags) {
 		return false
@@ -345,7 +345,6 @@ func GetImageTags() []string {
 	imageArr[1] = "eclipse/codewind-performance"
 	imageArr[2] = "eclipse/codewind-initialize"
 	tagArr := []string{}
-
 	images := GetImageList()
 
 	for _, image := range images {
