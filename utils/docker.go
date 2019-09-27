@@ -323,7 +323,10 @@ func RemoveNetwork(network types.NetworkResource) {
 
 // GetPFEHostAndPort will return the current hostname and port that PFE is running on
 func GetPFEHostAndPort() (string, string) {
-	if CheckContainerStatus() {
+	// on Che, can assume PFE is always on localhost:9090
+	if os.Getenv("CHE_API_EXTERNAL") != "" {
+		return "localhost", "9090"
+	} else if CheckContainerStatus() {
 		containerList := GetContainerList()
 		for _, container := range containerList {
 			if strings.HasPrefix(container.Image, "codewind-pfe") {
