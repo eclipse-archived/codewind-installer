@@ -19,7 +19,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-var tempFilePath = "installer-docker-compose.yaml"
+var tempFilePath = "codewind-docker-compose.yaml"
 
 const versionNum = "x.x.dev"
 
