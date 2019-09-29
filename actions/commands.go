@@ -236,6 +236,146 @@ func Commands() {
 			},
 		},
 
+		//  Security //
+		{
+			Name:  "sectoken",
+			Usage: "Authenticate and obtain an access_token",
+			Subcommands: []cli.Command{
+				{
+					Name:    "get",
+					Aliases: []string{"g"},
+					Usage:   "Login and retrieve access_token",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "host", Usage: "URL or ingress to Keycloak service", Required: true},
+						cli.StringFlag{Name: "realm,r", Usage: "Application realm", Required: true},
+						cli.StringFlag{Name: "username,u", Usage: "Account Username", Required: true},
+						cli.StringFlag{Name: "password,p", Usage: "Account Password", Required: true},
+						cli.StringFlag{Name: "client,c", Usage: "Client", Required: true},
+					},
+					Action: func(c *cli.Context) error {
+						SecurityTokenGet(c)
+						return nil
+					},
+				},
+			},
+		},
+		{
+			Name:  "secrealm",
+			Usage: "Manage Realm configuration",
+			Subcommands: []cli.Command{
+				{
+					Name:    "create",
+					Aliases: []string{"c"},
+					Usage:   "Create a new realm (requires either admin_token or username/password)",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "host", Usage: "URL or ingress to Keycloak service", Required: true},
+						cli.StringFlag{Name: "realm,r", Usage: "Existing realm name", Required: true},
+						cli.StringFlag{Name: "accesstoken,t", Usage: "Admin access_token", Required: false},
+						cli.StringFlag{Name: "username,u", Usage: "Admin Username", Required: false},
+						cli.StringFlag{Name: "password,p", Usage: "Admin Password", Required: false},
+					},
+					Action: func(c *cli.Context) error {
+						SecurityCreateRealm(c)
+						return nil
+					},
+				},
+			},
+		}, {
+			Name:  "secclient",
+			Usage: "Manage client access configuration",
+			Subcommands: []cli.Command{
+				{
+					Name:    "create",
+					Aliases: []string{"c"},
+					Usage:   "Create a new client in a Keycloak realm (requires either admin_token or username/password)",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "host", Usage: "URL or ingress to Keycloak service", Required: true},
+						cli.StringFlag{Name: "realm,r", Usage: "Realm name", Required: true},
+						cli.StringFlag{Name: "clientid,c", Usage: "New client ID to create", Required: true},
+						cli.StringFlag{Name: "redirect,l", Usage: "Redirect URL", Required: false},
+						cli.StringFlag{Name: "accesstoken,t", Usage: "Admin access_token", Required: false},
+						cli.StringFlag{Name: "username,u", Usage: "Admin Username", Required: false},
+						cli.StringFlag{Name: "password,p", Usage: "Admin Password", Required: false},
+					},
+					Action: func(c *cli.Context) error {
+						SecurityClientCreate(c)
+						return nil
+					},
+				},
+				{
+					Name:    "get",
+					Aliases: []string{"g"},
+					Usage:   "Get client id (requires either admin_token or username/password)",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "host", Usage: "URL or ingress to Keycloak service", Required: false},
+						cli.StringFlag{Name: "realm,r", Usage: "Realm name", Required: true},
+						cli.StringFlag{Name: "clientid,c", Usage: "New client ID to create", Required: true},
+						cli.StringFlag{Name: "accesstoken,t", Usage: "Admin access_token", Required: false},
+						cli.StringFlag{Name: "username,u", Usage: "Admin Username", Required: false},
+						cli.StringFlag{Name: "password,p", Usage: "Admin Password", Required: false},
+					},
+					Action: func(c *cli.Context) error {
+						SecurityClientGet(c)
+						return nil
+					},
+				},
+			},
+		},
+		{
+			Name:  "secuser",
+			Usage: "Manage keycloak user account",
+			Subcommands: []cli.Command{
+				{
+					Name:    "create",
+					Aliases: []string{"c"},
+					Usage:   "Create a new user (requires either admin_token or username/password)",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "host", Usage: "URL or ingress to Keycloak service", Required: false},
+						cli.StringFlag{Name: "realm,r", Usage: "Realm name", Required: true},
+						cli.StringFlag{Name: "name,n", Usage: "Username to add", Required: true},
+						cli.StringFlag{Name: "admintoken,t", Usage: "Admin access_token", Required: false},
+						cli.StringFlag{Name: "username,u", Usage: "Admin Username", Required: false},
+						cli.StringFlag{Name: "password,p", Usage: "Admin Password", Required: false},
+					},
+					Action: func(c *cli.Context) error {
+						SecurityUserCreate(c)
+						return nil
+					},
+				}, {
+					Name:    "get",
+					Aliases: []string{"g"},
+					Usage:   "Get details of a user (requires either admin_token or username/password)",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "host", Usage: "URL or ingress to Keycloak service", Required: false},
+						cli.StringFlag{Name: "realm,r", Usage: "Realm name", Required: true},
+						cli.StringFlag{Name: "name,n", Usage: "Username to retrieve", Required: true},
+						cli.StringFlag{Name: "admintoken,t", Usage: "Admin access_token", Required: false},
+						cli.StringFlag{Name: "username,u", Usage: "Admin Username", Required: false},
+						cli.StringFlag{Name: "password,p", Usage: "Admin Password", Required: false},
+					},
+					Action: func(c *cli.Context) error {
+						SecurityUserGet(c)
+						return nil
+					},
+				}, {
+					Name:    "setpw",
+					Aliases: []string{"p"},
+					Usage:   "Sets the password of an existing user (requires either admin_token or username/password)",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "host", Usage: "URL or ingress to Keycloak service", Required: false},
+						cli.StringFlag{Name: "realm,r", Usage: "Realm name", Required: true},
+						cli.StringFlag{Name: "name,n", Usage: "Account name to process", Required: true},
+						cli.StringFlag{Name: "accesstoken,t", Usage: "Access Token", Required: false},
+						cli.StringFlag{Name: "username,u", Usage: "Username", Required: false},
+						cli.StringFlag{Name: "password,p", Usage: "Password", Required: false},
+					},
+					Action: func(c *cli.Context) error {
+						SecurityUserSetPW(c)
+						return nil
+					},
+				},
+			},
+		},
 		//  Deployment maintenance //
 		{
 			Name:    "deployments",
