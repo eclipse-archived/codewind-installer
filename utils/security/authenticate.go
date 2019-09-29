@@ -46,7 +46,10 @@ func SecAuthenticate(c *cli.Context, connectionRealm string, connectionClient st
 	// build REST request
 	url := hostname + "/auth/realms/" + realm + "/protocol/openid-connect/token"
 	payload := strings.NewReader("grant_type=password&client_id=" + client + "&username=" + username + "&password=" + password)
-	req, _ := http.NewRequest("POST", url, payload)
+	req, err := http.NewRequest("POST", url, payload)
+	if err != nil {
+		return nil, &SecError{errOpConnection, err, err.Error()}
+	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Add("Cache-Control", "no-cache")
 	req.Header.Add("cache-control", "no-cache")

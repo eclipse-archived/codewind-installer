@@ -1,11 +1,7 @@
 package security
 
 import (
-	"crypto/tls"
 	"encoding/json"
-	"net/http"
-
-	"github.com/urfave/cli"
 )
 
 // KeycloakMasterRealm master realm name
@@ -32,6 +28,7 @@ const (
 	errOpResponse       = "sec_response"   // Bad response
 	errOpResponseFormat = "sec_bodyparser" // Parse errors
 	errOpNotFound       = "sec_notfound"   // No matching search results
+	errOpCreate         = "sec_create"     // Create failed
 )
 
 // SecError : Error formatted in JSON containing an errorOp and a description from
@@ -50,6 +47,17 @@ type RegisteredClient struct {
 	ID       string `json:"id"`
 	ClientID string `json:"clientId"`
 	Name     string `json:"name"`
+}
+
+// RegisteredUsers A collection of registered users
+type RegisteredUsers struct {
+	Collection []RegisteredUser
+}
+
+// RegisteredUser details of a registered user
+type RegisteredUser struct {
+	ID       string `json:"id"`
+	Username string `json:"username"`
 }
 
 // KeycloakAPIError Error responses from Keycloak
@@ -75,28 +83,4 @@ func parseKeycloakError(body string, httpCode int) *KeycloakAPIError {
 		keycloakAPIError.ErrorDescription = keycloakAPIError.ErrorMessage
 	}
 	return &keycloakAPIError
-}
-
-// SecUserCreate : Create a new user in Keycloak
-func SecUserCreate(c *cli.Context) error {
-	if c.GlobalBool("insecure") {
-		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	}
-	return nil
-}
-
-// SecUserGet : Retrieve user info from keycloak
-func SecUserGet(c *cli.Context) error {
-	if c.GlobalBool("insecure") {
-		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	}
-	return nil
-}
-
-// SecUserSetPW : Set a users password
-func SecUserSetPW(c *cli.Context) error {
-	if c.GlobalBool("insecure") {
-		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	}
-	return nil
 }

@@ -12,7 +12,7 @@
 package actions
 
 import (
-	"log"
+	"fmt"
 	"os"
 
 	"github.com/eclipse/codewind-installer/utils"
@@ -25,18 +25,20 @@ func SecurityTokenGet(c *cli.Context) {
 	auth, err := security.SecAuthenticate(c, "", "")
 	if err == nil && auth != nil {
 		utils.PrettyPrintJSON(auth)
-		os.Exit(0)
+	} else {
+		fmt.Println(err.Error())
 	}
-	log.Fatal(err)
+	os.Exit(0)
 }
 
 // SecurityCreateRealm : Create a realm in Keycloak
 func SecurityCreateRealm(c *cli.Context) {
 	err := security.SecRealmCreate(c)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err.Error())
+	} else {
+		utils.PrettyPrintJSON(security.Result{Status: "OK"})
 	}
-	utils.PrettyPrintJSON(security.Result{Status: "OK"})
 	os.Exit(0)
 }
 
@@ -44,9 +46,10 @@ func SecurityCreateRealm(c *cli.Context) {
 func SecurityClientCreate(c *cli.Context) {
 	err := security.SecClientCreate(c)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err.Error())
+	} else {
+		utils.PrettyPrintJSON(security.Result{Status: "OK"})
 	}
-	utils.PrettyPrintJSON(security.Result{Status: "OK"})
 	os.Exit(0)
 }
 
@@ -54,7 +57,8 @@ func SecurityClientCreate(c *cli.Context) {
 func SecurityClientGet(c *cli.Context) {
 	registredClient, err := security.SecClientGet(c)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err.Error())
+		os.Exit(0)
 	}
 	if registredClient != nil {
 		utils.PrettyPrintJSON(registredClient)
@@ -68,19 +72,25 @@ func SecurityClientGet(c *cli.Context) {
 func SecurityUserCreate(c *cli.Context) {
 	err := security.SecUserCreate(c)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err.Error())
+	} else {
+		utils.PrettyPrintJSON(security.Result{Status: "OK"})
 	}
-	utils.PrettyPrintJSON(security.Result{Status: "OK"})
 	os.Exit(0)
 }
 
 // SecurityUserGet : Retrieve the user detail from Keycloak
 func SecurityUserGet(c *cli.Context) {
-	err := security.SecUserGet(c)
+	registredUser, err := security.SecUserGet(c)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err.Error())
+		os.Exit(0)
 	}
-	utils.PrettyPrintJSON(security.Result{Status: "OK"})
+	if registredUser != nil {
+		utils.PrettyPrintJSON(registredUser)
+		os.Exit(0)
+	}
+	utils.PrettyPrintJSON(security.Result{Status: "Not found"})
 	os.Exit(0)
 }
 
@@ -88,7 +98,8 @@ func SecurityUserGet(c *cli.Context) {
 func SecurityUserSetPW(c *cli.Context) {
 	err := security.SecUserSetPW(c)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err.Error())
+		os.Exit(0)
 	}
 	utils.PrettyPrintJSON(security.Result{Status: "OK"})
 	os.Exit(0)

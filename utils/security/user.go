@@ -11,8 +11,16 @@ import (
 	"github.com/urfave/cli"
 )
 
-// SecClientCreate : Create a new client in Keycloak
-func SecClientCreate(c *cli.Context) *SecError {
+// SecUserSetPW : Set a users password
+func SecUserSetPW(c *cli.Context) error {
+	if c.GlobalBool("insecure") {
+		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	}
+	return nil
+}
+
+// SecUserCreate : Create a new realm in Keycloak
+func SecUserCreate(c *cli.Context) *SecError {
 	if c.GlobalBool("insecure") {
 		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	}
@@ -20,8 +28,7 @@ func SecClientCreate(c *cli.Context) *SecError {
 	hostname := strings.TrimSpace(strings.ToLower(c.String("host")))
 	realm := strings.TrimSpace(c.String("realm"))
 	accesstoken := strings.TrimSpace(c.String("accesstoken"))
-	clientid := strings.TrimSpace(c.String("clientid"))
-	redirect := strings.TrimSpace(c.String("redirect"))
+	targetUsername := strings.TrimSpace(c.String("name"))
 
 	// Authenticate if needed
 	if accesstoken == "" {
@@ -33,12 +40,9 @@ func SecClientCreate(c *cli.Context) *SecError {
 	}
 
 	// build REST request
-	url := hostname + "/auth/admin/realms/" + realm + "/clients"
-	callbackRedirect := ""
-	if redirect != "" {
-		callbackRedirect = ",\"redirectUris\":[\"" + redirect + "\"]"
-	}
-	payload := strings.NewReader("{\"clientId\":\"" + clientid + "\",\"name\":\"" + clientid + "\"" + callbackRedirect + "}")
+	url := hostname + "/auth/admin/realms/" + realm + "/users"
+	//    '{"username":"developer","firstName":"codewind","lastName":"developer","enabled":true}'
+	payload := strings.NewReader("{\"enabled\":true,\"username\":\"" + targetUsername + "\",\"firstName\":\"\",\"lastName\":\"" + targetUsername + "\"}")
 	req, err := http.NewRequest("POST", url, payload)
 	if err != nil {
 		return &SecError{errOpConnection, err, err.Error()}
@@ -54,25 +58,25 @@ func SecClientCreate(c *cli.Context) *SecError {
 		return &SecError{errOpConnection, err, err.Error()}
 	}
 	defer res.Body.Close()
-	body, _ := ioutil.ReadAll(res.Body)
+	body, err := ioutil.ReadAll(res.Body)
 	if string(body) != "" {
 		keycloakAPIError := parseKeycloakError(string(body), res.StatusCode)
-		keycloakAPIError.Error = errOpResponseFormat
-		kcError := errors.New(string(keycloakAPIError.ErrorDescription))
+		keycloakAPIError.Error = errOpCreate
+		kcError := errors.New(keycloakAPIError.ErrorDescription)
 		return &SecError{keycloakAPIError.Error, kcError, kcError.Error()}
 	}
 	return nil
 }
 
-// SecClientGet : Retrieve Client information
-func SecClientGet(c *cli.Context) (*RegisteredClient, *SecError) {
+// SecUserGet : Get user from Keycloak
+func SecUserGet(c *cli.Context) (*RegisteredUser, *SecError) {
 	if c.GlobalBool("insecure") {
 		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	}
 	hostname := strings.TrimSpace(strings.ToLower(c.String("host")))
 	realm := strings.TrimSpace(c.String("realm"))
 	accesstoken := strings.TrimSpace(c.String("accesstoken"))
-	clientid := strings.TrimSpace(c.String("clientid"))
+	searchName := strings.TrimSpace(c.String("name"))
 
 	// Authenticate if needed
 	if accesstoken == "" {
@@ -84,7 +88,7 @@ func SecClientGet(c *cli.Context) (*RegisteredClient, *SecError) {
 	}
 
 	// Built REST request
-	url := hostname + "/auth/admin/realms/" + realm + "/clients?clientId=" + clientid
+	url := hostname + "/auth/admin/realms/" + realm + "/users?username=" + searchName
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, &SecError{errOpConnection, err, err.Error()}
@@ -96,6 +100,7 @@ func SecClientGet(c *cli.Context) (*RegisteredClient, *SecError) {
 	if err != nil {
 		return nil, &SecError{errOpConnection, err, err.Error()}
 	}
+
 	defer res.Body.Close()
 
 	// Handle HTTP status codes
@@ -105,17 +110,18 @@ func SecClientGet(c *cli.Context) (*RegisteredClient, *SecError) {
 		return nil, &SecError{errOpResponse, err, err.Error()}
 	}
 
-	registeredClients := RegisteredClients{}
+	registeredUsers := RegisteredUsers{}
 	body, err := ioutil.ReadAll(res.Body)
-	err = json.Unmarshal([]byte(body), &registeredClients.Collection)
+	err = json.Unmarshal([]byte(body), &registeredUsers.Collection)
 	if err != nil {
 		return nil, &SecError{errOpResponseFormat, err, err.Error()}
 	}
 
-	registredClient := RegisteredClient{}
-	if len(registeredClients.Collection) > 0 {
-		registredClient = registeredClients.Collection[0]
-		return &registredClient, nil
+	registredUser := RegisteredUser{}
+
+	if len(registeredUsers.Collection) > 0 {
+		registredUser = registeredUsers.Collection[0]
+		return &registredUser, nil
 	}
 
 	return nil, nil

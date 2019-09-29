@@ -32,7 +32,10 @@ func SecRealmCreate(c *cli.Context) *SecError {
 	// build REST request
 	url := hostname + "/auth/admin/realms"
 	payload := strings.NewReader("{\"realm\":\"" + realm + "\",\"displayName\":\"" + realm + "\",\"enabled\":true,\"loginTheme\":\"codewind\",\"accessTokenLifespan\":86400}")
-	req, _ := http.NewRequest("POST", url, payload)
+	req, err := http.NewRequest("POST", url, payload)
+	if err != nil {
+		return &SecError{errOpConnection, err, err.Error()}
+	}
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Cache-Control", "no-cache")
 	req.Header.Add("cache-control", "no-cache")
