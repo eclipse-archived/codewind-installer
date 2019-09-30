@@ -11,6 +11,17 @@ import (
 	"github.com/urfave/cli"
 )
 
+// RegisteredUsers A collection of registered users
+type RegisteredUsers struct {
+	Collection []RegisteredUser
+}
+
+// RegisteredUser details of a registered user
+type RegisteredUser struct {
+	ID       string `json:"id"`
+	Username string `json:"username"`
+}
+
 // SecUserSetPW : Set a users password
 func SecUserSetPW(c *cli.Context) error {
 	if c.GlobalBool("insecure") {

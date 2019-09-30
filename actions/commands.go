@@ -319,6 +319,23 @@ func Commands() {
 						return nil
 					},
 				},
+				{
+					Name:    "secret",
+					Aliases: []string{"s"},
+					Usage:   "Get client secret (requires either admin_token or username/password)",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "host", Usage: "URL or ingress to Keycloak service", Required: false},
+						cli.StringFlag{Name: "realm,r", Usage: "Realm name", Required: true},
+						cli.StringFlag{Name: "clientid,c", Usage: "Client id", Required: true},
+						cli.StringFlag{Name: "accesstoken,t", Usage: "Admin access_token", Required: false},
+						cli.StringFlag{Name: "username,u", Usage: "Admin Username", Required: false},
+						cli.StringFlag{Name: "password,p", Usage: "Admin Password", Required: false},
+					},
+					Action: func(c *cli.Context) error {
+						SecurityClientGetSecret(c)
+						return nil
+					},
+				},
 			},
 		},
 		{
@@ -370,7 +387,7 @@ func Commands() {
 						cli.StringFlag{Name: "password,p", Usage: "Password", Required: false},
 					},
 					Action: func(c *cli.Context) error {
-						SecurityUserSetPW(c)
+						SecurityUserSetPassword(c)
 						return nil
 					},
 				},

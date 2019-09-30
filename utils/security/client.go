@@ -11,6 +11,24 @@ import (
 	"github.com/urfave/cli"
 )
 
+// RegisteredClients A collection of registered clients
+type RegisteredClients struct {
+	Collection []RegisteredClient
+}
+
+// RegisteredClient details of a registered client
+type RegisteredClient struct {
+	ID       string `json:"id"`
+	ClientID string `json:"clientId"`
+	Name     string `json:"name"`
+}
+
+// RegisteredClientSecret - Client secret
+type RegisteredClientSecret struct {
+	Type   string `json:"type"`
+	Secret string `json:"value"`
+}
+
 // SecClientCreate : Create a new client in Keycloak
 func SecClientCreate(c *cli.Context) *SecError {
 	if c.GlobalBool("insecure") {
@@ -119,4 +137,65 @@ func SecClientGet(c *cli.Context) (*RegisteredClient, *SecError) {
 	}
 
 	return nil, nil
+}
+
+// SecClientGetSecret retrieve the client secret for the supplied clientID
+func SecClientGetSecret(c *cli.Context) (*RegisteredClientSecret, *SecError) {
+
+	if c.GlobalBool("insecure") {
+		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	}
+	hostname := strings.TrimSpace(strings.ToLower(c.String("host")))
+	realm := strings.TrimSpace(c.String("realm"))
+	accesstoken := strings.TrimSpace(c.String("accesstoken"))
+
+	// Authenticate if needed
+	if accesstoken == "" {
+		authToken, err := SecAuthenticate(c, KeycloakMasterRealm, KeycloakAdminClientID)
+		if err != nil || authToken == nil {
+			return nil, err
+		}
+		accesstoken = authToken.AccessToken
+	}
+
+	registeredClient, secError := SecClientGet(c)
+	if secError != nil {
+		return nil, secError
+	}
+
+	if registeredClient == nil {
+		return nil, nil
+	}
+
+	// Built REST request
+	url := hostname + "/auth/admin/realms/" + realm + "/clients/" + registeredClient.ID + "/client-secret"
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, &SecError{errOpConnection, err, err.Error()}
+	}
+
+	req.Header.Add("Authorization", "Bearer "+accesstoken)
+	req.Header.Add("cache-control", "no-cache")
+	req.Header.Add("cache-control", "no-cache")
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, &SecError{errOpConnection, err, err.Error()}
+	}
+	defer res.Body.Close()
+
+	// Handle HTTP status codes
+	if res.StatusCode != 200 {
+		body, _ := ioutil.ReadAll(res.Body)
+		err = errors.New(string(body))
+		return nil, &SecError{errOpResponse, err, err.Error()}
+	}
+
+	registeredClientSecret := RegisteredClientSecret{}
+	body, err := ioutil.ReadAll(res.Body)
+	err = json.Unmarshal([]byte(body), &registeredClientSecret)
+	if err != nil {
+		return nil, &SecError{errOpResponseFormat, err, err.Error()}
+	}
+
+	return &registeredClientSecret, nil
 }

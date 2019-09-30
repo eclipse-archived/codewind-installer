@@ -68,6 +68,21 @@ func SecurityClientGet(c *cli.Context) {
 	os.Exit(0)
 }
 
+// SecurityClientGetSecret : Retrieve a client secret from Keycloak
+func SecurityClientGetSecret(c *cli.Context) {
+	registredClientSecret, err := security.SecClientGetSecret(c)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(0)
+	}
+	if registredClientSecret != nil {
+		utils.PrettyPrintJSON(registredClientSecret)
+		os.Exit(0)
+	}
+	utils.PrettyPrintJSON(security.Result{Status: "Not found"})
+	os.Exit(0)
+}
+
 // SecurityUserCreate : Create a user in a Keycloak realm
 func SecurityUserCreate(c *cli.Context) {
 	err := security.SecUserCreate(c)
@@ -94,8 +109,8 @@ func SecurityUserGet(c *cli.Context) {
 	os.Exit(0)
 }
 
-// SecurityUserSetPW : Set a users password in Keycloak
-func SecurityUserSetPW(c *cli.Context) {
+// SecurityUserSetPassword : Set a users password in Keycloak
+func SecurityUserSetPassword(c *cli.Context) {
 	err := security.SecUserSetPW(c)
 	if err != nil {
 		fmt.Println(err.Error())

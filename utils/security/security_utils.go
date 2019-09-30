@@ -37,29 +37,6 @@ func (se *SecError) Error() string {
 	return "{\"error\", \"" + se.Op + "\", \"error_description\": \"" + se.Err.Error() + "\"}"
 }
 
-// RegisteredClients A collection of registered clients
-type RegisteredClients struct {
-	Collection []RegisteredClient
-}
-
-// RegisteredClient details of a registered client
-type RegisteredClient struct {
-	ID       string `json:"id"`
-	ClientID string `json:"clientId"`
-	Name     string `json:"name"`
-}
-
-// RegisteredUsers A collection of registered users
-type RegisteredUsers struct {
-	Collection []RegisteredUser
-}
-
-// RegisteredUser details of a registered user
-type RegisteredUser struct {
-	ID       string `json:"id"`
-	Username string `json:"username"`
-}
-
 // KeycloakAPIError Error responses from Keycloak
 type KeycloakAPIError struct {
 	HTTPStatus       int
