@@ -22,14 +22,6 @@ type RegisteredUser struct {
 	Username string `json:"username"`
 }
 
-// SecUserSetPW : Set a users password
-func SecUserSetPW(c *cli.Context) error {
-	if c.GlobalBool("insecure") {
-		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	}
-	return nil
-}
-
 // SecUserCreate : Create a new realm in Keycloak
 func SecUserCreate(c *cli.Context) *SecError {
 	if c.GlobalBool("insecure") {
@@ -135,5 +127,61 @@ func SecUserGet(c *cli.Context) (*RegisteredUser, *SecError) {
 		return &registredUser, nil
 	}
 
-	return nil, nil
+	// not found
+	errNotFound := errors.New("Registered User not found")
+	return nil, &SecError{errOpNotFound, errNotFound, errNotFound.Error()}
+
+}
+
+// SecUserSetPW : Resets the users password in keycloak to a new one supplied
+func SecUserSetPW(c *cli.Context) *SecError {
+	if c.GlobalBool("insecure") {
+		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	}
+	hostname := strings.TrimSpace(strings.ToLower(c.String("host")))
+	realm := strings.TrimSpace(c.String("realm"))
+	accesstoken := strings.TrimSpace(c.String("accesstoken"))
+	newPassword := strings.TrimSpace(c.String("newpw"))
+
+	// Authenticate if needed
+	if accesstoken == "" {
+		authToken, err := SecAuthenticate(c, KeycloakMasterRealm, KeycloakAdminClientID)
+		if err != nil || authToken == nil {
+			return err
+		}
+		accesstoken = authToken.AccessToken
+	}
+
+	registeredUser, secError := SecUserGet(c)
+	if secError != nil {
+		return secError
+	}
+
+	// Built REST request
+	url := hostname + "/auth/admin/realms/" + realm + "/users/" + registeredUser.ID + "/reset-password"
+	payload := strings.NewReader("{\"type\":\"password\",\"value\":\"" + newPassword + "\",\"temporary\":false}")
+	req, err := http.NewRequest("PUT", url, payload)
+	if err != nil {
+		return &SecError{errOpConnection, err, err.Error()}
+	}
+
+	req.Header.Add("Authorization", "Bearer "+accesstoken)
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("cache-control", "no-cache")
+	req.Header.Add("cache-control", "no-cache")
+	res, err := http.DefaultClient.Do(req)
+
+	if err != nil {
+		return &SecError{errOpConnection, err, err.Error()}
+	}
+
+	defer res.Body.Close()
+
+	// Handle HTTP status codes
+	if res.StatusCode != 204 {
+		errNotFound := errors.New(res.Status)
+		return &SecError{errOpNotFound, errNotFound, errNotFound.Error()}
+	}
+
+	return nil
 }

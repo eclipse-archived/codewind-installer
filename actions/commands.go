@@ -349,10 +349,10 @@ func Commands() {
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "host", Usage: "URL or ingress to Keycloak service", Required: false},
 						cli.StringFlag{Name: "realm,r", Usage: "Realm name", Required: true},
-						cli.StringFlag{Name: "name,n", Usage: "Username to add", Required: true},
 						cli.StringFlag{Name: "admintoken,t", Usage: "Admin access_token", Required: false},
 						cli.StringFlag{Name: "username,u", Usage: "Admin Username", Required: false},
 						cli.StringFlag{Name: "password,p", Usage: "Admin Password", Required: false},
+						cli.StringFlag{Name: "name,n", Usage: "Username to add", Required: true},
 					},
 					Action: func(c *cli.Context) error {
 						SecurityUserCreate(c)
@@ -365,10 +365,10 @@ func Commands() {
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "host", Usage: "URL or ingress to Keycloak service", Required: false},
 						cli.StringFlag{Name: "realm,r", Usage: "Realm name", Required: true},
-						cli.StringFlag{Name: "name,n", Usage: "Username to retrieve", Required: true},
 						cli.StringFlag{Name: "admintoken,t", Usage: "Admin access_token", Required: false},
 						cli.StringFlag{Name: "username,u", Usage: "Admin Username", Required: false},
 						cli.StringFlag{Name: "password,p", Usage: "Admin Password", Required: false},
+						cli.StringFlag{Name: "name,n", Usage: "Username to retrieve", Required: true},
 					},
 					Action: func(c *cli.Context) error {
 						SecurityUserGet(c)
@@ -381,10 +381,11 @@ func Commands() {
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "host", Usage: "URL or ingress to Keycloak service", Required: false},
 						cli.StringFlag{Name: "realm,r", Usage: "Realm name", Required: true},
-						cli.StringFlag{Name: "name,n", Usage: "Account name to process", Required: true},
-						cli.StringFlag{Name: "accesstoken,t", Usage: "Access Token", Required: false},
-						cli.StringFlag{Name: "username,u", Usage: "Username", Required: false},
-						cli.StringFlag{Name: "password,p", Usage: "Password", Required: false},
+						cli.StringFlag{Name: "accesstoken,t", Usage: "Admin Access Token", Required: false},
+						cli.StringFlag{Name: "username,u", Usage: "Admin Username", Required: false},
+						cli.StringFlag{Name: "password,p", Usage: "Admin Password", Required: false},
+						cli.StringFlag{Name: "name,n", Usage: "Existing user account name to process", Required: true},
+						cli.StringFlag{Name: "newpw,w", Usage: "New password", Required: true},
 					},
 					Action: func(c *cli.Context) error {
 						SecurityUserSetPassword(c)
