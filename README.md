@@ -85,16 +85,16 @@ $ brew upgrade dep
 |----------------|--------------|--------------------------------------------------------------------|
 |project         |              |'Manage Codewind projects'                                          |
 |install         |`in`          |'Pull pfe, performance & initialize images from dockerhub'          |
-|sectoken        |`st`          |'Authenticate with username and password to obtain an access_token' |
-|secrealm        |`sr`          |'Manage new or existing REALM configurations'                       |
-|secclient       |`sc`          |'Manage new or existing APPLICATION access configurations'          |
-|secuser         |`su`          |'Manage new or existing USER access configurations'                 |
 |start           |              |'Start the Codewind containers'                                     |
 |status          |              |'Print the installation status of Codewind'                         |
 |stop            |              |'Stop the running Codewind containers'                              |
 |stop-all        |              |'Stop all of the Codewind and project containers'                   |
 |remove          |`rm`          |'Remove Codewind/Project docker images and the codewind network'    |
 |templates       |              |'Manage project templates'                                          |
+|sectoken        |`st`          |'Authenticate with username and password to obtain an access_token' |
+|secrealm        |`sr`          |'Manage new or existing REALM configurations'                       |
+|secclient       |`sc`          |'Manage new or existing APPLICATION access configurations'          |
+|secuser         |`su`          |'Manage new or existing USER access configurations'                 |
 |help            |`h`           |'Shows a list of commands or help for one command'                  |
 
 ## CLI Command Options
@@ -137,6 +137,96 @@ $ brew upgrade dep
 Subcommands:</br>
 
 `list/ls` - List available templates
+
+## sectoken
+
+Subcommands:</br>
+
+`get/g` - Authenticate and obtain an access_token
+
+> **Flags:**
+> --host value                  URL or ingress to Keycloak service
+> --realm value                 Application realm
+> --username value              Account Username
+> --password value              Account Password
+> --client value                Client
+
+## secrealm
+
+Subcommands:</br>
+
+`create/c` - Create a new realm (requires either admin_token or username/password)
+
+> **Flags:**
+> --host value                   URL or ingress to Keycloak service
+> --realm value                  Application realm
+> --accesstoken value            Admin access_token
+> --username value               Admin Username
+> --password value               Admin Password
+
+## secclient
+
+Subcommands:</br>
+
+`create/c` - Create a new client in an existing Keycloak realm (requires either admin_token or username/password)
+
+> --host value                   URL or ingress to Keycloak service
+> --realm value                  Application realm
+> --clientid value               New client ID to create
+> --redirect value               Allowed redirect callback URL eg: `http://127.0.0.1:9090/*`
+> --accesstoken value            Admin access_token
+> --username value               Admin Username
+> --password value               Admin Password
+
+`get/g` - Get client id (requires either admin_token or username/password)
+
+> --host value                   URL or ingress to Keycloak service
+> --realm value                  Application realm
+> --clientid value               New client ID to create
+> --accesstoken value            Admin access_token
+> --username value               Admin Username
+> --password value               Admin Password
+
+`secret/s` - Get client secret (requires either admin_token or username/password)
+
+> --host value                   URL or ingress to Keycloak service
+> --realm value                  Application realm
+> --clientid value               New client ID to create
+> --accesstoken value            Admin access_token
+> --username value               Admin Username
+> --password value               Admin Password
+
+## secuser
+
+Subcommands:</br>
+
+`create/c` - Create a new user in an existing Keycloak realm (requires either admin_token or username/password)
+
+> --host value                   URL or ingress to Keycloak service
+> --realm value                  Application realm
+> --accesstoken value            Admin access_token
+> --username value               Admin Username
+> --password value               Admin Password
+> --name value                   Username to add
+
+`get/g` - Gets an existing Keycloak user from an existing realm (requires either admin_token or username/password)
+
+> --host value                   URL or ingress to Keycloak service
+> --realm value                  Application realm
+> --accesstoken value            Admin access_token
+> --username value               Admin Username
+> --password value               Admin Password
+> --name value                   Username to query
+
+`setpw/p` - Reset an existing users password (requires either admin_token or username/password)
+
+> --host value                   URL or ingress to Keycloak service
+> --realm value                  Application realm
+> --accesstoken value            Admin access_token
+> --username value               Admin Username
+> --password value               Admin Password
+> --name value                   Username to query
+> --newpw value                  New replacement password
 
 ## help
 
