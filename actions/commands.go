@@ -238,8 +238,9 @@ func Commands() {
 
 		//  Security //
 		{
-			Name:  "sectoken",
-			Usage: "Authenticate and obtain an access_token",
+			Name:    "sectoken",
+			Aliases: []string{"st"},
+			Usage:   "Authenticate and obtain an access_token",
 			Subcommands: []cli.Command{
 				{
 					Name:    "get",
@@ -260,8 +261,9 @@ func Commands() {
 			},
 		},
 		{
-			Name:  "secrealm",
-			Usage: "Manage Realm configuration",
+			Name:    "secrealm",
+			Aliases: []string{"sr"},
+			Usage:   "Manage Realm configuration",
 			Subcommands: []cli.Command{
 				{
 					Name:    "create",
@@ -281,8 +283,9 @@ func Commands() {
 				},
 			},
 		}, {
-			Name:  "secclient",
-			Usage: "Manage client access configuration",
+			Name:    "secclient",
+			Aliases: []string{"sc"},
+			Usage:   "Manage client access configuration",
 			Subcommands: []cli.Command{
 				{
 					Name:    "create",
@@ -339,8 +342,9 @@ func Commands() {
 			},
 		},
 		{
-			Name:  "secuser",
-			Usage: "Manage keycloak user account",
+			Name:    "secuser",
+			Aliases: []string{"su"},
+			Usage:   "Manage keycloak user account",
 			Subcommands: []cli.Command{
 				{
 					Name:    "create",
