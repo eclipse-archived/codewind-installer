@@ -178,8 +178,8 @@ spec:
                     echo running unit tests
                     # cd /home/jenkins/$CODE_DIRECTORY_FOR_GO/utils
                     ls
-                    go test
-                    # go test ./...
+                    # go test
+                    go test ./...
                 '''
 
             }
