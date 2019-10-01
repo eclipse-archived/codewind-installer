@@ -11,12 +11,12 @@ import (
 	"github.com/urfave/cli"
 )
 
-// RegisteredUsers A collection of registered users
+// RegisteredUsers : A collection of registered users
 type RegisteredUsers struct {
 	Collection []RegisteredUser
 }
 
-// RegisteredUser details of a registered user
+// RegisteredUser : details of a registered user
 type RegisteredUser struct {
 	ID       string `json:"id"`
 	Username string `json:"username"`
@@ -33,7 +33,7 @@ func SecUserCreate(c *cli.Context) *SecError {
 	accesstoken := strings.TrimSpace(c.String("accesstoken"))
 	targetUsername := strings.TrimSpace(c.String("name"))
 
-	// Authenticate if needed
+	// authenticate if needed
 	if accesstoken == "" {
 		authToken, err := SecAuthenticate(c, KeycloakMasterRealm, KeycloakAdminClientID)
 		if err != nil || authToken == nil {
@@ -81,7 +81,7 @@ func SecUserGet(c *cli.Context) (*RegisteredUser, *SecError) {
 	accesstoken := strings.TrimSpace(c.String("accesstoken"))
 	searchName := strings.TrimSpace(c.String("name"))
 
-	// Authenticate if needed
+	// authenticate if needed
 	if accesstoken == "" {
 		authToken, err := SecAuthenticate(c, KeycloakMasterRealm, KeycloakAdminClientID)
 		if err != nil || authToken == nil {
@@ -90,7 +90,7 @@ func SecUserGet(c *cli.Context) (*RegisteredUser, *SecError) {
 		accesstoken = authToken.AccessToken
 	}
 
-	// Built REST request
+	// build REST request
 	url := hostname + "/auth/admin/realms/" + realm + "/users?username=" + searchName
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -106,7 +106,7 @@ func SecUserGet(c *cli.Context) (*RegisteredUser, *SecError) {
 
 	defer res.Body.Close()
 
-	// Handle HTTP status codes
+	// handle HTTP status codes
 	if res.StatusCode != 200 {
 		body, _ := ioutil.ReadAll(res.Body)
 		err = errors.New(string(body))
@@ -120,14 +120,14 @@ func SecUserGet(c *cli.Context) (*RegisteredUser, *SecError) {
 		return nil, &SecError{errOpResponseFormat, err, err.Error()}
 	}
 
-	registredUser := RegisteredUser{}
+	registeredUser := RegisteredUser{}
 
 	if len(registeredUsers.Collection) > 0 {
-		registredUser = registeredUsers.Collection[0]
-		return &registredUser, nil
+		registeredUser = registeredUsers.Collection[0]
+		return &registeredUser, nil
 	}
 
-	// not found
+	// user not found
 	errNotFound := errors.New(textUserNotFound)
 	return nil, &SecError{errOpNotFound, errNotFound, errNotFound.Error()}
 
@@ -149,7 +149,7 @@ func SecUserSetPW(c *cli.Context) *SecError {
 		return &SecError{errOpPassword, err, err.Error()}
 	}
 
-	// Authenticate if needed
+	// authenticate if needed
 	if accesstoken == "" {
 		authToken, err := SecAuthenticate(c, KeycloakMasterRealm, KeycloakAdminClientID)
 		if err != nil || authToken == nil {
@@ -163,7 +163,7 @@ func SecUserSetPW(c *cli.Context) *SecError {
 		return secError
 	}
 
-	// Built REST request
+	// build REST request
 	url := hostname + "/auth/admin/realms/" + realm + "/users/" + registeredUser.ID + "/reset-password"
 	payload := strings.NewReader("{\"type\":\"password\",\"value\":\"" + newPassword + "\",\"temporary\":false}")
 	req, err := http.NewRequest("PUT", url, payload)
@@ -183,7 +183,7 @@ func SecUserSetPW(c *cli.Context) *SecError {
 
 	defer res.Body.Close()
 
-	// Handle HTTP status codes
+	// handle HTTP status codes
 	if res.StatusCode != 204 {
 		errNotFound := errors.New(res.Status)
 		return &SecError{errOpNotFound, errNotFound, errNotFound.Error()}

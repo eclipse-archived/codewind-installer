@@ -55,13 +55,13 @@ func SecurityClientCreate(c *cli.Context) {
 
 // SecurityClientGet : Retrieve a client configuration from Keycloak
 func SecurityClientGet(c *cli.Context) {
-	registredClient, err := security.SecClientGet(c)
+	registeredClient, err := security.SecClientGet(c)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(0)
 	}
-	if registredClient != nil {
-		utils.PrettyPrintJSON(registredClient)
+	if registeredClient != nil {
+		utils.PrettyPrintJSON(registeredClient)
 		os.Exit(0)
 	}
 	utils.PrettyPrintJSON(security.Result{Status: "Not found"})
@@ -70,13 +70,13 @@ func SecurityClientGet(c *cli.Context) {
 
 // SecurityClientGetSecret : Retrieve a client secret from Keycloak
 func SecurityClientGetSecret(c *cli.Context) {
-	registredClientSecret, err := security.SecClientGetSecret(c)
+	registeredClientSecret, err := security.SecClientGetSecret(c)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(0)
 	}
-	if registredClientSecret != nil {
-		utils.PrettyPrintJSON(registredClientSecret)
+	if registeredClientSecret != nil {
+		utils.PrettyPrintJSON(registeredClientSecret)
 		os.Exit(0)
 	}
 	utils.PrettyPrintJSON(security.Result{Status: "Not found"})
@@ -96,13 +96,13 @@ func SecurityUserCreate(c *cli.Context) {
 
 // SecurityUserGet : Retrieve the user detail from Keycloak
 func SecurityUserGet(c *cli.Context) {
-	registredUser, err := security.SecUserGet(c)
+	registeredUser, err := security.SecUserGet(c)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(0)
 	}
-	if registredUser != nil {
-		utils.PrettyPrintJSON(registredUser)
+	if registeredUser != nil {
+		utils.PrettyPrintJSON(registeredUser)
 		os.Exit(0)
 	}
 	utils.PrettyPrintJSON(security.Result{Status: "Not found"})

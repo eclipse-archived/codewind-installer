@@ -11,19 +11,19 @@ import (
 	"github.com/urfave/cli"
 )
 
-// RegisteredClients A collection of registered clients
+// RegisteredClients : A collection of registered clients
 type RegisteredClients struct {
 	Collection []RegisteredClient
 }
 
-// RegisteredClient details of a registered client
+// RegisteredClient : Registered client
 type RegisteredClient struct {
 	ID       string `json:"id"`
 	ClientID string `json:"clientId"`
 	Name     string `json:"name"`
 }
 
-// RegisteredClientSecret - Client secret
+// RegisteredClientSecret : Client secret
 type RegisteredClientSecret struct {
 	Type   string `json:"type"`
 	Secret string `json:"value"`
@@ -41,7 +41,7 @@ func SecClientCreate(c *cli.Context) *SecError {
 	clientid := strings.TrimSpace(c.String("clientid"))
 	redirect := strings.TrimSpace(c.String("redirect"))
 
-	// Authenticate if needed
+	// authenticate if needed
 	if accesstoken == "" {
 		authToken, err := SecAuthenticate(c, KeycloakMasterRealm, KeycloakAdminClientID)
 		if err != nil || authToken == nil {
@@ -56,7 +56,7 @@ func SecClientCreate(c *cli.Context) *SecError {
 	if redirect != "" {
 		callbackRedirect = ",\"redirectUris\":[\"" + redirect + "\"]"
 	}
-	payload := strings.NewReader("{\"clientId\":\"" + clientid + "\",\"name\":\"" + clientid + "\"" + callbackRedirect + "}")
+	payload := strings.NewReader("{\"directAccessGrantsEnabled\":true, \"publicClient\":true, \"clientId\":\"" + clientid + "\",\"name\":\"" + clientid + "\"" + callbackRedirect + "}")
 	req, err := http.NewRequest("POST", url, payload)
 	if err != nil {
 		return &SecError{errOpConnection, err, err.Error()}
@@ -92,7 +92,7 @@ func SecClientGet(c *cli.Context) (*RegisteredClient, *SecError) {
 	accesstoken := strings.TrimSpace(c.String("accesstoken"))
 	clientid := strings.TrimSpace(c.String("clientid"))
 
-	// Authenticate if needed
+	// authenticate if needed
 	if accesstoken == "" {
 		authToken, err := SecAuthenticate(c, KeycloakMasterRealm, KeycloakAdminClientID)
 		if err != nil || authToken == nil {
@@ -101,7 +101,7 @@ func SecClientGet(c *cli.Context) (*RegisteredClient, *SecError) {
 		accesstoken = authToken.AccessToken
 	}
 
-	// Built REST request
+	// build REST request
 	url := hostname + "/auth/admin/realms/" + realm + "/clients?clientId=" + clientid
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -116,7 +116,7 @@ func SecClientGet(c *cli.Context) (*RegisteredClient, *SecError) {
 	}
 	defer res.Body.Close()
 
-	// Handle HTTP status codes
+	// handle HTTP status codes
 	if res.StatusCode != 200 {
 		body, _ := ioutil.ReadAll(res.Body)
 		err = errors.New(string(body))
@@ -130,16 +130,16 @@ func SecClientGet(c *cli.Context) (*RegisteredClient, *SecError) {
 		return nil, &SecError{errOpResponseFormat, err, err.Error()}
 	}
 
-	registredClient := RegisteredClient{}
+	registeredClient := RegisteredClient{}
 	if len(registeredClients.Collection) > 0 {
-		registredClient = registeredClients.Collection[0]
-		return &registredClient, nil
+		registeredClient = registeredClients.Collection[0]
+		return &registeredClient, nil
 	}
 
 	return nil, nil
 }
 
-// SecClientGetSecret retrieve the client secret for the supplied clientID
+// SecClientGetSecret : Retrieve the client secret for the supplied clientID
 func SecClientGetSecret(c *cli.Context) (*RegisteredClientSecret, *SecError) {
 
 	if c.GlobalBool("insecure") {
@@ -149,7 +149,7 @@ func SecClientGetSecret(c *cli.Context) (*RegisteredClientSecret, *SecError) {
 	realm := strings.TrimSpace(c.String("realm"))
 	accesstoken := strings.TrimSpace(c.String("accesstoken"))
 
-	// Authenticate if needed
+	// authenticate if needed
 	if accesstoken == "" {
 		authToken, err := SecAuthenticate(c, KeycloakMasterRealm, KeycloakAdminClientID)
 		if err != nil || authToken == nil {
@@ -167,7 +167,7 @@ func SecClientGetSecret(c *cli.Context) (*RegisteredClientSecret, *SecError) {
 		return nil, nil
 	}
 
-	// Built REST request
+	// build REST request
 	url := hostname + "/auth/admin/realms/" + realm + "/clients/" + registeredClient.ID + "/client-secret"
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -183,7 +183,7 @@ func SecClientGetSecret(c *cli.Context) (*RegisteredClientSecret, *SecError) {
 	}
 	defer res.Body.Close()
 
-	// Handle HTTP status codes
+	// handle HTTP status codes
 	if res.StatusCode != 200 {
 		body, _ := ioutil.ReadAll(res.Body)
 		err = errors.New(string(body))

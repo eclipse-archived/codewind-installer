@@ -4,19 +4,19 @@ import (
 	"encoding/json"
 )
 
-// KeycloakMasterRealm master realm name
+// KeycloakMasterRealm : master realm name
 const KeycloakMasterRealm string = "master"
 
-// KeycloakAdminClientID master realm name
+// KeycloakAdminClientID : master realm name
 const KeycloakAdminClientID string = "admin-cli"
 
-// CodewindCliID master realm name
+// CodewindCliID : master realm name
 const CodewindCliID string = "codewind-cli"
 
-// CodewindClientID master realm name
+// CodewindClientID : master realm name
 const CodewindClientID string = "codewind-backend"
 
-// SecError - Security package errors
+// SecError : Security package errors
 type SecError struct {
 	Op   string
 	Err  error
@@ -24,12 +24,13 @@ type SecError struct {
 }
 
 const (
-	errOpConnection     = "sec_connection" // Connection failed
-	errOpResponse       = "sec_response"   // Bad response
-	errOpResponseFormat = "sec_bodyparser" // Parse errors
-	errOpNotFound       = "sec_notfound"   // No matching search results
-	errOpCreate         = "sec_create"     // Create failed
-	errOpPassword       = "sec_password"   // Password formatting
+	errOpConnection     = "sec_connection"      // Connection failed
+	errOpResponse       = "sec_response"        // Bad response
+	errOpResponseFormat = "sec_bodyparser"      // Parse errors
+	errOpNotFound       = "sec_notfound"        // No matching search results
+	errOpCreate         = "sec_create"          // Create failed
+	errOpPassword       = "sec_passwordcontent" // Password formatting
+	errOpHostname       = "sec_badhostname"     // Bad hostname / url
 )
 
 const (
@@ -44,7 +45,7 @@ func (se *SecError) Error() string {
 	return "{\"error\", \"" + se.Op + "\", \"error_description\": \"" + se.Err.Error() + "\"}"
 }
 
-// KeycloakAPIError Error responses from Keycloak
+// KeycloakAPIError : Error responses from Keycloak
 type KeycloakAPIError struct {
 	HTTPStatus       int
 	Error            string `json:"error"`
