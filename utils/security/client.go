@@ -39,7 +39,7 @@ func SecClientCreate(c *cli.Context) *SecError {
 	realm := strings.TrimSpace(c.String("realm"))
 	accesstoken := strings.TrimSpace(c.String("accesstoken"))
 	clientid := strings.TrimSpace(c.String("clientid"))
-	redirect := strings.TrimSpace(c.String("redirect"))
+	redirectURL := strings.TrimSpace(c.String("redirect"))
 
 	// authenticate if needed
 	if accesstoken == "" {
@@ -52,12 +52,27 @@ func SecClientCreate(c *cli.Context) *SecError {
 
 	// build REST request
 	url := hostname + "/auth/admin/realms/" + realm + "/clients"
-	callbackRedirect := ""
-	if redirect != "" {
-		callbackRedirect = ",\"redirectUris\":[\"" + redirect + "\"]"
+
+	// build the payload (JSON)
+	type PayloadClient struct {
+		DirectAccessGrantsEnabled bool      `json:"directAccessGrantsEnabled"`
+		PublicClient              bool      `json:"publicClient"`
+		ClientID                  string    `json:"clientId"`
+		Name                      string    `json:"name"`
+		RedirectUris              [1]string `json:"redirectUris"`
 	}
-	payload := strings.NewReader("{\"directAccessGrantsEnabled\":true, \"publicClient\":true, \"clientId\":\"" + clientid + "\",\"name\":\"" + clientid + "\"" + callbackRedirect + "}")
+	tempClient := &PayloadClient{
+		DirectAccessGrantsEnabled: true,
+		PublicClient:              true,
+		ClientID:                  clientid,
+		Name:                      clientid,
+	}
+
+	tempClient.RedirectUris = [...]string{redirectURL}
+	jsonClient, err := json.Marshal(tempClient)
+	payload := strings.NewReader(string(jsonClient))
 	req, err := http.NewRequest("POST", url, payload)
+
 	if err != nil {
 		return &SecError{errOpConnection, err, err.Error()}
 	}

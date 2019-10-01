@@ -44,8 +44,23 @@ func SecUserCreate(c *cli.Context) *SecError {
 
 	// build REST request
 	url := hostname + "/auth/admin/realms/" + realm + "/users"
-	//    '{"username":"developer","firstName":"codewind","lastName":"developer","enabled":true}'
-	payload := strings.NewReader("{\"enabled\":true,\"username\":\"" + targetUsername + "\",\"firstName\":\"\",\"lastName\":\"" + targetUsername + "\"}")
+
+	// build the payload (JSON)
+	type PayloadUser struct {
+		Enabled   bool   `json:"enabled"`
+		Username  string `json:"username"`
+		FirstName string `json:"firstName"`
+		LastName  string `json:"lastName"`
+	}
+	tempUser := &PayloadUser{
+		Enabled:   true,
+		Username:  targetUsername,
+		FirstName: "",
+		LastName:  "",
+	}
+
+	jsonUser, err := json.Marshal(tempUser)
+	payload := strings.NewReader(string(jsonUser))
 	req, err := http.NewRequest("POST", url, payload)
 	if err != nil {
 		return &SecError{errOpConnection, err, err.Error()}
@@ -165,7 +180,16 @@ func SecUserSetPW(c *cli.Context) *SecError {
 
 	// build REST request
 	url := hostname + "/auth/admin/realms/" + realm + "/users/" + registeredUser.ID + "/reset-password"
-	payload := strings.NewReader("{\"type\":\"password\",\"value\":\"" + newPassword + "\",\"temporary\":false}")
+
+	// build the payload (JSON)
+	type PayloadPasswordChange struct {
+		Type      string `json:"type"`
+		Value     string `json:"value"`
+		Temporary bool   `json:"temporary"`
+	}
+	tempPasswordChange := &PayloadPasswordChange{Type: "password", Value: newPassword, Temporary: false}
+	jsonPasswordChange, err := json.Marshal(tempPasswordChange)
+	payload := strings.NewReader(string(jsonPasswordChange))
 	req, err := http.NewRequest("PUT", url, payload)
 	if err != nil {
 		return &SecError{errOpConnection, err, err.Error()}

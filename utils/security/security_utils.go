@@ -42,7 +42,13 @@ const (
 // SecError : Error formatted in JSON containing an errorOp and a description from
 // either a fault condition in the CLI, or an error payload from a REST request
 func (se *SecError) Error() string {
-	return "{\"error\", \"" + se.Op + "\", \"error_description\": \"" + se.Err.Error() + "\"}"
+	type Output struct {
+		Operation   string `json:"error"`
+		Description string `json:"error_description"`
+	}
+	tempOutput := &Output{Operation: se.Op, Description: se.Err.Error()}
+	jsonError, _ := json.Marshal(tempOutput)
+	return string(jsonError)
 }
 
 // KeycloakAPIError : Error responses from Keycloak

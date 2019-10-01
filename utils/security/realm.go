@@ -2,6 +2,7 @@ package security
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"net/http"
@@ -31,7 +32,25 @@ func SecRealmCreate(c *cli.Context) *SecError {
 
 	// build REST request
 	url := hostname + "/auth/admin/realms"
-	payload := strings.NewReader("{\"realm\":\"" + realm + "\",\"displayName\":\"" + realm + "\",\"enabled\":true,\"loginTheme\":\"codewind\",\"accessTokenLifespan\":86400}")
+
+	// build the payload (JSON)
+	type PayloadRealm struct {
+		Realm               string `json:"realm"`
+		DisplayName         string `json:"displayName"`
+		Enabled             bool   `json:"enabled"`
+		LoginTheme          string `json:"loginTheme"`
+		AccessTokenLifespan int    `json:"accessTokenLifespan"`
+	}
+	tempRealm := &PayloadRealm{
+		Realm:               realm,
+		DisplayName:         realm,
+		Enabled:             true,
+		LoginTheme:          "codewind",
+		AccessTokenLifespan: 86400,
+	}
+
+	jsonRealm, err := json.Marshal(tempRealm)
+	payload := strings.NewReader(string(jsonRealm))
 	req, err := http.NewRequest("POST", url, payload)
 	if err != nil {
 		return &SecError{errOpConnection, err, err.Error()}
