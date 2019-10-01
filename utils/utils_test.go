@@ -12,17 +12,11 @@
 package utils
 
 import (
-	"bytes"
-	"context"
 	"log"
 	"os"
-	"os/exec"
 	"strconv"
-	"strings"
 	"testing"
 
-	"github.com/docker/docker/api/types"
-	"github.com/moby/moby/client"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -32,51 +26,51 @@ func TestToggleDebug(t *testing.T) {
 	assert.Equal(t, debug, true, "should return true: debug flag should be true")
 }
 
-func TestRemoveImage(t *testing.T) {
-	performanceImage := "docker.io/eclipse/codewind-performance-amd64"
-	PullImage(performanceImage, false)
-	RemoveImage(performanceImage)
-}
-func TestCheckImageStatusFalse(t *testing.T) {
-	// Test checks that image list can be searched
-	// False return as no images have been installed for this test
-	result := CheckImageStatus()
-	assert.Equal(t, result, false, "should return false: no images are installed")
-}
+// func TestRemoveImage(t *testing.T) {
+// 	performanceImage := "docker.io/eclipse/codewind-performance-amd64"
+// 	PullImage(performanceImage, false)
+// 	RemoveImage(performanceImage)
+// }
+// func TestCheckImageStatusFalse(t *testing.T) {
+// 	// Test checks that image list can be searched
+// 	// False return as no images have been installed for this test
+// 	result := CheckImageStatus()
+// 	assert.Equal(t, result, false, "should return false: no images are installed")
+// }
 
-func TestCheckContainerStatusFalse(t *testing.T) {
-	// Test checks that container list can be searched
-	// False return as no containers have been started for this test
-	result := CheckContainerStatus()
-	assert.Equal(t, result, false, "should return false: no containers are started")
-}
+// func TestCheckContainerStatusFalse(t *testing.T) {
+// 	// Test checks that container list can be searched
+// 	// False return as no containers have been started for this test
+// 	result := CheckContainerStatus()
+// 	assert.Equal(t, result, false, "should return false: no containers are started")
+// }
 
-func TestPullDockerImage(t *testing.T) {
-	performanceImage := "docker.io/eclipse/codewind-performance-amd64"
-	performanceImageTarget := "codewind-performance-amd64:latest"
-	PullImage(performanceImage, false)
-	TagImage(performanceImage, performanceImageTarget)
+// func TestPullDockerImage(t *testing.T) {
+// 	performanceImage := "docker.io/eclipse/codewind-performance-amd64"
+// 	performanceImageTarget := "codewind-performance-amd64:latest"
+// 	PullImage(performanceImage, false)
+// 	TagImage(performanceImage, performanceImageTarget)
 
-	ctx := context.Background()
-	cli, _ := client.NewEnvClient()
-	images, _ := cli.ImageList(ctx, types.ImageListOptions{})
-	imageStatus := false
-	for _, image := range images {
-		imageRepo := strings.Join(image.RepoDigests, " ")
-		if strings.Contains(imageRepo, "codewind") {
-			imageStatus = true
-			assert.Equal(t, imageStatus, true, "should return true: imageStatus should be true")
-		}
-	}
-	cmd := exec.Command("docker", "image", "rm", "eclipse/codewind-performance-amd64", performanceImageTarget, "-f")
-	cmd.Stdin = strings.NewReader("Deleting pulled image")
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal("Failed to delete test images")
-	}
-}
+// 	ctx := context.Background()
+// 	cli, _ := client.NewEnvClient()
+// 	images, _ := cli.ImageList(ctx, types.ImageListOptions{})
+// 	imageStatus := false
+// 	for _, image := range images {
+// 		imageRepo := strings.Join(image.RepoDigests, " ")
+// 		if strings.Contains(imageRepo, "codewind") {
+// 			imageStatus = true
+// 			assert.Equal(t, imageStatus, true, "should return true: imageStatus should be true")
+// 		}
+// 	}
+// 	cmd := exec.Command("docker", "image", "rm", "eclipse/codewind-performance-amd64", performanceImageTarget, "-f")
+// 	cmd.Stdin = strings.NewReader("Deleting pulled image")
+// 	var out bytes.Buffer
+// 	cmd.Stdout = &out
+// 	err := cmd.Run()
+// 	if err != nil {
+// 		log.Fatal("Failed to delete test images")
+// 	}
+// }
 
 func TestCreateTempFile(t *testing.T) {
 	file := CreateTempFile("TestFile.yaml")

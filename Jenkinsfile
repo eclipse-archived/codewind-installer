@@ -3,6 +3,7 @@
 pipeline {
 
     agent {
+        
         kubernetes {
               label 'go-pod'
             yaml """
@@ -24,6 +25,7 @@ spec:
         cpu: "1"
 """
         }
+
     }
 
     options {
@@ -80,8 +82,106 @@ spec:
         }
 
         stage('Test') {
+            agent {
+                docker {
+                image 'golang:1.11-stretch'
+                }
+            }
             steps {
-                echo 'Testing to be defined.'
+            //    script {
+            //         // sh '''
+            //         //     echo $HOME
+
+            //         //     # install bats
+            //         //     # git clone https://github.com/bats-core/bats-core.git
+            //         //     # cd bats-core
+            //         //     # ./install.sh $HOME
+                        
+            //         //     # add to path
+            //         //     # export PATH="$HOME/bin:$PATH"
+
+            //         //     # run bats tests file
+            //         //     # bats $HOME/$CODE_DIRECTORY_FOR_GO/integration.bats
+            //         // '''
+
+            //         container('go') {
+            //         sh '''
+            //             echo "starting unit tests.."
+
+            //             # add the base directory to the gopath
+            //             DEFAULT_CODE_DIRECTORY=$PWD
+            //             cd ../..
+            //             export GOPATH=$GOPATH:$(pwd)
+                        
+            //             cd /home/jenkins/$CODE_DIRECTORY_FOR_GO
+                        
+            //             # get dep and run it
+            //             wget -O - https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+            //             dep status
+            //             dep ensure -v
+
+            //             # run unit tests
+            //             echo running unit tests
+            //             # cd /home/jenkins/$CODE_DIRECTORY_FOR_GO/utils
+            //             go test ./...
+
+            //         '''
+            //     }
+            //     }
+
+            // We need the docker agent for test step so we can run Codewind in docker
+
+                sh '''#!/usr/bin/env bash
+                   # echo testing script
+                    # echo $HOME
+                    # pwd
+                    # ls
+                    # add the base directory to the gopath
+                    # DEFAULT_CODE_DIRECTORY=$PWD
+
+                    # cd ../..
+                    
+                    # export GOPATH=$GOPATH:$(pwd)
+                    # echo $GOPATH
+
+                    # cd $DEFAULT_CODE_DIRECTORY
+
+
+                    echo "starting preInstall for test stage.....: GOPATH=$GOPATH"
+
+                    # add the base directory to the gopath
+                    DEFAULT_CODE_DIRECTORY=$PWD
+
+                    echo file permissions on defaul_code_directory
+
+                    export GOPATH=$GOPATH:$(pwd)
+
+                    # create a new directory to store the code for go compile
+                    if [ -d $CODE_DIRECTORY_FOR_GO ]; then
+                        rm -rf $CODE_DIRECTORY_FOR_GO
+                    fi
+                    mkdir -p $CODE_DIRECTORY_FOR_GO
+                    cd $CODE_DIRECTORY_FOR_GO
+
+                    # copy the code into the new directory for go compile
+                    cp -r $DEFAULT_CODE_DIRECTORY/*.* .
+                    cp -r $DEFAULT_CODE_DIRECTORY/Jenkinsfile $DEFAULT_CODE_DIRECTORY/actions $DEFAULT_CODE_DIRECTORY/apiroutes $DEFAULT_CODE_DIRECTORY/config $DEFAULT_CODE_DIRECTORY/errors $DEFAULT_CODE_DIRECTORY/resources $DEFAULT_CODE_DIRECTORY/utils .
+                    echo $DEFAULT_CODE_DIRECTORY >> $DEFAULT_WORKSPACE_DIR_FILE
+
+                    
+                    # get dep and run it
+                    wget -O - https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+                    dep status
+                    dep ensure -v
+
+                    # run unit tests
+                    echo running unit tests
+                    # cd /home/jenkins/$CODE_DIRECTORY_FOR_GO/utils
+                    ls
+                    go test
+                    # go test ./...
+                '''
+
             }
         }
 
