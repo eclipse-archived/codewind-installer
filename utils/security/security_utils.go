@@ -29,6 +29,7 @@ const (
 	errOpResponseFormat = "sec_bodyparser" // Parse errors
 	errOpNotFound       = "sec_notfound"   // No matching search results
 	errOpCreate         = "sec_create"     // Create failed
+	errBadPassword      = "sec_password"   // Password formatting
 )
 
 // SecError : Error formatted in JSON containing an errorOp and a description from

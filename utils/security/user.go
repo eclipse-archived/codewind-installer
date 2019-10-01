@@ -143,6 +143,12 @@ func SecUserSetPW(c *cli.Context) *SecError {
 	accesstoken := strings.TrimSpace(c.String("accesstoken"))
 	newPassword := strings.TrimSpace(c.String("newpw"))
 
+	// validate password characters
+	if strings.Contains(newPassword, "'") || strings.Contains(newPassword, "\"") {
+		err := errors.New("Passwords must not contains quoted characters")
+		return &SecError{errBadPassword, err, err.Error()}
+	}
+
 	// Authenticate if needed
 	if accesstoken == "" {
 		authToken, err := SecAuthenticate(c, KeycloakMasterRealm, KeycloakAdminClientID)
