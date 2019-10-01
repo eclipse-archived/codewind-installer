@@ -103,9 +103,9 @@ spec:
                         # only sign windows exe if not a pull request
                         if [ -z $CHANGE_ID ]; then
                             curl -o codewind-installer/cwctl-win-${TIMESTAMP}.exe  -F file=@cwctl-win.exe http://build.eclipse.org:31338/winsign.php
-                            rm codewind-installer-win.exe
+                            rm cwctl-win.exe
                         fi
-                        # move other executable to codewind-installer directoryand add timestamp to the name
+                        # move other executable to codewind-installer directory and add timestamp to the name
                         for fileid in cwctl-*; do
                             mv -v $fileid codewind-installer/${fileid}-$TIMESTAMP
                         done
