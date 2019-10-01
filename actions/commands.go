@@ -19,17 +19,16 @@ import (
 	"github.com/urfave/cli"
 )
 
-var tempFilePath = "installer-docker-compose.yaml"
-
+var tempFilePath = "codewind-docker-compose.yaml"
 
 const versionNum = "x.x.dev"
 
 const healthEndpoint = "/api/v1/environment"
 
-//Commands for the installer
+//Commands for the controller
 func Commands() {
 	app := cli.NewApp()
-	app.Name = "codewind-installer"
+	app.Name = "cwctl"
 	app.Version = versionNum
 	app.Usage = "Start, Stop and Remove Codewind"
 

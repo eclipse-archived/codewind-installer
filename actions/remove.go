@@ -23,11 +23,11 @@ import (
 func RemoveCommand(c *cli.Context) {
 	tag := c.String("tag")
 	imageArr := []string{
-        "eclipse/codewind-pfe-amd64:" + tag,
-        "eclipse/codewind-performance-amd64:" + tag,
-        "eclipse/codewind-initialize-amd64:" + tag,
-        "cw-",
-    }
+		"eclipse/codewind-pfe-amd64:" + tag,
+		"eclipse/codewind-performance-amd64:" + tag,
+		"eclipse/codewind-initialize-amd64:" + tag,
+		"cw-",
+	}
 	networkName := "codewind"
 
 	images := utils.GetImageList()
