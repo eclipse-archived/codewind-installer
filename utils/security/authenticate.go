@@ -77,7 +77,7 @@ func SecAuthenticate(c *cli.Context, connectionRealm string, connectionClient st
 	authToken := AuthToken{}
 	err = json.Unmarshal([]byte(body), &authToken)
 	if err != nil {
-		return nil, &SecError{errOpResponseFormat, err, "Unable to parse Keycloak response"}
+		return nil, &SecError{errOpResponseFormat, err, textUnableToParse}
 	}
 	return &authToken, nil
 }

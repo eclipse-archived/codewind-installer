@@ -128,7 +128,7 @@ func SecUserGet(c *cli.Context) (*RegisteredUser, *SecError) {
 	}
 
 	// not found
-	errNotFound := errors.New("Registered User not found")
+	errNotFound := errors.New(textUserNotFound)
 	return nil, &SecError{errOpNotFound, errNotFound, errNotFound.Error()}
 
 }
@@ -145,8 +145,8 @@ func SecUserSetPW(c *cli.Context) *SecError {
 
 	// validate password characters
 	if strings.Contains(newPassword, "'") || strings.Contains(newPassword, "\"") {
-		err := errors.New("Passwords must not contains quoted characters")
-		return &SecError{errBadPassword, err, err.Error()}
+		err := errors.New(textBadPassword)
+		return &SecError{errOpPassword, err, err.Error()}
 	}
 
 	// Authenticate if needed

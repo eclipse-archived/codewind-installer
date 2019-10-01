@@ -29,7 +29,13 @@ const (
 	errOpResponseFormat = "sec_bodyparser" // Parse errors
 	errOpNotFound       = "sec_notfound"   // No matching search results
 	errOpCreate         = "sec_create"     // Create failed
-	errBadPassword      = "sec_password"   // Password formatting
+	errOpPassword       = "sec_password"   // Password formatting
+)
+
+const (
+	textBadPassword   = "Passwords must not contains quoted characters"
+	textUserNotFound  = "Registered User not found"
+	textUnableToParse = "Unable to parse Keycloak response"
 )
 
 // SecError : Error formatted in JSON containing an errorOp and a description from
