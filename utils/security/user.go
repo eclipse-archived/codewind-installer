@@ -111,7 +111,7 @@ func SecUserGet(c *cli.Context) (*RegisteredUser, *SecError) {
 	}
 	req.Header.Add("Authorization", "Bearer "+accesstoken)
 	req.Header.Add("cache-control", "no-cache")
-	req.Header.Add("cache-control", "no-cache")
+	req.Header.Add("Cache-Control", "no-cache")
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, &SecError{errOpConnection, err, err.Error()}
@@ -188,7 +188,7 @@ func SecUserSetPW(c *cli.Context) *SecError {
 	req.Header.Add("Authorization", "Bearer "+accesstoken)
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("cache-control", "no-cache")
-	req.Header.Add("cache-control", "no-cache")
+	req.Header.Add("Cache-Control", "no-cache")
 	res, err := http.DefaultClient.Do(req)
 
 	if err != nil {
