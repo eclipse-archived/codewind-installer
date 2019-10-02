@@ -27,7 +27,6 @@ type (
 	Template struct {
 		Label       string `json:"label"`
 		Description string `json:"description"`
-		Name        string `json:"name"`
 		Language    string `json:"language"`
 		URL         string `json:"url"`
 		ProjectType string `json:"projectType"`
@@ -44,7 +43,7 @@ type (
 // GetTemplates gets project templates from PFE's REST API.
 // Filter them using the function arguments
 func GetTemplates(projectStyle string, showEnabledOnly string) ([]Template, error) {
-	req, err := http.NewRequest("GET", config.PFEApiRoute()+"templates", nil)
+	req, err := http.NewRequest("GET", config.PFEApiRoute() + "templates", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +166,7 @@ func DeleteTemplateRepo(URL string) ([]TemplateRepo, error) {
 
 	req, err := http.NewRequest(
 		"DELETE",
-		config.PFEApiRoute()+"templates/repositories",
+		config.PFEApiRoute() + "templates/repositories",
 		bytes.NewBuffer(jsonValue),
 	)
 	req.Header.Set("Content-Type", "application/json")
