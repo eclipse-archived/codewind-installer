@@ -133,19 +133,10 @@ spec:
 
                 sh '''#!/usr/bin/env bash
                    # echo testing script
-                    # echo $HOME
-                    # pwd
-                    # ls
-                    # add the base directory to the gopath
-                    # DEFAULT_CODE_DIRECTORY=$PWD
+                    echo $HOME
+                    echo $JENKINS_HOME
 
-                    # cd ../..
-                    
-                    # export GOPATH=$GOPATH:$(pwd)
-                    # echo $GOPATH
-
-                    # cd $DEFAULT_CODE_DIRECTORY
-
+                    export HOME=$JENKINS_HOME
 
                     echo "starting preInstall for test stage.....: GOPATH=$GOPATH"
 
