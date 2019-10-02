@@ -139,6 +139,8 @@ spec:
                     export HOME=$JENKINS_HOME
                     export GOCACHE="off"
 
+                    docker -u $(getent passwd genie.codewind | cut -d: -f3):$(getent passwd genie.codewind | cut -d: -f4)
+
                     echo "starting preInstall for test stage.....: GOPATH=$GOPATH"
 
                     # add the base directory to the gopath
