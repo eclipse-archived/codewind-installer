@@ -25,21 +25,6 @@ import (
 	"github.com/urfave/cli"
 )
 
-func getDeploymentConfigPath() string {
-	const GOOS string = runtime.GOOS
-	homeDir := ""
-	if GOOS == "windows" {
-		homeDir = os.Getenv("USERPROFILE")
-	} else {
-		homeDir = os.Getenv("HOME")
-	}
-	return path.Join(homeDir, ".codewind", "config")
-}
-
-func getDeploymentConfigFilename() string {
-	return path.Join(getDeploymentConfigPath(), "deployments.json")
-}
-
 // DeploymentConfig state and possible deployments
 type DeploymentConfig struct {
 	Active      string       `json:"active"`
@@ -48,9 +33,10 @@ type DeploymentConfig struct {
 
 // Deployment entry
 type Deployment struct {
-	Name  string `json:"name"`
-	Label string `json:"label"`
-	URL   string `json:"url"`
+	ID      string `json:"id"`
+	Label   string `json:"label"`
+	URL     string `json:"url"`
+	AuthURL string `json:"auth"`
 }
 
 // InitDeploymentConfigIfRequired : Check the config file exist, if it does not then create a new default configuration
@@ -69,9 +55,10 @@ func ResetDeploymentsFile() {
 		Active: "local",
 		Deployments: []Deployment{
 			Deployment{
-				Name:  "local",
-				Label: "Codewind local deployment",
-				URL:   "",
+				ID:      "local",
+				Label:   "Codewind local deployment",
+				URL:     "",
+				AuthURL: "",
 			},
 		},
 	}
@@ -81,45 +68,16 @@ func ResetDeploymentsFile() {
 	errors.CheckErr(saveErr, 203, "Unable to save the deployments config file")
 }
 
-// loadDeploymentsConfigFile : Load the deployments configuration file from disk
-// and returns the contents of the file or an error
-func loadDeploymentsConfigFile() (*DeploymentConfig, int, error) {
-	file, err := ioutil.ReadFile(getDeploymentConfigFilename())
-	if err != nil {
-		return nil, 207, err
-	}
-	data := DeploymentConfig{}
-	err = json.Unmarshal([]byte(file), &data)
-	if err != nil {
-		return nil, 208, err
-	}
-	return &data, 0, nil
-}
-
-// saveDeploymentsConfigFile: Save the deployments configuration file to disk
-// returns an error, and error code
-func saveDeploymentsConfigFile() (int, error) {
-	file, err := ioutil.ReadFile(getDeploymentConfigFilename())
-	if err != nil {
-		return 207, err
-	}
-	data := DeploymentConfig{}
-	err = json.Unmarshal([]byte(file), &data)
-	if err != nil {
-		return 208, err
-	}
-	return 0, nil
-}
-
 // FindTargetDeployment : Returns the single active deployment
 func FindTargetDeployment() *Deployment {
 	data, errCode, err := loadDeploymentsConfigFile()
 	errors.CheckErr(err, errCode, "Unable to process the deployments config file")
 	activeID := data.Active
 	for i := 0; i < len(data.Deployments); i++ {
-		if strings.EqualFold(activeID, data.Deployments[i].Name) {
+		if strings.EqualFold(activeID, data.Deployments[i].ID) {
 			targetDeployment := data.Deployments[i]
 			targetDeployment.URL = strings.TrimSuffix(targetDeployment.URL, "/")
+			targetDeployment.AuthURL = strings.TrimSuffix(targetDeployment.AuthURL, "/")
 			return &targetDeployment
 		}
 	}
@@ -135,22 +93,22 @@ func GetDeploymentsConfig() *DeploymentConfig {
 
 // SetTargetDeployment : If the deployment is unknown the command will return an error message
 func SetTargetDeployment(c *cli.Context) {
-	newTargetName := c.String("name")
+	newTargetName := c.String("id")
 	data, errCode, err := loadDeploymentsConfigFile()
 	errors.CheckErr(err, errCode, "Unable to process the deployments config file")
-	foundName := ""
+	foundID := ""
 
 	for i := 0; i < len(data.Deployments); i++ {
-		if strings.EqualFold(newTargetName, data.Deployments[i].Name) {
-			foundName = data.Deployments[i].Name
+		if strings.EqualFold(newTargetName, data.Deployments[i].ID) {
+			foundID = data.Deployments[i].ID
 			break
 		}
 	}
-	if foundName == "" {
+	if foundID == "" {
 		log.Fatal("Unable to change deployment. '" + newTargetName + "' has no matching configuration")
 	}
 
-	data.Active = foundName
+	data.Active = foundID
 	body, err := json.MarshalIndent(data, "", "\t")
 	errors.CheckErr(err, 208, "Unable to format deployments file")
 	saveErr := ioutil.WriteFile(getDeploymentConfigFilename(), body, 0644)
@@ -159,11 +117,15 @@ func SetTargetDeployment(c *cli.Context) {
 
 // AddDeploymentToList : adds a new deployment to the deployment config
 func AddDeploymentToList(c *cli.Context) {
-	name := strings.TrimSpace(strings.ToLower(c.String("name")))
+	id := strings.TrimSpace(strings.ToLower(c.String("id")))
 	label := strings.TrimSpace(c.String("label"))
 	url := c.String("url")
 	if url != "" && len(strings.TrimSpace(url)) > 0 {
 		url = strings.TrimSuffix(url, "/")
+	}
+	auth := c.String("auth")
+	if auth != "" && len(strings.TrimSpace(auth)) > 0 {
+		auth = strings.TrimSuffix(auth, "/")
 	}
 
 	data, errCode, err := loadDeploymentsConfigFile()
@@ -171,16 +133,17 @@ func AddDeploymentToList(c *cli.Context) {
 
 	// check the name is not already in use
 	for i := 0; i < len(data.Deployments); i++ {
-		if strings.EqualFold(name, data.Deployments[i].Name) {
-			log.Fatal("Deployment '" + name + "' already exists, to update:  first remove, then add")
+		if strings.EqualFold(id, data.Deployments[i].ID) {
+			log.Fatal("Deployment '" + id + "' already exists, to update:  first remove, then add")
 		}
 	}
 
 	// create the new deployment
 	newDeployment := Deployment{
-		Name:  name,
-		Label: label,
-		URL:   url,
+		ID:      id,
+		Label:   label,
+		URL:     url,
+		AuthURL: auth,
 	}
 
 	// append it to the list
@@ -191,16 +154,16 @@ func AddDeploymentToList(c *cli.Context) {
 	errors.CheckErr(saveErr, 203, "Unable to save the deployments config file")
 }
 
-// RemoveDeploymentFromList - Removes the stored entry
+// RemoveDeploymentFromList : Removes the stored entry
 func RemoveDeploymentFromList(c *cli.Context) {
-	name := c.String("name")
-	if strings.EqualFold(name, "local") {
+	id := c.String("id")
+	if strings.EqualFold(id, "local") {
 		log.Fatal("Local is a required deployment and can not be removed")
 	}
 	data, errCode, err := loadDeploymentsConfigFile()
 	errors.CheckErr(err, errCode, "Unable to process the deployments config file")
 	for i := 0; i < len(data.Deployments); i++ {
-		if strings.EqualFold(name, data.Deployments[i].Name) {
+		if strings.EqualFold(id, data.Deployments[i].ID) {
 			copy(data.Deployments[i:], data.Deployments[i+1:])
 			data.Deployments = data.Deployments[:len(data.Deployments)-1]
 		}
@@ -230,4 +193,49 @@ func ListDeployments() {
 	} else {
 		log.Fatal("Unable to any deployments - please run the reset command")
 	}
+}
+
+// loadDeploymentsConfigFile : Load the deployments configuration file from disk
+// and returns the contents of the file or an error
+func loadDeploymentsConfigFile() (*DeploymentConfig, int, error) {
+	file, err := ioutil.ReadFile(getDeploymentConfigFilename())
+	if err != nil {
+		return nil, 207, err
+	}
+	data := DeploymentConfig{}
+	err = json.Unmarshal([]byte(file), &data)
+	if err != nil {
+		return nil, 208, err
+	}
+	return &data, 0, nil
+}
+
+// saveDeploymentsConfigFile : Save the deployments configuration file to disk
+// returns an error, and error code
+func saveDeploymentsConfigFile() (int, error) {
+	file, err := ioutil.ReadFile(getDeploymentConfigFilename())
+	if err != nil {
+		return 207, err
+	}
+	data := DeploymentConfig{}
+	err = json.Unmarshal([]byte(file), &data)
+	if err != nil {
+		return 208, err
+	}
+	return 0, nil
+}
+
+func getDeploymentConfigPath() string {
+	const GOOS string = runtime.GOOS
+	homeDir := ""
+	if GOOS == "windows" {
+		homeDir = os.Getenv("USERPROFILE")
+	} else {
+		homeDir = os.Getenv("HOME")
+	}
+	return path.Join(homeDir, ".codewind", "config")
+}
+
+func getDeploymentConfigFilename() string {
+	return path.Join(getDeploymentConfigPath(), "deployments.json")
 }

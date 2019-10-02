@@ -23,17 +23,17 @@ import (
 	"github.com/urfave/cli"
 )
 
-// StatusCommand to show the status
+// StatusCommand : to show the status
 func StatusCommand(c *cli.Context) {
 	targetDeployment := FindTargetDeployment()
-	if strings.EqualFold(targetDeployment.Name, "local") {
+	if strings.EqualFold(targetDeployment.ID, "local") {
 		StatusCommandLocalDeployment(c)
 	} else {
 		StatusCommandRemoteDeployment(c, targetDeployment)
 	}
 }
 
-// StatusCommandRemoteDeployment - Output remote deployment details
+// StatusCommandRemoteDeployment : Output remote deployment details
 func StatusCommandRemoteDeployment(c *cli.Context, d *Deployment) {
 	jsonOutput := c.Bool("json")
 	apiResponse, err := apiroutes.GetAPIEnvironment(c, d.URL)
@@ -80,7 +80,7 @@ func StatusCommandRemoteDeployment(c *cli.Context, d *Deployment) {
 
 }
 
-// StatusCommandLocalDeployment - Output local deployment details
+// StatusCommandLocalDeployment : Output local deployment details
 func StatusCommandLocalDeployment(c *cli.Context) {
 	jsonOutput := c.Bool("json")
 	if utils.CheckContainerStatus() {
