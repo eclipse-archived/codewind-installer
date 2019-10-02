@@ -137,6 +137,7 @@ spec:
                     echo $JENKINS_HOME
 
                     export HOME=$JENKINS_HOME
+                    export GOCACHE="off"
 
                     echo "starting preInstall for test stage.....: GOPATH=$GOPATH"
 
