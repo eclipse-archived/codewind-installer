@@ -88,9 +88,7 @@ func SecUserCreate(c *cli.Context) *SecError {
 
 // SecUserGet : Get user from Keycloak
 func SecUserGet(c *cli.Context) (*RegisteredUser, *SecError) {
-	if c.GlobalBool("insecure") {
-		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	}
+
 	hostname := strings.TrimSpace(strings.ToLower(c.String("host")))
 	realm := strings.TrimSpace(c.String("realm"))
 	accesstoken := strings.TrimSpace(c.String("accesstoken"))
@@ -150,19 +148,11 @@ func SecUserGet(c *cli.Context) (*RegisteredUser, *SecError) {
 
 // SecUserSetPW : Resets the users password in keycloak to a new one supplied
 func SecUserSetPW(c *cli.Context) *SecError {
-	if c.GlobalBool("insecure") {
-		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	}
+
 	hostname := strings.TrimSpace(strings.ToLower(c.String("host")))
 	realm := strings.TrimSpace(c.String("realm"))
 	accesstoken := strings.TrimSpace(c.String("accesstoken"))
 	newPassword := strings.TrimSpace(c.String("newpw"))
-
-	// validate password characters
-	if strings.Contains(newPassword, "'") || strings.Contains(newPassword, "\"") {
-		err := errors.New(textBadPassword)
-		return &SecError{errOpPassword, err, err.Error()}
-	}
 
 	// authenticate if needed
 	if accesstoken == "" {

@@ -12,6 +12,8 @@
 package actions
 
 import (
+	"crypto/tls"
+	"net/http"
 	"os"
 
 	"github.com/eclipse/codewind-installer/errors"
@@ -468,6 +470,14 @@ func Commands() {
 				},
 			},
 		},
+	}
+
+	app.Before = func(c *cli.Context) error {
+		// Handle Global flag to disable certificate checking
+		if c.GlobalBool("insecure") {
+			http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		}
+		return nil
 	}
 
 	// Start application

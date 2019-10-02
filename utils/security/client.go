@@ -1,7 +1,6 @@
 package security
 
 import (
-	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
@@ -31,9 +30,6 @@ type RegisteredClientSecret struct {
 
 // SecClientCreate : Create a new client in Keycloak
 func SecClientCreate(c *cli.Context) *SecError {
-	if c.GlobalBool("insecure") {
-		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	}
 
 	hostname := strings.TrimSpace(strings.ToLower(c.String("host")))
 	realm := strings.TrimSpace(c.String("realm"))
@@ -99,9 +95,7 @@ func SecClientCreate(c *cli.Context) *SecError {
 
 // SecClientGet : Retrieve Client information
 func SecClientGet(c *cli.Context) (*RegisteredClient, *SecError) {
-	if c.GlobalBool("insecure") {
-		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	}
+
 	hostname := strings.TrimSpace(strings.ToLower(c.String("host")))
 	realm := strings.TrimSpace(c.String("realm"))
 	accesstoken := strings.TrimSpace(c.String("accesstoken"))
@@ -123,7 +117,7 @@ func SecClientGet(c *cli.Context) (*RegisteredClient, *SecError) {
 		return nil, &SecError{errOpConnection, err, err.Error()}
 	}
 	req.Header.Add("Authorization", "Bearer "+accesstoken)
-	req.Header.Add("cache-control", "no-cache")
+	req.Header.Add("Cache-Control", "no-cache")
 	req.Header.Add("cache-control", "no-cache")
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -157,9 +151,6 @@ func SecClientGet(c *cli.Context) (*RegisteredClient, *SecError) {
 // SecClientGetSecret : Retrieve the client secret for the supplied clientID
 func SecClientGetSecret(c *cli.Context) (*RegisteredClientSecret, *SecError) {
 
-	if c.GlobalBool("insecure") {
-		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	}
 	hostname := strings.TrimSpace(strings.ToLower(c.String("host")))
 	realm := strings.TrimSpace(c.String("realm"))
 	accesstoken := strings.TrimSpace(c.String("accesstoken"))

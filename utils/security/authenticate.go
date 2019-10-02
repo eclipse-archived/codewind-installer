@@ -1,7 +1,6 @@
 package security
 
 import (
-	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
@@ -25,9 +24,7 @@ type AuthToken struct {
 // SecAuthenticate - sends credentials to the auth server for a specific realm and returns an AuthToken
 // connectionRealm can be used to override the supplied context arguments
 func SecAuthenticate(c *cli.Context, connectionRealm string, connectionClient string) (*AuthToken, *SecError) {
-	if c.GlobalBool("insecure") {
-		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	}
+
 	hostname := strings.TrimSpace(strings.ToLower(c.String("host")))
 	username := strings.TrimSpace(strings.ToLower(c.String("username")))
 	password := strings.TrimSpace(strings.ToLower(c.String("password")))

@@ -1,7 +1,6 @@
 package security
 
 import (
-	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
@@ -13,9 +12,6 @@ import (
 
 // SecRealmCreate : Create a new realm in Keycloak
 func SecRealmCreate(c *cli.Context) *SecError {
-	if c.GlobalBool("insecure") {
-		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	}
 
 	hostname := strings.TrimSpace(strings.ToLower(c.String("host")))
 	realm := strings.TrimSpace(c.String("realm"))
