@@ -76,6 +76,7 @@ func AddTemplateRepo(c *cli.Context) {
 	repos, err := apiroutes.AddTemplateRepo(
 		c.String("URL"),
 		c.String("description"),
+		c.String("name"),
 	)
 	if err != nil {
 		log.Printf("Error adding template repo: %q", err)
