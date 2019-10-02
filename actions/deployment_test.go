@@ -24,7 +24,7 @@ func Test_GetActiveDeployment(t *testing.T) {
 		result := FindTargetDeployment()
 		assert.Equal(t, "local", result.Name)
 		assert.Equal(t, "Codewind local deployment", result.Label)
-		assert.Equal(t, "tbd", result.Url)
+		assert.Equal(t, "", result.URL)
 	})
 }
 

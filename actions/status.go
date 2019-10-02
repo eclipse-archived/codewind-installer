@@ -23,7 +23,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-//StatusCommand to show the status
+// StatusCommand to show the status
 func StatusCommand(c *cli.Context) {
 	targetDeployment := FindTargetDeployment()
 	if strings.EqualFold(targetDeployment.Name, "local") {
@@ -33,9 +33,10 @@ func StatusCommand(c *cli.Context) {
 	}
 }
 
+// StatusCommandRemoteDeployment - Output remote deployment details
 func StatusCommandRemoteDeployment(c *cli.Context, d *Deployment) {
 	jsonOutput := c.Bool("json")
-	apiResponse, err := apiroutes.GetAPIEnvironment(c, d.Url)
+	apiResponse, err := apiroutes.GetAPIEnvironment(c, d.URL)
 	if err != nil {
 		if jsonOutput {
 			type status struct {
@@ -49,7 +50,7 @@ func StatusCommandRemoteDeployment(c *cli.Context, d *Deployment) {
 			output, _ := json.Marshal(respStatus)
 			fmt.Println(string(output))
 		} else {
-			fmt.Println("Codewind remote deployment did not respond on " + d.Url)
+			fmt.Println("Codewind remote deployment did not respond on " + d.URL)
 			log.Println(err)
 		}
 		os.Exit(0)
@@ -68,21 +69,22 @@ func StatusCommandRemoteDeployment(c *cli.Context, d *Deployment) {
 			Status:   "started",
 			Versions: append(versions, apiResponse.Version),
 			Started:  append(versions, apiResponse.Version),
-			URL:      d.Url,
+			URL:      d.URL,
 		}
 		output, _ := json.Marshal(resp)
 		fmt.Println(string(output))
 	} else {
-		fmt.Println("Codewind is installed and running on: " + d.Url)
+		fmt.Println("Codewind is installed and running on: " + d.URL)
 	}
 	os.Exit(0)
 
 }
 
+// StatusCommandLocalDeployment - Output local deployment details
 func StatusCommandLocalDeployment(c *cli.Context) {
 	jsonOutput := c.Bool("json")
 	if utils.CheckContainerStatus() {
-		// STARTED
+		// Started
 		hostname, port := utils.GetPFEHostAndPort()
 		if jsonOutput {
 
@@ -112,7 +114,7 @@ func StatusCommandLocalDeployment(c *cli.Context) {
 	}
 
 	if utils.CheckImageStatus() {
-		// INSTALLED BUT NOT STARTED
+		// Installed but not started
 		if jsonOutput {
 
 			imageTagArr := utils.GetImageTags()
@@ -134,7 +136,7 @@ func StatusCommandLocalDeployment(c *cli.Context) {
 		}
 		os.Exit(0)
 	} else {
-		// NOT INSTALLED
+		// Not installed
 		if jsonOutput {
 			output, _ := json.Marshal(map[string]string{"status": "uninstalled"})
 			fmt.Println(string(output))

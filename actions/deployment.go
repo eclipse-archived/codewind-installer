@@ -40,20 +40,20 @@ func getDeploymentConfigFilename() string {
 	return path.Join(getDeploymentConfigPath(), "deployments.json")
 }
 
+// DeploymentConfig state and possible deployments
 type DeploymentConfig struct {
 	Active      string       `json:"active"`
 	Deployments []Deployment `json:"deployments"`
 }
 
+// Deployment entry
 type Deployment struct {
 	Name  string `json:"name"`
 	Label string `json:"label"`
-	Url   string `json:"url"`
+	URL   string `json:"url"`
 }
 
-/**
-* Check the config file exist, if it does not then create a new default configuration
- */
+// InitDeploymentConfigIfRequired : Check the config file exist, if it does not then create a new default configuration
 func InitDeploymentConfigIfRequired() {
 	_, err := os.Stat(getDeploymentConfigFilename())
 	if os.IsNotExist(err) {
@@ -62,10 +62,7 @@ func InitDeploymentConfigIfRequired() {
 	}
 }
 
-/***
- * ResetDeploymentsFile
- * Creates a new / overwrites deployment config file with a default single local Codewind deployment
- */
+// ResetDeploymentsFile : Creates a new / overwrites deployment config file with a default single local Codewind deployment
 func ResetDeploymentsFile() {
 	// create the default local deployment
 	initialConfig := DeploymentConfig{
@@ -74,7 +71,7 @@ func ResetDeploymentsFile() {
 			Deployment{
 				Name:  "local",
 				Label: "Codewind local deployment",
-				Url:   "tbd",
+				URL:   "",
 			},
 		},
 	}
@@ -84,75 +81,62 @@ func ResetDeploymentsFile() {
 	errors.CheckErr(saveErr, 203, "Unable to save the deployments config file")
 }
 
-/***
- * Load the deployments configuration file from disk
- * returns:  the contents of the file, an error, an error code
- */
-func loadDeploymentsConfigFile() (*DeploymentConfig, error, int) {
+// loadDeploymentsConfigFile : Load the deployments configuration file from disk
+// and returns the contents of the file or an error
+func loadDeploymentsConfigFile() (*DeploymentConfig, int, error) {
 	file, err := ioutil.ReadFile(getDeploymentConfigFilename())
 	if err != nil {
-		return nil, err, 207
+		return nil, 207, err
 	}
 	data := DeploymentConfig{}
 	err = json.Unmarshal([]byte(file), &data)
 	if err != nil {
-		return nil, err, 208
+		return nil, 208, err
 	}
-	return &data, nil, 0
+	return &data, 0, nil
 }
 
-/***
- * Save the deployments configuration file to disk
- * returns:  an error,  and error code
- */
-func saveDeploymentsConfigFile() (error, int) {
+// saveDeploymentsConfigFile: Save the deployments configuration file to disk
+// returns an error, and error code
+func saveDeploymentsConfigFile() (int, error) {
 	file, err := ioutil.ReadFile(getDeploymentConfigFilename())
 	if err != nil {
-		return err, 207
+		return 207, err
 	}
 	data := DeploymentConfig{}
 	err = json.Unmarshal([]byte(file), &data)
 	if err != nil {
-		return err, 208
+		return 208, err
 	}
-	return nil, 0
+	return 0, nil
 }
 
-/***
- * FindTargetDeployment
- * returns:  The single active deployment
- */
+// FindTargetDeployment : Returns the single active deployment
 func FindTargetDeployment() *Deployment {
-	data, err, errCode := loadDeploymentsConfigFile()
+	data, errCode, err := loadDeploymentsConfigFile()
 	errors.CheckErr(err, errCode, "Unable to process the deployments config file")
 	activeID := data.Active
 	for i := 0; i < len(data.Deployments); i++ {
 		if strings.EqualFold(activeID, data.Deployments[i].Name) {
 			targetDeployment := data.Deployments[i]
-			targetDeployment.Url = strings.TrimSuffix(targetDeployment.Url, "/")
+			targetDeployment.URL = strings.TrimSuffix(targetDeployment.URL, "/")
 			return &targetDeployment
 		}
 	}
 	return nil
 }
 
-/***
- * GetDeploymentConfig
- * returns:  The entire Deployment configuration contents
- */
+// GetDeploymentsConfig : Retrieves and returns the entire Deployment configuration contents
 func GetDeploymentsConfig() *DeploymentConfig {
-	data, err, errCode := loadDeploymentsConfigFile()
+	data, errCode, err := loadDeploymentsConfigFile()
 	errors.CheckErr(err, errCode, "Unable to process the deployments config file")
 	return data
 }
 
-/**
-* Set active deployment
-* If the deployment is unknown the command will fail with an error message
- */
+// SetTargetDeployment : If the deployment is unknown the command will return an error message
 func SetTargetDeployment(c *cli.Context) {
 	newTargetName := c.String("name")
-	data, err, errCode := loadDeploymentsConfigFile()
+	data, errCode, err := loadDeploymentsConfigFile()
 	errors.CheckErr(err, errCode, "Unable to process the deployments config file")
 	foundName := ""
 
@@ -173,10 +157,7 @@ func SetTargetDeployment(c *cli.Context) {
 	errors.CheckErr(saveErr, 203, "Unable to save the deployments config file")
 }
 
-/**
- * AddDeploymentToList
- * Adds a new deployment to the deployment config
- */
+// AddDeploymentToList : adds a new deployment to the deployment config
 func AddDeploymentToList(c *cli.Context) {
 	name := strings.TrimSpace(strings.ToLower(c.String("name")))
 	label := strings.TrimSpace(c.String("label"))
@@ -185,7 +166,7 @@ func AddDeploymentToList(c *cli.Context) {
 		url = strings.TrimSuffix(url, "/")
 	}
 
-	data, err, errCode := loadDeploymentsConfigFile()
+	data, errCode, err := loadDeploymentsConfigFile()
 	errors.CheckErr(err, errCode, "Unable to process the deployments config file")
 
 	// check the name is not already in use
@@ -199,7 +180,7 @@ func AddDeploymentToList(c *cli.Context) {
 	newDeployment := Deployment{
 		Name:  name,
 		Label: label,
-		Url:   url,
+		URL:   url,
 	}
 
 	// append it to the list
@@ -210,16 +191,13 @@ func AddDeploymentToList(c *cli.Context) {
 	errors.CheckErr(saveErr, 203, "Unable to save the deployments config file")
 }
 
-/**
- * RemoveDeploymentFromList
- * Removes a deployment from the list
- */
+// RemoveDeploymentFromList - Removes the stored entry
 func RemoveDeploymentFromList(c *cli.Context) {
 	name := c.String("name")
 	if strings.EqualFold(name, "local") {
 		log.Fatal("Local is a required deployment and can not be removed")
 	}
-	data, err, errCode := loadDeploymentsConfigFile()
+	data, errCode, err := loadDeploymentsConfigFile()
 	errors.CheckErr(err, errCode, "Unable to process the deployments config file")
 	for i := 0; i < len(data.Deployments); i++ {
 		if strings.EqualFold(name, data.Deployments[i].Name) {
@@ -234,7 +212,7 @@ func RemoveDeploymentFromList(c *cli.Context) {
 	errors.CheckErr(saveErr, 203, "Unable to save the deployments config file")
 }
 
-// Display the deployment details for the current target deployment
+// ListTargetDeployment : Display the deployment details for the current target deployment
 func ListTargetDeployment() {
 	targetDeployment := FindTargetDeployment()
 	if targetDeployment != nil {
@@ -244,7 +222,7 @@ func ListTargetDeployment() {
 	}
 }
 
-// Display saved deployments
+// ListDeployments : Output all saved deployments
 func ListDeployments() {
 	deploymentConfig := GetDeploymentsConfig()
 	if deploymentConfig != nil && deploymentConfig.Deployments != nil && len(deploymentConfig.Deployments) > 0 {
