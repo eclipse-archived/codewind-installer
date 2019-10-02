@@ -16,50 +16,28 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/urfave/cli"
+	"github.com/urfav/cli"
 )
 
-func Test_GetDeploymentsConfig(t *testing.T) {
-	InitDeploymentConfigIfRequired()
-	t.Run("Asserts there is only one deployment", func(t *testing.T) {
-		ResetDeploymentsFile()
-		result := GetDeploymentsConfig()
-		assert.Equal(t, "local", result.Active)
-		assert.Len(t, result.Deployments, 1)
-	})
-}
+// func Test_GetActiveDeployment(t *testing.T) {
+// 	InitDeploymentConfigIfRequired()
+// 	t.Run("ActiveDeployment", func(t *testing.T) {
+// 		ResetDeploymentsFile()
+// 		result := FindTargetDeployment()
+// 		assert.Equal(t, "local", result.Name)
+// 		assert.Equal(t, "Codewind local deployment", result.Label)
+// 		assert.Equal(t, "tbd", result.Url)
+// 	})
+// }
 
-func Test_GetActiveDeployment(t *testing.T) {
-	t.Run("Asserts the initial deployment is local", func(t *testing.T) {
-		ResetDeploymentsFile()
-		result, err := FindTargetDeployment()
-		if err != nil {
-			t.Fail()
-		}
-		assert.Equal(t, "local", result.ID)
-		assert.Equal(t, "Codewind local deployment", result.Label)
-		assert.Equal(t, "", result.URL)
-	})
-}
-
-// Test_CreateNewDeployment :  Adds a new deployment to the list called remoteserver
-func Test_CreateNewDeployment(t *testing.T) {
-	set := flag.NewFlagSet("tests", 0)
-	set.String("id", "remoteserver", "just an id")
-	set.String("label", "MyRemoteServer", "just a label")
-	set.String("url", "https://codewind.server.remote", "Codewind URL")
-	set.String("auth", "https://auth.server.remote:8443", "Auth URL")
-	set.String("realm", "codewind", "Security realm")
-	set.String("clientid", "cwctl", "ID of client")
-
-	c := cli.NewContext(nil, set, nil)
-	ResetDeploymentsFile()
-	t.Run("Adds new deployment to the config", func(t *testing.T) {
-		AddDeploymentToList(c)
-		result := GetDeploymentsConfig()
-		assert.Len(t, result.Deployments, 2)
-	})
-}
+// func Test_GetDeploymentsConfig(t *testing.T) {
+// 	t.Run("GetDeploymentsConfig", func(t *testing.T) {
+// 		ResetDeploymentsFile()
+// 		result := GetDeploymentsConfig()
+// 		assert.Equal(t, "local", result.Active)
+// 		assert.Len(t, result.Deployments, 1)
+// 	})
+// }
 
 // Test_SwitchTarget : Switches the target from one deployment to one called remoteserver
 func Test_SwitchTarget(t *testing.T) {
