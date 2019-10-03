@@ -228,6 +228,7 @@ Subcommands:</br>
 > --password value               Admin Password
 > --name value                   Username to query
 > --newpw value                  New replacement password
+ 
 ## deployments
 
 Subcommands:</br>
@@ -239,6 +240,8 @@ Subcommands:</br>
 > --label value  A displayable name
 > --url value    The ingress URL of the PFE instance
 > --auth value   URL of Keycloak service eg: `https://mykeycloak.test:8443`
+> --realm value  Security realm eg:  codewind or che
+> --clientid value  Security client id eg:  codewind or che-public
 
 `remove/rm` - Remove a deployment from the list
 

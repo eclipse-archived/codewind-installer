@@ -33,10 +33,12 @@ type DeploymentConfig struct {
 
 // Deployment entry
 type Deployment struct {
-	ID      string `json:"id"`
-	Label   string `json:"label"`
-	URL     string `json:"url"`
-	AuthURL string `json:"auth"`
+	ID       string `json:"id"`
+	Label    string `json:"label"`
+	URL      string `json:"url"`
+	AuthURL  string `json:"auth"`
+	Realm    string `json:"realm"`
+	ClientID string `json:"clientid"`
 }
 
 // InitDeploymentConfigIfRequired : Check the config file exist, if it does not then create a new default configuration
@@ -55,10 +57,12 @@ func ResetDeploymentsFile() {
 		Active: "local",
 		Deployments: []Deployment{
 			Deployment{
-				ID:      "local",
-				Label:   "Codewind local deployment",
-				URL:     "",
-				AuthURL: "",
+				ID:       "local",
+				Label:    "Codewind local deployment",
+				URL:      "",
+				AuthURL:  "",
+				Realm:    "",
+				ClientID: "",
 			},
 		},
 	}
@@ -128,6 +132,9 @@ func AddDeploymentToList(c *cli.Context) {
 		auth = strings.TrimSuffix(auth, "/")
 	}
 
+	realm := strings.TrimSpace(c.String("realm"))
+	clientID := strings.TrimSpace(c.String("clientid"))
+
 	data, errCode, err := loadDeploymentsConfigFile()
 	errors.CheckErr(err, errCode, "Unable to process the deployments config file")
 
@@ -140,10 +147,12 @@ func AddDeploymentToList(c *cli.Context) {
 
 	// create the new deployment
 	newDeployment := Deployment{
-		ID:      id,
-		Label:   label,
-		URL:     url,
-		AuthURL: auth,
+		ID:       id,
+		Label:    label,
+		URL:      url,
+		AuthURL:  auth,
+		Realm:    realm,
+		ClientID: clientID,
 	}
 
 	// append it to the list

@@ -415,6 +415,8 @@ func Commands() {
 						cli.StringFlag{Name: "label", Usage: "A displayable name", Required: false},
 						cli.StringFlag{Name: "url", Usage: "The ingress URL of the PFE instance", Required: true},
 						cli.StringFlag{Name: "auth", Usage: "URL of Keycloak service eg: https://mykeycloak.test:8443", Required: false},
+						cli.StringFlag{Name: "realm", Usage: "Security realm eg: codewind or che", Required: false},
+						cli.StringFlag{Name: "clientid", Usage: "Security client_id to connect as eg: codewind_ctl or che-public", Required: false},
 					},
 					Action: func(c *cli.Context) error {
 						AddDeploymentToList(c)

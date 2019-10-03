@@ -45,7 +45,10 @@ func Test_CreateNewDeployment(t *testing.T) {
 	set.String("id", "remoteserver", "just an id")
 	set.String("label", "MyRemoteServer", "just a label")
 	set.String("url", "https://codewind.server.remote", "Codewind URL")
-	set.String("auth", "https://auth.server.remote", "Auth URL")
+	set.String("auth", "https://auth.server.remote:8443", "Auth URL")
+	set.String("realm", "codewind", "Security realm")
+	set.String("clientid", "cwctl", "ID of client")
+
 	c := cli.NewContext(nil, set, nil)
 	ResetDeploymentsFile()
 	t.Run("Adds new deployment to the config", func(t *testing.T) {
@@ -66,7 +69,9 @@ func Test_SwitchTarget(t *testing.T) {
 		assert.Equal(t, "remoteserver", result.ID)
 		assert.Equal(t, "MyRemoteServer", result.Label)
 		assert.Equal(t, "https://codewind.server.remote", result.URL)
-		assert.Equal(t, "https://auth.server.remote", result.AuthURL)
+		assert.Equal(t, "https://auth.server.remote:8443", result.AuthURL)
+		assert.Equal(t, "codewind", result.Realm)
+		assert.Equal(t, "cwctl", result.ClientID)
 	})
 }
 
