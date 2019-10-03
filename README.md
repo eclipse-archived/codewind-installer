@@ -94,6 +94,7 @@ $ brew upgrade dep
 |sectoken        |`st`          |'Authenticate with username and password to obtain an access_token' |
 |secrealm        |`sr`          |'Manage new or existing REALM configurations'                       |
 |secclient       |`sc`          |'Manage new or existing APPLICATION access configurations'          |
+|seckeyring      |`sk`          |'Manage Codewind keys in the desktop keyring'                       |
 |secuser         |`su`          |'Manage new or existing USER access configurations'                 |
 |deployments     |`dep`         |'Manage deployments configuration list'                             |
 |help            |`h`           |'Shows a list of commands or help for one command'                  |
@@ -196,6 +197,21 @@ Subcommands:</br>
 > --accesstoken value            Admin access_token
 > --username value               Admin Username
 > --password value               Admin Password
+
+## seckeyring
+
+Subcommands:</br>
+
+`update/u` - Add new or updates existing Codewind credentials key in keyring
+
+> --depid `<value>`                 Deployment ID (see the deployments cmd)
+> --username `<value>`              Username
+> --password `<value>`              Password
+
+`validate/v` - Checks if credentials key exist in the keyring
+
+> --depid `<value>`                 Deployment ID (see the deployments cmd)
+> --username `<value>`              Username
 
 ## secuser
 
