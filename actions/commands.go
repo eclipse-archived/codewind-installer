@@ -212,6 +212,11 @@ func Commands() {
 									Value: "",
 									Usage: "Description of the template repo",
 								},
+								cli.StringFlag{
+									Name:  "name",
+									Value: "",
+									Usage: "Name of the template repo",
+								},
 							},
 							Action: func(c *cli.Context) error {
 								AddTemplateRepo(c)
