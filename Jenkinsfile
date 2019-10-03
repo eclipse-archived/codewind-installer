@@ -89,81 +89,82 @@ spec:
             }
             steps {
                 withEnv(["PATH=$PATH:~/.local/bin;NOBUILD=true"]){
-                withDockerRegistry([url: 'https://index.docker.io/v1/', credentialsId: 'docker.com-bot']) {
-                    sh '''#!/usr/bin/env bash
-                        echo start pfe containers
+                    withDockerRegistry([url: 'https://index.docker.io/v1/', credentialsId: 'docker.com-bot']) {
+                        sh '''#!/usr/bin/env bash
+                            echo start pfe containers
 
-                        ARCH=`uname -m`;
-                        printf "\n\n${MAGENTA}Platform: $ARCH ${RESET}\n"
+                            ARCH=`uname -m`;
+                            printf "\n\n${MAGENTA}Platform: $ARCH ${RESET}\n"
 
-                        # Install docker-compose 
-                        curl -L https://github.com/docker/compose/releases/download/1.21.2/docker-compose-`uname -s`-`uname -m` -o ~/docker-compose
-                        chmod +x ~/docker-compose
+                            # Install docker-compose 
+                            curl -L https://github.com/docker/compose/releases/download/1.21.2/docker-compose-`uname -s`-`uname -m` -o ~/docker-compose
+                            chmod +x ~/docker-compose
 
-                        # Create codewind-workspace if it does not exist
-                        printf "\n\nCreating codewind-workspace\n"
-                        mkdir -m 777 -p codewind-workspace
+                            # Create codewind-workspace if it does not exist
+                            printf "\n\nCreating codewind-workspace\n"
+                            mkdir -m 777 -p codewind-workspace
 
-                        export REPOSITORY='';
-                        export TAG
-                        export WORKSPACE_DIRECTORY=$PWD/codewind-workspace;
-                        export WORKSPACE_VOLUME=cw-workspace;
-                        export HOST_OS=$(uname);
-                        export REMOTE_MODE;
-                        export HOST_HOME=$HOME
-                        export ARCH=$(uname -m);
-                        # Select the right images for this architecture.
-                        if [ "$ARCH" = "x86_64" ]; then
-                          export PLATFORM="-amd64"
-                        else
-                          export PLATFORM="-$ARCH"
-                        fi
+                            export REPOSITORY='';
+                            export TAG
+                            export WORKSPACE_DIRECTORY=$PWD/codewind-workspace;
+                            export WORKSPACE_VOLUME=cw-workspace;
+                            export HOST_OS=$(uname);
+                            export REMOTE_MODE;
+                            export HOST_HOME=$HOME
+                            export ARCH=$(uname -m);
+                            # Select the right images for this architecture.
+                            if [ "$ARCH" = "x86_64" ]; then
+                            export PLATFORM="-amd64"
+                            else
+                            export PLATFORM="-$ARCH"
+                            fi
 
-                        git clone https://github.com/eclipse/codewind.git
-                        cd codewind
+                            git clone https://github.com/eclipse/codewind.git
+                            cd codewind
 
-                        # Start codewind running
-                        ~/docker-compose -f docker-compose.yaml -f docker-compose-remote.yaml up -d;
-                        if [ $? -eq 0 ]; then
-                            # Reset so we don't get conflicts
-                            unset REPOSITORY;
-                            unset WORKSPACE_DIRECTORY;
-                            unset REMOTE_MODE;
-                            printf "\n\n${GREEN}SUCCESSFULLY STARTED CONTAINERS $RESET\n";
-                            printf "\nCurrent running codewind containers\n";
-                            docker ps --filter name=codewind
-                        else
-                            printf "\n\n${RED}FAILED TO START CONTAINERS $RESET\n";
-                            exit;
-                        fi
+                            # Start codewind running
+                            ~/docker-compose -f docker-compose.yaml -f docker-compose-remote.yaml up -d;
+                            if [ $? -eq 0 ]; then
+                                # Reset so we don't get conflicts
+                                unset REPOSITORY;
+                                unset WORKSPACE_DIRECTORY;
+                                unset REMOTE_MODE;
+                                printf "\n\n${GREEN}SUCCESSFULLY STARTED CONTAINERS $RESET\n";
+                                printf "\nCurrent running codewind containers\n";
+                                docker ps --filter name=codewind
+                            else
+                                printf "\n\n${RED}FAILED TO START CONTAINERS $RESET\n";
+                                exit;
+                            fi
 
-                        printf "\n\nPausing for 20 seconds to allow containers to start\n";
-                        sleep 20;
+                            printf "\n\nPausing for 20 seconds to allow containers to start\n";
+                            sleep 20;
 
-                         # Check to see if any containers exited straight away
-                        printf "\n\n${BLUE}CHECKING FOR codewind CONTAINERS THAT EXITED STRAIGHT AFTER BEING RUN $RESET\n";
-                        EXITED_PROCESSES=$(docker ps -q --filter "name=codewind" --filter "status=exited"  | wc -l)
-                        if [ $EXITED_PROCESSES -gt 0 ]; then
-                          printf "\n${RED}Exited containers found $RESET\n";
-                          # docker ps --filter "name=codewind" --filter "status=exited";
-                          NUM_CODE_ZERO=$(docker ps -q --filter "name=codewind" --filter "status=exited" --filter "exited=0" | wc -l);
-                          NUM_CODE_ONE=$(docker ps -q --filter "name=codewind" --filter "status=exited" --filter "exited=1" | wc -l);
-                          if [ $NUM_CODE_ZERO -gt 0 ]; then
-                            printf "\n${RED}$NUM_CODE_ZERO found with an exit code '0' $RESET\n";
-                            docker ps --filter "name=codewind" --filter "status=exited" --filter "exited=0";
-                            printf "\nUse 'docker logs [container name]' to find why the exit happened";
-                          fi
-                          if [ $NUM_CODE_ONE -gt 0 ]; then
-                            printf "\n${RED}$NUM_CODE_ONE found with an exit code '1' $RESET\n";
-                            docker ps --filter "name=codewind" --filter "status=exited" --filter "exited=1";
-                            printf "\nUse 'docker logs [container name]' to debug exit";
-                          fi
-                        else
-                          printf "\nNo containers exited \n";
-                        fi
-                        printf "\n\ncodewind now available\n";
-                    
-                    '''
+                            # Check to see if any containers exited straight away
+                            printf "\n\n${BLUE}CHECKING FOR codewind CONTAINERS THAT EXITED STRAIGHT AFTER BEING RUN $RESET\n";
+                            EXITED_PROCESSES=$(docker ps -q --filter "name=codewind" --filter "status=exited"  | wc -l)
+                            if [ $EXITED_PROCESSES -gt 0 ]; then
+                            printf "\n${RED}Exited containers found $RESET\n";
+                            # docker ps --filter "name=codewind" --filter "status=exited";
+                            NUM_CODE_ZERO=$(docker ps -q --filter "name=codewind" --filter "status=exited" --filter "exited=0" | wc -l);
+                            NUM_CODE_ONE=$(docker ps -q --filter "name=codewind" --filter "status=exited" --filter "exited=1" | wc -l);
+                            if [ $NUM_CODE_ZERO -gt 0 ]; then
+                                printf "\n${RED}$NUM_CODE_ZERO found with an exit code '0' $RESET\n";
+                                docker ps --filter "name=codewind" --filter "status=exited" --filter "exited=0";
+                                printf "\nUse 'docker logs [container name]' to find why the exit happened";
+                            fi
+                            if [ $NUM_CODE_ONE -gt 0 ]; then
+                                printf "\n${RED}$NUM_CODE_ONE found with an exit code '1' $RESET\n";
+                                docker ps --filter "name=codewind" --filter "status=exited" --filter "exited=1";
+                                printf "\nUse 'docker logs [container name]' to debug exit";
+                            fi
+                            else
+                            printf "\nNo containers exited \n";
+                            fi
+                            printf "\n\ncodewind now available\n";
+                        
+                        '''
+                    }
                 }
             // We need the docker agent for test step so we can run Codewind in docker
 
