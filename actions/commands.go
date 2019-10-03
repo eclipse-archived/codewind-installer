@@ -413,16 +413,19 @@ func Commands() {
 		{
 			Name:    "deployments",
 			Aliases: []string{"dep"},
-			Usage:   "Maintain local deployments list",
+			Usage:   "Manage deployments list",
 			Subcommands: []cli.Command{
 				{
 					Name:    "add",
 					Aliases: []string{"a"},
-					Usage:   "Add a new deployment to the list",
+					Usage:   "Add a new deployment to the configuration file",
 					Flags: []cli.Flag{
-						cli.StringFlag{Name: "name", Usage: "A reference name", Required: true},
+						cli.StringFlag{Name: "id", Usage: "A reference name", Required: true},
 						cli.StringFlag{Name: "label", Usage: "A displayable name", Required: false},
-						cli.StringFlag{Name: "url", Usage: "The ingress url of the PFE instance", Required: true},
+						cli.StringFlag{Name: "url", Usage: "The ingress URL of the PFE instance", Required: true},
+						cli.StringFlag{Name: "auth", Usage: "URL of Keycloak service eg: https://mykeycloak.test:8443", Required: false},
+						cli.StringFlag{Name: "realm", Usage: "Security realm eg: codewind or che", Required: false},
+						cli.StringFlag{Name: "clientid", Usage: "Security client_id to connect as eg: codewind_ctl or che-public", Required: false},
 					},
 					Action: func(c *cli.Context) error {
 						AddDeploymentToList(c)
@@ -432,9 +435,9 @@ func Commands() {
 				{
 					Name:    "remove",
 					Aliases: []string{"rm"},
-					Usage:   "Remove a deployment from the list",
+					Usage:   "Remove a deployment from the configuration file",
 					Flags: []cli.Flag{
-						cli.StringFlag{Name: "name", Usage: "The reference name of the deployment to be removed", Required: true},
+						cli.StringFlag{Name: "id", Usage: "The reference ID of the deployment to be removed", Required: true},
 					},
 					Action: func(c *cli.Context) error {
 						if c.NumFlags() != 1 {
@@ -449,7 +452,7 @@ func Commands() {
 					Aliases: []string{"t"},
 					Usage:   "Show/Change the current target deployment",
 					Flags: []cli.Flag{
-						cli.StringFlag{Name: "name", Usage: "The deployment name of a new target"},
+						cli.StringFlag{Name: "id", Usage: "The deployment id of the target to switch to"},
 					},
 					Action: func(c *cli.Context) error {
 						if c.NumFlags() == 0 {
