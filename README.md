@@ -95,6 +95,7 @@ $ brew upgrade dep
 |secrealm        |`sr`          |'Manage new or existing REALM configurations'                       |
 |secclient       |`sc`          |'Manage new or existing APPLICATION access configurations'          |
 |secuser         |`su`          |'Manage new or existing USER access configurations'                 |
+|deployments     |`dep`         |'Manage deployments configuration list'                             |
 |help            |`h`           |'Shows a list of commands or help for one command'                  |
 
 ## CLI Command Options
@@ -227,6 +228,39 @@ Subcommands:</br>
 > --password value               Admin Password
 > --name value                   Username to query
 > --newpw value                  New replacement password
+ 
+## deployments
+
+Subcommands:</br>
+
+`add/a` - Add a new deployment to the list
+
+> **Flags:**
+> --id value     A deployment reference id
+> --label value  A displayable name
+> --url value    The ingress URL of the PFE instance
+> --auth value   URL of Keycloak service eg: `https://mykeycloak.test:8443`
+> --realm value  Security realm eg:  codewind or che
+> --clientid value  Security client id eg:  codewind or che-public
+
+`remove/rm` - Remove a deployment from the list
+
+> **Flags:**
+> --id value     A deployment reference id
+
+`target/t` - Show/Change the current target deployment
+
+> *Note:* Not supplying any flag will return the current selected target
+> --id value  The deployment id of the target to switch to
+
+
+`list/ls` - List known deployments
+
+>**Note:** No additional flags
+
+`reset` - Resets the deployments list to a single local deployment
+
+>**Note:** No additional flags
 
 ## help
 
