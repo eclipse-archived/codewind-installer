@@ -53,9 +53,13 @@ func Commands() {
 					Name:  "url, u",
 					Usage: "URL of project to download",
 				},
+				cli.StringFlag{
+					Name:  "type, t",
+					Usage: "Known type and subtype of project (`type:subtype`). Ignored when URL is given",
+				},
 			},
 			Action: func(c *cli.Context) error {
-				if c.NumFlags() != 0 {
+				if c.String("u") != "" {
 					DownloadTemplate(c)
 				}
 				ValidateProject(c)
