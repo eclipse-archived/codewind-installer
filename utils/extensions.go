@@ -35,9 +35,9 @@ func RunCommand(projectPath string, command ExtensionCommand) error {
 		log.Println("There was a problem with locating the command directory")
 		return err
 	}
-	installerPath := filepath.Dir(cwd)
+	cwctlPath := filepath.Dir(cwd)
 	commandName := filepath.Base(command.Command) // prevent path traversal
-	commandBin := filepath.Join(installerPath, commandName)
+	commandBin := filepath.Join(cwctlPath, commandName)
 	cmd := exec.Command(commandBin, command.Args...)
 	cmd.Dir = projectPath
 	output := new(bytes.Buffer)

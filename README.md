@@ -81,17 +81,22 @@ $ brew upgrade dep
 
 ## CLI Commands
 
-|Command         |Alias         |Usage                                                           |
-|----------------|--------------|----------------------------------------------------------------|
-|project         |              |'Manage Codewind projects'                                      |
-|install         |`in`          |'Pull pfe, performance & initialize images from dockerhub'      |
-|start           |              |'Start the Codewind containers'                                 |
-|status          |              |'Print the installation status of Codewind'                     |
-|stop            |              |'Stop the running Codewind containers'                          |
-|stop-all        |              |'Stop all of the Codewind and project containers'               |
-|remove          |`rm`          |'Remove Codewind/Project docker images and the codewind network'|
-|templates       |              |'Manage project templates'                                      |
-|help            |`h`           |'Shows a list of commands or help for one command'              |
+|Command         |Alias         |Usage                                                               |
+|----------------|--------------|--------------------------------------------------------------------|
+|project         |              |'Manage Codewind projects'                                          |
+|install         |`in`          |'Pull pfe, performance & initialize images from dockerhub'          |
+|start           |              |'Start the Codewind containers'                                     |
+|status          |              |'Print the installation status of Codewind'                         |
+|stop            |              |'Stop the running Codewind containers'                              |
+|stop-all        |              |'Stop all of the Codewind and project containers'                   |
+|remove          |`rm`          |'Remove Codewind/Project docker images and the codewind network'    |
+|templates       |              |'Manage project templates'                                          |
+|sectoken        |`st`          |'Authenticate with username and password to obtain an access_token' |
+|secrealm        |`sr`          |'Manage new or existing REALM configurations'                       |
+|secclient       |`sc`          |'Manage new or existing APPLICATION access configurations'          |
+|secuser         |`su`          |'Manage new or existing USER access configurations'                 |
+|deployments     |`dep`         |'Manage deployments configuration list'                             |
+|help            |`h`           |'Shows a list of commands or help for one command'                  |
 
 ## CLI Command Options
 
@@ -133,6 +138,129 @@ $ brew upgrade dep
 Subcommands:</br>
 
 `list/ls` - List available templates
+
+## sectoken
+
+Subcommands:</br>
+
+`get/g` - Authenticate and obtain an access_token
+
+> **Flags:**
+> --host value                  URL or ingress to Keycloak service
+> --realm value                 Application realm
+> --username value              Account Username
+> --password value              Account Password
+> --client value                Client
+
+## secrealm
+
+Subcommands:</br>
+
+`create/c` - Create a new realm (requires either admin_token or username/password)
+
+> **Flags:**
+> --host value                   URL or ingress to Keycloak service
+> --realm value                  Application realm
+> --accesstoken value            Admin access_token
+> --username value               Admin Username
+> --password value               Admin Password
+
+## secclient
+
+Subcommands:</br>
+
+`create/c` - Create a new client in an existing Keycloak realm (requires either admin_token or username/password)
+
+> --host value                   URL or ingress to Keycloak service
+> --realm value                  Application realm
+> --clientid value               New client ID to create
+> --redirect value               Allowed redirect callback URL eg: `http://127.0.0.1:9090/*`
+> --accesstoken value            Admin access_token
+> --username value               Admin Username
+> --password value               Admin Password
+
+`get/g` - Get client id (requires either admin_token or username/password)
+
+> --host value                   URL or ingress to Keycloak service
+> --realm value                  Application realm
+> --clientid value               New client ID to create
+> --accesstoken value            Admin access_token
+> --username value               Admin Username
+> --password value               Admin Password
+
+`secret/s` - Get client secret (requires either admin_token or username/password)
+
+> --host value                   URL or ingress to Keycloak service
+> --realm value                  Application realm
+> --clientid value               New client ID to create
+> --accesstoken value            Admin access_token
+> --username value               Admin Username
+> --password value               Admin Password
+
+## secuser
+
+Subcommands:</br>
+
+`create/c` - Create a new user in an existing Keycloak realm (requires either admin_token or username/password)
+
+> --host value                   URL or ingress to Keycloak service
+> --realm value                  Application realm
+> --accesstoken value            Admin access_token
+> --username value               Admin Username
+> --password value               Admin Password
+> --name value                   Username to add
+
+`get/g` - Gets an existing Keycloak user from an existing realm (requires either admin_token or username/password)
+
+> --host value                   URL or ingress to Keycloak service
+> --realm value                  Application realm
+> --accesstoken value            Admin access_token
+> --username value               Admin Username
+> --password value               Admin Password
+> --name value                   Username to query
+
+`setpw/p` - Reset an existing users password (requires either admin_token or username/password)
+
+> --host value                   URL or ingress to Keycloak service
+> --realm value                  Application realm
+> --accesstoken value            Admin access_token
+> --username value               Admin Username
+> --password value               Admin Password
+> --name value                   Username to query
+> --newpw value                  New replacement password
+ 
+## deployments
+
+Subcommands:</br>
+
+`add/a` - Add a new deployment to the list
+
+> **Flags:**
+> --id value     A deployment reference id
+> --label value  A displayable name
+> --url value    The ingress URL of the PFE instance
+> --auth value   URL of Keycloak service eg: `https://mykeycloak.test:8443`
+> --realm value  Security realm eg:  codewind or che
+> --clientid value  Security client id eg:  codewind or che-public
+
+`remove/rm` - Remove a deployment from the list
+
+> **Flags:**
+> --id value     A deployment reference id
+
+`target/t` - Show/Change the current target deployment
+
+> *Note:* Not supplying any flag will return the current selected target
+> --id value  The deployment id of the target to switch to
+
+
+`list/ls` - List known deployments
+
+>**Note:** No additional flags
+
+`reset` - Resets the deployments list to a single local deployment
+
+>**Note:** No additional flags
 
 ## help
 

@@ -16,7 +16,7 @@
 }
 
 @test "invoke start command - Start dockerhub images (latest)" {
-  run go run main.go start
+  run go run main.go start -t latest
   echo "status = ${status}"
   echo "output trace = ${output}"
   [ "$status" -eq 0 ]
