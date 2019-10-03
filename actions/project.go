@@ -50,7 +50,9 @@ type (
 	}
 
 	CompleteRequest struct {
-		FileList []string `json:"fileList"`
+		FileList     []string `json:"fileList"`
+		ModifiedList []string `json:"modifiedList"`
+		TimeStamp    int64    `json:"timeStamp"`
 	}
 
 	FileUploadMsg struct {
@@ -166,96 +168,69 @@ func ValidateProject(c *cli.Context) {
 	fmt.Println(string(projectInfo))
 }
 
-func BindProject(projectPath string, Name string, Language string, BuildType string) {
-
-	bindRequest := BindRequest{
-		Language:    Language,
-		Name:        Name,
-		ProjectType: BuildType,
-		Path:        projectPath,
-	}
-	buf := new(bytes.Buffer)
-	json.NewEncoder(buf).Encode(bindRequest)
-
-	fmt.Println("Posting to: " + config.PFEApiRoute() + "projects/remote-bind/start")
-	fmt.Println(buf)
-	// Make the request to start the remote bind process.
-	resp, err := http.Post(config.PFEApiRoute()+"projects/remote-bind/start", "application/json", buf)
-
-	fmt.Println(resp)
-	defer resp.Body.Close()
-	bodyBytes, err := ioutil.ReadAll(resp.Body)
-	body := string(bodyBytes)
-	fmt.Println(string(body))
-
-	if resp.StatusCode != 202 {
-		errors.CheckErr(err, 200, "")
-	}
-
-	var projectInfo map[string]interface{}
-	// err = json.Unmarshal(bodyBytes, &projectInfo);
-	if err := json.Unmarshal(bodyBytes, &projectInfo); err != nil {
-		panic(err)
-		// TODO - Need to handle this gracefully.
-	}
-
-	//projectID := projectInfo["projectID"].(string)
-
-	//	SyncProject(projectPath, projectID, 0)
-
-}
-
-//func SyncProject(projectPath string, projectId string, lastUploadTime int) {
 func SyncProject(c *cli.Context) {
 	projectPath := strings.TrimSpace(c.String("path"))
 	projectId := strings.TrimSpace(c.String("id"))
-	time := strings.TrimSpace(c.String("time"))
+	synctime := int64(c.Int("time"))
 
-	fmt.Println("Syncing project " + projectId + " path " + projectPath + " time " + time)
-
+	//	fmt.Println("Syncing project "+projectId+" path "+projectPath+" synctime ", synctime)
 	var fileList []string
+	var modifiedList []string
 
 	projectUploadUrl := config.PFEApiRoute() + "projects/" + projectId + "/remote-bind/upload"
 	client := &http.Client{}
 	fmt.Println("Uploading to " + projectUploadUrl)
 
 	err := filepath.Walk(projectPath, func(path string, info os.FileInfo, err error) error {
-	
+
 		if err != nil {
 			// TODO - How to handle *some* files being unreadable
 		}
 		if !info.IsDir() {
- 		    relativePath := path[(len(projectPath)+1):]
-		  
-	        fileUploadBody := FileUploadMsg{
-		        IsDirectory:  info.IsDir(),
-		        RelativePath: relativePath,
-		        Message:      "",
-	        }
-
+			relativePath := path[(len(projectPath) + 1):]
+			// Create list of all files for a project
 			fileList = append(fileList, relativePath)
-			fileContent, err := ioutil.ReadFile(path)
-			jsonContent, err := json.Marshal(string(fileContent))
-			// Skip this file if there is an error reading it.
-			if err != nil {
-				return nil
+
+			// get time file was modified in milliseconds since epoch
+			modifiedmillis := info.ModTime().UnixNano() / 1000000
+
+			fileUploadBody := FileUploadMsg{
+				IsDirectory:  info.IsDir(),
+				RelativePath: relativePath,
+				Message:      "",
 			}
-			var buffer bytes.Buffer
-			zWriter := zlib.NewWriter(&buffer)
-			zWriter.Write([]byte(jsonContent))
 
-			zWriter.Close()
-			encoded := base64.StdEncoding.EncodeToString(buffer.Bytes())
-			fileUploadBody.Message = encoded
+			// Has this file been modified since last sync
+			if modifiedmillis > synctime {
+				fileContent, err := ioutil.ReadFile(path)
+				jsonContent, err := json.Marshal(string(fileContent))
+				// Skip this file if there is an error reading it.
+				if err != nil {
+					return nil
+				}
+				// Create list of all modfied files
+				modifiedList = append(modifiedList, relativePath)
 
-			buf := new(bytes.Buffer)
-			json.NewEncoder(buf).Encode(fileUploadBody)
+				var buffer bytes.Buffer
+				zWriter := zlib.NewWriter(&buffer)
+				zWriter.Write([]byte(jsonContent))
 
-			// TODO - How do we handle partial success?
-			request, err := http.NewRequest("PUT", projectUploadUrl, bytes.NewReader(buf.Bytes()))
-			request.Header.Set("Content-Type", "application/json")
-			resp, err := client.Do(request)
-			fmt.Println("Upload status:" + resp.Status + " for file: " + relativePath)
+				zWriter.Close()
+				encoded := base64.StdEncoding.EncodeToString(buffer.Bytes())
+				fileUploadBody.Message = encoded
+
+				buf := new(bytes.Buffer)
+				json.NewEncoder(buf).Encode(fileUploadBody)
+
+				// TODO - How do we handle partial success?
+				request, err := http.NewRequest("PUT", projectUploadUrl, bytes.NewReader(buf.Bytes()))
+				request.Header.Set("Content-Type", "application/json")
+				resp, err := client.Do(request)
+				fmt.Println("Upload status:" + resp.Status + " for file: " + relativePath)
+				if err != nil {
+					return nil
+				}
+			}
 		}
 
 		return nil
@@ -265,22 +240,19 @@ func SyncProject(c *cli.Context) {
 		return
 	}
 	// Complete the upload
-	completeUpload(projectId, fileList)
+	completeUpload(projectId, fileList, modifiedList, synctime)
 }
 
-func completeUpload(projectId string, files []string) {
-//	fmt.Println("Calling clear for " + projectId)
+func completeUpload(projectId string, files []string, modfiles []string, timestamp int64) {
+	//	fmt.Println("Calling clear for " + projectId)
+	uploadEndUrl := config.PFEApiRoute() + "projects/" + projectId + "/upload/end"
 
-	completeUploadUrl := config.PFEApiRoute() + "projects/" + projectId + "/remote-bind/clear"
-
-	payload := &CompleteRequest{FileList: files}
+	payload := &CompleteRequest{FileList: files, ModifiedList: modfiles, TimeStamp: timestamp}
 	jsonPayload, _ := json.Marshal(payload)
 
-	fmt.Println("Posting to: projects/remote-bind/clear")
-	fmt.Println(files)
-	// Make the request to start the remote bind process.
-	resp, err := http.Post(completeUploadUrl, "application/json", bytes.NewBuffer(jsonPayload))
-	fmt.Println(resp)
+	// Make the request to end the sync process.
+	resp, err := http.Post(uploadEndUrl, "application/json", bytes.NewBuffer(jsonPayload))
+	fmt.Println("Upload end status:" + resp.Status)
 	if err != nil {
 		panic(err)
 		// TODO - Need to handle this gracefully.

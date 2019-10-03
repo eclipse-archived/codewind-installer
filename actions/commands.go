@@ -13,7 +13,6 @@ package actions
 
 import (
 	"os"
-	"log"
 
 	"github.com/eclipse/codewind-installer/errors"
 
@@ -21,7 +20,6 @@ import (
 )
 
 var tempFilePath = "installer-docker-compose.yaml"
-
 
 const versionNum = "x.x.dev"
 
@@ -50,9 +48,9 @@ func Commands() {
 			Usage: "Manage Codewind projects",
 			Subcommands: []cli.Command{
 				{
-					Name:  "create",
+					Name:    "create",
 					Aliases: []string{""},
-					Usage: "create a project on disk",
+					Usage:   "create a project on disk",
 					Flags: []cli.Flag{
 						cli.StringFlag{
 							Name:  "url, u",
@@ -68,52 +66,22 @@ func Commands() {
 					},
 				},
 				{
-					Name:  "validate",
+					Name:    "validate",
 					Aliases: []string{""},
-					Usage: "validate an existing project on disk",
+					Usage:   "validate an existing project on disk",
 					Action: func(c *cli.Context) error {
 						ValidateProject(c)
 						return nil
 					},
 				},
 				{
-					Name:  "bind",
+					Name:    "sync",
 					Aliases: []string{""},
-					Usage: "bind a project to codewind for building and running",
+					Usage:   "synchronize a project to codewind for building",
 					Flags: []cli.Flag{
-						cli.StringFlag{
-							Name:  "name, n",
-							Usage: "the name of the project",
-						},
-						cli.StringFlag{
-							Name:  "language, l",
-							Usage: "the project language",
-						},
-						cli.StringFlag{
-							Name:  "type, t",
-							Usage: "the type of the project",
-						},
-					},
-					Action: func(c *cli.Context) error {
-						if c.NArg() == 0 {
-							log.Fatal("path to source not set")
-						}
-						if c.NArg() > 1 {
-							log.Fatal("too many arguments")
-						}
-						BindProject(c.Args().Get(0), c.String("name"), c.String("language"), c.String("type"))
-						return nil
-					},
-				},
-				{
-					//SyncProject(projectPath string, projectId string, lastUploadTime int) 
-					Name:  "sync",
-					Aliases: []string{""},
-					Usage: "synchronize a project to codewind for building",
-                    Flags: []cli.Flag{
-						cli.StringFlag{Name:  "path, p", Usage: "the path to the project", Required: true},
-						cli.StringFlag{Name:  "id, i", Usage: "the project id", Required: true},
-						cli.StringFlag{Name:  "time, t", Usage: "the integer representing the time of the last upload", Required: true},
+						cli.StringFlag{Name: "path, p", Usage: "the path to the project", Required: true},
+						cli.StringFlag{Name: "id, i", Usage: "the project id", Required: true},
+						cli.StringFlag{Name: "time, t", Usage: "time of the last sync for the given project", Required: true},
 					},
 					Action: func(c *cli.Context) error {
 						SyncProject(c)
