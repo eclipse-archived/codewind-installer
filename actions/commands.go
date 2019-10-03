@@ -272,6 +272,39 @@ func Commands() {
 			},
 		},
 		{
+			Name:    "seckeyring",
+			Aliases: []string{"sk"},
+			Usage:   "Manage the desktop keyring",
+			Subcommands: []cli.Command{
+				{
+					Name:    "update",
+					Aliases: []string{"u"},
+					Usage:   "Add new or update existing Codewind credentials in the keyring",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "depid,d", Usage: "Deployment ID (see the deployments cmd)", Required: true},
+						cli.StringFlag{Name: "username,u", Usage: "Username", Required: true},
+						cli.StringFlag{Name: "password,p", Usage: "New password", Required: true},
+					},
+					Action: func(c *cli.Context) error {
+						SecurityKeyUpdate(c)
+						return nil
+					},
+				}, {
+					Name:    "validate",
+					Aliases: []string{"v"},
+					Usage:   "Checks if Codewind credentials exist in the keyring",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "depid,d", Usage: "Keycloak login ID", Required: true},
+						cli.StringFlag{Name: "username,u", Usage: "Username", Required: true},
+					},
+					Action: func(c *cli.Context) error {
+						SecurityKeyValidate(c)
+						return nil
+					},
+				},
+			},
+		},
+		{
 			Name:    "secrealm",
 			Aliases: []string{"sr"},
 			Usage:   "Manage Realm configuration",

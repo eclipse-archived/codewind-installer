@@ -32,6 +32,14 @@
   version = "v1.4.2"
 
 [[projects]]
+  digest = "1:675c7e2e645d40363350159cfe1f719f61ce353a3859db939ca686d98aa85f16"
+  name = "github.com/danieljoos/wincred"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "b892d337201d1400370ebf4fa919941c9ea222ee"
+  version = "v1.0.2"
+
+[[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
@@ -97,6 +105,14 @@
   pruneopts = "UT"
   revision = "519db1ee28dcc9fd2474ae59fca29a810482bfb1"
   version = "v0.4.0"
+
+[[projects]]
+  digest = "1:1f9fae0d86e56888d2e00c231d2a3958c321856ae585cff461b64929c66ce595"
+  name = "github.com/godbus/dbus"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "735b987ea3fc98b200348de1656e97f656ed4873"
+  version = "v5.0.2"
 
 [[projects]]
   digest = "1:525ebc5da920b1f2c76ae763c13f4decdc3c3bc541ff0fa18f2399d4e742177f"
@@ -172,6 +188,17 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:df5e82212238797c639de335e63a63e2eeddbacce39f3ab9a86405c3ea8b3a6c"
+  name = "github.com/zalando/go-keyring"
+  packages = [
+    ".",
+    "secret_service",
+  ]
+  pruneopts = "UT"
+  revision = "62750a1ff80d85940d011bc005f538647fe5d091"
+
+[[projects]]
+  branch = "master"
   digest = "1:50804d40964a0c59170e827824e79bbf810cc10ae57603d8facce8a1f48f9a83"
   name = "golang.org/x/crypto"
   packages = [
@@ -229,6 +256,7 @@
     "github.com/moby/moby/client",
     "github.com/stretchr/testify/assert",
     "github.com/urfave/cli",
+    "github.com/zalando/go-keyring",
     "gopkg.in/yaml.v3",
   ]
   solver-name = "gps-cdcl"
