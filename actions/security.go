@@ -12,6 +12,7 @@
 package actions
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -127,7 +128,8 @@ func SecurityKeyUpdate(c *cli.Context) {
 		fmt.Println(err.Error())
 		os.Exit(0)
 	}
-	utils.PrettyPrintJSON(security.Result{Status: "OK"})
+	response, _ := json.Marshal(security.Result{Status: "OK"})
+	fmt.Println(string(response))
 	os.Exit(0)
 }
 
@@ -138,6 +140,7 @@ func SecurityKeyValidate(c *cli.Context) {
 		fmt.Println(err.Error())
 		os.Exit(0)
 	}
-	utils.PrettyPrintJSON(security.Result{Status: "OK"})
+	response, _ := json.Marshal(security.Result{Status: "OK"})
+	fmt.Println(string(response))
 	os.Exit(0)
 }

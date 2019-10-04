@@ -111,3 +111,48 @@
    [ "$output" = '{"id":"local","label":"Codewind local deployment","url":"","auth":"","realm":"","clientid":""}' ]
    [ "$status" -eq 0 ]
 }
+
+#########################
+# Keyring command tests #
+#########################
+
+@test "invoke seckeyring update command - create a key" {
+  run go run main.go seckeyring update --depid local --username testuser --password secretphrase
+  echo "status = ${status}"
+  echo "output trace = ${output}"
+  [ "$output" = '{"status":"OK"}' ]
+  [ "$status" -eq 0 ]
+}
+
+@test "invoke seckeyring update command - update a key" {
+  run go run main.go seckeyring update --depid local --username testuser --password new_secretphrase
+  echo "status = ${status}"
+  echo "output trace = ${output}"
+  [ "$output" = '{"status":"OK"}' ]
+  [ "$status" -eq 0 ]
+}
+
+@test "invoke seckeyring validate command - validate a key" {
+  run go run main.go seckeyring validate --depid local --username testuser
+  echo "status = ${status}"
+  echo "output trace = ${output}"
+  [ "$output" = '{"status":"OK"}' ]
+  [ "$status" -eq 0 ]
+}
+
+@test "invoke seckeyring validate command - key not found (incorrect deployment)" {
+  run go run main.go seckeyring validate --depid remoteNotKnown --username testuser
+  echo "status = ${status}"
+  echo "output trace = ${output}"
+  [ "$output" = '{"error":"sec_keyring","error_description":"secret not found in keyring"}' ]
+  [ "$status" -eq 0 ]
+}
+
+@test "invoke seckeyring validate command - key not found (incorrect username)"  {
+  run go run main.go seckeyring validate --depid local --username testuser_unknown
+  echo "status = ${status}"
+  echo "output trace = ${output}"
+  [ "$output" = '{"error":"sec_keyring","error_description":"secret not found in keyring"}' ]
+  [ "$status" -eq 0 ]
+}
+
