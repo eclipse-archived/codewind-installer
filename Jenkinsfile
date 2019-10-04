@@ -88,7 +88,7 @@ spec:
                 }
             }
             steps {
-                    withDockerRegistry([url: 'https://index.docker.io/v1/', credentialsId: 'docker.com-bot']) {
+
                         sh '''#!/usr/bin/env bash
                             echo start pfe containers
 
@@ -163,7 +163,7 @@ spec:
                             printf "\n\ncodewind now available\n";
                         
                         '''
-                    }
+
             // We need the docker agent for test step so we can run Codewind in docker
 
                 sh '''#!/usr/bin/env bash
