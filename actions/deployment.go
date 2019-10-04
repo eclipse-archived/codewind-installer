@@ -282,13 +282,14 @@ func applySchemaUpdates() error {
 
 			// create new config structure
 			newDeploymentConfig := deployments.DeploymentConfigV1{}
-			newDeploymentConfig.Active = deploymentConfig.Active
-			newDeploymentConfig.SchemaVersion = 1
 
 			err = json.Unmarshal([]byte(file), &deploymentConfig)
 			if err != nil {
 				return err
 			}
+
+			newDeploymentConfig.Active = deploymentConfig.Active
+			newDeploymentConfig.SchemaVersion = 1
 
 			// copy deployments from old to new config
 			originalDeploymentsV0 := deploymentConfig.Deployments
