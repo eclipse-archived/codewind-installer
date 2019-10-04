@@ -32,7 +32,10 @@ func Test_GetDeploymentsConfig(t *testing.T) {
 func Test_GetActiveDeployment(t *testing.T) {
 	t.Run("Asserts the initial deployment is local", func(t *testing.T) {
 		ResetDeploymentsFile()
-		result := FindTargetDeployment()
+		result, err := FindTargetDeployment()
+		if err != nil {
+			t.Fail()
+		}
 		assert.Equal(t, "local", result.ID)
 		assert.Equal(t, "Codewind local deployment", result.Label)
 		assert.Equal(t, "", result.URL)
@@ -65,7 +68,10 @@ func Test_SwitchTarget(t *testing.T) {
 	c := cli.NewContext(nil, set, nil)
 	t.Run("Assert target switches to remoteserver", func(t *testing.T) {
 		SetTargetDeployment(c)
-		result := FindTargetDeployment()
+		result, err := FindTargetDeployment()
+		if err != nil {
+			t.Fail()
+		}
 		assert.Equal(t, "remoteserver", result.ID)
 		assert.Equal(t, "MyRemoteServer", result.Label)
 		assert.Equal(t, "https://codewind.server.remote", result.URL)
@@ -87,7 +93,10 @@ func Test_RemoveDeploymentFromList(t *testing.T) {
 	})
 
 	t.Run("Check current target is 'remoteserver'", func(t *testing.T) {
-		result := FindTargetDeployment()
+		result, err := FindTargetDeployment()
+		if err != nil {
+			t.Fail()
+		}
 		assert.Equal(t, "remoteserver", result.ID)
 	})
 
@@ -98,7 +107,10 @@ func Test_RemoveDeploymentFromList(t *testing.T) {
 	})
 
 	t.Run("Check target reverts back to local", func(t *testing.T) {
-		result := FindTargetDeployment()
+		result, err := FindTargetDeployment()
+		if err != nil {
+			t.Fail()
+		}
 		assert.Equal(t, "local", result.ID)
 	})
 }

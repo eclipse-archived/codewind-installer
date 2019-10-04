@@ -12,6 +12,7 @@
 package errors
 
 import (
+	"errors"
 	"log"
 )
 
@@ -72,4 +73,8 @@ func CheckErr(err error, code int, optMsg string) {
 			log.Fatal("UNKNOWN_ERROR", "[", code, "]: ", err, ". ", optMsg)
 		}
 	}
+}
+
+func newError(text string) error {
+	return errors.New(text)
 }

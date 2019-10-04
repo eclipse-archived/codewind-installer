@@ -13,6 +13,7 @@ package actions
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"log"
 	"os"
@@ -20,15 +21,20 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/eclipse/codewind-installer/errors"
+	codewindErrors "github.com/eclipse/codewind-installer/errors"
 	"github.com/eclipse/codewind-installer/utils"
+	"github.com/eclipse/codewind-installer/utils/deployments"
 	"github.com/urfave/cli"
 )
 
+// deploymentsSchemaVersion must be incremented when changing the Deployment Config or Deployment Entry
+const deploymentsSchemaVersion = 1
+
 // DeploymentConfig state and possible deployments
 type DeploymentConfig struct {
-	Active      string       `json:"active"`
-	Deployments []Deployment `json:"deployments"`
+	SchemaVersion int          `json:"schemaversion"`
+	Active        string       `json:"active"`
+	Deployments   []Deployment `json:"deployments"`
 }
 
 // Deployment entry
@@ -47,6 +53,8 @@ func InitDeploymentConfigIfRequired() {
 	if os.IsNotExist(err) {
 		os.MkdirAll(getDeploymentConfigPath(), 0777)
 		ResetDeploymentsFile()
+	} else {
+		err = applySchemaUpdates()
 	}
 }
 
@@ -54,7 +62,8 @@ func InitDeploymentConfigIfRequired() {
 func ResetDeploymentsFile() {
 	// create the default local deployment
 	initialConfig := DeploymentConfig{
-		Active: "local",
+		Active:        "local",
+		SchemaVersion: deploymentsSchemaVersion,
 		Deployments: []Deployment{
 			Deployment{
 				ID:       "local",
@@ -67,31 +76,32 @@ func ResetDeploymentsFile() {
 		},
 	}
 	body, err := json.MarshalIndent(initialConfig, "", "\t")
-	errors.CheckErr(err, 208, "Unable to format deployments file")
+	codewindErrors.CheckErr(err, 208, "Unable to format deployments file")
 	saveErr := ioutil.WriteFile(getDeploymentConfigFilename(), body, 0644)
-	errors.CheckErr(saveErr, 203, "Unable to save the deployments config file")
+	codewindErrors.CheckErr(saveErr, 203, "Unable to save the deployments config file")
 }
 
 // FindTargetDeployment : Returns the single active deployment
-func FindTargetDeployment() *Deployment {
+func FindTargetDeployment() (*Deployment, error) {
 	data, errCode, err := loadDeploymentsConfigFile()
-	errors.CheckErr(err, errCode, "Unable to process the deployments config file")
+	codewindErrors.CheckErr(err, errCode, "Unable to process the deployments config file")
 	activeID := data.Active
 	for i := 0; i < len(data.Deployments); i++ {
 		if strings.EqualFold(activeID, data.Deployments[i].ID) {
 			targetDeployment := data.Deployments[i]
 			targetDeployment.URL = strings.TrimSuffix(targetDeployment.URL, "/")
 			targetDeployment.AuthURL = strings.TrimSuffix(targetDeployment.AuthURL, "/")
-			return &targetDeployment
+			return &targetDeployment, nil
 		}
 	}
-	return nil
+	depError := errors.New(deployments.TextTargetNotFound)
+	return nil, &deployments.DepError{deployments.ErrOpSchema, depError, depError.Error()}
 }
 
 // GetDeploymentsConfig : Retrieves and returns the entire Deployment configuration contents
 func GetDeploymentsConfig() *DeploymentConfig {
 	data, errCode, err := loadDeploymentsConfigFile()
-	errors.CheckErr(err, errCode, "Unable to process the deployments config file")
+	codewindErrors.CheckErr(err, errCode, "Unable to process the deployments config file")
 	return data
 }
 
@@ -99,7 +109,7 @@ func GetDeploymentsConfig() *DeploymentConfig {
 func SetTargetDeployment(c *cli.Context) {
 	newTargetName := c.String("id")
 	data, errCode, err := loadDeploymentsConfigFile()
-	errors.CheckErr(err, errCode, "Unable to process the deployments config file")
+	codewindErrors.CheckErr(err, errCode, "Unable to process the deployments config file")
 	foundID := ""
 
 	for i := 0; i < len(data.Deployments); i++ {
@@ -114,9 +124,9 @@ func SetTargetDeployment(c *cli.Context) {
 
 	data.Active = foundID
 	body, err := json.MarshalIndent(data, "", "\t")
-	errors.CheckErr(err, 208, "Unable to format deployments file")
+	codewindErrors.CheckErr(err, 208, "Unable to format deployments file")
 	saveErr := ioutil.WriteFile(getDeploymentConfigFilename(), body, 0644)
-	errors.CheckErr(saveErr, 203, "Unable to save the deployments config file")
+	codewindErrors.CheckErr(saveErr, 203, "Unable to save the deployments config file")
 }
 
 // AddDeploymentToList : adds a new deployment to the deployment config
@@ -136,7 +146,7 @@ func AddDeploymentToList(c *cli.Context) {
 	clientID := strings.TrimSpace(c.String("clientid"))
 
 	data, errCode, err := loadDeploymentsConfigFile()
-	errors.CheckErr(err, errCode, "Unable to process the deployments config file")
+	codewindErrors.CheckErr(err, errCode, "Unable to process the deployments config file")
 
 	// check the name is not already in use
 	for i := 0; i < len(data.Deployments); i++ {
@@ -158,9 +168,9 @@ func AddDeploymentToList(c *cli.Context) {
 	// append it to the list
 	data.Deployments = append(data.Deployments, newDeployment)
 	body, err := json.MarshalIndent(data, "", "\t")
-	errors.CheckErr(err, 208, "Unable to format deployments file")
+	codewindErrors.CheckErr(err, 208, "Unable to format deployments file")
 	saveErr := ioutil.WriteFile(getDeploymentConfigFilename(), body, 0644)
-	errors.CheckErr(saveErr, 203, "Unable to save the deployments config file")
+	codewindErrors.CheckErr(saveErr, 203, "Unable to save the deployments config file")
 }
 
 // RemoveDeploymentFromList : Removes the stored entry
@@ -170,7 +180,7 @@ func RemoveDeploymentFromList(c *cli.Context) {
 		log.Fatal("Local is a required deployment and can not be removed")
 	}
 	data, errCode, err := loadDeploymentsConfigFile()
-	errors.CheckErr(err, errCode, "Unable to process the deployments config file")
+	codewindErrors.CheckErr(err, errCode, "Unable to process the deployments config file")
 	for i := 0; i < len(data.Deployments); i++ {
 		if strings.EqualFold(id, data.Deployments[i].ID) {
 			copy(data.Deployments[i:], data.Deployments[i+1:])
@@ -179,14 +189,14 @@ func RemoveDeploymentFromList(c *cli.Context) {
 	}
 	data.Active = "local"
 	body, err := json.MarshalIndent(data, "", "\t")
-	errors.CheckErr(err, 208, "Unable to format deployments file")
+	codewindErrors.CheckErr(err, 208, "Unable to format deployments file")
 	saveErr := ioutil.WriteFile(getDeploymentConfigFilename(), body, 0644)
-	errors.CheckErr(saveErr, 203, "Unable to save the deployments config file")
+	codewindErrors.CheckErr(saveErr, 203, "Unable to save the deployments config file")
 }
 
 // ListTargetDeployment : Display the deployment details for the current target deployment
 func ListTargetDeployment() {
-	targetDeployment := FindTargetDeployment()
+	targetDeployment, _ := FindTargetDeployment()
 	if targetDeployment != nil {
 		utils.PrettyPrintJSON(targetDeployment)
 	} else {
@@ -221,16 +231,11 @@ func loadDeploymentsConfigFile() (*DeploymentConfig, int, error) {
 
 // saveDeploymentsConfigFile : Save the deployments configuration file to disk
 // returns an error, and error code
-func saveDeploymentsConfigFile() (int, error) {
-	file, err := ioutil.ReadFile(getDeploymentConfigFilename())
-	if err != nil {
-		return 207, err
-	}
-	data := DeploymentConfig{}
-	err = json.Unmarshal([]byte(file), &data)
-	if err != nil {
-		return 208, err
-	}
+func saveDeploymentsConfigFile(deploymentConfig *DeploymentConfig) (int, error) {
+	body, err := json.MarshalIndent(deploymentConfig, "", "\t")
+	codewindErrors.CheckErr(err, 208, "Unable to format deployments file")
+	saveErr := ioutil.WriteFile(getDeploymentConfigFilename(), body, 0644)
+	codewindErrors.CheckErr(saveErr, 203, "Unable to save the deployments config file")
 	return 0, nil
 }
 
@@ -247,4 +252,64 @@ func getDeploymentConfigPath() string {
 
 func getDeploymentConfigFilename() string {
 	return path.Join(getDeploymentConfigPath(), "deployments.json")
+}
+
+func loadRawDeploymentsFile() ([]byte, int, error) {
+	file, err := ioutil.ReadFile(getDeploymentConfigFilename())
+	if err != nil {
+		return nil, 207, err
+	}
+	return file, 0, nil
+}
+
+// update any existing entries to use the new schema design
+func applySchemaUpdates() error {
+
+	loadedFile, errCode, err := loadDeploymentsConfigFile()
+	codewindErrors.CheckErr(err, errCode, "Unable to load the deployments config file")
+	savedSchemaVersion := loadedFile.SchemaVersion
+
+	// upgrade the schema if needed
+	if savedSchemaVersion < deploymentsSchemaVersion {
+		file, errCode, err := loadRawDeploymentsFile()
+		codewindErrors.CheckErr(err, errCode, "Unable to read the deployments config file")
+
+		// apply schama updates from version 0 to version 1
+		if savedSchemaVersion == 0 {
+
+			// current config file
+			deploymentConfig := deployments.DeploymentConfigV0{}
+
+			// create new config structure
+			newDeploymentConfig := deployments.DeploymentConfigV1{}
+			newDeploymentConfig.Active = deploymentConfig.Active
+			newDeploymentConfig.SchemaVersion = 1
+
+			err = json.Unmarshal([]byte(file), &deploymentConfig)
+			if err != nil {
+				return err
+			}
+
+			// copy deployments from old to new config
+			originalDeploymentsV0 := deploymentConfig.Deployments
+			for i := 0; i < len(originalDeploymentsV0); i++ {
+				originalDeployment := originalDeploymentsV0[i]
+				deploymentJSON, _ := json.Marshal(originalDeployment)
+				var upgradedDeployment deployments.DeploymentV1
+				json.Unmarshal(deploymentJSON, &upgradedDeployment)
+
+				// rename 'name' field to 'id'
+				upgradedDeployment.ID = originalDeployment.Name
+				newDeploymentConfig.Deployments = append(newDeploymentConfig.Deployments, upgradedDeployment)
+			}
+
+			// schema has been updated
+			body, err := json.MarshalIndent(newDeploymentConfig, "", "\t")
+			codewindErrors.CheckErr(err, 208, "Unable to format deployments file")
+			saveErr := ioutil.WriteFile(getDeploymentConfigFilename(), body, 0644)
+			codewindErrors.CheckErr(saveErr, 203, "Unable to save the deployments config file")
+		}
+
+	}
+	return nil
 }
