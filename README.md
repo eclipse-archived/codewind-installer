@@ -202,7 +202,7 @@ Subcommands:</br>
 
 Subcommands:</br>
 
-`update/u` - Add new or updates existing Codewind credentials key in keyring
+`update/u` - Add new or update existing Codewind credentials key in keyring
 
 > --depid `<value>`                 Deployment ID (see the deployments cmd)
 > --username `<value>`              Username
