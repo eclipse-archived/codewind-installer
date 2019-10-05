@@ -11,9 +11,12 @@
 
 package main
 
-import "github.com/eclipse/codewind-installer/actions"
+import (
+	"github.com/eclipse/codewind-installer/actions"
+	"github.com/eclipse/codewind-installer/utils/deployments"
+)
 
 func main() {
-	actions.InitDeploymentConfigIfRequired()
+	deployments.InitConfigFileIfRequired()
 	actions.Commands()
 }
