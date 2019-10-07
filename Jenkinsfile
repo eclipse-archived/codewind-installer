@@ -97,10 +97,10 @@ spec:
                             
                             echo `uname -s`
                             echo `uname -m`
-                            
+
                             # Install docker-compose 
-                            curl -L https://github.com/docker/compose/releases/download/1.21.2/docker-compose-`uname -s`-`uname -m` -o ~/docker-compose
-                            chmod +x ~/docker-compose
+                            curl -L https://github.com/docker/compose/releases/download/1.21.2/docker-compose-`uname -s`-`uname -m` -o ./docker-compose
+                            chmod +x ./docker-compose
 
                             # Create codewind-workspace if it does not exist
                             printf "\n\nCreating codewind-workspace\n"
@@ -125,7 +125,7 @@ spec:
                             cd codewind
 
                             # Start codewind running
-                            ~/docker-compose -f docker-compose.yaml -f docker-compose-remote.yaml up -d;
+                            ../docker-compose -f docker-compose.yaml -f docker-compose-remote.yaml up -d;
                             if [ $? -eq 0 ]; then
                                 # Reset so we don't get conflicts
                                 unset REPOSITORY;
