@@ -49,6 +49,10 @@ type (
 		Path        string `json:"path"`
 	}
 
+	BindEndRequest struct {
+		ProjectID string `json:"id"`
+	}
+
 	CompleteRequest struct {
 		FileList     []string `json:"fileList"`
 		ModifiedList []string `json:"modifiedList"`
@@ -168,12 +172,73 @@ func ValidateProject(c *cli.Context) {
 	fmt.Println(string(projectInfo))
 }
 
-func SyncProject(c *cli.Context) {
+func BindProject(c *cli.Context) {
 	projectPath := strings.TrimSpace(c.String("path"))
-	projectId := strings.TrimSpace(c.String("id"))
-	synctime := int64(c.Int("time"))
+	Name := strings.TrimSpace(c.String("name"))
+	Language := strings.TrimSpace(c.String("language"))
+	BuildType := strings.TrimSpace(c.String("type"))
 
-	//	fmt.Println("Syncing project "+projectId+" path "+projectPath+" synctime ", synctime)
+	bindRequest := BindRequest{
+		Language:    Language,
+		Name:        Name,
+		ProjectType: BuildType,
+		Path:        projectPath,
+	}
+	buf := new(bytes.Buffer)
+	json.NewEncoder(buf).Encode(bindRequest)
+
+	//	fmt.Println(buf)
+	// Make the request to start the remote bind process.
+	remotebindUrl := config.PFEApiRoute() + "projects/remote-bind/start"
+	//	fmt.Println("Posting to: " + remotebindUrl)
+
+	client := &http.Client{}
+
+	request, err := http.NewRequest("POST", remotebindUrl, bytes.NewReader(buf.Bytes()))
+	request.Header.Set("Content-Type", "application/json")
+	resp, err := client.Do(request)
+	if err != nil {
+		return
+	}
+
+	defer resp.Body.Close()
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	body := string(bodyBytes)
+	fmt.Println(string(body))
+
+	var projectInfo map[string]interface{}
+	if err := json.Unmarshal(bodyBytes, &projectInfo); err != nil {
+		panic(err)
+		// TODO - Need to handle this gracefully.
+	}
+
+	projectID := projectInfo["projectID"].(string)
+	fmt.Println("Returned projectid " + projectID)
+
+	// Sync all the project files
+	syncFiles(projectPath, projectID, 0)
+
+	// Call remote-bind/end to complete
+	completeRemotebind(projectID)
+}
+
+func completeRemotebind(projectId string) {
+	uploadEndUrl := config.PFEApiRoute() + "projects/" + projectId + "/remote-bind/end"
+
+	payload := &BindEndRequest{ProjectID: projectId}
+	jsonPayload, _ := json.Marshal(payload)
+
+	// Make the request to end the sync process.
+	resp, err := http.Post(uploadEndUrl, "application/json", bytes.NewBuffer(jsonPayload))
+	fmt.Println("Upload end status:" + resp.Status)
+	if err != nil {
+		panic(err)
+		// TODO - Need to handle this gracefully.
+	}
+
+}
+
+func syncFiles(projectPath string, projectId string, synctime int64) ([]string, []string) {
 	var fileList []string
 	var modifiedList []string
 
@@ -237,14 +302,24 @@ func SyncProject(c *cli.Context) {
 	})
 	if err != nil {
 		fmt.Printf("error walking the path %q: %v\n", projectPath, err)
-		return
+		return nil, nil
 	}
+	return fileList, modifiedList
+}
+
+func SyncProject(c *cli.Context) {
+	projectPath := strings.TrimSpace(c.String("path"))
+	projectID := strings.TrimSpace(c.String("id"))
+	synctime := int64(c.Int("time"))
+
+	// Sync all the necessary project files
+	fileList, modifiedList := syncFiles(projectPath, projectID, synctime)
+
 	// Complete the upload
-	completeUpload(projectId, fileList, modifiedList, synctime)
+	completeUpload(projectID, fileList, modifiedList, synctime)
 }
 
 func completeUpload(projectId string, files []string, modfiles []string, timestamp int64) {
-	//	fmt.Println("Calling clear for " + projectId)
 	uploadEndUrl := config.PFEApiRoute() + "projects/" + projectId + "/upload/end"
 
 	payload := &CompleteRequest{FileList: files, ModifiedList: modfiles, TimeStamp: timestamp}

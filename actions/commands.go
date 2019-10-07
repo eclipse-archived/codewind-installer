@@ -77,9 +77,24 @@ func Commands() {
 					},
 				},
 				{
+					Name:    "bind",
+					Aliases: []string{""},
+					Usage:   "bind a project to codewind for building and running",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "name, n", Usage: "the name of the project", Required: true},
+						cli.StringFlag{Name: "language, l", Usage: "the project language", Required: true},
+						cli.StringFlag{Name: "type, t", Usage: "the type of the project", Required: true},
+						cli.StringFlag{Name: "path, p", Usage: "the path to the project", Required: true},
+					},
+					Action: func(c *cli.Context) error {
+						BindProject(c)
+						return nil
+					},
+				},
+				{
 					Name:    "sync",
 					Aliases: []string{""},
-					Usage:   "synchronize a project to codewind for building",
+					Usage:   "synchronize a project to codewind for building and running",
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "path, p", Usage: "the path to the project", Required: true},
 						cli.StringFlag{Name: "id, i", Usage: "the project id", Required: true},
