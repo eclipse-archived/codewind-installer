@@ -36,7 +36,7 @@ type (
 	TemplateRepo struct {
 		Description string `json:"description"`
 		URL         string `json:"url"`
-		Name        string `json:name`
+		Name        string `json:"name"`
 	}
 )
 
