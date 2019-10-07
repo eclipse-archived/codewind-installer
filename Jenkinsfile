@@ -83,9 +83,10 @@ spec:
 
         stage('Test') {
             agent {
-                docker {
-                image 'golang:1.11-stretch'
-                }
+                // docker {
+                // image 'golang:1.11-stretch'
+                // }
+                label “docker-build”
             }
             steps {
 
