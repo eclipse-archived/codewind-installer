@@ -97,6 +97,7 @@ spec:
                             
                             echo `uname -s`
                             echo `uname -m`
+                            docker --version
 
                             # Install docker-compose 
                             curl -L https://github.com/docker/compose/releases/download/1.21.2/docker-compose-`uname -s`-`uname -m` -o ./docker-compose
