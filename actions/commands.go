@@ -48,19 +48,19 @@ func Commands() {
 		{
 			Name:  "project",
 			Usage: "Manage Codewind projects",
+
 			Subcommands: []cli.Command{
 				{
 					Name:    "create",
 					Aliases: []string{""},
 					Usage:   "create a project on disk",
+
 					Flags: []cli.Flag{
-						cli.StringFlag{
-							Name:  "url, u",
-							Usage: "URL of project to download",
-						},
+						cli.StringFlag{Name: "url, u", Usage: "URL of project to download"},
+						cli.StringFlag{Name: "type, t", Usage: "Known type and subtype of project (`type:subtype`). Ignored when URL is given"},
 					},
 					Action: func(c *cli.Context) error {
-						if c.NumFlags() != 0 {
+						if c.String("u") != "" {
 							DownloadTemplate(c)
 						}
 						ValidateProject(c)
@@ -68,23 +68,14 @@ func Commands() {
 					},
 				},
 				{
-					Name:    "validate",
-					Aliases: []string{""},
-					Usage:   "validate an existing project on disk",
-					Action: func(c *cli.Context) error {
-						ValidateProject(c)
-						return nil
-					},
-				},
-				{
 					Name:    "bind",
 					Aliases: []string{""},
-					Usage:   "bind a project to codewind for building and running",
+					Usage:   "bind a project to codewind for building and running",
 					Flags: []cli.Flag{
-						cli.StringFlag{Name: "name, n", Usage: "the name of the project", Required: true},
-						cli.StringFlag{Name: "language, l", Usage: "the project language", Required: true},
-						cli.StringFlag{Name: "type, t", Usage: "the type of the project", Required: true},
-						cli.StringFlag{Name: "path, p", Usage: "the path to the project", Required: true},
+						cli.StringFlag{Name: "name, n", Usage: "the name of the project", Required: true},
+						cli.StringFlag{Name: "language, l", Usage: "the project language", Required: true},
+						cli.StringFlag{Name: "type, t", Usage: "the type of the project", Required: true},
+						cli.StringFlag{Name: "path, p", Usage: "the path to the project", Required: true},
 					},
 					Action: func(c *cli.Context) error {
 						BindProject(c)
@@ -94,11 +85,11 @@ func Commands() {
 				{
 					Name:    "sync",
 					Aliases: []string{""},
-					Usage:   "synchronize a project to codewind for building and running",
+					Usage:   "synchronize a project to codewind for building and running",
 					Flags: []cli.Flag{
-						cli.StringFlag{Name: "path, p", Usage: "the path to the project", Required: true},
-						cli.StringFlag{Name: "id, i", Usage: "the project id", Required: true},
-						cli.StringFlag{Name: "time, t", Usage: "time of the last sync for the given project", Required: true},
+						cli.StringFlag{Name: "path, p", Usage: "the path to the project", Required: true},
+						cli.StringFlag{Name: "id, i", Usage: "the project id", Required: true},
+						cli.StringFlag{Name: "time, t", Usage: "time of the last sync for the given project", Required: true},
 					},
 					Action: func(c *cli.Context) error {
 						SyncProject(c)
@@ -256,6 +247,11 @@ func Commands() {
 									Name:  "description",
 									Value: "",
 									Usage: "Description of the template repo",
+								},
+								cli.StringFlag{
+									Name:  "name",
+									Value: "",
+									Usage: "Name of the template repo",
 								},
 							},
 							Action: func(c *cli.Context) error {

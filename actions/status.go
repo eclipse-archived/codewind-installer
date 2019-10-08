@@ -25,7 +25,10 @@ import (
 
 // StatusCommand : to show the status
 func StatusCommand(c *cli.Context) {
-	targetDeployment := FindTargetDeployment()
+	targetDeployment, err := FindTargetDeployment()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 	if strings.EqualFold(targetDeployment.ID, "local") {
 		StatusCommandLocalDeployment(c)
 	} else {
