@@ -20,12 +20,13 @@ import (
 
 	"github.com/eclipse/codewind-installer/apiroutes"
 	"github.com/eclipse/codewind-installer/utils"
+	"github.com/eclipse/codewind-installer/utils/deployments"
 	"github.com/urfave/cli"
 )
 
 // StatusCommand : to show the status
 func StatusCommand(c *cli.Context) {
-	targetDeployment, err := FindTargetDeployment()
+	targetDeployment, err := deployments.GetTargetDeployment()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -37,7 +38,7 @@ func StatusCommand(c *cli.Context) {
 }
 
 // StatusCommandRemoteDeployment : Output remote deployment details
-func StatusCommandRemoteDeployment(c *cli.Context, d *Deployment) {
+func StatusCommandRemoteDeployment(c *cli.Context, d *deployments.Deployment) {
 	jsonOutput := c.Bool("json")
 	apiResponse, err := apiroutes.GetAPIEnvironment(c, d.URL)
 	if err != nil {
@@ -50,7 +51,10 @@ func StatusCommandRemoteDeployment(c *cli.Context, d *Deployment) {
 				Status:   "stopped",
 				Versions: []string{},
 			}
-			output, _ := json.Marshal(respStatus)
+			output, err := json.Marshal(respStatus)
+			if err != nil {
+				log.Fatal(err.Error())
+			}
 			fmt.Println(string(output))
 		} else {
 			fmt.Println("Codewind remote deployment did not respond on " + d.URL)

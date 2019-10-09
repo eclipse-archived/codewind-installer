@@ -428,7 +428,7 @@ func Commands() {
 						cli.StringFlag{Name: "clientid", Usage: "Security client_id to connect as eg: codewind_ctl or che-public", Required: false},
 					},
 					Action: func(c *cli.Context) error {
-						AddDeploymentToList(c)
+						DeploymentAddToList(c)
 						return nil
 					},
 				},
@@ -442,7 +442,7 @@ func Commands() {
 					Action: func(c *cli.Context) error {
 						if c.NumFlags() != 1 {
 						} else {
-							RemoveDeploymentFromList(c)
+							DeploymentRemoveFromList(c)
 						}
 						return nil
 					},
@@ -456,9 +456,9 @@ func Commands() {
 					},
 					Action: func(c *cli.Context) error {
 						if c.NumFlags() == 0 {
-							ListTargetDeployment()
+							DeploymentGetTarget()
 						} else {
-							SetTargetDeployment(c)
+							DeploymentSetTarget(c)
 						}
 						return nil
 					},
@@ -468,7 +468,7 @@ func Commands() {
 					Aliases: []string{"ls"},
 					Usage:   "List known deployments",
 					Action: func(c *cli.Context) error {
-						ListDeployments()
+						DeploymentListAll()
 						return nil
 					},
 				},
@@ -476,7 +476,7 @@ func Commands() {
 					Name:  "reset",
 					Usage: "Resets the deployments list",
 					Action: func(c *cli.Context) error {
-						ResetDeploymentsFile()
+						DeploymentResetList()
 						return nil
 					},
 				},

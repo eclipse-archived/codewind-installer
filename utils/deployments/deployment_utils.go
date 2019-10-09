@@ -1,6 +1,8 @@
 package deployments
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 /*******************************************************************************
  * Copyright (c) 2019 IBM Corporation and others.
@@ -21,16 +23,17 @@ type DepError struct {
 }
 
 const (
-	// ErrOpSchema : Schema type errors
-	ErrOpSchema = "sec_schema"
-
-	// ErrOpTarget : Deployment target errors
-	ErrOpTarget = "sec_target"
+	errOpFileParse    = "dep_parse"
+	errOpFileLoad     = "dep_load"
+	errOpFileWrite    = "dep_write"
+	errOpSchemaUpdate = "dep_schema_update"
+	errOpConflict     = "dep_conflict"
+	errOpNotFound     = "dep_not_found"
+	errOpProtected    = "dep_protected"
 )
 
 const (
-	// TextTargetNotFound : missing target deployment text
-	TextTargetNotFound = "Target deployment not found"
+	errTargetNotFound = "Target deployment not found"
 )
 
 // DepError : Error formatted in JSON containing an errorOp and a description from
@@ -43,4 +46,10 @@ func (se *DepError) Error() string {
 	tempOutput := &Output{Operation: se.Op, Description: se.Err.Error()}
 	jsonError, _ := json.Marshal(tempOutput)
 	return string(jsonError)
+}
+
+// Result : status message
+type Result struct {
+	Status        string `json:"status"`
+	StatusMessage string `json:"status_message"`
 }
