@@ -337,6 +337,8 @@ func SyncProject(c *cli.Context) {
 
 	// Sync all the necessary project files
 	fileList, modifiedList := syncFiles(projectPath, projectID, synctime)
+	fmt.Println(fileList)
+	fmt.Println(modifiedList)
 
 	// Complete the upload
 	completeUpload(projectID, fileList, modifiedList, synctime)
