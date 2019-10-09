@@ -13,14 +13,32 @@ package deployments
 
 import (
 	"flag"
+	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/urfave/cli"
 )
 
+// Test_SchemaUpgrade01 :  Upgrade schema tests from Version 0 to Version 1
+func Test_SchemaUpgrade0to1(t *testing.T) {
+	// create a v1 file :
+	v1File := "{\"active\": \"testlocal\",\"deployments\": [{\"name\":\"testlocal\",\"label\": \"Codewind local test deployment\",\"url\": \"\"}]}"
+	ioutil.WriteFile(getDeploymentConfigFilename(), []byte(v1File), 0644)
+	t.Run("Asserts schema updated to v1 with a local target", func(t *testing.T) {
+		InitConfigFileIfRequired() // perform upgrade
+		result, err := GetDeploymentsConfig()
+		if err != nil {
+			t.Fail()
+		}
+		assert.Equal(t, 1, result.SchemaVersion)
+		assert.Equal(t, "testlocal", result.Active)
+		assert.Len(t, result.Deployments, 1)
+		assert.Equal(t, "testlocal", result.Deployments[0].ID)
+	})
+}
+
 func Test_GetDeploymentsConfig(t *testing.T) {
-	InitConfigFileIfRequired()
 	t.Run("Asserts there is only one deployment", func(t *testing.T) {
 		ResetDeploymentsFile()
 		result, err := GetDeploymentsConfig()
