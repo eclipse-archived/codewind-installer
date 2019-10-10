@@ -1,9 +1,3 @@
-package deployments
-
-import (
-	"encoding/json"
-)
-
 /*******************************************************************************
  * Copyright (c) 2019 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -14,6 +8,12 @@ import (
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
+
+package deployments
+
+import (
+	"encoding/json"
+)
 
 // DepError : Deployment package errors
 type DepError struct {
