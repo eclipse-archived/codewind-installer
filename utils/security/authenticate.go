@@ -27,7 +27,7 @@ func SecAuthenticate(c *cli.Context, connectionRealm string, connectionClient st
 
 	hostname := strings.TrimSpace(strings.ToLower(c.String("host")))
 	username := strings.TrimSpace(strings.ToLower(c.String("username")))
-	password := strings.TrimSpace(strings.ToLower(c.String("password")))
+	password := strings.TrimSpace(c.String("password"))
 	realm := strings.TrimSpace(strings.ToLower(c.String("realm")))
 	client := strings.TrimSpace(strings.ToLower(c.String("client")))
 
