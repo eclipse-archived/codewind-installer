@@ -117,7 +117,7 @@
 #########################
 
 @test "invoke seckeyring update command - create a key" {
-  run go run main.go seckeyring update --depid local --username testuser --password secretphrase
+  run go run main.go seckeyring update --depid local --username testuser --password seCretphrase
   echo "status = ${status}"
   echo "output trace = ${output}"
   [ "$output" = '{"status":"OK"}' ]
@@ -125,7 +125,7 @@
 }
 
 @test "invoke seckeyring update command - update a key" {
-  run go run main.go seckeyring update --depid local --username testuser --password new_secretphrase
+  run go run main.go seckeyring update --depid local --username testuser --password new_secretPhrase
   echo "status = ${status}"
   echo "output trace = ${output}"
   [ "$output" = '{"status":"OK"}' ]

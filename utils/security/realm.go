@@ -14,7 +14,7 @@ import (
 func SecRealmCreate(c *cli.Context) *SecError {
 
 	hostname := strings.TrimSpace(strings.ToLower(c.String("host")))
-	realm := strings.TrimSpace(c.String("realm"))
+	newRealm := strings.TrimSpace(c.String("newrealm"))
 	accesstoken := strings.TrimSpace(c.String("accesstoken"))
 
 	// Authenticate if needed
@@ -38,8 +38,8 @@ func SecRealmCreate(c *cli.Context) *SecError {
 		AccessTokenLifespan int    `json:"accessTokenLifespan"`
 	}
 	tempRealm := &PayloadRealm{
-		Realm:               realm,
-		DisplayName:         realm,
+		Realm:               newRealm,
+		DisplayName:         newRealm,
 		Enabled:             true,
 		LoginTheme:          "codewind",
 		AccessTokenLifespan: 86400,

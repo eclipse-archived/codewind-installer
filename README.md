@@ -161,7 +161,7 @@ Subcommands:</br>
 
 > **Flags:**
 > --host value                   URL or ingress to Keycloak service
-> --realm value                  Application realm
+> --newrealm value               Application realm to be created
 > --accesstoken value            Admin access_token
 > --username value               Admin Username
 > --password value               Admin Password
@@ -173,8 +173,8 @@ Subcommands:</br>
 `create/c` - Create a new client in an existing Keycloak realm (requires either admin_token or username/password)
 
 > --host value                   URL or ingress to Keycloak service
-> --realm value                  Application realm
-> --clientid value               New client ID to create
+> --realm value                  Application realm where client should be created
+> --newclient value              New client ID to create
 > --redirect value               Allowed redirect callback URL eg: `http://127.0.0.1:9090/*`
 > --accesstoken value            Admin access_token
 > --username value               Admin Username
@@ -184,7 +184,7 @@ Subcommands:</br>
 
 > --host value                   URL or ingress to Keycloak service
 > --realm value                  Application realm
-> --clientid value               New client ID to create
+> --clientid value               Client ID to retrieve
 > --accesstoken value            Admin access_token
 > --username value               Admin Username
 > --password value               Admin Password
@@ -193,7 +193,7 @@ Subcommands:</br>
 
 > --host value                   URL or ingress to Keycloak service
 > --realm value                  Application realm
-> --clientid value               New client ID to create
+> --clientid value               Client ID to retrieve
 > --accesstoken value            Admin access_token
 > --username value               Admin Username
 > --password value               Admin Password
@@ -244,7 +244,7 @@ Subcommands:</br>
 > --password value               Admin Password
 > --name value                   Username to query
 > --newpw value                  New replacement password
- 
+
 ## deployments
 
 Subcommands:</br>
@@ -257,7 +257,7 @@ Subcommands:</br>
 > --url value    The ingress URL of the PFE instance
 > --auth value   URL of Keycloak service eg: `https://mykeycloak.test:8443`
 > --realm value  Security realm eg:  codewind or che
-> --clientid value  Security client id eg:  codewind or che-public
+> --clientid value  Security client id eg: codewind or che-public
 
 `remove/rm` - Remove a deployment from the list
 

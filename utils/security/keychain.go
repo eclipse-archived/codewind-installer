@@ -14,7 +14,6 @@ package security
 import (
 	"strings"
 
-	"github.com/urfave/cli"
 	"github.com/zalando/go-keyring"
 )
 
@@ -25,11 +24,13 @@ type KeyringSecret struct {
 }
 
 // SecKeyUpdate : Creates or updates a key in the platforms keyring
-func SecKeyUpdate(c *cli.Context) *SecError {
-	depid := strings.TrimSpace(strings.ToLower(c.String("depid")))
-	username := strings.TrimSpace(c.String("username"))
-	password := strings.TrimSpace(c.String("password"))
-	err := keyring.Set(KeyringServiceName+"."+depid, username, password)
+func SecKeyUpdate(deploymentID string, username string, password string) *SecError {
+
+	depID := strings.TrimSpace(strings.ToLower(deploymentID))
+	uName := strings.TrimSpace(strings.ToLower(username))
+	pass := strings.TrimSpace(password)
+
+	err := keyring.Set(KeyringServiceName+"."+depID, uName, pass)
 	if err != nil {
 		return &SecError{errOpKeyring, err, err.Error()}
 	}
@@ -37,10 +38,12 @@ func SecKeyUpdate(c *cli.Context) *SecError {
 }
 
 // SecKeyGetSecret : retrieve secret / credentials from the keyring
-func SecKeyGetSecret(c *cli.Context) (string, *SecError) {
-	depid := strings.TrimSpace(c.String("depid"))
-	username := strings.TrimSpace(c.String("username"))
-	secret, err := keyring.Get(KeyringServiceName+"."+depid, username)
+func SecKeyGetSecret(deploymentID string, username string) (string, *SecError) {
+
+	depID := strings.TrimSpace(strings.ToLower(deploymentID))
+	uName := strings.TrimSpace(strings.ToLower(username))
+
+	secret, err := keyring.Get(KeyringServiceName+"."+depID, uName)
 	if err != nil {
 		return "", &SecError{errOpKeyring, err, err.Error()}
 	}
