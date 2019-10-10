@@ -40,14 +40,14 @@ func TestRemoveImage(t *testing.T) {
 func TestCheckImageStatusFalse(t *testing.T) {
 	// Test checks that image list can be searched
 	// False return as no images have been installed for this test
-	result := CheckImageStatus()
+	result, _ := CheckImageStatus()
 	assert.Equal(t, result, false, "should return false: no images are installed")
 }
 
 func TestCheckContainerStatusFalse(t *testing.T) {
 	// Test checks that container list can be searched
 	// False return as no containers have been started for this test
-	result := CheckContainerStatus()
+	result, _ := CheckContainerStatus()
 	assert.Equal(t, result, false, "should return false: no containers are started")
 }
 

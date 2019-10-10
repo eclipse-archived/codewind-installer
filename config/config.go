@@ -12,12 +12,19 @@
 package config
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/eclipse/codewind-installer/utils"
 )
 
 // PFEHost is the host at which PFE is running, e.g. "127.0.0.1:9090"
 func PFEHost() string {
-	hostname, port := utils.GetPFEHostAndPort()
+	hostname, port, err := utils.GetPFEHostAndPort()
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(0)
+	}
 	return hostname + ":" + port
 }
 

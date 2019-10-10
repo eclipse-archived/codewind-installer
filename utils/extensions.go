@@ -38,7 +38,7 @@ func RunCommand(projectPath string, command ExtensionCommand, params map[string]
 	}
 	cwctlPath := filepath.Dir(cwd)
 	commandName := filepath.Base(command.Command) // prevent path traversal
-	commandBin := filepath.Join(installerPath, commandName)
+	commandBin := filepath.Join(cwctlPath, commandName)
 
 	// check for variable substition into args, syntax: $variable
 	for i := 0; i < len(command.Args); i++ {

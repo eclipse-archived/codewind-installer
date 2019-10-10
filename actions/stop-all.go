@@ -13,6 +13,7 @@ package actions
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/eclipse/codewind-installer/utils"
@@ -27,7 +28,12 @@ func StopAllCommand() {
 		"appsody",
 	}
 
-	containers := utils.GetContainerList()
+	containers, err := utils.GetContainerList()
+
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(0)
+	}
 
 	fmt.Println("Stopping Codewind and Project containers")
 	for _, container := range containers {

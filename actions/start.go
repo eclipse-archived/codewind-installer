@@ -13,7 +13,7 @@ package actions
 
 import (
 	"fmt"
-	"log"
+	"os"
 
 	"github.com/eclipse/codewind-installer/utils"
 	"github.com/urfave/cli"
@@ -23,15 +23,25 @@ import (
 func StartCommand(c *cli.Context, tempFilePath string, healthEndpoint string) {
 	tag := c.String("tag")
 
-	if !utils.CheckImageStatus() {
-		log.Fatal("Error: Cannot find Codewind images, try running install to pull them")
-	}
-	if !utils.CheckImageTag(tag) {
-		log.Fatal(fmt.Sprintf("Cannot find Codewind images with tag %s, try running install with this tag", tag))
+	imagesAreInstalled, err := utils.CheckImageStatus()
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(0)
 	}
 
-	status := utils.CheckContainerStatus()
-	if status {
+	err = utils.CheckImageTag(tag)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(0)
+	}
+
+	containersAreRunning, err := utils.CheckContainerStatus()
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(0)
+	}
+
+	if containersAreRunning && imagesAreInstalled {
 		fmt.Println("Codewind is already running!")
 	} else {
 		debug := c.Bool("debug")
@@ -43,4 +53,5 @@ func StartCommand(c *cli.Context, tempFilePath string, healthEndpoint string) {
 		utils.DeleteTempFile(tempFilePath) // Remove docker-compose.yaml
 		utils.PingHealth(healthEndpoint)
 	}
+	os.Exit(0)
 }

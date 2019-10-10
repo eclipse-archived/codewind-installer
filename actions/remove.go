@@ -13,6 +13,7 @@ package actions
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/eclipse/codewind-installer/utils"
@@ -30,7 +31,12 @@ func RemoveCommand(c *cli.Context) {
 	}
 	networkName := "codewind"
 
-	images := utils.GetImageList()
+	images, err := utils.GetImageList()
+
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(0)
+	}
 
 	fmt.Println("Removing Codewind docker images..")
 
@@ -49,7 +55,12 @@ func RemoveCommand(c *cli.Context) {
 		}
 	}
 
-	networks := utils.GetNetworkList()
+	networks, err := utils.GetNetworkList()
+
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(0)
+	}
 
 	for _, network := range networks {
 		if strings.Contains(network.Name, networkName) {
