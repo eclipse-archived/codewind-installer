@@ -88,13 +88,33 @@ func StatusCommandRemoteConnection(c *cli.Context) {
 // StatusCommandLocalConnection : Output local connection details
 func StatusCommandLocalConnection(c *cli.Context) {
 	jsonOutput := c.Bool("json") || c.GlobalBool("json")
-	if utils.CheckContainerStatus() {
+	jsonOutput := c.Bool("json")
+	containersAreRunning, err := utils.CheckContainerStatus()
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(0)
+	}
+	if containersAreRunning {
 		// Started
-		hostname, port := utils.GetPFEHostAndPort()
+		hostname, port, err := utils.GetPFEHostAndPort()
+		if err != nil {
+			fmt.Println(err.Error())
+			os.Exit(0)
+		}
+
 		if jsonOutput {
 
-			imageTagArr := utils.GetImageTags()
-			containerTagArr := utils.GetContainerTags()
+			imageTagArr, err := utils.GetImageTags()
+			if err != nil {
+				fmt.Println(err.Error())
+				os.Exit(0)
+			}
+
+			containerTagArr, err := utils.GetContainerTags()
+			if err != nil {
+				fmt.Println(err.Error())
+				os.Exit(0)
+			}
 
 			type status struct {
 				Status   string   `json:"status"`
@@ -118,11 +138,21 @@ func StatusCommandLocalConnection(c *cli.Context) {
 		os.Exit(0)
 	}
 
-	if utils.CheckImageStatus() {
+	imagesAreInstalled, err := utils.CheckImageStatus()
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(0)
+	}
+
+	if imagesAreInstalled {
 		// Installed but not started
 		if jsonOutput {
 
-			imageTagArr := utils.GetImageTags()
+			imageTagArr, err := utils.GetImageTags()
+			if err != nil {
+				fmt.Println(err.Error())
+				os.Exit(0)
+			}
 
 			type status struct {
 				Status   string   `json:"status"`

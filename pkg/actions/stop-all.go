@@ -13,6 +13,7 @@ package actions
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/docker/docker/api/types"
@@ -21,7 +22,18 @@ import (
 
 //StopAllCommand to stop codewind and project containers
 func StopAllCommand() {
-	containers := utils.GetContainerList()
+	containerArr := []string{
+		"codewind-pfe",
+		"codewind-performance",
+		"cw-",
+		"appsody",
+	}
+	containers, err := utils.GetContainerList()
+
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(0)
+	}
 
 	fmt.Println("Stopping Codewind and Project containers")
 	containersToRemove := getContainersToRemove(containers)
