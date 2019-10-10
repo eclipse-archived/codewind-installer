@@ -22,6 +22,10 @@
 #   go-tests = true
 #   unused-packages = true
 
+[[override]]
+  name = "github.com/docker/docker"
+  source = "https://github.com/docker/engine"
+  version = "19.03.3"
 
 [prune]
   go-tests = true
