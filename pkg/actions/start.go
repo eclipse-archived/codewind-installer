@@ -28,11 +28,17 @@ func StartCommand(c *cli.Context, tempFilePath string, healthEndpoint string) {
 		fmt.Println(err.Error())
 		os.Exit(0)
 	}
+	if !imagesAreInstalled {
+		fmt.Println("Cannot find Codewind images, try running install to pull them")
+	}
 
-	err = utils.CheckImageTag(tag)
+	taggedImagesAreInstalled, err := utils.CheckImageTag(tag)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(0)
+	}
+	if !taggedImagesAreInstalled {
+		fmt.Println("Cannot find Codewind images with given tag, try running install to pull them")
 	}
 
 	containersAreRunning, err := utils.CheckContainerStatus()
@@ -41,7 +47,7 @@ func StartCommand(c *cli.Context, tempFilePath string, healthEndpoint string) {
 		os.Exit(0)
 	}
 
-	if containersAreRunning && imagesAreInstalled {
+	if containersAreRunning {
 		fmt.Println("Codewind is already running!")
 	} else {
 		debug := c.Bool("debug")

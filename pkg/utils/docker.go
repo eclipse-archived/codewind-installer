@@ -304,21 +304,20 @@ func CheckImageStatus() (bool, *DockerError) {
 		imageError := goErr.New("Cannot find Codewind images, try running install to pull them")
 		return false, &DockerError{errOpImageNotFound, imageError, imageError.Error()}
 	}
-
 	return true, nil
 }
 
 // CheckImageTag returns false if codewind images with given tag don't exist
-func CheckImageTag(tag string) *DockerError {
+func CheckImageTag(tag string) (bool, *DockerError) {
 	tags, err := GetImageTags()
 	if err != nil {
-		return err
+		return false, err
 	}
 	if !StringInSlice(tag, tags) {
 		imageTagError := goErr.New("Cannot find Codewind with given tag, try running install to pull them")
-		return &DockerError{errOpImageTag, imageTagError, imageTagError.Error()}
+		return false, &DockerError{errOpImageTag, imageTagError, imageTagError.Error()}
 	}
-	return nil
+	return true, nil
 }
 
 // RemoveImage of Codewind and project
