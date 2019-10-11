@@ -35,7 +35,7 @@ func DownloadFromURLThenExtract(URL string, destination string) error {
 // DownloadFromTarGzURL downloads a tar.gz file from a URL
 // and extracts it to a destination
 func DownloadFromTarGzURL(URL string, destination string) error {
-	_ = os.MkdirAll(destination, 0700) // gives User rwx permission
+	_ = os.MkdirAll(destination, 0755) // gives User rwx permission, everyone rx
 
 	pathToTempFile := path.Join(destination, "temp.tar.gz")
 	err := DownloadFile(URL, pathToTempFile)
@@ -71,7 +71,7 @@ func DownloadFromRepoURL(repoURL string, destination string) error {
 func DownloadAndExtractZip(zipURL string, destination string) error {
 	time := time.Now().Format(time.RFC3339)
 	time = strings.Replace(time, ":", "-", -1) // ":" is illegal char in windows
-	pathToTempZipFile := path.Join(os.TempDir(), "_" + time + ".zip")
+	pathToTempZipFile := path.Join(os.TempDir(), "_"+time+".zip")
 
 	err := DownloadFile(zipURL, pathToTempZipFile)
 	if err != nil {
