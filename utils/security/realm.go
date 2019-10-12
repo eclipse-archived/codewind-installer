@@ -37,6 +37,11 @@ func SecRealmCreate(c *cli.Context) *SecError {
 		accesstoken = authToken.AccessToken
 	}
 
+	themeToUse, secErr := GetSuggestedTheme(hostname, accesstoken)
+	if secErr != nil {
+		return secErr
+	}
+
 	// build REST request
 	url := hostname + "/auth/admin/realms"
 
@@ -52,7 +57,7 @@ func SecRealmCreate(c *cli.Context) *SecError {
 		Realm:               newRealm,
 		DisplayName:         newRealm,
 		Enabled:             true,
-		LoginTheme:          "codewind",
+		LoginTheme:          themeToUse,
 		AccessTokenLifespan: 86400,
 	}
 
