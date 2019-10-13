@@ -70,7 +70,7 @@ func DeploymentSetTarget(c *cli.Context) {
 
 // DeploymentListAll : Fetch all deployments
 func DeploymentListAll() {
-	allDeployments, err := deployments.GetAllDeployments()
+	allDeployments, err := deployments.GetDeploymentsConfig()
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(0)

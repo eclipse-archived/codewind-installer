@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/eclipse/codewind-installer/utils/deployments"
 	"github.com/urfave/cli"
 )
 
@@ -36,19 +37,79 @@ type AuthToken struct {
 // connectionRealm can be used to override the supplied context arguments
 func SecAuthenticate(c *cli.Context, connectionRealm string, connectionClient string) (*AuthToken, *SecError) {
 
-	hostname := strings.TrimSpace(strings.ToLower(c.String("host")))
-	username := strings.TrimSpace(strings.ToLower(c.String("username")))
-	password := strings.TrimSpace(c.String("password"))
-	realm := strings.TrimSpace(strings.ToLower(c.String("realm")))
-	client := strings.TrimSpace(strings.ToLower(c.String("client")))
+	cliHostname := strings.TrimSpace(strings.ToLower(c.String("host")))
+	cliUsername := strings.TrimSpace(strings.ToLower(c.String("username")))
+	cliRealm := strings.TrimSpace(strings.ToLower(c.String("realm")))
+	cliClient := strings.TrimSpace(strings.ToLower(c.String("client")))
+	cliPassword := strings.TrimSpace(c.String("password"))
+	deploymentID := strings.TrimSpace(strings.ToLower(c.String("depid")))
 
-	// If a connection realm was supplied, use that instead of the command line Context flags
+	// Check supplied context flags
+	if deploymentID == "" && (cliHostname == "" || cliUsername == "" || cliRealm == "" || cliClient == "") {
+		err := errors.New("Must supply a deployment ID or connection details")
+		return nil, &SecError{errOpDepConfig, err, err.Error()}
+	}
+
+	hostname := ""
+	username := ""
+	password := ""
+	realm := ""
+	client := ""
+
+	deployment, depErr := deployments.GetDeploymentByID(deploymentID)
+
+	if deploymentID != "" && depErr != nil {
+		return nil, &SecError{errOpDepConfig, depErr.Err, depErr.Desc}
+	}
+
+	if deployment != nil {
+		hostname = deployment.AuthURL
+		realm = deployment.Realm
+		client = deployment.ClientID
+	}
+
+	// Use command line context flags in preference to loaded deployment fields
+	if cliHostname != "" {
+		hostname = cliHostname
+	}
+	if cliUsername != "" {
+		username = cliUsername
+	}
+	if cliRealm != "" {
+		realm = cliRealm
+	}
+	if cliClient != "" {
+		client = cliClient
+	}
+
+	// When a matching deployment exist retrieve secret from the keyring
+	if deployment != nil {
+		secret, secError := SecKeyGetSecret(deployment.ID, username)
+		if secError != nil && cliPassword == "" {
+			return nil, secError
+		}
+		password = secret
+	}
+
+	if cliPassword != "" {
+		password = cliPassword
+	}
+
+	// If a connection realm was supplied, use that instead of the command line Context flags.
+	// This allows this function to be used by other realms such as master when admins are performing initial setup of keycloak
 	if connectionRealm != "" {
 		realm = connectionRealm
 	}
 
 	if connectionClient != "" {
 		client = connectionClient
+	}
+
+	// Pre-flight check
+
+	if hostname == "" || realm == "" || username == "" || password == "" || client == "" {
+		err := errors.New(textInvalidOptions)
+		return nil, &SecError{errOpCLICommand, err, err.Error()}
 	}
 
 	// build REST request
@@ -87,5 +148,24 @@ func SecAuthenticate(c *cli.Context, connectionRealm string, connectionClient st
 	if err != nil {
 		return nil, &SecError{errOpResponseFormat, err, textUnableToParse}
 	}
+
+	// store access and refresh tokens in keyring
+	secErr := SecKeyUpdate(deploymentID, "access_token", authToken.AccessToken)
+	if secErr != nil {
+		return &authToken, secErr
+	}
+	secErr = SecKeyUpdate(deploymentID, "refresh_token", authToken.RefreshToken)
+	if secErr != nil {
+		return &authToken, secErr
+	}
+
+	// login successful, update users password in keyring
+	if password != "" {
+		secErr = SecKeyUpdate(deploymentID, username, password)
+		if secErr != nil {
+			return &authToken, secErr
+		}
+	}
+
 	return &authToken, nil
 }

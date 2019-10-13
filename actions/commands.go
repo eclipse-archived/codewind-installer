@@ -290,11 +290,12 @@ func Commands() {
 					Aliases: []string{"g"},
 					Usage:   "Login and retrieve access_token",
 					Flags: []cli.Flag{
-						cli.StringFlag{Name: "host", Usage: "URL or ingress to Keycloak service", Required: true},
-						cli.StringFlag{Name: "realm,r", Usage: "Application realm", Required: true},
+						cli.StringFlag{Name: "host", Usage: "URL or ingress to Keycloak service", Required: false},
+						cli.StringFlag{Name: "realm,r", Usage: "Application realm", Required: false},
 						cli.StringFlag{Name: "username,u", Usage: "Account Username", Required: true},
-						cli.StringFlag{Name: "password,p", Usage: "Account Password", Required: true},
-						cli.StringFlag{Name: "client,c", Usage: "Client", Required: true},
+						cli.StringFlag{Name: "password,p", Usage: "Account Password", Required: false},
+						cli.StringFlag{Name: "client,c", Usage: "Client", Required: false},
+						cli.StringFlag{Name: "depid,d", Usage: "Deployment ID", Required: false},
 					},
 					Action: func(c *cli.Context) error {
 						SecurityTokenGet(c)
@@ -485,12 +486,8 @@ func Commands() {
 					Aliases: []string{"a"},
 					Usage:   "Add a new deployment to the configuration file",
 					Flags: []cli.Flag{
-						cli.StringFlag{Name: "id", Usage: "A reference name", Required: true},
-						cli.StringFlag{Name: "label", Usage: "A displayable name", Required: false},
+						cli.StringFlag{Name: "label", Usage: "A displayable name", Required: true},
 						cli.StringFlag{Name: "url", Usage: "The ingress URL of the PFE instance", Required: true},
-						cli.StringFlag{Name: "auth", Usage: "URL of Keycloak service eg: https://mykeycloak.test:8443", Required: false},
-						cli.StringFlag{Name: "realm", Usage: "Security realm eg: codewind or che", Required: false},
-						cli.StringFlag{Name: "clientid", Usage: "Security client_id to connect as eg: codewind_ctl or che-public", Required: false},
 					},
 					Action: func(c *cli.Context) error {
 						DeploymentAddToList(c)

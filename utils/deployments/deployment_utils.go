@@ -30,6 +30,7 @@ const (
 	errOpConflict     = "dep_conflict"
 	errOpNotFound     = "dep_not_found"
 	errOpProtected    = "dep_protected"
+	errOpGetEnv       = "dep_environment"
 )
 
 const (

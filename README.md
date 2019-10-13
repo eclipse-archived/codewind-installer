@@ -144,7 +144,12 @@ Subcommands:</br>
 
 Subcommands:</br>
 
-`get/g` - Authenticate and obtain an access_token
+`get/g` - Authenticate and obtain an access_token. 
+
+>**Note 1:**: The preferred way to authenticate is by supplying just the depid and username. In this mode the command will use the stored password from the platform keyring
+>**Note 2:**: If you dont have a depid you must supply use the host, realm and client flags
+>**Note 3:**: You can use a combination of both the depid and host/realm/client flags. In this mode, the host/realm/client flags take precedence override the deployment defaults
+>**Note 4:**: The password flag is optional when used with the depid flag and when a password already exists in the platform keyring. Including the password flag will update the keychain password after a successful login or add a password to the keychain if one does not exist
 
 > **Flags:**
 > --host value                  URL or ingress to Keycloak service
@@ -152,6 +157,7 @@ Subcommands:</br>
 > --username value              Account Username
 > --password value              Account Password
 > --client value                Client
+> --depid value                 Use connection details from a deployment configuration
 
 ## secrealm
 
@@ -252,12 +258,8 @@ Subcommands:</br>
 `add/a` - Add a new deployment to the list
 
 > **Flags:**
-> --id value     A deployment reference id
 > --label value  A displayable name
 > --url value    The ingress URL of the PFE instance
-> --auth value   URL of Keycloak service eg: `https://mykeycloak.test:8443`
-> --realm value  Security realm eg:  codewind or che
-> --clientid value  Security client id eg: codewind or che-public
 
 `remove/rm` - Remove a deployment from the list
 
