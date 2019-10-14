@@ -35,7 +35,7 @@ func DownloadFromURLThenExtract(URL string, destination string) error {
 // DownloadFromTarGzURL downloads a tar.gz file from a URL
 // and extracts it to a destination
 func DownloadFromTarGzURL(URL string, destination string) error {
-	_ = os.MkdirAll(destination, 0755) // gives User rwx permission, everyone rx
+	_ = os.MkdirAll(destination, 0755) // gives User rwx permission, everyone else rx
 
 	pathToTempFile := path.Join(destination, "temp.tar.gz")
 	err := DownloadFile(URL, pathToTempFile)
