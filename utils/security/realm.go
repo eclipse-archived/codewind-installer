@@ -30,7 +30,7 @@ func SecRealmCreate(c *cli.Context) *SecError {
 
 	// Authenticate if needed
 	if accesstoken == "" {
-		authToken, err := SecAuthenticate(c, KeycloakMasterRealm, KeycloakAdminClientID)
+		authToken, err := SecAuthenticate(http.DefaultClient, c, KeycloakMasterRealm, KeycloakAdminClientID)
 		if err != nil || authToken == nil {
 			return err
 		}

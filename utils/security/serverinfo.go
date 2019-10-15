@@ -67,11 +67,11 @@ func GetServerInfo(hostname string, accesstoken string) (*ServerInfo, *SecError)
 
 	// Handle special case http status codes
 	switch httpCode := res.StatusCode; {
-	case httpCode == 400, httpCode == 401:
+	case httpCode == http.StatusBadRequest, httpCode == http.StatusUnauthorized:
 		keycloakAPIError := parseKeycloakError(string(body), res.StatusCode)
 		kcError := errors.New(string(keycloakAPIError.ErrorDescription))
 		return nil, &SecError{keycloakAPIError.Error, kcError, kcError.Error()}
-	case httpCode != 200:
+	case httpCode != http.StatusOK:
 		err = errors.New(string(body))
 		return nil, &SecError{errOpResponse, err, err.Error()}
 	}

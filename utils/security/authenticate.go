@@ -35,7 +35,7 @@ type AuthToken struct {
 
 // SecAuthenticate - sends credentials to the auth server for a specific realm and returns an AuthToken
 // connectionRealm can be used to override the supplied context arguments
-func SecAuthenticate(c *cli.Context, connectionRealm string, connectionClient string) (*AuthToken, *SecError) {
+func SecAuthenticate(httpClient HTTPClient, c *cli.Context, connectionRealm string, connectionClient string) (*AuthToken, *SecError) {
 
 	cliHostname := strings.TrimSpace(strings.ToLower(c.String("host")))
 	cliUsername := strings.TrimSpace(strings.ToLower(c.String("username")))
@@ -124,7 +124,7 @@ func SecAuthenticate(c *cli.Context, connectionRealm string, connectionClient st
 	req.Header.Add("cache-control", "no-cache")
 
 	// send request
-	res, err := http.DefaultClient.Do(req)
+	res, err := httpClient.Do(req)
 	if err != nil {
 		return nil, &SecError{errOpConnection, err, err.Error()}
 	}
@@ -133,11 +133,11 @@ func SecAuthenticate(c *cli.Context, connectionRealm string, connectionClient st
 
 	// Handle special case http status codes
 	switch httpCode := res.StatusCode; {
-	case httpCode == 400, httpCode == 401:
+	case httpCode == http.StatusBadRequest, httpCode == http.StatusUnauthorized:
 		keycloakAPIError := parseKeycloakError(string(body), res.StatusCode)
 		kcError := errors.New(string(keycloakAPIError.ErrorDescription))
 		return nil, &SecError{keycloakAPIError.Error, kcError, kcError.Error()}
-	case httpCode != 200:
+	case httpCode != http.StatusOK:
 		err = errors.New(string(body))
 		return nil, &SecError{errOpResponse, err, err.Error()}
 	}

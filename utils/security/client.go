@@ -50,7 +50,7 @@ func SecClientCreate(c *cli.Context) *SecError {
 
 	// authenticate if needed
 	if accesstoken == "" {
-		authToken, err := SecAuthenticate(c, KeycloakMasterRealm, KeycloakAdminClientID)
+		authToken, err := SecAuthenticate(http.DefaultClient, c, KeycloakMasterRealm, KeycloakAdminClientID)
 		if err != nil || authToken == nil {
 			return err
 		}
@@ -114,7 +114,7 @@ func SecClientGet(c *cli.Context) (*RegisteredClient, *SecError) {
 
 	// authenticate if needed
 	if accesstoken == "" {
-		authToken, err := SecAuthenticate(c, KeycloakMasterRealm, KeycloakAdminClientID)
+		authToken, err := SecAuthenticate(http.DefaultClient, c, KeycloakMasterRealm, KeycloakAdminClientID)
 		if err != nil || authToken == nil {
 			return nil, err
 		}
@@ -137,7 +137,7 @@ func SecClientGet(c *cli.Context) (*RegisteredClient, *SecError) {
 	defer res.Body.Close()
 
 	// handle HTTP status codes
-	if res.StatusCode != 200 {
+	if res.StatusCode != http.StatusOK {
 		body, _ := ioutil.ReadAll(res.Body)
 		err = errors.New(string(body))
 		return nil, &SecError{errOpResponse, err, err.Error()}
@@ -168,7 +168,7 @@ func SecClientGetSecret(c *cli.Context) (*RegisteredClientSecret, *SecError) {
 
 	// authenticate if needed
 	if accesstoken == "" {
-		authToken, err := SecAuthenticate(c, KeycloakMasterRealm, KeycloakAdminClientID)
+		authToken, err := SecAuthenticate(http.DefaultClient, c, KeycloakMasterRealm, KeycloakAdminClientID)
 		if err != nil || authToken == nil {
 			return nil, err
 		}
@@ -201,7 +201,7 @@ func SecClientGetSecret(c *cli.Context) (*RegisteredClientSecret, *SecError) {
 	defer res.Body.Close()
 
 	// handle HTTP status codes
-	if res.StatusCode != 200 {
+	if res.StatusCode != http.StatusOK {
 		body, _ := ioutil.ReadAll(res.Body)
 		err = errors.New(string(body))
 		return nil, &SecError{errOpResponse, err, err.Error()}
