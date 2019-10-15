@@ -350,8 +350,6 @@ func Commands() {
 						cli.StringFlag{Name: "host", Usage: "URL or ingress to Keycloak service", Required: true},
 						cli.StringFlag{Name: "newrealm,r", Usage: "New realm name", Required: true},
 						cli.StringFlag{Name: "accesstoken,t", Usage: "Admin access_token", Required: false},
-						cli.StringFlag{Name: "username,u", Usage: "Admin Username", Required: false},
-						cli.StringFlag{Name: "password,p", Usage: "Admin Password", Required: false},
 					},
 					Action: func(c *cli.Context) error {
 						SecurityCreateRealm(c)
@@ -499,13 +497,10 @@ func Commands() {
 					Aliases: []string{"rm"},
 					Usage:   "Remove a deployment from the configuration file",
 					Flags: []cli.Flag{
-						cli.StringFlag{Name: "id", Usage: "The reference ID of the deployment to be removed", Required: true},
+						cli.StringFlag{Name: "depid,d", Usage: "The reference ID of the deployment to be removed", Required: true},
 					},
 					Action: func(c *cli.Context) error {
-						if c.NumFlags() != 1 {
-						} else {
-							DeploymentRemoveFromList(c)
-						}
+						DeploymentRemoveFromList(c)
 						return nil
 					},
 				},
@@ -514,7 +509,7 @@ func Commands() {
 					Aliases: []string{"t"},
 					Usage:   "Show/Change the current target deployment",
 					Flags: []cli.Flag{
-						cli.StringFlag{Name: "id", Usage: "The deployment id of the target to switch to"},
+						cli.StringFlag{Name: "depid,d", Usage: "The deployment id of the target to switch to"},
 					},
 					Action: func(c *cli.Context) error {
 						if c.NumFlags() == 0 {

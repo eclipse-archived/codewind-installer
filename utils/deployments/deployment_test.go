@@ -117,7 +117,7 @@ func Test_SwitchTarget(t *testing.T) {
 	newID := allDeployments[1].ID
 
 	set := flag.NewFlagSet("tests", 0)
-	set.String("id", newID, "doc")
+	set.String("depid", newID, "doc")
 	c := cli.NewContext(nil, set, nil)
 	t.Run("Assert target switches to remoteserver", func(t *testing.T) {
 		SetTargetDeployment(c)
@@ -144,7 +144,7 @@ func Test_RemoveDeploymentFromList(t *testing.T) {
 
 	idToDelete := allDeployments[1].ID
 
-	set.String("id", idToDelete, "doc")
+	set.String("depid", idToDelete, "doc")
 	c := cli.NewContext(nil, set, nil)
 
 	t.Run("Check we have 2 deployments", func(t *testing.T) {

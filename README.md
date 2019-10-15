@@ -157,7 +157,7 @@ Subcommands:</br>
 > --username value              Account Username
 > --password value              Account Password
 > --client value                Client
-> --depid value                 Use connection details from a deployment configuration
+> --depid,-d value              Use connection details from a deployment configuration
 
 ## secrealm
 
@@ -169,8 +169,6 @@ Subcommands:</br>
 > --host value                   URL or ingress to Keycloak service
 > --newrealm value               Application realm to be created
 > --accesstoken value            Admin access_token
-> --username value               Admin Username
-> --password value               Admin Password
 
 ## secclient
 
@@ -183,8 +181,6 @@ Subcommands:</br>
 > --newclient value              New client ID to create
 > --redirect value               Allowed redirect callback URL eg: `http://127.0.0.1:9090/*`
 > --accesstoken value            Admin access_token
-> --username value               Admin Username
-> --password value               Admin Password
 
 `get/g` - Get client id (requires either admin_token or username/password)
 
@@ -210,13 +206,13 @@ Subcommands:</br>
 
 `update/u` - Add new or update existing Codewind credentials key in keyring
 
-> --depid `<value>`                 Deployment ID (see the deployments cmd)
+> --depid,-d `<value>`              Deployment ID (see the deployments cmd)
 > --username `<value>`              Username
 > --password `<value>`              Password
 
 `validate/v` - Checks if credentials key exist in the keyring
 
-> --depid `<value>`                 Deployment ID (see the deployments cmd)
+> --depid,-d `<value>`              Deployment ID (see the deployments cmd)
 > --username `<value>`              Username
 
 ## secuser
@@ -264,12 +260,12 @@ Subcommands:</br>
 `remove/rm` - Remove a deployment from the list
 
 > **Flags:**
-> --id value     A deployment reference id
+> --depid,-d value     A deployment id
 
 `target/t` - Show/Change the current target deployment
 
 > *Note:* Not supplying any flag will return the current selected target
-> --id value  The deployment id of the target to switch to
+> --depid,-d value  The deployment id of the target to switch to
 
 
 `list/ls` - List known deployments

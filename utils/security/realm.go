@@ -28,15 +28,6 @@ func SecRealmCreate(c *cli.Context) *SecError {
 	newRealm := strings.TrimSpace(c.String("newrealm"))
 	accesstoken := strings.TrimSpace(c.String("accesstoken"))
 
-	// Authenticate if needed
-	if accesstoken == "" {
-		authToken, err := SecAuthenticate(http.DefaultClient, c, KeycloakMasterRealm, KeycloakAdminClientID)
-		if err != nil || authToken == nil {
-			return err
-		}
-		accesstoken = authToken.AccessToken
-	}
-
 	themeToUse, secErr := GetSuggestedTheme(hostname, accesstoken)
 	if secErr != nil {
 		return secErr

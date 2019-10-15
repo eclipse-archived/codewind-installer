@@ -48,15 +48,6 @@ func SecClientCreate(c *cli.Context) *SecError {
 	newclient := strings.TrimSpace(c.String("newclient"))
 	redirectURL := strings.TrimSpace(c.String("redirect"))
 
-	// authenticate if needed
-	if accesstoken == "" {
-		authToken, err := SecAuthenticate(http.DefaultClient, c, KeycloakMasterRealm, KeycloakAdminClientID)
-		if err != nil || authToken == nil {
-			return err
-		}
-		accesstoken = authToken.AccessToken
-	}
-
 	// build REST request
 	url := hostname + "/auth/admin/realms/" + realm + "/clients"
 

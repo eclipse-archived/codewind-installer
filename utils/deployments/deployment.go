@@ -132,7 +132,7 @@ func GetDeploymentsConfig() (*DeploymentConfig, *DepError) {
 
 // SetTargetDeployment : If the deployment is unknown return an error
 func SetTargetDeployment(c *cli.Context) *DepError {
-	newTargetName := c.String("id")
+	newTargetName := c.String("depid")
 	data, depErr := loadDeploymentsConfigFile()
 	if depErr != nil {
 		return depErr
@@ -212,8 +212,8 @@ func AddDeploymentToList(httpClient utils.HTTPClient, c *cli.Context) *DepError 
 
 // RemoveDeploymentFromList : Removes the stored entry
 func RemoveDeploymentFromList(c *cli.Context) *DepError {
-	id := c.String("id")
-	if strings.EqualFold(id, "local") {
+	id := strings.ToUpper(c.String("depid"))
+	if strings.EqualFold(id, "LOCAL") {
 		depError := errors.New("Local is a required deployment and must not be removed")
 		return &DepError{errOpProtected, depError, depError.Error()}
 	}

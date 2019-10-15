@@ -41,10 +41,10 @@ type ServerInfo struct {
 }
 
 // GetServerInfo - fetch Keycloak server info
-func GetServerInfo(hostname string, accesstoken string) (*ServerInfo, *SecError) {
+func GetServerInfo(keycloakHostname string, accesstoken string) (*ServerInfo, *SecError) {
 
 	// build REST request
-	url := hostname + "/auth/admin/serverinfo"
+	url := keycloakHostname + "/auth/admin/serverinfo"
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, &SecError{errOpConnection, err, err.Error()}
@@ -86,8 +86,8 @@ func GetServerInfo(hostname string, accesstoken string) (*ServerInfo, *SecError)
 }
 
 // GetSuggestedTheme - Recommends the Codewind theme, else Che, else keycloak default
-func GetSuggestedTheme(hostname string, accesstoken string) (string, *SecError) {
-	serverInfo, secErr := GetServerInfo(hostname, accesstoken)
+func GetSuggestedTheme(keycloakHostname string, accesstoken string) (string, *SecError) {
+	serverInfo, secErr := GetServerInfo(keycloakHostname, accesstoken)
 	if secErr != nil {
 		return "", secErr
 	}
