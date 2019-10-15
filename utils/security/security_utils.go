@@ -13,7 +13,6 @@ package security
 
 import (
 	"encoding/json"
-	"net/http"
 )
 
 // KeycloakMasterRealm : master realm name
@@ -93,9 +92,4 @@ func parseKeycloakError(body string, httpCode int) *KeycloakAPIError {
 		keycloakAPIError.ErrorDescription = keycloakAPIError.ErrorMessage
 	}
 	return &keycloakAPIError
-}
-
-// HTTPClient : An HTTP Client to simplify testing
-type HTTPClient interface {
-	Do(req *http.Request) (*http.Response, error)
 }

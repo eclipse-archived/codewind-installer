@@ -14,6 +14,7 @@ package actions
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 
 	"github.com/eclipse/codewind-installer/utils/deployments"
@@ -22,7 +23,7 @@ import (
 
 // DeploymentAddToList : Add new deployment to the deployments config file
 func DeploymentAddToList(c *cli.Context) {
-	err := deployments.AddDeploymentToList(c)
+	err := deployments.AddDeploymentToList(http.DefaultClient, c)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(0)

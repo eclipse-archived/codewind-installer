@@ -161,7 +161,7 @@ func SetTargetDeployment(c *cli.Context) *DepError {
 }
 
 // AddDeploymentToList : validates then adds a new deployment to the deployment config
-func AddDeploymentToList(c *cli.Context) *DepError {
+func AddDeploymentToList(httpClient utils.HTTPClient, c *cli.Context) *DepError {
 	deploymentID := strings.ToUpper(strconv.FormatInt(utils.CreateTimestamp(), 36))
 	label := strings.TrimSpace(c.String("label"))
 	url := strings.TrimSpace(c.String("url"))
@@ -181,7 +181,7 @@ func AddDeploymentToList(c *cli.Context) *DepError {
 		}
 	}
 
-	gatekeeperEnv, err := apiroutes.GetGatekeeperEnvironment(url)
+	gatekeeperEnv, err := apiroutes.GetGatekeeperEnvironment(httpClient, url)
 	if err != nil {
 		return &DepError{errOpGetEnv, err, err.Error()}
 	}

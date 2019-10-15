@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/eclipse/codewind-installer/utils"
 	"github.com/eclipse/codewind-installer/utils/deployments"
 	"github.com/urfave/cli"
 )
@@ -35,7 +36,7 @@ type AuthToken struct {
 
 // SecAuthenticate - sends credentials to the auth server for a specific realm and returns an AuthToken
 // connectionRealm can be used to override the supplied context arguments
-func SecAuthenticate(httpClient HTTPClient, c *cli.Context, connectionRealm string, connectionClient string) (*AuthToken, *SecError) {
+func SecAuthenticate(httpClient utils.HTTPClient, c *cli.Context, connectionRealm string, connectionClient string) (*AuthToken, *SecError) {
 
 	cliHostname := strings.TrimSpace(strings.ToLower(c.String("host")))
 	cliUsername := strings.TrimSpace(strings.ToLower(c.String("username")))

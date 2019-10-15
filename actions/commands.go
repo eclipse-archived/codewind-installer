@@ -487,7 +487,7 @@ func Commands() {
 					Usage:   "Add a new deployment to the configuration file",
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "label", Usage: "A displayable name", Required: true},
-						cli.StringFlag{Name: "url", Usage: "The ingress URL of the PFE instance", Required: true},
+						cli.StringFlag{Name: "url", Usage: "The ingress URL of Codewind gatekeeper", Required: true},
 					},
 					Action: func(c *cli.Context) error {
 						DeploymentAddToList(c)

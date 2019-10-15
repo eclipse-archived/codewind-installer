@@ -15,6 +15,8 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/eclipse/codewind-installer/utils"
 )
 
 // GatekeeperEnvironment : Codewind Gatekeeper Environment
@@ -25,14 +27,26 @@ type GatekeeperEnvironment struct {
 }
 
 // GetGatekeeperEnvironment : Fetch the Gatekeeper environment
-func GetGatekeeperEnvironment(host string) (*GatekeeperEnvironment, error) {
+func GetGatekeeperEnvironment(httpClient utils.HTTPClient, host string) (*GatekeeperEnvironment, error) {
 
-	resp, err := http.Get(host + "/api/v1/gatekeeper/environment")
+	// build REST request
+	url := host + "/api/v1/gatekeeper/environment"
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
-	byteArray, err := ioutil.ReadAll(resp.Body)
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Cache-Control", "no-cache")
+	req.Header.Add("cache-control", "no-cache")
+
+	// send request
+	res, err := httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	byteArray, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}

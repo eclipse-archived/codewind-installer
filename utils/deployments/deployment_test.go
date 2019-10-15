@@ -12,13 +12,30 @@
 package deployments
 
 import (
+	"bytes"
+	"encoding/json"
 	"flag"
+	"io"
 	"io/ioutil"
+	"net/http"
 	"testing"
 
+	"github.com/eclipse/codewind-installer/apiroutes"
 	"github.com/stretchr/testify/assert"
 	"github.com/urfave/cli"
 )
+
+type ClientMockServerConfig struct {
+	StatusCode int
+	Body       io.ReadCloser
+}
+
+func (c *ClientMockServerConfig) Do(req *http.Request) (*http.Response, error) {
+	return &http.Response{
+		StatusCode: c.StatusCode,
+		Body:       c.Body,
+	}, nil
+}
 
 // Test_SchemaUpgrade01 :  Upgrade schema tests from Version 0 to Version 1
 func Test_SchemaUpgrade0to1(t *testing.T) {
@@ -65,19 +82,22 @@ func Test_GetActiveDeployment(t *testing.T) {
 
 // Test_CreateNewDeployment :  Adds a new deployment to the list called remoteserver
 func Test_CreateNewDeployment(t *testing.T) {
-	t.Skip("skipping test")
 	set := flag.NewFlagSet("tests", 0)
-	set.String("id", "remoteserver", "just an id")
 	set.String("label", "MyRemoteServer", "just a label")
 	set.String("url", "https://codewind.server.remote", "Codewind URL")
-	set.String("auth", "https://auth.server.remote:8443", "Auth URL")
-	set.String("realm", "codewind", "Security realm")
-	set.String("clientid", "cw-ctl", "ID of client")
-
 	c := cli.NewContext(nil, set, nil)
+
 	ResetDeploymentsFile()
+
+	mockResponse := apiroutes.GatekeeperEnvironment{AuthURL: "http://a.mock.auth.server.remote:1234", Realm: "remoteRealm", ClientID: "remoteClient"}
+	jsonResponse, _ := json.Marshal(mockResponse)
+	body := ioutil.NopCloser(bytes.NewReader([]byte(jsonResponse)))
+
+	// construct a http client with our mock canned response
+	mockClient := &ClientMockServerConfig{StatusCode: http.StatusOK, Body: body}
+
 	t.Run("Adds new deployment to the config", func(t *testing.T) {
-		AddDeploymentToList(c)
+		AddDeploymentToList(mockClient, c)
 		result, err := GetDeploymentsConfig()
 		if err != nil {
 			t.Fail()
@@ -86,11 +106,18 @@ func Test_CreateNewDeployment(t *testing.T) {
 	})
 }
 
-// Test_SwitchTarget : Switches the target from one deployment to one called remoteserver
+// Test_SwitchTarget : Switches the target to the last one added
 func Test_SwitchTarget(t *testing.T) {
-	t.Skip("skipping test")
+
+	allDeployments, err := GetAllDeployments()
+	if err != nil {
+		t.Fail()
+	}
+
+	newID := allDeployments[1].ID
+
 	set := flag.NewFlagSet("tests", 0)
-	set.String("id", "remoteserver", "doc")
+	set.String("id", newID, "doc")
 	c := cli.NewContext(nil, set, nil)
 	t.Run("Assert target switches to remoteserver", func(t *testing.T) {
 		SetTargetDeployment(c)
@@ -98,20 +125,26 @@ func Test_SwitchTarget(t *testing.T) {
 		if err != nil {
 			t.Fail()
 		}
-		assert.Equal(t, "remoteserver", result.ID)
 		assert.Equal(t, "MyRemoteServer", result.Label)
 		assert.Equal(t, "https://codewind.server.remote", result.URL)
-		assert.Equal(t, "https://auth.server.remote:8443", result.AuthURL)
-		assert.Equal(t, "codewind", result.Realm)
-		assert.Equal(t, "cw-ctl", result.ClientID)
+		assert.Equal(t, "http://a.mock.auth.server.remote:1234", result.AuthURL)
+		assert.Equal(t, "remoteRealm", result.Realm)
+		assert.Equal(t, "remoteClient", result.ClientID)
 	})
 }
 
 // Test_RemoveDeploymentFromList : Adds a new deployment to the stored list
 func Test_RemoveDeploymentFromList(t *testing.T) {
-	t.Skip("skipping test")
 	set := flag.NewFlagSet("tests", 0)
-	set.String("id", "remoteserver", "doc")
+
+	allDeployments, err := GetAllDeployments()
+	if err != nil {
+		t.Fail()
+	}
+
+	idToDelete := allDeployments[1].ID
+
+	set.String("id", idToDelete, "doc")
 	c := cli.NewContext(nil, set, nil)
 
 	t.Run("Check we have 2 deployments", func(t *testing.T) {
@@ -122,15 +155,15 @@ func Test_RemoveDeploymentFromList(t *testing.T) {
 		assert.Len(t, result.Deployments, 2)
 	})
 
-	t.Run("Check current target is 'remoteserver'", func(t *testing.T) {
+	t.Run("Check current target host url is https://codewind.server.remote", func(t *testing.T) {
 		result, err := FindTargetDeployment()
 		if err != nil {
 			t.Fail()
 		}
-		assert.Equal(t, "remoteserver", result.ID)
+		assert.Equal(t, "https://codewind.server.remote", result.URL)
 	})
 
-	t.Run("Remove the remoteserver deployment", func(t *testing.T) {
+	t.Run("Remove the https://codewind.server.remote deployment", func(t *testing.T) {
 		RemoveDeploymentFromList(c)
 		result, err := GetDeploymentsConfig()
 		if err != nil {
