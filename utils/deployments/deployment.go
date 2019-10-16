@@ -117,7 +117,7 @@ func GetDeploymentByID(depID string) (*Deployment, *DepError) {
 			return &deployment, nil
 		}
 	}
-	depError := errors.New("Deployment " + depID + " not found")
+	depError := errors.New("Deployment " + strings.ToUpper(depID) + " not found")
 	return nil, &DepError{errOpNotFound, depError, depError.Error()}
 }
 
@@ -213,10 +213,18 @@ func AddDeploymentToList(httpClient utils.HTTPClient, c *cli.Context) *DepError 
 // RemoveDeploymentFromList : Removes the stored entry
 func RemoveDeploymentFromList(c *cli.Context) *DepError {
 	id := strings.ToUpper(c.String("depid"))
+
 	if strings.EqualFold(id, "LOCAL") {
 		depError := errors.New("Local is a required deployment and must not be removed")
 		return &DepError{errOpProtected, depError, depError.Error()}
 	}
+
+	// check deployment has been registered
+	_, depErr := GetDeploymentByID(id)
+	if depErr != nil {
+		return depErr
+	}
+
 	data, depErr := loadDeploymentsConfigFile()
 	if depErr != nil {
 		return depErr
