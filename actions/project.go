@@ -145,7 +145,10 @@ func ValidateProject(c *cli.Context) {
 	projectInfo, err := json.Marshal(response)
 
 	errors.CheckErr(err, 203, "")
-	writeCwSettingsIfNotInProject(projectPath, buildType)
+	// write settings file only for non-extension projects
+	if extensionType == "" {
+		writeCwSettingsIfNotInProject(projectPath, buildType)
+	}
 	fmt.Println(string(projectInfo))
 }
 

@@ -12,8 +12,10 @@
 package actions
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/eclipse/codewind-installer/utils"
 	"github.com/eclipse/codewind-installer/utils/security"
@@ -117,5 +119,34 @@ func SecurityUserSetPassword(c *cli.Context) {
 		os.Exit(0)
 	}
 	utils.PrettyPrintJSON(security.Result{Status: "OK"})
+	os.Exit(0)
+}
+
+// SecurityKeyUpdate : Creates or updates a key in the platforms keyring
+func SecurityKeyUpdate(c *cli.Context) {
+	deploymentID := strings.TrimSpace(strings.ToLower(c.String("depid")))
+	username := strings.TrimSpace(strings.ToLower(c.String("username")))
+	password := strings.TrimSpace(c.String("password"))
+	err := security.SecKeyUpdate(deploymentID, username, password)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(0)
+	}
+	response, _ := json.Marshal(security.Result{Status: "OK"})
+	fmt.Println(string(response))
+	os.Exit(0)
+}
+
+// SecurityKeyValidate : Checks the key is available in the platform keyring
+func SecurityKeyValidate(c *cli.Context) {
+	deploymentID := strings.TrimSpace(strings.ToLower(c.String("depid")))
+	username := strings.TrimSpace(strings.ToLower(c.String("username")))
+	_, err := security.SecKeyGetSecret(deploymentID, username)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(0)
+	}
+	response, _ := json.Marshal(security.Result{Status: "OK"})
+	fmt.Println(string(response))
 	os.Exit(0)
 }

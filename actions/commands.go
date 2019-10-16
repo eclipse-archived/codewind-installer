@@ -304,6 +304,39 @@ func Commands() {
 			},
 		},
 		{
+			Name:    "seckeyring",
+			Aliases: []string{"sk"},
+			Usage:   "Manage the desktop keyring",
+			Subcommands: []cli.Command{
+				{
+					Name:    "update",
+					Aliases: []string{"u"},
+					Usage:   "Add new or update existing Codewind credentials in the keyring",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "depid,d", Usage: "Deployment ID (see the deployments cmd)", Required: true},
+						cli.StringFlag{Name: "username,u", Usage: "Username", Required: true},
+						cli.StringFlag{Name: "password,p", Usage: "New password", Required: true},
+					},
+					Action: func(c *cli.Context) error {
+						SecurityKeyUpdate(c)
+						return nil
+					},
+				}, {
+					Name:    "validate",
+					Aliases: []string{"v"},
+					Usage:   "Checks if Codewind credentials exist in the keyring",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "depid,d", Usage: "Keycloak login ID", Required: true},
+						cli.StringFlag{Name: "username,u", Usage: "Username", Required: true},
+					},
+					Action: func(c *cli.Context) error {
+						SecurityKeyValidate(c)
+						return nil
+					},
+				},
+			},
+		},
+		{
 			Name:    "secrealm",
 			Aliases: []string{"sr"},
 			Usage:   "Manage Realm configuration",
@@ -314,7 +347,7 @@ func Commands() {
 					Usage:   "Create a new realm (requires either admin_token or username/password)",
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "host", Usage: "URL or ingress to Keycloak service", Required: true},
-						cli.StringFlag{Name: "realm,r", Usage: "Existing realm name", Required: true},
+						cli.StringFlag{Name: "newrealm,r", Usage: "New realm name", Required: true},
 						cli.StringFlag{Name: "accesstoken,t", Usage: "Admin access_token", Required: false},
 						cli.StringFlag{Name: "username,u", Usage: "Admin Username", Required: false},
 						cli.StringFlag{Name: "password,p", Usage: "Admin Password", Required: false},
@@ -336,8 +369,8 @@ func Commands() {
 					Usage:   "Create a new client in a Keycloak realm (requires either admin_token or username/password)",
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "host", Usage: "URL or ingress to Keycloak service", Required: true},
-						cli.StringFlag{Name: "realm,r", Usage: "Realm name", Required: true},
-						cli.StringFlag{Name: "clientid,c", Usage: "New client ID to create", Required: true},
+						cli.StringFlag{Name: "realm,r", Usage: "Realm where client should be created", Required: true},
+						cli.StringFlag{Name: "newclient,c", Usage: "New client ID to create", Required: true},
 						cli.StringFlag{Name: "redirect,l", Usage: "Redirect URL", Required: false},
 						cli.StringFlag{Name: "accesstoken,t", Usage: "Admin access_token", Required: false},
 						cli.StringFlag{Name: "username,u", Usage: "Admin Username", Required: false},
@@ -355,7 +388,7 @@ func Commands() {
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "host", Usage: "URL or ingress to Keycloak service", Required: false},
 						cli.StringFlag{Name: "realm,r", Usage: "Realm name", Required: true},
-						cli.StringFlag{Name: "clientid,c", Usage: "New client ID to create", Required: true},
+						cli.StringFlag{Name: "clientid,c", Usage: "Client ID to retrieve", Required: true},
 						cli.StringFlag{Name: "accesstoken,t", Usage: "Admin access_token", Required: false},
 						cli.StringFlag{Name: "username,u", Usage: "Admin Username", Required: false},
 						cli.StringFlag{Name: "password,p", Usage: "Admin Password", Required: false},
@@ -372,7 +405,7 @@ func Commands() {
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "host", Usage: "URL or ingress to Keycloak service", Required: false},
 						cli.StringFlag{Name: "realm,r", Usage: "Realm name", Required: true},
-						cli.StringFlag{Name: "clientid,c", Usage: "Client id", Required: true},
+						cli.StringFlag{Name: "clientid,c", Usage: "Client ID to retrieve", Required: true},
 						cli.StringFlag{Name: "accesstoken,t", Usage: "Admin access_token", Required: false},
 						cli.StringFlag{Name: "username,u", Usage: "Admin Username", Required: false},
 						cli.StringFlag{Name: "password,p", Usage: "Admin Password", Required: false},
@@ -396,7 +429,7 @@ func Commands() {
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "host", Usage: "URL or ingress to Keycloak service", Required: false},
 						cli.StringFlag{Name: "realm,r", Usage: "Realm name", Required: true},
-						cli.StringFlag{Name: "admintoken,t", Usage: "Admin access_token", Required: false},
+						cli.StringFlag{Name: "accesstoken,t", Usage: "Admin access_token", Required: false},
 						cli.StringFlag{Name: "username,u", Usage: "Admin Username", Required: false},
 						cli.StringFlag{Name: "password,p", Usage: "Admin Password", Required: false},
 						cli.StringFlag{Name: "name,n", Usage: "Username to add", Required: true},
@@ -412,7 +445,7 @@ func Commands() {
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "host", Usage: "URL or ingress to Keycloak service", Required: false},
 						cli.StringFlag{Name: "realm,r", Usage: "Realm name", Required: true},
-						cli.StringFlag{Name: "admintoken,t", Usage: "Admin access_token", Required: false},
+						cli.StringFlag{Name: "accesstoken,t", Usage: "Admin access_token", Required: false},
 						cli.StringFlag{Name: "username,u", Usage: "Admin Username", Required: false},
 						cli.StringFlag{Name: "password,p", Usage: "Admin Password", Required: false},
 						cli.StringFlag{Name: "name,n", Usage: "Username to retrieve", Required: true},
@@ -460,7 +493,7 @@ func Commands() {
 						cli.StringFlag{Name: "clientid", Usage: "Security client_id to connect as eg: codewind_ctl or che-public", Required: false},
 					},
 					Action: func(c *cli.Context) error {
-						AddDeploymentToList(c)
+						DeploymentAddToList(c)
 						return nil
 					},
 				},
@@ -474,7 +507,7 @@ func Commands() {
 					Action: func(c *cli.Context) error {
 						if c.NumFlags() != 1 {
 						} else {
-							RemoveDeploymentFromList(c)
+							DeploymentRemoveFromList(c)
 						}
 						return nil
 					},
@@ -488,9 +521,9 @@ func Commands() {
 					},
 					Action: func(c *cli.Context) error {
 						if c.NumFlags() == 0 {
-							ListTargetDeployment()
+							DeploymentGetTarget()
 						} else {
-							SetTargetDeployment(c)
+							DeploymentSetTarget(c)
 						}
 						return nil
 					},
@@ -500,7 +533,7 @@ func Commands() {
 					Aliases: []string{"ls"},
 					Usage:   "List known deployments",
 					Action: func(c *cli.Context) error {
-						ListDeployments()
+						DeploymentListAll()
 						return nil
 					},
 				},
@@ -508,7 +541,7 @@ func Commands() {
 					Name:  "reset",
 					Usage: "Resets the deployments list",
 					Action: func(c *cli.Context) error {
-						ResetDeploymentsFile()
+						DeploymentResetList()
 						return nil
 					},
 				},

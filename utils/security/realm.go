@@ -1,3 +1,14 @@
+/*******************************************************************************
+ * Copyright (c) 2019 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v2.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v20.html
+ *
+ * Contributors:
+ *     IBM Corporation - initial API and implementation
+ *******************************************************************************/
+
 package security
 
 import (
@@ -14,7 +25,7 @@ import (
 func SecRealmCreate(c *cli.Context) *SecError {
 
 	hostname := strings.TrimSpace(strings.ToLower(c.String("host")))
-	realm := strings.TrimSpace(c.String("realm"))
+	newRealm := strings.TrimSpace(c.String("newrealm"))
 	accesstoken := strings.TrimSpace(c.String("accesstoken"))
 
 	// Authenticate if needed
@@ -24,6 +35,11 @@ func SecRealmCreate(c *cli.Context) *SecError {
 			return err
 		}
 		accesstoken = authToken.AccessToken
+	}
+
+	themeToUse, secErr := GetSuggestedTheme(hostname, accesstoken)
+	if secErr != nil {
+		return secErr
 	}
 
 	// build REST request
@@ -38,10 +54,10 @@ func SecRealmCreate(c *cli.Context) *SecError {
 		AccessTokenLifespan int    `json:"accessTokenLifespan"`
 	}
 	tempRealm := &PayloadRealm{
-		Realm:               realm,
-		DisplayName:         realm,
+		Realm:               newRealm,
+		DisplayName:         newRealm,
 		Enabled:             true,
-		LoginTheme:          "codewind",
+		LoginTheme:          themeToUse,
 		AccessTokenLifespan: 86400,
 	}
 
