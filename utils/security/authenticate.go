@@ -150,21 +150,23 @@ func SecAuthenticate(httpClient utils.HTTPClient, c *cli.Context, connectionReal
 		return nil, &SecError{errOpResponseFormat, err, textUnableToParse}
 	}
 
-	// store access and refresh tokens in keyring
-	secErr := SecKeyUpdate(deploymentID, "access_token", authToken.AccessToken)
-	if secErr != nil {
-		return &authToken, secErr
-	}
-	secErr = SecKeyUpdate(deploymentID, "refresh_token", authToken.RefreshToken)
-	if secErr != nil {
-		return &authToken, secErr
-	}
-
-	// login successful, update users password in keyring
-	if password != "" {
-		secErr = SecKeyUpdate(deploymentID, username, password)
+	// store access and refresh tokens in keyring if a deployment is known
+	if deployment != nil {
+		secErr := SecKeyUpdate(deploymentID, "access_token", authToken.AccessToken)
 		if secErr != nil {
 			return &authToken, secErr
+		}
+		secErr = SecKeyUpdate(deploymentID, "refresh_token", authToken.RefreshToken)
+		if secErr != nil {
+			return &authToken, secErr
+		}
+
+		// login successful, update users password in keyring
+		if password != "" {
+			secErr = SecKeyUpdate(deploymentID, username, password)
+			if secErr != nil {
+				return &authToken, secErr
+			}
 		}
 	}
 
