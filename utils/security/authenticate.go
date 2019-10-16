@@ -57,8 +57,8 @@ func SecAuthenticate(httpClient utils.HTTPClient, c *cli.Context, connectionReal
 	realm := ""
 	client := ""
 
+	// Check deployment is known
 	deployment, depErr := deployments.GetDeploymentByID(deploymentID)
-
 	if deploymentID != "" && depErr != nil {
 		return nil, &SecError{errOpDepConfig, depErr.Err, depErr.Desc}
 	}

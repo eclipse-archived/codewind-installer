@@ -50,6 +50,8 @@ func Test_Authenticate(t *testing.T) {
 	set.String("username", "testuser", "doc")
 	set.String("password", "testpassword", "doc")
 	set.String("client", "testclient", "doc")
+	set.String("depid", "local", "doc") // must be a valid deployment (using local which will always exist)
+
 	c := cli.NewContext(nil, set, nil)
 
 	t.Run("Expect authentication failure - invalid credentials", func(t *testing.T) {
