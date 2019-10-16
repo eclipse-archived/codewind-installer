@@ -15,28 +15,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"flag"
-	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/urfave/cli"
+	"github.com/zalando/go-keyring"
 )
-
-// ClientMockAuthenticate: Client Mock with a concrete response and status code
-
-type ClientMockAuthenticate struct {
-	StatusCode int
-	Body       io.ReadCloser
-}
-
-func (c *ClientMockAuthenticate) Do(req *http.Request) (*http.Response, error) {
-	return &http.Response{
-		StatusCode: c.StatusCode,
-		Body:       c.Body,
-	}, nil
-}
 
 func Test_Authenticate(t *testing.T) {
 
@@ -47,14 +34,16 @@ func Test_Authenticate(t *testing.T) {
 	set := flag.NewFlagSet("tests", 0)
 	set.String("host", "https://mockserver/auth", "doc")
 	set.String("realm", "master", "doc")
-	set.String("username", "testuser", "doc")
+	set.String("username", testUsername, "doc")
 	set.String("password", "testpassword", "doc")
 	set.String("client", "testclient", "doc")
-	set.String("depid", "local", "doc") // must be a valid deployment (using local which will always exist)
+	set.String("depid", testDeployment, "doc") // must be a valid deployment (using local which will always exist)
 
 	c := cli.NewContext(nil, set, nil)
 
 	t.Run("Expect authentication failure - invalid credentials", func(t *testing.T) {
+
+		// create a keycloak error message
 		mockKeycloakResponse := KeycloakAPIError{HTTPStatus: http.StatusUnauthorized, Error: "invalid_grant", ErrorDescription: "Invalid user credentials"}
 		jsonResponse, _ := json.Marshal(mockKeycloakResponse)
 		body := ioutil.NopCloser(bytes.NewReader([]byte(jsonResponse)))
@@ -62,6 +51,7 @@ func Test_Authenticate(t *testing.T) {
 		// construct a http client with our mock canned response
 		mockClient := &ClientMockAuthenticate{StatusCode: http.StatusUnauthorized, Body: body}
 
+		// attempt authentication
 		_, secError := SecAuthenticate(mockClient, c, "codewind", "codewind")
 		if secError == nil {
 			t.Fail()
@@ -85,4 +75,9 @@ func Test_Authenticate(t *testing.T) {
 		assert.Equal(t, accessToken, retrievedSecrets.AccessToken)
 	})
 
+	t.Run("Cleanup stored access_token and refresh_token", func(t *testing.T) {
+		// Clean up test entries
+		keyring.Delete(strings.ToLower(KeyringServiceName+"."+testDeployment), "access_token")
+		keyring.Delete(strings.ToLower(KeyringServiceName+"."+testDeployment), "refresh_token")
+	})
 }
