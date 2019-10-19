@@ -269,6 +269,7 @@ func PathExists(path string) bool {
 	return false
 }
 
+// ReplaceInFiles the placeholder string "[PROJ_NAME_PLACEHOLDER]" with a generated name based on the project directory
 func ReplaceInFiles(projectPath string, oldStr string, newStr string) error {
 
 	oldBytes := []byte(oldStr)

@@ -37,6 +37,7 @@ func RemoveDuplicateEntries(inputArr []string) []string {
 	return result
 }
 
+// PrettyPrintJSON into a readable format
 func PrettyPrintJSON(i interface{}) {
 	s, _ := json.MarshalIndent(i, "", "\t")
 	fmt.Println(string(s))
