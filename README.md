@@ -260,7 +260,7 @@ Subcommands:</br>
 `get/g` - Get a deployment using its ID
 
 > **Flags:**
-> --depid value  The Deployment ID to retrieve
+> --depid,-d value   The Deployment ID to retrieve
 
 `remove/rm` - Remove a deployment from the list
 
