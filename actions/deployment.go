@@ -16,19 +16,40 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/eclipse/codewind-installer/utils/deployments"
 	"github.com/urfave/cli"
 )
 
-// DeploymentAddToList : Add new deployment to the deployments config file
+// DeploymentAddToList : Add new deployment to the deployments config file and returns the ID of the added entry
 func DeploymentAddToList(c *cli.Context) {
-	err := deployments.AddDeploymentToList(http.DefaultClient, c)
+	deployment, err := deployments.AddDeploymentToList(http.DefaultClient, c)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(0)
 	}
-	response, _ := json.Marshal(deployments.Result{Status: "OK", StatusMessage: "Deployment added"})
+
+	type Result struct {
+		Status        string `json:"status"`
+		StatusMessage string `json:"status_message"`
+		DepID         string `json:"id"`
+	}
+
+	response, _ := json.Marshal(Result{Status: "OK", StatusMessage: "Deployment added", DepID: strings.ToUpper(deployment.ID)})
+	fmt.Println(string(response))
+	os.Exit(0)
+}
+
+// DeploymentGetByID : Get deployment by its id
+func DeploymentGetByID(c *cli.Context) {
+	deploymentID := strings.TrimSpace(strings.ToLower(c.String("depid")))
+	deployment, err := deployments.GetDeploymentByID(deploymentID)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(0)
+	}
+	response, _ := json.Marshal(deployment)
 	fmt.Println(string(response))
 	os.Exit(0)
 }

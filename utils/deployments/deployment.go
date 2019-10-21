@@ -161,7 +161,7 @@ func SetTargetDeployment(c *cli.Context) *DepError {
 }
 
 // AddDeploymentToList : validates then adds a new deployment to the deployment config
-func AddDeploymentToList(httpClient utils.HTTPClient, c *cli.Context) *DepError {
+func AddDeploymentToList(httpClient utils.HTTPClient, c *cli.Context) (*Deployment, *DepError) {
 	deploymentID := strings.ToUpper(strconv.FormatInt(utils.CreateTimestamp(), 36))
 	label := strings.TrimSpace(c.String("label"))
 	url := strings.TrimSpace(c.String("url"))
@@ -170,20 +170,20 @@ func AddDeploymentToList(httpClient utils.HTTPClient, c *cli.Context) *DepError 
 	}
 	data, depErr := loadDeploymentsConfigFile()
 	if depErr != nil {
-		return depErr
+		return nil, depErr
 	}
 
 	// check the url and label are not already in use
 	for i := 0; i < len(data.Deployments); i++ {
 		if strings.EqualFold(label, data.Deployments[i].Label) || strings.EqualFold(url, data.Deployments[i].URL) {
 			depError := errors.New("Deployment ID: " + deploymentID + " already exists. To update, first remove and then re-add")
-			return &DepError{errOpConflict, depError, depError.Error()}
+			return nil, &DepError{errOpConflict, depError, depError.Error()}
 		}
 	}
 
 	gatekeeperEnv, err := apiroutes.GetGatekeeperEnvironment(httpClient, url)
 	if err != nil {
-		return &DepError{errOpGetEnv, err, err.Error()}
+		return nil, &DepError{errOpGetEnv, err, err.Error()}
 	}
 
 	// create the new deployment
@@ -200,14 +200,14 @@ func AddDeploymentToList(httpClient utils.HTTPClient, c *cli.Context) *DepError 
 	data.Deployments = append(data.Deployments, newDeployment)
 	body, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {
-		return &DepError{errOpFileParse, err, err.Error()}
+		return nil, &DepError{errOpFileParse, err, err.Error()}
 	}
 
 	err = ioutil.WriteFile(getDeploymentConfigFilename(), body, 0644)
 	if err != nil {
-		return &DepError{errOpFileWrite, err, err.Error()}
+		return nil, &DepError{errOpFileWrite, err, err.Error()}
 	}
-	return nil
+	return &newDeployment, nil
 }
 
 // RemoveDeploymentFromList : Removes the stored entry

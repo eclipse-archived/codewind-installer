@@ -493,6 +493,18 @@ func Commands() {
 					},
 				},
 				{
+					Name:    "get",
+					Aliases: []string{"g"},
+					Usage:   "Get a deployment config by id",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "depid", Usage: "A displayable name", Required: true},
+					},
+					Action: func(c *cli.Context) error {
+						DeploymentGetByID(c)
+						return nil
+					},
+				},
+				{
 					Name:    "remove",
 					Aliases: []string{"rm"},
 					Usage:   "Remove a deployment from the configuration file",
