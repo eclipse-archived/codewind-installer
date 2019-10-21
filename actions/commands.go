@@ -497,7 +497,7 @@ func Commands() {
 					Aliases: []string{"g"},
 					Usage:   "Get a deployment config by id",
 					Flags: []cli.Flag{
-						cli.StringFlag{Name: "depid", Usage: "A displayable name", Required: true},
+						cli.StringFlag{Name: "depid", Usage: "Deployment ID to retrieve", Required: true},
 					},
 					Action: func(c *cli.Context) error {
 						DeploymentGetByID(c)
