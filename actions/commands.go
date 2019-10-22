@@ -96,6 +96,50 @@ func Commands() {
 						return nil
 					},
 				},
+				{
+					Name:    "deployment",
+					Aliases: []string{"dep"},
+					Usage:   "Manage project deployments",
+					Subcommands: []cli.Command{
+						{
+							Name:    "add",
+							Aliases: []string{"a"},
+							Usage:   "Add a deployment target",
+							Flags: []cli.Flag{
+								cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
+								cli.StringFlag{Name: "depid,d", Usage: "Deployment ID", Required: true},
+							},
+							Action: func(c *cli.Context) error {
+								ProjectAddTargetDeployment(c)
+								return nil
+							},
+						},
+						{
+							Name:    "list",
+							Aliases: []string{"l"},
+							Usage:   "List the registered deployments for a project",
+							Flags: []cli.Flag{
+								cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
+							},
+							Action: func(c *cli.Context) error {
+								ProjectTargetList(c)
+								return nil
+							},
+						}, {
+							Name:    "remove",
+							Aliases: []string{"r"},
+							Usage:   "Remove a deployment target",
+							Flags: []cli.Flag{
+								cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
+								cli.StringFlag{Name: "depid,d", Usage: "Deployment ID", Required: true},
+							},
+							Action: func(c *cli.Context) error {
+								ProjectRemoveTargetDeployment(c)
+								return nil
+							},
+						},
+					},
+				},
 			},
 		},
 

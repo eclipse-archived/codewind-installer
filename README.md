@@ -106,6 +106,26 @@ $ brew upgrade dep
 
 `--url/-u <value>` - URL of project to download
 
+
+Subcommands:</br>
+
+`deployment/dep` - Manage the deployment targets for a project
+
+`add,a` - Add a deployment to a project
+> **Flags:**
+> --id,i value                  Project ID
+> --depid,d value               Deployment ID
+
+`list,l` - List deployments for a project
+> **Flags:**
+> --id,i value                  Project ID
+
+`remove,r` - Remove a deployment from a project
+> **Flags:**
+> --id,i value                  Project ID
+> --depid,d value               Deployment ID
+
+
 ## install
 
 `--tag/-t <value>` - Dockerhub image tag (default: "latest")</br>
