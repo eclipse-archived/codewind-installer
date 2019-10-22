@@ -61,9 +61,9 @@ func Commands() {
 					},
 					Action: func(c *cli.Context) error {
 						if c.String("u") != "" {
-							DownloadTemplate(c)
+							ProjectCreate(c)
 						}
-						ValidateProject(c)
+						ProjectValidate(c)
 						return nil
 					},
 				},
@@ -78,7 +78,7 @@ func Commands() {
 						cli.StringFlag{Name: "path, p", Usage: "the path to the project", Required: true},
 					},
 					Action: func(c *cli.Context) error {
-						BindProject(c)
+						ProjectBind(c)
 						return nil
 					},
 				},
@@ -92,7 +92,7 @@ func Commands() {
 						cli.StringFlag{Name: "time, t", Usage: "time of the last sync for the given project", Required: true},
 					},
 					Action: func(c *cli.Context) error {
-						SyncProject(c)
+						ProjectSync(c)
 						return nil
 					},
 				},
@@ -545,6 +545,18 @@ func Commands() {
 						return nil
 					},
 				},
+			},
+		},
+		{
+			Name:    "upgrade",
+			Aliases: []string{"up"},
+			Usage:   "Upgrade projects",
+			Flags: []cli.Flag{
+				cli.StringFlag{Name: "workspace, ws", Usage: "the workspace directory to upgrade, location of projects", Required: true},
+			},
+			Action: func(c *cli.Context) error {
+				UpgradeProjects(c)
+				return nil
 			},
 		},
 	}
