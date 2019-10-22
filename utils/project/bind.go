@@ -14,6 +14,7 @@ package project
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -80,8 +81,14 @@ func Bind(projectPath string, Name string, Language string, BuildType string) *P
 	if err != nil {
 		return &ProjectError{errBadType, err, err.Error()}
 	}
-	if resp.StatusCode == 400 {
-		return &ProjectError{errBadType, err, err.Error()}
+
+	switch httpCode := resp.StatusCode; {
+	case httpCode == 400:
+		err = errors.New(textInvalidType)
+		return &ProjectError{errOpResponse, err, textInvalidType}
+	case httpCode == 409:
+		err = errors.New(textDupName)
+		return &ProjectError{errOpResponse, err, textDupName}
 	}
 
 	defer resp.Body.Close()
