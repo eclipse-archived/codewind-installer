@@ -21,8 +21,15 @@ type ProjectError struct {
 }
 
 const (
-	errBadPath = "proj_path" // Invalid path provided
-	errBadType = "proj_type" // Invalid type provided
+	errBadPath    = "proj_path"     // Invalid path provided
+	errBadType    = "proj_type"     // Invalid type provided
+	errOpResponse = "proj_response" // Bad response to http
+)
+
+const (
+	textDupName          = "project name is already in use"
+	textInvalidType      = "project type is invalid"
+	textInvalidProjectID = "project ID is invalid"
 )
 
 // ProjectError : Error formatted in JSON containing an errorOp and a description from
