@@ -25,13 +25,13 @@ import (
 	"strings"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
 	"github.com/eclipse/codewind-installer/errors"
-	"github.com/moby/moby/client"
 )
 
-// docker-compose yaml data
+// codewind-docker-compose.yaml data
 var data = `
 version: 2
 services:
@@ -319,7 +319,10 @@ func RemoveNetwork(network types.NetworkResource) {
 
 // GetPFEHostAndPort will return the current hostname and port that PFE is running on
 func GetPFEHostAndPort() (string, string) {
-	if CheckContainerStatus() {
+	// on Che, can assume PFE is always on localhost:9090
+	if os.Getenv("CHE_API_EXTERNAL") != "" {
+		return "localhost", "9090"
+	} else if CheckContainerStatus() {
 		containerList := GetContainerList()
 		for _, container := range containerList {
 			if strings.HasPrefix(container.Image, "codewind-pfe") {

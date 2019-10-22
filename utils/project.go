@@ -34,9 +34,9 @@ type CWSettings struct {
 	MavenProperties   []string `json:"mavenProperties,omitempty"`
 }
 
-// DetermineProjectInfo returns the language and build-type of a project, as well as if it's an Appsody project
-func DetermineProjectInfo(projectPath string) (string, string, bool) {
-	language, buildType, isAppsody := "unknown", "docker", false
+// DetermineProjectInfo returns the language and build-type of a project
+func DetermineProjectInfo(projectPath string) (string, string) {
+	language, buildType := "unknown", "docker"
 	if PathExists(path.Join(projectPath, "pom.xml")) {
 		language = "java"
 		buildType = determineJavaBuildType(projectPath)
@@ -49,13 +49,11 @@ func DetermineProjectInfo(projectPath string) (string, string, bool) {
 		language = "swift"
 		buildType = "swift"
 	}
-	if PathExists(path.Join(projectPath, "stack.yaml")) {
-		isAppsody = true
+	if PathExists(path.Join(projectPath, "Pipfile")) {
+		language = "python"
+		buildType = "docker"
 	}
-	if PathExists(path.Join(projectPath, ".appsody-config.yaml")) {
-		isAppsody = true
-	}
-	return language, buildType, isAppsody
+	return language, buildType
 }
 
 // CheckProjectPath will stop the process and return an error if path does not
@@ -81,7 +79,10 @@ func determineJavaBuildType(projectPath string) string {
 	if strings.Contains(pomXMLString, "<groupId>org.springframework.boot</groupId>") {
 		return "spring"
 	}
-	if strings.Contains(pomXMLString, "<groupId>org.eclipse.microprofile</groupId>") {
+	pathToDockerfile := path.Join(projectPath, "Dockerfile")
+	dockerfileContents, err := ioutil.ReadFile(pathToDockerfile)
+	dockerfileString := string(dockerfileContents)
+	if strings.Contains(dockerfileString, "FROM websphere-liberty") {
 		return "liberty"
 	}
 	return "docker"
@@ -92,7 +93,7 @@ func determineJavaBuildType(projectPath string) string {
 func WriteNewCwSettings(pathToCwSettings string, BuildType string) {
 	defaultCwSettings := getDefaultCwSettings()
 	cwSettings := addNonDefaultFieldsToCwSettings(defaultCwSettings, BuildType)
-	settings, err := json.MarshalIndent(cwSettings, "", "")
+	settings, err := json.MarshalIndent(cwSettings, "", "  ")
 	errors.CheckErr(err, 203, "")
 	// File permission 0644 grants read and write access to the owner
 	err = ioutil.WriteFile(pathToCwSettings, settings, 0644)

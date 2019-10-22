@@ -1,4 +1,5 @@
-# Codewind Installer
+# Codewind Command Line Interface (CLI)
+
 Install Codewind on MacOS or Windows.
 Prebuilt binary files are available for download [on Eclipse](https://download.eclipse.org/codewind/codewind-installer/).
 
@@ -13,22 +14,22 @@ Ensure that you are logged in to Docker. Type `docker login` into a command line
 
 1. Download the release binary file to a folder on your system.
 2. Use the `cd` command to go to the location of the downloaded file in the command line window.
-3. If the binary file has the `.dms` extension, remove the extension so that the file is named `codewind-installer-macos`.
-4. Enter the `chmod +x codewind-installer-macos` command to give yourself execution permissions for the binary.
-5. If you already have a `codewind-workspace` with your projects in it, copy it into your `/Users/<username>` home directory. If you do not already have a workspace, the installer creates an empty workspace for you in this directory.
-6. Type `./codewind-installer-macos` in the command line window to run the installer.
-7. To run a command, enter `./codewind-installer-macos <command>`.
+3. If the binary file has the `.dms` extension, remove the extension so that the file is named `cwctl-macos`.
+4. Enter the `chmod +x cwctl-macos` command to give yourself execution permissions for the binary.
+5. If you already have a `codewind-workspace` with your projects in it, copy it into your `/Users/<username>` home directory. If you do not already have a workspace, the CLI creates an empty workspace for you in this directory.
+6. Type `./cwctl-macos` in the command line window to run the CLI.
+7. To run a command, enter `./cwctl-macos <command>`.
 
 ## Downloading the release binary for Linux
 
 1. Download the release binary file to a folder on your system.
 2. Use the `cd` command to go to the location of the downloaded file in the command line window.
-3. If necessary, remove any file extensions so that the file is named `codewind-installer-linux`.
-4. Enter the `chmod +x codewind-installer-linux` command to give yourself execution permissions for the binary.
-5. If you already have a `codewind-workspace` with your projects in it, copy the workspace into your `$HOME` home directory. If you do not already have a workspace, the installer creates an empty workspace for you in this directory.
+3. If necessary, remove any file extensions so that the file is named `cwctl-linux`.
+4. Enter the `chmod +x cwctl-linux` command to give yourself execution permissions for the binary.
+5. If you already have a `codewind-workspace` with your projects in it, copy the workspace into your `$HOME` home directory. If you do not already have a workspace, the CLI creates an empty workspace for you in this directory.
 6. Install `docker-compose` with [Install Docker Compose](https://docs.docker.com/compose/install/).
-7. To run the installer, enter `./codewind-installer-linux` in the command line window.
-8. To run a command, enter `./codewind-installer-linux <command>`.
+7. To run the CLI, enter `./cwctl-linux` in the command line window.
+8. To run a command, enter `./cwctl-linux <command>`.
 
 ## Downloading the release binary for Windows
 
@@ -36,9 +37,9 @@ Ensure that you are logged in to Docker. Type `docker login` into a command line
 2. Use the `cd` command to go to the location of the downloaded file in the command prompt.
 3. Ensure that the binary file has an `.exe` extension. If it doesn't, add the extension to the file name.
 4. Ensure that your `C:\` drive is shared with Docker Desktop for Windows. To check, go to **Settings**>**Shared drives** and make sure the `C:\` drive check box is selected.
-5. If you already have a `codewind-workspace` with your projects in it, copy the `codewind-workspace` into your `C:\` directory. If you do not already have a workspace, the installer creates an empty one for you in this directory.
-6. To get started and see the commands that are available, type the `.\codewind-installer-win.exe` command in the command prompt.
-7. To run a command, enter `.\codewind-installer-win.exe <command>`.
+5. If you already have a `codewind-workspace` with your projects in it, copy the `codewind-workspace` into your `C:\` directory. If you do not already have a workspace, the CLI creates an empty one for you in this directory.
+6. To get started and see the commands that are available, type the `.\cwctl-win.exe` command in the command prompt.
+7. To run a command, enter `.\cwctl-win.exe <command>`.
 
 ## Building and deploying locally on MacOS
 
@@ -56,7 +57,7 @@ $ brew upgrade dep
 6. Use the `cd` command to go to the project directory and install the vendor packages with the `dep ensure -v` command.
 7. Build the binary and give it a name with the `go build -o <binary-name>` command. To build a binary without the debug symbols, use the `go build -ldflags="-s -w" -o <binary-name>` command.
 8. Copy your `codewind-workspace` into your `/Users/<username>` home directory.
-9. Type `./<binary-name>` in the command line window to run the installer.
+9. Type `./<binary-name>` in the command line window to run the CLI.
 10. To run a command, enter `./<binary-name> <command>`.
 
 ## Creating a cross-platform binary
@@ -81,17 +82,23 @@ $ brew upgrade dep
 
 ## CLI Commands
 
-|Command         |Alias         |Usage                                                           |
-|----------------|--------------|----------------------------------------------------------------|
-|project         |              |'Manage Codewind projects'                                      |
-|install         |`in`          |'Pull pfe, performance & initialize images from dockerhub'      |
-|start           |              |'Start the Codewind containers'                                 |
-|status          |              |'Print the installation status of Codewind'                     |
-|stop            |              |'Stop the running Codewind containers'                          |
-|stop-all        |              |'Stop all of the Codewind and project containers'               |
-|remove          |`rm`          |'Remove Codewind/Project docker images and the codewind network'|
-|templates       |              |'Manage project templates'                                      |
-|help            |`h`           |'Shows a list of commands or help for one command'              |
+|Command         |Alias         |Usage                                                               |
+|----------------|--------------|--------------------------------------------------------------------|
+|project         |              |'Manage Codewind projects'                                          |
+|install         |`in`          |'Pull pfe, performance & initialize images from dockerhub'          |
+|start           |              |'Start the Codewind containers'                                     |
+|status          |              |'Print the installation status of Codewind'                         |
+|stop            |              |'Stop the running Codewind containers'                              |
+|stop-all        |              |'Stop all of the Codewind and project containers'                   |
+|remove          |`rm`          |'Remove Codewind/Project docker images and the codewind network'    |
+|templates       |              |'Manage project templates'                                          |
+|sectoken        |`st`          |'Authenticate with username and password to obtain an access_token' |
+|secrealm        |`sr`          |'Manage new or existing REALM configurations'                       |
+|secclient       |`sc`          |'Manage new or existing APPLICATION access configurations'          |
+|seckeyring      |`sk`          |'Manage Codewind keys in the desktop keyring'                       |
+|secuser         |`su`          |'Manage new or existing USER access configurations'                 |
+|deployments     |`dep`         |'Manage deployments configuration list'                             |
+|help            |`h`           |'Shows a list of commands or help for one command'                  |
 
 ## CLI Command Options
 
@@ -133,6 +140,144 @@ $ brew upgrade dep
 Subcommands:</br>
 
 `list/ls` - List available templates
+
+## sectoken
+
+Subcommands:</br>
+
+`get/g` - Authenticate and obtain an access_token
+
+> **Flags:**
+> --host value                  URL or ingress to Keycloak service
+> --realm value                 Application realm
+> --username value              Account Username
+> --password value              Account Password
+> --client value                Client
+
+## secrealm
+
+Subcommands:</br>
+
+`create/c` - Create a new realm (requires either admin_token or username/password)
+
+> **Flags:**
+> --host value                   URL or ingress to Keycloak service
+> --newrealm value               Application realm to be created
+> --accesstoken value            Admin access_token
+> --username value               Admin Username
+> --password value               Admin Password
+
+## secclient
+
+Subcommands:</br>
+
+`create/c` - Create a new client in an existing Keycloak realm (requires either admin_token or username/password)
+
+> --host value                   URL or ingress to Keycloak service
+> --realm value                  Application realm where client should be created
+> --newclient value              New client ID to create
+> --redirect value               Allowed redirect callback URL eg: `http://127.0.0.1:9090/*`
+> --accesstoken value            Admin access_token
+> --username value               Admin Username
+> --password value               Admin Password
+
+`get/g` - Get client id (requires either admin_token or username/password)
+
+> --host value                   URL or ingress to Keycloak service
+> --realm value                  Application realm
+> --clientid value               Client ID to retrieve
+> --accesstoken value            Admin access_token
+> --username value               Admin Username
+> --password value               Admin Password
+
+`secret/s` - Get client secret (requires either admin_token or username/password)
+
+> --host value                   URL or ingress to Keycloak service
+> --realm value                  Application realm
+> --clientid value               Client ID to retrieve
+> --accesstoken value            Admin access_token
+> --username value               Admin Username
+> --password value               Admin Password
+
+## seckeyring
+
+Subcommands:</br>
+
+`update/u` - Add new or update existing Codewind credentials key in keyring
+
+> --depid `<value>`                 Deployment ID (see the deployments cmd)
+> --username `<value>`              Username
+> --password `<value>`              Password
+
+`validate/v` - Checks if credentials key exist in the keyring
+
+> --depid `<value>`                 Deployment ID (see the deployments cmd)
+> --username `<value>`              Username
+
+## secuser
+
+Subcommands:</br>
+
+`create/c` - Create a new user in an existing Keycloak realm (requires either admin_token or username/password)
+
+> --host value                   URL or ingress to Keycloak service
+> --realm value                  Application realm
+> --accesstoken value            Admin access_token
+> --username value               Admin Username
+> --password value               Admin Password
+> --name value                   Username to add
+
+`get/g` - Gets an existing Keycloak user from an existing realm (requires either admin_token or username/password)
+
+> --host value                   URL or ingress to Keycloak service
+> --realm value                  Application realm
+> --accesstoken value            Admin access_token
+> --username value               Admin Username
+> --password value               Admin Password
+> --name value                   Username to query
+
+`setpw/p` - Reset an existing users password (requires either admin_token or username/password)
+
+> --host value                   URL or ingress to Keycloak service
+> --realm value                  Application realm
+> --accesstoken value            Admin access_token
+> --username value               Admin Username
+> --password value               Admin Password
+> --name value                   Username to query
+> --newpw value                  New replacement password
+
+## deployments
+
+Subcommands:</br>
+
+`add/a` - Add a new deployment to the list
+
+> **Flags:**
+> --id value     A deployment reference id
+> --label value  A displayable name
+> --url value    The ingress URL of the PFE instance
+> --auth value   URL of Keycloak service eg: `https://mykeycloak.test:8443`
+> --realm value  Security realm eg:  codewind or che
+> --clientid value  Security client id eg: codewind or che-public
+
+`remove/rm` - Remove a deployment from the list
+
+> **Flags:**
+> --id value     A deployment reference id
+
+`target/t` - Show/Change the current target deployment
+
+> *Note:* Not supplying any flag will return the current selected target
+> --id value  The deployment id of the target to switch to
+
+
+`list/ls` - List known deployments
+
+>**Note:** No additional flags
+
+`reset` - Resets the deployments list to a single local deployment
+
+>**Note:** No additional flags
 
 ## help
 

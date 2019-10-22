@@ -36,13 +36,14 @@ type (
 	TemplateRepo struct {
 		Description string `json:"description"`
 		URL         string `json:"url"`
+		Name        string `json:"name"`
 	}
 )
 
 // GetTemplates gets project templates from PFE's REST API.
 // Filter them using the function arguments
 func GetTemplates(projectStyle string, showEnabledOnly string) ([]Template, error) {
-	req, err := http.NewRequest("GET", config.PFEApiRoute() + "templates", nil)
+	req, err := http.NewRequest("GET", config.PFEApiRoute()+"templates", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +117,7 @@ func GetTemplateRepos() ([]TemplateRepo, error) {
 
 // AddTemplateRepo adds a template repo to PFE and
 // returns the new list of existing repos
-func AddTemplateRepo(URL, description string) ([]TemplateRepo, error) {
+func AddTemplateRepo(URL, description string, name string) ([]TemplateRepo, error) {
 	if _, err := url.ParseRequestURI(URL); err != nil {
 		return nil, fmt.Errorf("Error: '%s' is not a valid URL", URL)
 	}
@@ -124,11 +125,12 @@ func AddTemplateRepo(URL, description string) ([]TemplateRepo, error) {
 	values := map[string]string{
 		"url":         URL,
 		"description": description,
+		"name":        name,
 	}
 	jsonValue, _ := json.Marshal(values)
 
 	resp, err := http.Post(
-		config.PFEApiRoute() + "templates/repositories",
+		config.PFEApiRoute()+"templates/repositories",
 		"application/json",
 		bytes.NewBuffer(jsonValue),
 	)
@@ -164,7 +166,7 @@ func DeleteTemplateRepo(URL string) ([]TemplateRepo, error) {
 
 	req, err := http.NewRequest(
 		"DELETE",
-		config.PFEApiRoute() + "templates/repositories",
+		config.PFEApiRoute()+"templates/repositories",
 		bytes.NewBuffer(jsonValue),
 	)
 	req.Header.Set("Content-Type", "application/json")
