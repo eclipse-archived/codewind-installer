@@ -48,7 +48,6 @@ services:
   image: codewind-performance${PLATFORM}:${TAG}
   ports: ["127.0.0.1:9095:9095"]
   container_name: codewind-performance
-  volumes: ["/var/run/docker.sock:/var/run/docker.sock","${WORKSPACE_DIRECTORY}:/codewind-workspace"]
   networks: [network]
 networks:
   network:
