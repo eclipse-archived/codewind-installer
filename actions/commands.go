@@ -547,6 +547,18 @@ func Commands() {
 				},
 			},
 		},
+		{
+			Name:    "upgrade",
+			Aliases: []string{"up"},
+			Usage:   "Upgrade projects",
+			Flags: []cli.Flag{
+				cli.StringFlag{Name: "workspace, ws", Usage: "the workspace directory to upgrade, location of projects", Required: true},
+			},
+			Action: func(c *cli.Context) error {
+				UpgradeProjects(c)
+				return nil
+			},
+		},
 	}
 
 	app.Before = func(c *cli.Context) error {

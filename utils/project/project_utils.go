@@ -14,7 +14,6 @@ import (
 	"encoding/json"
 )
 
-// ProjectError : Project package errors
 type ProjectError struct {
 	Op   string
 	Err  error
@@ -24,12 +23,6 @@ type ProjectError struct {
 const (
 	errBadPath = "proj_path" // Invalid path provided
 	errBadType = "proj_type" // Invalid type provided
-)
-
-const (
-	textBadPassword   = "Passwords must not contains quoted characters"
-	textUserNotFound  = "Registered User not found"
-	textUnableToParse = "Unable to parse Keycloak response"
 )
 
 // ProjectError : Error formatted in JSON containing an errorOp and a description from

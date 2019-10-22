@@ -50,7 +50,11 @@ func BindProject(c *cli.Context) *ProjectError {
 	Name := strings.TrimSpace(c.String("name"))
 	Language := strings.TrimSpace(c.String("language"))
 	BuildType := strings.TrimSpace(c.String("type"))
+	return Bind(projectPath, Name, Language, BuildType)
+}
 
+func Bind(projectPath string, Name string, Language string, BuildType string) *ProjectError {
+	//	fmt.Println(projectPath + " " + Name + " " + Language + " " + BuildType)
 	_, err := os.Stat(projectPath)
 	if err != nil {
 		return &ProjectError{errBadPath, err, err.Error()}
@@ -65,20 +69,16 @@ func BindProject(c *cli.Context) *ProjectError {
 	buf := new(bytes.Buffer)
 	json.NewEncoder(buf).Encode(bindRequest)
 
-	//	fmt.Println(buf)
-	// Make the request to start the remote bind process.
-	remotebindUrl := config.PFEApiRoute() + "projects/remote-bind/start"
-	//	fmt.Println("Posting to: " + remotebindUrl)
+	// Make the request to start the bind process.
+	bindUrl := config.PFEApiRoute() + "projects/bind/start"
 
 	client := &http.Client{}
 
-	request, err := http.NewRequest("POST", remotebindUrl, bytes.NewReader(buf.Bytes()))
+	request, err := http.NewRequest("POST", bindUrl, bytes.NewReader(buf.Bytes()))
 	request.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(request)
 	if err != nil {
 		return &ProjectError{errBadType, err, err.Error()}
-	} else {
-		fmt.Println(resp)
 	}
 	if resp.StatusCode == 400 {
 		return &ProjectError{errBadType, err, err.Error()}
@@ -86,13 +86,10 @@ func BindProject(c *cli.Context) *ProjectError {
 
 	defer resp.Body.Close()
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
-	body := string(bodyBytes)
-	fmt.Println(string(body))
 
 	var projectInfo map[string]interface{}
 	if err := json.Unmarshal(bodyBytes, &projectInfo); err != nil {
 		panic(err)
-		// TODO - Need to handle this gracefully.
 	}
 
 	projectID := projectInfo["projectID"].(string)
@@ -101,13 +98,13 @@ func BindProject(c *cli.Context) *ProjectError {
 	// Sync all the project files
 	syncFiles(projectPath, projectID, 0)
 
-	// Call remote-bind/end to complete
-	completeRemotebind(projectID)
+	// Call bind/end to complete
+	completeBind(projectID)
 	return nil
 }
 
-func completeRemotebind(projectId string) {
-	uploadEndUrl := config.PFEApiRoute() + "projects/" + projectId + "/remote-bind/end"
+func completeBind(projectId string) {
+	uploadEndUrl := config.PFEApiRoute() + "projects/" + projectId + "/bind/end"
 
 	payload := &BindEndRequest{ProjectID: projectId}
 	jsonPayload, _ := json.Marshal(payload)
@@ -117,7 +114,5 @@ func completeRemotebind(projectId string) {
 	fmt.Println("Upload end status:" + resp.Status)
 	if err != nil {
 		panic(err)
-		// TODO - Need to handle this gracefully.
 	}
-
 }

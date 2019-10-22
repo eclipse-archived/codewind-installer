@@ -23,8 +23,6 @@ func ProjectValidate(c *cli.Context) {
 	err := project.ValidateProject(c)
 	if err != nil {
 		fmt.Println(err.Error())
-	} else {
-		//		utils.PrettyPrintJSON(project.Result{Status: "OK"})
 	}
 	os.Exit(0)
 }
@@ -33,8 +31,6 @@ func ProjectCreate(c *cli.Context) {
 	err := project.DownloadTemplate(c)
 	if err != nil {
 		fmt.Println(err.Error())
-	} else {
-		//		utils.PrettyPrintJSON(project.Result{Status: "OK"})
 	}
 	os.Exit(0)
 }
@@ -43,8 +39,6 @@ func ProjectSync(c *cli.Context) {
 	err := project.SyncProject(c)
 	if err != nil {
 		fmt.Println(err.Error())
-	} else {
-		//		utils.PrettyPrintJSON(project.Result{Status: "OK"})
 	}
 	os.Exit(0)
 }
@@ -53,8 +47,14 @@ func ProjectBind(c *cli.Context) {
 	err := project.BindProject(c)
 	if err != nil {
 		fmt.Println(err.Error())
-	} else {
-		//		utils.PrettyPrintJSON(project.Result{Status: "OK"})
+	}
+	os.Exit(0)
+}
+
+func UpgradeProjects(c *cli.Context) {
+	err := project.UpgradeProjects(c)
+	if err != nil {
+		fmt.Println(err.Error())
 	}
 	os.Exit(0)
 }

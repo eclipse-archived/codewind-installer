@@ -46,10 +46,13 @@ func SyncProject(c *cli.Context) *ProjectError {
 	projectID := strings.TrimSpace(c.String("id"))
 	synctime := int64(c.Int("time"))
 
+	_, err := os.Stat(projectPath)
+	if err != nil {
+		return &ProjectError{errBadPath, err, err.Error()}
+	}
+
 	// Sync all the necessary project files
 	fileList, modifiedList := syncFiles(projectPath, projectID, synctime)
-	fmt.Println(fileList)
-	fmt.Println(modifiedList)
 
 	// Complete the upload
 	completeUpload(projectID, fileList, modifiedList, synctime)
@@ -60,13 +63,14 @@ func syncFiles(projectPath string, projectId string, synctime int64) ([]string, 
 	var fileList []string
 	var modifiedList []string
 
-	projectUploadUrl := config.PFEApiRoute() + "projects/" + projectId + "/remote-bind/upload"
+	projectUploadUrl := config.PFEApiRoute() + "projects/" + projectId + "/upload"
 	client := &http.Client{}
-	fmt.Println("Uploading to " + projectUploadUrl)
+	//	fmt.Println("Uploading to " + projectUploadUrl)
 
 	err := filepath.Walk(projectPath, func(path string, info os.FileInfo, err error) error {
 
 		if err != nil {
+			panic(err)
 			// TODO - How to handle *some* files being unreadable
 		}
 		if !info.IsDir() {
