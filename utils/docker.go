@@ -42,7 +42,7 @@ services:
   environment: ["HOST_WORKSPACE_DIRECTORY=${WORKSPACE_DIRECTORY}","CONTAINER_WORKSPACE_DIRECTORY=/codewind-workspace","HOST_OS=${HOST_OS}","CODEWIND_VERSION=${TAG}","PERFORMANCE_CONTAINER=codewind-performance${PLATFORM}:${TAG}","HOST_HOME=${HOST_HOME}","HOST_MAVEN_OPTS=${HOST_MAVEN_OPTS}"]
   depends_on: [codewind-performance]
   ports: ["127.0.0.1:${PFE_EXTERNAL_PORT}:9090"]
-  volumes: ["/var/run/docker.sock:/var/run/docker.sock","${WORKSPACE_DIRECTORY}:/codewind-workspace"]
+  volumes: ["/var/run/docker.sock:/var/run/docker.sock","cw-workspace:/codewind-workspace"]
   networks: [network]
  codewind-performance:
   image: codewind-performance${PLATFORM}:${TAG}
@@ -52,6 +52,8 @@ services:
   networks: [network]
 networks:
   network:
+volumes:
+  cw-workspace:
 `
 
 // Compose struct for the docker compose yaml file
@@ -76,6 +78,9 @@ type Compose struct {
 			Networks      []string `yaml:"networks"`
 		} `yaml:"codewind-performance"`
 	} `yaml:"services"`
+	VOLUME struct {
+		CodewindWorkspace map[string]string `yaml:"cw-workspace"`
+	} `yaml:"volumes"`
 	NETWORK struct {
 		Network map[string]string `yaml:"network"`
 	} `yaml:"networks"`
@@ -91,7 +96,7 @@ const (
 )
 
 // DockerCompose to set up the Codewind environment
-func DockerCompose(tag string) {
+func DockerCompose(tempFilePath string, tag string) {
 
 	// Set env variables for the docker compose file
 	home := os.Getenv("HOME")
@@ -129,12 +134,12 @@ func DockerCompose(tag string) {
 	}
 	os.Setenv("PFE_EXTERNAL_PORT", port)
 
-	cmd := exec.Command("docker-compose", "-f", "codewind-docker-compose.yaml", "up", "-d")
+	cmd := exec.Command("docker-compose", "-f", tempFilePath, "up", "-d")
 	output := new(bytes.Buffer)
 	cmd.Stdout = output
 	cmd.Stderr = output
 	if err := cmd.Start(); err != nil { // after 'Start' the program is continued and script is executing in background
-		DeleteTempFile("codewind-docker-compose.yaml")
+		DeleteTempFile(tempFilePath)
 		errors.CheckErr(err, 101, "Is docker-compose installed?")
 	}
 	fmt.Printf("Please wait whilst containers initialize... %s \n", output.String())
@@ -142,12 +147,12 @@ func DockerCompose(tag string) {
 	fmt.Printf(output.String()) // Wait to finish execution, so we can read all output
 
 	if strings.Contains(output.String(), "ERROR") || strings.Contains(output.String(), "error") {
-		DeleteTempFile("codewind-docker-compose.yaml")
+		DeleteTempFile(tempFilePath)
 		os.Exit(1)
 	}
 
 	if strings.Contains(output.String(), "The image for the service you're trying to recreate has been removed") {
-		DeleteTempFile("codewind-docker-compose.yaml")
+		DeleteTempFile(tempFilePath)
 		os.Exit(1)
 	}
 }
