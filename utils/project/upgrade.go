@@ -23,7 +23,7 @@ import (
 )
 
 func UpgradeProjects(c *cli.Context) *ProjectError {
-	fmt.Println("About to migrate projects")
+	fmt.Println("About to upgrade projects")
 
 	oldDir := strings.TrimSpace(c.String("workspace"))
 
@@ -46,15 +46,10 @@ func UpgradeProjects(c *cli.Context) *ProjectError {
 			var result map[string]string
 			json.Unmarshal([]byte(file), &result)
 
-			id := result["projectID"]
 			language := result["language"]
 			projecttype := result["projectType"]
 			name := result["name"]
 			location := result["workspace"] + name
-			fmt.Println(id)
-			fmt.Println(language)
-			fmt.Println(projecttype)
-			fmt.Println(name)
 			Bind(location, name, language, projecttype)
 		}
 		return nil
