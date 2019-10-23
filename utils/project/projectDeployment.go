@@ -15,11 +15,12 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
-	"log"
 	"os"
 	"path"
 	"runtime"
 	"strings"
+
+	"github.com/eclipse/codewind-installer/utils/deployments"
 )
 
 // Target : A Deployment target
@@ -38,7 +39,11 @@ const deploymentTargetSchemaVersion = 1
 // AddDeploymentTarget : Add a deployment target
 func AddDeploymentTarget(projectID string, depID string) *ProjectError {
 
-	log.Println("TODO: ******  Check if the deployment exists // waiting for pr to merge with the getDeploymentByID func")
+	deployment, depErr := deployments.GetDeploymentByID(depID)
+	if depErr != nil || deployment == nil {
+		projError := errors.New("Deployment unknown")
+		return &ProjectError{"dep_not_found", projError, projError.Error()}
+	}
 
 	// Check if projectID is supplied in correct format
 	if !IsProjectIDValid(projectID) {
@@ -110,7 +115,11 @@ func ResetTargetFile(projectID string) *ProjectError {
 // RemoveDeploymentTarget : Remove deployment target from project-deployments file
 func RemoveDeploymentTarget(projectID string, depID string) *ProjectError {
 
-	log.Println("TODO: ******  Check if the deployment exists // waiting for pr to merge with the getDeploymentByID func")
+	deployment, depErr := deployments.GetDeploymentByID(depID)
+	if depErr != nil || deployment == nil {
+		projError := errors.New("Deployment unknown")
+		return &ProjectError{"dep_not_found", projError, projError.Error()}
+	}
 
 	// Check if projectID is supplied in correct format
 	if !IsProjectIDValid(projectID) {
@@ -124,18 +133,18 @@ func RemoveDeploymentTarget(projectID string, depID string) *ProjectError {
 		return projErr
 	}
 
-	found := false
+	deploymentFound := false
 
 	// Remove the deployment
 	for i := 0; i < len(deploymentTargets.DeploymentTargets); i++ {
 		if strings.EqualFold(depID, deploymentTargets.DeploymentTargets[i].DeploymentID) {
 			copy(deploymentTargets.DeploymentTargets[i:], deploymentTargets.DeploymentTargets[i+1:])
-			found = true
+			deploymentFound = true
 			deploymentTargets.DeploymentTargets = deploymentTargets.DeploymentTargets[:len(deploymentTargets.DeploymentTargets)-1]
 		}
 	}
 
-	if !found {
+	if !deploymentFound {
 		projErr := errors.New(textDepMissing)
 		return &ProjectError{errOpNotFound, projErr, projErr.Error()}
 	}

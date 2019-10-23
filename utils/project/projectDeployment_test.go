@@ -60,7 +60,7 @@ func Test_ProjectDeployment(t *testing.T) {
 		if projError == nil {
 			t.Fail()
 		}
-		assert.Equal(t, errOpNotFound, projError.Op)
+		assert.Equal(t, "dep_not_found", projError.Op)
 	})
 
 	t.Run("Asserts removing a known deployment is successful", func(t *testing.T) {
