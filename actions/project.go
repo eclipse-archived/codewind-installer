@@ -34,7 +34,6 @@ func ProjectCreate(c *cli.Context) {
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-	os.Exit(0)
 }
 
 func ProjectSync(c *cli.Context) {
