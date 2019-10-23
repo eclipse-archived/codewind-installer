@@ -145,7 +145,12 @@ Subcommands:</br>
 
 Subcommands:</br>
 
-`get/g` - Authenticate and obtain an access_token
+`get/g` - Authenticate and obtain an access_token. 
+
+>**Note 1:**: The preferred way to authenticate is by supplying just the depid and username. In this mode the command will use the stored password from the platform keyring
+>**Note 2:**: If you dont have a depid you must supply use the host, realm and client flags
+>**Note 3:**: You can use a combination of both the depid and host/realm/client flags. In this mode, the host/realm/client flags take precedence override the deployment defaults
+>**Note 4:**: The password flag is optional when used with the depid flag and when a password already exists in the platform keyring. Including the password flag will update the keychain password after a successful login or add a password to the keychain if one does not exist
 
 > **Flags:**
 > --host value                  URL or ingress to Keycloak service
@@ -153,6 +158,7 @@ Subcommands:</br>
 > --username value              Account Username
 > --password value              Account Password
 > --client value                Client
+> --depid,-d value              Use connection details from a deployment configuration
 
 ## secrealm
 
@@ -164,8 +170,6 @@ Subcommands:</br>
 > --host value                   URL or ingress to Keycloak service
 > --newrealm value               Application realm to be created
 > --accesstoken value            Admin access_token
-> --username value               Admin Username
-> --password value               Admin Password
 
 ## secclient
 
@@ -178,8 +182,6 @@ Subcommands:</br>
 > --newclient value              New client ID to create
 > --redirect value               Allowed redirect callback URL eg: `http://127.0.0.1:9090/*`
 > --accesstoken value            Admin access_token
-> --username value               Admin Username
-> --password value               Admin Password
 
 `get/g` - Get client id (requires either admin_token or username/password)
 
@@ -205,13 +207,13 @@ Subcommands:</br>
 
 `update/u` - Add new or update existing Codewind credentials key in keyring
 
-> --depid `<value>`                 Deployment ID (see the deployments cmd)
+> --depid,-d `<value>`              Deployment ID (see the deployments cmd)
 > --username `<value>`              Username
 > --password `<value>`              Password
 
 `validate/v` - Checks if credentials key exist in the keyring
 
-> --depid `<value>`                 Deployment ID (see the deployments cmd)
+> --depid,-d `<value>`              Deployment ID (see the deployments cmd)
 > --username `<value>`              Username
 
 ## secuser
@@ -253,22 +255,23 @@ Subcommands:</br>
 `add/a` - Add a new deployment to the list
 
 > **Flags:**
-> --id value     A deployment reference id
 > --label value  A displayable name
 > --url value    The ingress URL of the PFE instance
-> --auth value   URL of Keycloak service eg: `https://mykeycloak.test:8443`
-> --realm value  Security realm eg:  codewind or che
-> --clientid value  Security client id eg: codewind or che-public
+
+`get/g` - Get a deployment using its ID
+
+> **Flags:**
+> --depid,-d value   The Deployment ID to retrieve
 
 `remove/rm` - Remove a deployment from the list
 
 > **Flags:**
-> --id value     A deployment reference id
+> --depid,-d value     A deployment id
 
 `target/t` - Show/Change the current target deployment
 
 > *Note:* Not supplying any flag will return the current selected target
-> --id value  The deployment id of the target to switch to
+> --depid,-d value  The deployment id of the target to switch to
 
 
 `list/ls` - List known deployments

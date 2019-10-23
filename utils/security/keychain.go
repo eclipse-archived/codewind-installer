@@ -12,8 +12,10 @@
 package security
 
 import (
+	"errors"
 	"strings"
 
+	"github.com/eclipse/codewind-installer/utils/deployments"
 	"github.com/zalando/go-keyring"
 )
 
@@ -29,6 +31,13 @@ func SecKeyUpdate(deploymentID string, username string, password string) *SecErr
 	depID := strings.TrimSpace(strings.ToLower(deploymentID))
 	uName := strings.TrimSpace(strings.ToLower(username))
 	pass := strings.TrimSpace(password)
+
+	// check deployment has been registered
+	_, depErr := deployments.GetDeploymentByID(depID)
+	if depErr != nil {
+		err := errors.New("Deployment " + strings.ToUpper(depID) + " not found")
+		return &SecError{errOpNotFound, err, depErr.Error()}
+	}
 
 	err := keyring.Set(KeyringServiceName+"."+depID, uName, pass)
 	if err != nil {
