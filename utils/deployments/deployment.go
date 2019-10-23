@@ -18,8 +18,11 @@ import (
 	"os"
 	"path"
 	"runtime"
+	"strconv"
 	"strings"
 
+	"github.com/eclipse/codewind-installer/apiroutes"
+	"github.com/eclipse/codewind-installer/utils"
 	"github.com/urfave/cli"
 )
 
@@ -103,6 +106,21 @@ func FindTargetDeployment() (*Deployment, *DepError) {
 	return nil, &DepError{errOpNotFound, err, err.Error()}
 }
 
+// GetDeploymentByID : retrieve a single deployment with matching ID
+func GetDeploymentByID(depID string) (*Deployment, *DepError) {
+	deploymentList, depErr := GetAllDeployments()
+	if depErr != nil {
+		return nil, depErr
+	}
+	for _, deployment := range deploymentList {
+		if strings.ToUpper(deployment.ID) == strings.ToUpper(depID) {
+			return &deployment, nil
+		}
+	}
+	depError := errors.New("Deployment " + strings.ToUpper(depID) + " not found")
+	return nil, &DepError{errOpNotFound, depError, depError.Error()}
+}
+
 // GetDeploymentsConfig : Retrieves and returns the entire Deployment configuration contents
 func GetDeploymentsConfig() (*DeploymentConfig, *DepError) {
 	data, depErr := loadDeploymentsConfigFile()
@@ -114,7 +132,7 @@ func GetDeploymentsConfig() (*DeploymentConfig, *DepError) {
 
 // SetTargetDeployment : If the deployment is unknown return an error
 func SetTargetDeployment(c *cli.Context) *DepError {
-	newTargetName := c.String("id")
+	newTargetName := c.String("depid")
 	data, depErr := loadDeploymentsConfigFile()
 	if depErr != nil {
 		return depErr
@@ -142,66 +160,71 @@ func SetTargetDeployment(c *cli.Context) *DepError {
 	return nil
 }
 
-// AddDeploymentToList : adds a new deployment to the deployment config
-func AddDeploymentToList(c *cli.Context) *DepError {
-	id := strings.TrimSpace(strings.ToLower(c.String("id")))
+// AddDeploymentToList : validates then adds a new deployment to the deployment config
+func AddDeploymentToList(httpClient utils.HTTPClient, c *cli.Context) (*Deployment, *DepError) {
+	deploymentID := strings.ToUpper(strconv.FormatInt(utils.CreateTimestamp(), 36))
 	label := strings.TrimSpace(c.String("label"))
-	url := c.String("url")
+	url := strings.TrimSpace(c.String("url"))
 	if url != "" && len(strings.TrimSpace(url)) > 0 {
 		url = strings.TrimSuffix(url, "/")
 	}
-	auth := c.String("auth")
-	if auth != "" && len(strings.TrimSpace(auth)) > 0 {
-		auth = strings.TrimSuffix(auth, "/")
-	}
-
-	realm := strings.TrimSpace(c.String("realm"))
-	clientID := strings.TrimSpace(c.String("clientid"))
-
 	data, depErr := loadDeploymentsConfigFile()
 	if depErr != nil {
-		return depErr
+		return nil, depErr
 	}
 
-	// check the name is not already in use
+	// check the url and label are not already in use
 	for i := 0; i < len(data.Deployments); i++ {
-		if strings.EqualFold(id, data.Deployments[i].ID) {
-			depError := errors.New("Deployment '" + id + "' already exists, to update:  first remove, then add")
-			return &DepError{errOpConflict, depError, depError.Error()}
+		if strings.EqualFold(label, data.Deployments[i].Label) || strings.EqualFold(url, data.Deployments[i].URL) {
+			depError := errors.New("Deployment ID: " + deploymentID + " already exists. To update, first remove and then re-add")
+			return nil, &DepError{errOpConflict, depError, depError.Error()}
 		}
+	}
+
+	gatekeeperEnv, err := apiroutes.GetGatekeeperEnvironment(httpClient, url)
+	if err != nil {
+		return nil, &DepError{errOpGetEnv, err, err.Error()}
 	}
 
 	// create the new deployment
 	newDeployment := Deployment{
-		ID:       id,
+		ID:       deploymentID,
 		Label:    label,
 		URL:      url,
-		AuthURL:  auth,
-		Realm:    realm,
-		ClientID: clientID,
+		AuthURL:  gatekeeperEnv.AuthURL,
+		Realm:    gatekeeperEnv.Realm,
+		ClientID: gatekeeperEnv.ClientID,
 	}
 
 	// append it to the list
 	data.Deployments = append(data.Deployments, newDeployment)
 	body, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {
-		return &DepError{errOpFileParse, err, err.Error()}
+		return nil, &DepError{errOpFileParse, err, err.Error()}
 	}
 
 	err = ioutil.WriteFile(getDeploymentConfigFilename(), body, 0644)
 	if err != nil {
-		return &DepError{errOpFileWrite, err, err.Error()}
+		return nil, &DepError{errOpFileWrite, err, err.Error()}
 	}
-	return nil
+	return &newDeployment, nil
 }
 
 // RemoveDeploymentFromList : Removes the stored entry
 func RemoveDeploymentFromList(c *cli.Context) *DepError {
-	id := c.String("id")
-	if strings.EqualFold(id, "local") {
+	id := strings.ToUpper(c.String("depid"))
+
+	if strings.EqualFold(id, "LOCAL") {
 		depError := errors.New("Local is a required deployment and must not be removed")
 		return &DepError{errOpProtected, depError, depError.Error()}
 	}
+
+	// check deployment has been registered
+	_, depErr := GetDeploymentByID(id)
+	if depErr != nil {
+		return depErr
+	}
+
 	data, depErr := loadDeploymentsConfigFile()
 	if depErr != nil {
 		return depErr
@@ -240,13 +263,13 @@ func GetTargetDeployment() (*Deployment, *DepError) {
 }
 
 // GetAllDeployments : Retrieve all saved deployments
-func GetAllDeployments() (*DeploymentConfig, *DepError) {
+func GetAllDeployments() ([]Deployment, *DepError) {
 	deploymentConfig, depErr := GetDeploymentsConfig()
 	if depErr != nil {
 		return nil, depErr
 	}
 	if deploymentConfig != nil && deploymentConfig.Deployments != nil && len(deploymentConfig.Deployments) > 0 {
-		return deploymentConfig, nil
+		return deploymentConfig.Deployments, nil
 	}
 	depError := errors.New("No Deployments found")
 	return nil, &DepError{errOpNotFound, depError, depError.Error()}

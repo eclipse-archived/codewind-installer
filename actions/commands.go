@@ -61,9 +61,9 @@ func Commands() {
 					},
 					Action: func(c *cli.Context) error {
 						if c.String("u") != "" {
-							DownloadTemplate(c)
+							ProjectCreate(c)
 						}
-						ValidateProject(c)
+						ProjectValidate(c)
 						return nil
 					},
 				},
@@ -78,7 +78,7 @@ func Commands() {
 						cli.StringFlag{Name: "path, p", Usage: "the path to the project", Required: true},
 					},
 					Action: func(c *cli.Context) error {
-						BindProject(c)
+						ProjectBind(c)
 						return nil
 					},
 				},
@@ -92,8 +92,52 @@ func Commands() {
 						cli.StringFlag{Name: "time, t", Usage: "time of the last sync for the given project", Required: true},
 					},
 					Action: func(c *cli.Context) error {
-						SyncProject(c)
+						ProjectSync(c)
 						return nil
+					},
+				},
+				{
+					Name:    "deployment",
+					Aliases: []string{"dep"},
+					Usage:   "Manage project deployments",
+					Subcommands: []cli.Command{
+						{
+							Name:    "add",
+							Aliases: []string{"a"},
+							Usage:   "Add a deployment target",
+							Flags: []cli.Flag{
+								cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
+								cli.StringFlag{Name: "depid,d", Usage: "Deployment ID", Required: true},
+							},
+							Action: func(c *cli.Context) error {
+								ProjectAddTargetDeployment(c)
+								return nil
+							},
+						},
+						{
+							Name:    "list",
+							Aliases: []string{"l"},
+							Usage:   "List the registered deployments for a project",
+							Flags: []cli.Flag{
+								cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
+							},
+							Action: func(c *cli.Context) error {
+								ProjectTargetList(c)
+								return nil
+							},
+						}, {
+							Name:    "remove",
+							Aliases: []string{"r"},
+							Usage:   "Remove a deployment target",
+							Flags: []cli.Flag{
+								cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
+								cli.StringFlag{Name: "depid,d", Usage: "Deployment ID", Required: true},
+							},
+							Action: func(c *cli.Context) error {
+								ProjectRemoveTargetDeployment(c)
+								return nil
+							},
+						},
 					},
 				},
 			},
@@ -290,11 +334,12 @@ func Commands() {
 					Aliases: []string{"g"},
 					Usage:   "Login and retrieve access_token",
 					Flags: []cli.Flag{
-						cli.StringFlag{Name: "host", Usage: "URL or ingress to Keycloak service", Required: true},
-						cli.StringFlag{Name: "realm,r", Usage: "Application realm", Required: true},
+						cli.StringFlag{Name: "host", Usage: "URL or ingress to Keycloak service", Required: false},
+						cli.StringFlag{Name: "realm,r", Usage: "Application realm", Required: false},
 						cli.StringFlag{Name: "username,u", Usage: "Account Username", Required: true},
-						cli.StringFlag{Name: "password,p", Usage: "Account Password", Required: true},
-						cli.StringFlag{Name: "client,c", Usage: "Client", Required: true},
+						cli.StringFlag{Name: "password,p", Usage: "Account Password", Required: false},
+						cli.StringFlag{Name: "client,c", Usage: "Client", Required: false},
+						cli.StringFlag{Name: "depid,d", Usage: "Deployment ID", Required: false},
 					},
 					Action: func(c *cli.Context) error {
 						SecurityTokenGet(c)
@@ -349,8 +394,6 @@ func Commands() {
 						cli.StringFlag{Name: "host", Usage: "URL or ingress to Keycloak service", Required: true},
 						cli.StringFlag{Name: "newrealm,r", Usage: "New realm name", Required: true},
 						cli.StringFlag{Name: "accesstoken,t", Usage: "Admin access_token", Required: false},
-						cli.StringFlag{Name: "username,u", Usage: "Admin Username", Required: false},
-						cli.StringFlag{Name: "password,p", Usage: "Admin Password", Required: false},
 					},
 					Action: func(c *cli.Context) error {
 						SecurityCreateRealm(c)
@@ -485,15 +528,23 @@ func Commands() {
 					Aliases: []string{"a"},
 					Usage:   "Add a new deployment to the configuration file",
 					Flags: []cli.Flag{
-						cli.StringFlag{Name: "id", Usage: "A reference name", Required: true},
-						cli.StringFlag{Name: "label", Usage: "A displayable name", Required: false},
-						cli.StringFlag{Name: "url", Usage: "The ingress URL of the PFE instance", Required: true},
-						cli.StringFlag{Name: "auth", Usage: "URL of Keycloak service eg: https://mykeycloak.test:8443", Required: false},
-						cli.StringFlag{Name: "realm", Usage: "Security realm eg: codewind or che", Required: false},
-						cli.StringFlag{Name: "clientid", Usage: "Security client_id to connect as eg: codewind_ctl or che-public", Required: false},
+						cli.StringFlag{Name: "label", Usage: "A displayable name", Required: true},
+						cli.StringFlag{Name: "url", Usage: "The ingress URL of Codewind gatekeeper", Required: true},
 					},
 					Action: func(c *cli.Context) error {
 						DeploymentAddToList(c)
+						return nil
+					},
+				},
+				{
+					Name:    "get",
+					Aliases: []string{"g"},
+					Usage:   "Get a deployment config by id",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "depid,d", Usage: "Deployment ID to retrieve", Required: true},
+					},
+					Action: func(c *cli.Context) error {
+						DeploymentGetByID(c)
 						return nil
 					},
 				},
@@ -502,13 +553,10 @@ func Commands() {
 					Aliases: []string{"rm"},
 					Usage:   "Remove a deployment from the configuration file",
 					Flags: []cli.Flag{
-						cli.StringFlag{Name: "id", Usage: "The reference ID of the deployment to be removed", Required: true},
+						cli.StringFlag{Name: "depid,d", Usage: "The reference ID of the deployment to be removed", Required: true},
 					},
 					Action: func(c *cli.Context) error {
-						if c.NumFlags() != 1 {
-						} else {
-							DeploymentRemoveFromList(c)
-						}
+						DeploymentRemoveFromList(c)
 						return nil
 					},
 				},
@@ -517,7 +565,7 @@ func Commands() {
 					Aliases: []string{"t"},
 					Usage:   "Show/Change the current target deployment",
 					Flags: []cli.Flag{
-						cli.StringFlag{Name: "id", Usage: "The deployment id of the target to switch to"},
+						cli.StringFlag{Name: "depid,d", Usage: "The deployment id of the target to switch to"},
 					},
 					Action: func(c *cli.Context) error {
 						if c.NumFlags() == 0 {
@@ -545,6 +593,18 @@ func Commands() {
 						return nil
 					},
 				},
+			},
+		},
+		{
+			Name:    "upgrade",
+			Aliases: []string{"up"},
+			Usage:   "Upgrade projects",
+			Flags: []cli.Flag{
+				cli.StringFlag{Name: "workspace, ws", Usage: "the workspace directory to upgrade, location of projects", Required: true},
+			},
+			Action: func(c *cli.Context) error {
+				UpgradeProjects(c)
+				return nil
 			},
 		},
 	}

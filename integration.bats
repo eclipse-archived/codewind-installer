@@ -57,6 +57,7 @@
 }
 
 @test "invoke dep add command - add new deployment to the list" {
+  skip
   run go run main.go dep add -id kube --label "kube-cluster" --url http://mykube:12345 --auth http://myauth:12345 --realm codewind-cloud --clientid codewind
   echo "status = ${status}"
   echo "output trace = ${output}"
@@ -65,6 +66,7 @@
 }
 
 @test "invoke dep list command - ensure both deployments exist " {
+  skip
   run go run main.go dep list
   echo "status = ${status}"
   echo "output trace = ${output}"
@@ -81,6 +83,7 @@
 }
 
 @test "invoke dep target command - set the target to kube" {
+  skip
   run go run main.go dep target --id kube
   echo "status = ${status}"
   echo "output trace = ${output}"
@@ -89,6 +92,7 @@
 }
 
 @test "invoke dep target command - check the target is now kube" {
+  skip
   run go run main.go dep target
   echo "status = ${status}"
   echo "output trace = ${output}"
@@ -97,6 +101,7 @@
 }
 
 @test "invoke dep remove command - delete target kube" {
+  skip
   run go run main.go dep remove --id kube
   echo "status = ${status}"
   echo "output trace = ${output}"

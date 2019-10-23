@@ -41,10 +41,10 @@ type ServerInfo struct {
 }
 
 // GetServerInfo - fetch Keycloak server info
-func GetServerInfo(hostname string, accesstoken string) (*ServerInfo, *SecError) {
+func GetServerInfo(keycloakHostname string, accesstoken string) (*ServerInfo, *SecError) {
 
 	// build REST request
-	url := hostname + "/auth/admin/serverinfo"
+	url := keycloakHostname + "/auth/admin/serverinfo"
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, &SecError{errOpConnection, err, err.Error()}
@@ -67,11 +67,11 @@ func GetServerInfo(hostname string, accesstoken string) (*ServerInfo, *SecError)
 
 	// Handle special case http status codes
 	switch httpCode := res.StatusCode; {
-	case httpCode == 400, httpCode == 401:
+	case httpCode == http.StatusBadRequest, httpCode == http.StatusUnauthorized:
 		keycloakAPIError := parseKeycloakError(string(body), res.StatusCode)
 		kcError := errors.New(string(keycloakAPIError.ErrorDescription))
 		return nil, &SecError{keycloakAPIError.Error, kcError, kcError.Error()}
-	case httpCode != 200:
+	case httpCode != http.StatusOK:
 		err = errors.New(string(body))
 		return nil, &SecError{errOpResponse, err, err.Error()}
 	}
@@ -86,8 +86,8 @@ func GetServerInfo(hostname string, accesstoken string) (*ServerInfo, *SecError)
 }
 
 // GetSuggestedTheme - Recommends the Codewind theme, else Che, else keycloak default
-func GetSuggestedTheme(hostname string, accesstoken string) (string, *SecError) {
-	serverInfo, secErr := GetServerInfo(hostname, accesstoken)
+func GetSuggestedTheme(keycloakHostname string, accesstoken string) (string, *SecError) {
+	serverInfo, secErr := GetServerInfo(keycloakHostname, accesstoken)
 	if secErr != nil {
 		return "", secErr
 	}

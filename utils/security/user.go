@@ -12,7 +12,6 @@
 package security
 
 import (
-	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
@@ -35,9 +34,6 @@ type RegisteredUser struct {
 
 // SecUserCreate : Create a new realm in Keycloak
 func SecUserCreate(c *cli.Context) *SecError {
-	if c.GlobalBool("insecure") {
-		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	}
 
 	hostname := strings.TrimSpace(strings.ToLower(c.String("host")))
 	realm := strings.TrimSpace(c.String("realm"))
@@ -46,7 +42,7 @@ func SecUserCreate(c *cli.Context) *SecError {
 
 	// authenticate if needed
 	if accesstoken == "" {
-		authToken, err := SecAuthenticate(c, KeycloakMasterRealm, KeycloakAdminClientID)
+		authToken, err := SecAuthenticate(http.DefaultClient, c, KeycloakMasterRealm, KeycloakAdminClientID)
 		if err != nil || authToken == nil {
 			return err
 		}
@@ -107,7 +103,7 @@ func SecUserGet(c *cli.Context) (*RegisteredUser, *SecError) {
 
 	// authenticate if needed
 	if accesstoken == "" {
-		authToken, err := SecAuthenticate(c, KeycloakMasterRealm, KeycloakAdminClientID)
+		authToken, err := SecAuthenticate(http.DefaultClient, c, KeycloakMasterRealm, KeycloakAdminClientID)
 		if err != nil || authToken == nil {
 			return nil, err
 		}
@@ -131,7 +127,7 @@ func SecUserGet(c *cli.Context) (*RegisteredUser, *SecError) {
 	defer res.Body.Close()
 
 	// handle HTTP status codes
-	if res.StatusCode != 200 {
+	if res.StatusCode != http.StatusOK {
 		body, _ := ioutil.ReadAll(res.Body)
 		err = errors.New(string(body))
 		return nil, &SecError{errOpResponse, err, err.Error()}
@@ -167,7 +163,7 @@ func SecUserSetPW(c *cli.Context) *SecError {
 
 	// authenticate if needed
 	if accesstoken == "" {
-		authToken, err := SecAuthenticate(c, KeycloakMasterRealm, KeycloakAdminClientID)
+		authToken, err := SecAuthenticate(http.DefaultClient, c, KeycloakMasterRealm, KeycloakAdminClientID)
 		if err != nil || authToken == nil {
 			return err
 		}
@@ -209,7 +205,7 @@ func SecUserSetPW(c *cli.Context) *SecError {
 	defer res.Body.Close()
 
 	// handle HTTP status codes
-	if res.StatusCode != 204 {
+	if res.StatusCode != http.StatusNoContent {
 		errNotFound := errors.New(res.Status)
 		return &SecError{errOpNotFound, errNotFound, errNotFound.Error()}
 	}

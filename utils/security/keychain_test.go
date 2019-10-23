@@ -12,21 +12,20 @@
 package security
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/zalando/go-keyring"
 )
 
-const testDeployment = "unittest-dev"
-const testUsername = "unit_test_user"
 const testPassword = "pAss%-w0rd-&'cha*s"
 const testPasswordUpdated = "pAss%-w0rd-&'cha*s-with_more_chars"
 
 func Test_Keychain(t *testing.T) {
 
 	// remove test key if one exists
-	keyring.Delete(KeyringServiceName+"."+testDeployment, testUsername)
+	keyring.Delete(strings.ToLower(KeyringServiceName+"."+testDeployment), testUsername)
 
 	t.Run("Secret can not be retrieved for an unknown account", func(t *testing.T) {
 		retrievedSecret, err := SecKeyGetSecret(testDeployment, testUsername)
@@ -66,6 +65,11 @@ func Test_Keychain(t *testing.T) {
 		assert.Equal(t, testPasswordUpdated, storedSecret)
 	})
 
-	// remove test key
-	keyring.Delete(KeyringServiceName+"."+testDeployment, testUsername)
+	t.Run("Test keyring entry can be removed", func(t *testing.T) {
+		err := keyring.Delete(strings.ToLower(KeyringServiceName+"."+testDeployment), testUsername)
+		if err != nil {
+			t.Fail()
+		}
+	})
+
 }

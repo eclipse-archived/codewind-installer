@@ -46,12 +46,15 @@ const (
 	errOpPassword       = "sec_passwordcontent" // Password formatting
 	errOpHostname       = "sec_badhostname"     // Bad hostname / url
 	errOpKeyring        = "sec_keyring"         // Keyring operations
+	errOpDepConfig      = "sec_dep_config"      // Deployment configuration errors
+	errOpCLICommand     = "sec_cli_options"     // Invalid command line options
 )
 
 const (
-	textBadPassword   = "Passwords must not contains quoted characters"
-	textUserNotFound  = "Registered User not found"
-	textUnableToParse = "Unable to parse Keycloak response"
+	textBadPassword    = "Passwords must not contains quoted characters"
+	textUserNotFound   = "Registered User not found"
+	textUnableToParse  = "Unable to parse Keycloak response"
+	textInvalidOptions = "Invalid or missing command line options"
 )
 
 // SecError : Error formatted in JSON containing an errorOp and a description from

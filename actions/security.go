@@ -14,6 +14,7 @@ package actions
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
 
@@ -24,7 +25,7 @@ import (
 
 // SecurityTokenGet : Authenticate and retrieve an access_token
 func SecurityTokenGet(c *cli.Context) {
-	auth, err := security.SecAuthenticate(c, "", "")
+	auth, err := security.SecAuthenticate(http.DefaultClient, c, "", "")
 	if err == nil && auth != nil {
 		utils.PrettyPrintJSON(auth)
 	} else {
