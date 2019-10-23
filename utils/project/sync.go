@@ -156,7 +156,7 @@ func completeUpload(projectId string, files []string, modfiles []string, timesta
 }
 
 func ignoreFileOrDirectory(name string, isDir bool) bool {
-	// List of files not add to PFE
+	// List of files that will not be sent to PFE
 	ignoredFiles := []string{
 		".DS_Store",
 		"*.swp",
@@ -173,7 +173,7 @@ func ignoreFileOrDirectory(name string, isDir bool) bool {
 		".build-ubuntu",
 		".yo-rc.json"}
 
-	// List of directories to not send to PFE
+	// List of directories that will not be sent to PFE
 	ignoredDirectories := []string{
 		".project",
 		"node_modules*",
@@ -194,16 +194,16 @@ func ignoreFileOrDirectory(name string, isDir bool) bool {
 		ignoredList = ignoredDirectories
 	}
 
-	fileInIgnored := false
+	isFileInIgnoredList := false
 	for _, fileName := range ignoredList {
 		matched, err := filepath.Match(fileName, name)
 		if err != nil {
 			return false
 		}
 		if matched {
-			fileInIgnored = true
+			isFileInIgnoredList = true
 			break
 		}
 	}
-	return fileInIgnored
+	return isFileInIgnoredList
 }
