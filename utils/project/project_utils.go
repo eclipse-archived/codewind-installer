@@ -12,6 +12,7 @@ package project
 
 import (
 	"encoding/json"
+	"regexp"
 )
 
 // ProjectError : A Project error
@@ -30,6 +31,7 @@ const (
 	errOpFileWrite = "proj_write"
 	errOpConflict  = "proj_conflict"
 	errOpNotFound  = "proj_notfound"
+	errOpInvalidID = "proj_id_invalid"
 )
 
 const (
@@ -56,4 +58,13 @@ func (pe *ProjectError) Error() string {
 type Result struct {
 	Status        string `json:"status"`
 	StatusMessage string `json:"status_message"`
+}
+
+// IsProjectIDValid : Checks if a supplied project ID is in the correct format
+func IsProjectIDValid(projectID string) bool {
+	match, err := regexp.MatchString("[0-9a-z]{8}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{12}", projectID)
+	if err != nil {
+		return false
+	}
+	return match
 }

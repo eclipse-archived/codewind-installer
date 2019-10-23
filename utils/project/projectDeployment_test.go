@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const testProjectID = "test-1234-1234-1234"
+const testProjectID = "a9384430-f177-11e9-b862-edc28aca827a"
 const testDeploymentID = "local"
 
 // Test_ProjectDeployment :  Tests
@@ -76,6 +76,14 @@ func Test_ProjectDeployment(t *testing.T) {
 			t.Fail()
 		}
 		assert.Len(t, deploymentTargets.DeploymentTargets, 0)
+	})
+
+	t.Run("Asserts attempting to manage an invalid project ID fails", func(t *testing.T) {
+		projError := AddDeploymentTarget("bad-project-ID", testDeploymentID)
+		if projError == nil {
+			t.Fail()
+		}
+		assert.Equal(t, errOpInvalidID, projError.Op)
 	})
 
 }

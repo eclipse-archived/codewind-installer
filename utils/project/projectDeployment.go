@@ -40,6 +40,12 @@ func AddDeploymentTarget(projectID string, depID string) *ProjectError {
 
 	log.Println("TODO: ******  Check if the deployment exists // waiting for pr to merge with the getDeploymentByID func")
 
+	// Check if projectID is supplied in correct format
+	if !IsProjectIDValid(projectID) {
+		projError := errors.New(textInvalidProjectID)
+		return &ProjectError{errOpInvalidID, projError, projError.Error()}
+	}
+
 	// Load the project-deployment.json
 	deploymentTargets, projError := loadTargets(projectID)
 
@@ -105,6 +111,12 @@ func ResetTargetFile(projectID string) *ProjectError {
 func RemoveDeploymentTarget(projectID string, depID string) *ProjectError {
 
 	log.Println("TODO: ******  Check if the deployment exists // waiting for pr to merge with the getDeploymentByID func")
+
+	// Check if projectID is supplied in correct format
+	if !IsProjectIDValid(projectID) {
+		projError := errors.New(textInvalidProjectID)
+		return &ProjectError{errOpInvalidID, projError, projError.Error()}
+	}
 
 	// Load the deployments
 	deploymentTargets, projErr := loadTargets(projectID)
