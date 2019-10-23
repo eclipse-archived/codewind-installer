@@ -171,7 +171,8 @@ func ignoreFileOrDirectory(name string, isDir bool) bool {
 		"idt.js",
 		".bluemix",
 		".build-ubuntu",
-		".yo-rc.json"}
+		".yo-rc.json",
+	}
 
 	// List of directories that will not be sent to PFE
 	ignoredDirectories := []string{
@@ -187,7 +188,8 @@ func ignoreFileOrDirectory(name string, isDir bool) bool {
 		"debian",
 		".bluemix",
 		"terraform",
-		".build-ubuntu"}
+		".build-ubuntu",
+	}
 
 	ignoredList := ignoredFiles
 	if isDir {

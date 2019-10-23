@@ -1,7 +1,6 @@
 package project
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -67,6 +66,5 @@ func TestIgnoreFileOrDirectory(t *testing.T) {
 
 			assert.Equal(t, test.shouldBeIgnored, fileIsIgnored, "fileIsIgnored was %b but should have been %b", fileIsIgnored, test.shouldBeIgnored)
 		})
-		fmt.Println()
 	}
 }
