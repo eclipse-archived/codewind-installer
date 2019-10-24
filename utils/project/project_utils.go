@@ -40,6 +40,8 @@ const (
 	textInvalidProjectID = "project ID is invalid"
 	textDeploymentExists = "project already added to this deployment"
 	textDepMissing       = "project deployment not found"
+	textNoCodewind       = "unable to connect to Codewind server"
+	textAPINotFound      = "unable to find requested resource on Codewind server"
 )
 
 // ProjectError : Error formatted in JSON containing an errorOp and a description from
