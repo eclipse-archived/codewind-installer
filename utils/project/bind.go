@@ -79,13 +79,17 @@ func Bind(projectPath string, Name string, Language string, BuildType string) *P
 	request.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(request)
 	if err != nil {
-		return &ProjectError{errBadType, err, err.Error()}
+		bindError := errors.New(textNoCodewind)
+		return &ProjectError{errOpResponse, bindError, bindError.Error()}
 	}
 
 	switch httpCode := resp.StatusCode; {
 	case httpCode == 400:
 		err = errors.New(textInvalidType)
 		return &ProjectError{errOpResponse, err, textInvalidType}
+	case httpCode == 404:
+		err = errors.New(textAPINotFound)
+		return &ProjectError{errOpResponse, err, textAPINotFound}
 	case httpCode == 409:
 		err = errors.New(textDupName)
 		return &ProjectError{errOpResponse, err, textDupName}
