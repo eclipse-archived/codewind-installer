@@ -122,6 +122,7 @@ func syncFiles(projectPath string, projectId string, synctime int64) ([]string, 
 				if err != nil {
 					return nil
 				}
+				defer resp.Body.Close()
 			}
 		} else {
 			shouldIgnore := ignoreFileOrDirectory(info.Name(), true)
