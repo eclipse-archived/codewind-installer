@@ -83,7 +83,6 @@ func Bind(projectPath string, name string, language string, projectType string, 
 
 	// use the given deploymentID to call api/v1/bind/start
 	depURL := config.PFEApiRoute()
-	fmt.Println(depURL)
 	if depInfo.ID != "local" {
 		depURL = depInfo.URL
 	}
@@ -118,10 +117,10 @@ func Bind(projectPath string, name string, language string, projectType string, 
 	projectID := projectInfo["projectID"].(string)
 	fmt.Println("Returned projectID " + projectID)
 
-	// Generate the ./codewind/deployments/{projectID}.json file based on the given depID
+	// Generate the .codewind/deployments/{projectID}.json file based on the given depID
 	AddDeploymentTarget(projectID, depID)
 
-	// Read the generated deployment file
+	// Read deployments.json to find the URL of the deployment
 	depURL, projErr := GetDeploymentURL(projectID)
 
 	if projErr != nil {
