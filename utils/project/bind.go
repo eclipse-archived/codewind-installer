@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/eclipse/codewind-installer/config"
+	"github.com/eclipse/codewind-installer/utils/deployments"
 	"github.com/urfave/cli"
 )
 
@@ -32,7 +33,7 @@ type (
 		BuildType string `json:"projectType"`
 	}
 
-	// ValidationResponse represents the response to validating a project on the users filesystem
+	// BindRequest represents the response to validating a project on the users filesystem
 	// result is an interface as it could be ProjectType or string depending on success or failure.
 	BindRequest struct {
 		Language    string `json:"language"`
@@ -41,41 +42,56 @@ type (
 		Path        string `json:"path"`
 	}
 
+	// BindEndRequest represents the request body parameters required to complete a bind
 	BindEndRequest struct {
 		ProjectID string `json:"id"`
 	}
 )
 
+// BindProject is used to bind a project for building and running, with CLI context
 func BindProject(c *cli.Context) *ProjectError {
 	projectPath := strings.TrimSpace(c.String("path"))
 	Name := strings.TrimSpace(c.String("name"))
 	Language := strings.TrimSpace(c.String("language"))
 	BuildType := strings.TrimSpace(c.String("type"))
-	return Bind(projectPath, Name, Language, BuildType)
+	depID := strings.TrimSpace(strings.ToLower(c.String("depID")))
+	return Bind(projectPath, Name, Language, BuildType, depID)
 }
 
-func Bind(projectPath string, Name string, Language string, BuildType string) *ProjectError {
-	//	fmt.Println(projectPath + " " + Name + " " + Language + " " + BuildType)
+// Bind is used to bind a project for building and running
+func Bind(projectPath string, name string, language string, projectType string, depID string) *ProjectError {
+	//	fmt.Println(projectPath + " " + Name + " " + Language + " " + projectType)
 	_, err := os.Stat(projectPath)
 	if err != nil {
 		return &ProjectError{errBadPath, err, err.Error()}
 	}
 
+	depInfo, depError := deployments.GetDeploymentByID(depID)
+	if depError != nil {
+		fmt.Printf(depError.Op)
+		os.Exit(0)
+	}
+
 	bindRequest := BindRequest{
-		Language:    Language,
-		Name:        Name,
-		ProjectType: BuildType,
+		Language:    language,
+		Name:        name,
+		ProjectType: projectType,
 		Path:        projectPath,
 	}
 	buf := new(bytes.Buffer)
 	json.NewEncoder(buf).Encode(bindRequest)
 
-	// Make the request to start the bind process.
-	bindUrl := config.PFEApiRoute() + "projects/bind/start"
+	// use the given deploymentID to call api/v1/bind/start
+	depURL := config.PFEApiRoute()
+	fmt.Println(depURL)
+	if depInfo.ID != "local" {
+		depURL = depInfo.URL
+	}
+	bindURL := depURL + "projects/bind/start"
 
 	client := &http.Client{}
 
-	request, err := http.NewRequest("POST", bindUrl, bytes.NewReader(buf.Bytes()))
+	request, err := http.NewRequest("POST", bindURL, bytes.NewReader(buf.Bytes()))
 	request.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(request)
 	if err != nil {
@@ -100,24 +116,34 @@ func Bind(projectPath string, Name string, Language string, BuildType string) *P
 	}
 
 	projectID := projectInfo["projectID"].(string)
-	fmt.Println("Returned projectid " + projectID)
+	fmt.Println("Returned projectID " + projectID)
+
+	// Generate the ./codewind/deployments/{projectID}.json file based on the given depID
+	AddDeploymentTarget(projectID, depID)
+
+	// Read the generated deployment file
+	depURL, projErr := GetDeploymentURL(projectID)
+
+	if projErr != nil {
+		return projErr
+	}
 
 	// Sync all the project files
-	syncFiles(projectPath, projectID, 0)
+	syncFiles(projectPath, projectID, depURL, 0)
 
 	// Call bind/end to complete
-	completeBind(projectID)
+	completeBind(projectID, depURL)
 	return nil
 }
 
-func completeBind(projectId string) {
-	uploadEndUrl := config.PFEApiRoute() + "projects/" + projectId + "/bind/end"
+func completeBind(projectID string, depURL string) {
+	uploadEndURL := depURL + "projects/" + projectID + "/bind/end"
 
-	payload := &BindEndRequest{ProjectID: projectId}
+	payload := &BindEndRequest{ProjectID: projectID}
 	jsonPayload, _ := json.Marshal(payload)
 
 	// Make the request to end the sync process.
-	resp, err := http.Post(uploadEndUrl, "application/json", bytes.NewBuffer(jsonPayload))
+	resp, err := http.Post(uploadEndURL, "application/json", bytes.NewBuffer(jsonPayload))
 	fmt.Println("Upload end status:" + resp.Status)
 	if err != nil {
 		panic(err)

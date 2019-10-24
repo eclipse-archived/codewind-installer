@@ -47,10 +47,16 @@ func UpgradeProjects(c *cli.Context) *ProjectError {
 			json.Unmarshal([]byte(file), &result)
 
 			language := result["language"]
-			projecttype := result["projectType"]
+			projectType := result["projectType"]
 			name := result["name"]
 			location := result["workspace"] + name
-			Bind(location, name, language, projecttype)
+			projectID := result["projectID"]
+
+			depID, err := GetDeploymentURL(projectID)
+			if err != nil {
+				return err
+			}
+			Bind(location, name, language, projectType, depID)
 		}
 		return nil
 	})

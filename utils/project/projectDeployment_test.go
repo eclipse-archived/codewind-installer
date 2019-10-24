@@ -32,6 +32,14 @@ func Test_ProjectDeployment(t *testing.T) {
 		assert.Len(t, deploymentTargets.DeploymentTargets, 0)
 	})
 
+	t.Run("Asserts getting deployment URL fails", func(t *testing.T) {
+		_, projError := GetDeploymentURL(testProjectID)
+		if projError == nil {
+			t.Fail()
+		}
+		assert.Equal(t, errOpNotFound, projError.Op)
+	})
+
 	t.Run("Add project to local deployment", func(t *testing.T) {
 		projError := AddDeploymentTarget(testProjectID, testDeploymentID)
 		if projError != nil {
