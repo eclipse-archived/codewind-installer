@@ -73,7 +73,12 @@ func syncFiles(projectPath string, projectId string, synctime int64) ([]string, 
 			panic(err)
 			// TODO - How to handle *some* files being unreadable
 		}
+
 		if !info.IsDir() {
+			shouldIgnore := ignoreFileOrDirectory(info.Name(), false)
+			if shouldIgnore {
+				return nil
+			}
 			relativePath := path[(len(projectPath) + 1):]
 			// Create list of all files for a project
 			fileList = append(fileList, relativePath)
@@ -118,6 +123,12 @@ func syncFiles(projectPath string, projectId string, synctime int64) ([]string, 
 					return nil
 				}
 			}
+		} else {
+			shouldIgnore := ignoreFileOrDirectory(info.Name(), true)
+			if shouldIgnore {
+				return filepath.SkipDir
+			}
+
 		}
 
 		return nil
@@ -142,4 +153,59 @@ func completeUpload(projectId string, files []string, modfiles []string, timesta
 		panic(err)
 		// TODO - Need to handle this gracefully.
 	}
+}
+
+func ignoreFileOrDirectory(name string, isDir bool) bool {
+	// List of files that will not be sent to PFE
+	ignoredFiles := []string{
+		".DS_Store",
+		"*.swp",
+		"*.swx",
+		"Jenkinsfile",
+		".cfignore",
+		"localm2cache.zip",
+		"libertyrepocache.zip",
+		"run-dev",
+		"run-debug",
+		"manifest.yml",
+		"idt.js",
+		".bluemix",
+		".build-ubuntu",
+		".yo-rc.json",
+	}
+
+	// List of directories that will not be sent to PFE
+	ignoredDirectories := []string{
+		".project",
+		"node_modules*",
+		".git*",
+		"load-test*",
+		".settings",
+		"Dockerfile-tools",
+		"target",
+		"mc-target",
+		".m2",
+		"debian",
+		".bluemix",
+		"terraform",
+		".build-ubuntu",
+	}
+
+	ignoredList := ignoredFiles
+	if isDir {
+		ignoredList = ignoredDirectories
+	}
+
+	isFileInIgnoredList := false
+	for _, fileName := range ignoredList {
+		matched, err := filepath.Match(fileName, name)
+		if err != nil {
+			return false
+		}
+		if matched {
+			isFileInIgnoredList = true
+			break
+		}
+	}
+	return isFileInIgnoredList
 }
