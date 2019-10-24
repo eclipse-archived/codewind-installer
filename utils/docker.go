@@ -42,7 +42,7 @@ services:
   environment: ["HOST_WORKSPACE_DIRECTORY=${WORKSPACE_DIRECTORY}","CONTAINER_WORKSPACE_DIRECTORY=/codewind-workspace","HOST_OS=${HOST_OS}","CODEWIND_VERSION=${TAG}","PERFORMANCE_CONTAINER=codewind-performance${PLATFORM}:${TAG}","HOST_HOME=${HOST_HOME}","HOST_MAVEN_OPTS=${HOST_MAVEN_OPTS}"]
   depends_on: [codewind-performance]
   ports: ["127.0.0.1:${PFE_EXTERNAL_PORT}:9090"]
-  volumes: ["/var/run/docker.sock:/var/run/docker.sock","cw-workspace:/codewind-workspace"]
+  volumes: ["/var/run/docker.sock:/var/run/docker.sock","cw-workspace:/codewind-workspace","${WORKSPACE_DIRECTORY}:/mounted-workspace"]
   networks: [network]
  codewind-performance:
   image: codewind-performance${PLATFORM}:${TAG}
@@ -114,13 +114,13 @@ func DockerCompose(tempFilePath string, tag string) {
 	os.Setenv("REPOSITORY", "")
 	os.Setenv("TAG", tag)
 	if GOOS == "windows" {
-		os.Setenv("WORKSPACE_DIRECTORY", "C:\\codewind-workspace")
+		os.Setenv("WORKSPACE_DIRECTORY", "C:\\codewind-temp")
 		// In Windows, calling the env variable "HOME" does not return
 		// the user directory correctly
 		os.Setenv("HOST_HOME", os.Getenv("USERPROFILE"))
 
 	} else {
-		os.Setenv("WORKSPACE_DIRECTORY", home+"/codewind-workspace")
+		os.Setenv("WORKSPACE_DIRECTORY", home+"/codewind-temp")
 		os.Setenv("HOST_HOME", home)
 	}
 	os.Setenv("HOST_OS", GOOS)
