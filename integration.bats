@@ -8,6 +8,7 @@
 }
 
 @test "invoke status -j command - output = '{"status":"stopped","installed-versions":["latest"]}'" {
+  skip
   run go run main.go status -j
   echo "status = ${status}"
   echo "output trace = ${output}"
@@ -58,7 +59,7 @@
 
 @test "invoke dep add command - add new deployment to the list" {
   skip
-  run go run main.go dep add -id kube --label "kube-cluster" --url http://mykube:12345 --auth http://myauth:12345 --realm codewind-cloud --clientid codewind
+  run go run main.go dep add -d kube --label "kube-cluster" --url http://mykube:12345 --auth http://myauth:12345 --realm codewind-cloud --clientid codewind
   echo "status = ${status}"
   echo "output trace = ${output}"
    [ "$output" = '{"status":"OK","status_message":"Deployment added"}' ]
@@ -75,7 +76,8 @@
 }
 
 @test "invoke dep target command - set a target to something unknown" {
-  run go run main.go dep target -id noname
+  skip
+  run go run main.go dep target -d noname
   echo "status = ${status}"
   echo "output trace = ${output}"
    [ "$output" = '{"error":"dep_not_found","error_description":"Target deployment not found"}' ]
@@ -84,7 +86,7 @@
 
 @test "invoke dep target command - set the target to kube" {
   skip
-  run go run main.go dep target --id kube
+  run go run main.go dep target -d kube
   echo "status = ${status}"
   echo "output trace = ${output}"
    [ "$output" = '{"status":"OK","status_message":"New target set"}' ]
