@@ -161,7 +161,7 @@ func completeBind(projectID string, depURL string) (string, int) {
 	jsonPayload, _ := json.Marshal(payload)
 
 	// Make the request to end the sync process.
-	resp, err := http.Post(uploadEndUrl, "application/json", bytes.NewBuffer(jsonPayload))
+	resp, err := http.Post(uploadEndURL, "application/json", bytes.NewBuffer(jsonPayload))
 	if err != nil {
 		panic(err)
 	}

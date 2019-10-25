@@ -17,7 +17,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/eclipse/codewind-installer/utils"
 	"github.com/eclipse/codewind-installer/utils/project"
 	"github.com/urfave/cli"
 )
@@ -42,8 +41,10 @@ func ProjectSync(c *cli.Context) {
 	response, err := project.SyncProject(c)
 	if err != nil {
 		fmt.Println(err.Error())
+	} else {
+		jsonResponse, _ := json.Marshal(response)
+		fmt.Println(string(jsonResponse))
 	}
-	utils.PrettyPrintJSON(response)
 	os.Exit(0)
 }
 
@@ -51,8 +52,10 @@ func ProjectBind(c *cli.Context) {
 	response, err := project.BindProject(c)
 	if err != nil {
 		fmt.Println(err.Error())
+	} else {
+		jsonResponse, _ := json.Marshal(response)
+		fmt.Println(string(jsonResponse))
 	}
-	utils.PrettyPrintJSON(response)
 	os.Exit(0)
 }
 
