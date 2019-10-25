@@ -43,14 +43,14 @@ type (
 		Message      string `json:"msg"`
 	}
 	UploadedFile struct {
-		FilePath           string `json:"FilePath"`
-		ResponseStatus     string `json:"ResponseStatus"`
-		ResponseStatusCode int    `json:"ResponseStatusCode"`
+		FilePath   string `json:"FilePath"`
+		Status     string `json:"Status"`
+		StatusCode int    `json:"StatusCode"`
 	}
 	SyncResponse struct {
-		ResponseStatus     string         `json:"ResponseStatus"`
-		ResponseStatusCode int            `json:"ResponseStatusCode"`
-		UploadedFiles      []UploadedFile `json:"UploadedFiles"`
+		Status        string         `json:"Status"`
+		StatusCode    int            `json:"StatusCode"`
+		UploadedFiles []UploadedFile `json:"UploadedFiles"`
 	}
 )
 
@@ -83,9 +83,9 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	// Complete the upload
 	completeStatus, completeStatusCode := completeUpload(projectID, fileList, modifiedList, depURL, synctime)
 	response := SyncResponse{
-		UploadedFiles:      uploadedFilesList,
-		ResponseStatus:     completeStatus,
-		ResponseStatusCode: completeStatusCode,
+		UploadedFiles: uploadedFilesList,
+		Status:        completeStatus,
+		StatusCode:    completeStatusCode,
 	}
 
 	return &response, nil
@@ -151,9 +151,9 @@ func syncFiles(projectPath string, projectID string, depURL string, synctime int
 				request.Header.Set("Content-Type", "application/json")
 				resp, err := client.Do(request)
 				uploadedFiles = append(uploadedFiles, UploadedFile{
-					FilePath:           relativePath,
-					ResponseStatus:     resp.Status,
-					ResponseStatusCode: resp.StatusCode,
+					FilePath:   relativePath,
+					Status:     resp.Status,
+					StatusCode: resp.StatusCode,
 				})
 				if err != nil {
 					return nil

@@ -37,24 +37,34 @@ func ProjectCreate(c *cli.Context) {
 }
 
 func ProjectSync(c *cli.Context) {
-	// PrintAsJSON := c.GlobalBool("json")
+	PrintAsJSON := c.GlobalBool("json")
 	response, err := project.SyncProject(c)
 	if err != nil {
 		fmt.Println(err.Error())
 	} else {
-		jsonResponse, _ := json.Marshal(response)
-		fmt.Println(string(jsonResponse))
+		if PrintAsJSON {
+			jsonResponse, _ := json.Marshal(response)
+			fmt.Println(string(jsonResponse))
+		} else {
+			fmt.Println("Status: " + response.Status)
+		}
 	}
 	os.Exit(0)
 }
 
 func ProjectBind(c *cli.Context) {
+	PrintAsJSON := c.GlobalBool("json")
 	response, err := project.BindProject(c)
 	if err != nil {
 		fmt.Println(err.Error())
 	} else {
-		jsonResponse, _ := json.Marshal(response)
-		fmt.Println(string(jsonResponse))
+		if PrintAsJSON {
+			jsonResponse, _ := json.Marshal(response)
+			fmt.Println(string(jsonResponse))
+		} else {
+			fmt.Println("Project ID: " + response.ProjectID)
+			fmt.Println("Status: " + response.Status)
+		}
 	}
 	os.Exit(0)
 }

@@ -48,10 +48,10 @@ type (
 	}
 
 	BindResponse struct {
-		ProjectID          string         `json:"ProjectID"`
-		ResponseStatus     string         `json:"ResponseStatus"`
-		ResponseStatusCode int            `json:"ResponseStatusCode"`
-		UploadedFiles      []UploadedFile `json:"UploadedFiles"`
+		ProjectID     string         `json:"ProjectID"`
+		Status        string         `json:"Status"`
+		StatusCode    int            `json:"StatusCode"`
+		UploadedFiles []UploadedFile `json:"UploadedFiles"`
 	}
 )
 
@@ -146,10 +146,10 @@ func Bind(projectPath string, name string, language string, projectType string, 
 	// Call bind/end to complete
 	completeStatus, completeStatusCode := completeBind(projectID, depURL)
 	response := BindResponse{
-		ProjectID:          projectID,
-		UploadedFiles:      uploadedFilesList,
-		ResponseStatus:     completeStatus,
-		ResponseStatusCode: completeStatusCode,
+		ProjectID:     projectID,
+		UploadedFiles: uploadedFilesList,
+		Status:        completeStatus,
+		StatusCode:    completeStatusCode,
 	}
 	return &response, nil
 }
