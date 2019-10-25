@@ -32,7 +32,7 @@ const (
 	errOpFileWrite   = "proj_write"
 	errOpConflict    = "proj_conflict"
 	errOpNotFound    = "proj_notfound"
-	errOpDepNotFound = "proj_notfound"
+	errOpConNotFound = "connection_notfound"
 	errOpInvalidID   = "proj_id_invalid"
 )
 

@@ -170,7 +170,7 @@ func ListTargetConnections(projectID string) (*ConnectionTargets, *ProjectError)
 
 // GetConnectionURL returns to the connection URL for a given projectID, unique to each project connection
 func GetConnectionURL(projectID string) (string, *ProjectError) {
-	depID, err := GetConnectionID(projectID)
+	conID, err := GetConnectionID(projectID)
 
 	if err != nil {
 		return "", err
@@ -201,7 +201,7 @@ func GetConnectionID(projectID string) (string, *ProjectError) {
 		projError := errors.New("Connection not found for project " + projectID)
 		return "", &ProjectError{errOpNotFound, projError, projError.Error()}
 	}
-	return depID, nil
+	return conID, nil
 }
 
 // getProjectConnectionConfigDir : get directory path to the connections file

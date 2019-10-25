@@ -55,7 +55,7 @@ type (
 )
 
 // SyncProject syncs a project with its remote connection
-func SyncProject(c *cli.Context) *ProjectError {
+func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	projectPath := strings.TrimSpace(c.String("path"))
 	projectID := strings.TrimSpace(c.String("id"))
 	synctime := int64(c.Int("time"))
@@ -65,19 +65,19 @@ func SyncProject(c *cli.Context) *ProjectError {
 		return nil, &ProjectError{errBadPath, err, err.Error()}
 	}
 
-	connectionInfo, err := connections.GetConnectionByID(conID)
+	conID, projErr := GetConnectionID(projectID)
 	if projErr != nil {
 		return nil, projErr
 	}
 
-	depInfo, depInfoErr := deployments.GetDeploymentByID(depID)
-	if depInfoErr != nil {
-		return nil, &ProjectError{errOpDepNotFound, depInfoErr, depInfoErr.Desc}
+	conInfo, conInfoErr := connections.GetConnectionByID(conID)
+	if conInfoErr != nil {
+		return nil, &ProjectError{errOpConNotFound, conInfoErr, conInfoErr.Desc}
 	}
 
 	var conURL string
 	if conInfo.ID != "local" {
-		conURL = connectionInfo.URL
+		conURL = conInfo.URL
 	} else {
 		conURL = config.PFEApiRoute()
 	}
@@ -95,7 +95,7 @@ func SyncProject(c *cli.Context) *ProjectError {
 	return &response, nil
 }
 
-func syncFiles(projectPath string, projectID string, depURL string, synctime int64) ([]string, []string, []UploadedFile) {
+func syncFiles(projectPath string, projectID string, conURL string, synctime int64) ([]string, []string, []UploadedFile) {
 	var fileList []string
 	var modifiedList []string
 	var uploadedFiles []UploadedFile
