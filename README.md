@@ -110,7 +110,6 @@ $ brew upgrade dep
 Subcommands:</br>
 
 `bind` - Bind a project to Codewind for building and running
-
 > **Flags:**
 > --name,-n value               Project name
 > --language,-l value           Project language
