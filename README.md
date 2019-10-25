@@ -97,7 +97,7 @@ $ brew upgrade dep
 |secclient       |`sc`          |'Manage new or existing APPLICATION access configurations'          |
 |seckeyring      |`sk`          |'Manage Codewind keys in the desktop keyring'                       |
 |secuser         |`su`          |'Manage new or existing USER access configurations'                 |
-|connections     |`dep`         |'Manage connections configuration list'                             |
+|connections     |`con`         |'Manage connections configuration list'                             |
 |help            |`h`           |'Shows a list of commands or help for one command'                  |
 
 ## CLI Command Options
@@ -115,7 +115,7 @@ Subcommands:</br>
 > --language,-l value           Project language
 > --type,-t value               Project Type
 > --path,-p value               Project Path
-> --conid value              Connection ID
+> --conid value                 Connection ID
 
 `sync` - Synchronize a bound project to its connection
 > **Flags:**
@@ -128,7 +128,7 @@ Subcommands:</br>
 `add,a` - Add a connection to a project
 > **Flags:**
 > --id,i value                  Project ID
-> --conid value               Connection ID
+> --conid value                 Connection ID
 
 `list,l` - List connections for a project
 > **Flags:**
@@ -137,7 +137,7 @@ Subcommands:</br>
 `remove,r` - Remove a connection from a project
 > **Flags:**
 > --id,i value                  Project ID
-> --conid value               Connection ID
+> --conid value                 Connection ID
 
 
 ## install

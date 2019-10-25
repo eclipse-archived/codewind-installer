@@ -33,10 +33,10 @@ func ConnectionAddToList(c *cli.Context) {
 	type Result struct {
 		Status        string `json:"status"`
 		StatusMessage string `json:"status_message"`
-		DepID         string `json:"id"`
+		ConID         string `json:"id"`
 	}
 
-	response, _ := json.Marshal(Result{Status: "OK", StatusMessage: "Connection added", DepID: strings.ToUpper(connection.ID)})
+	response, _ := json.Marshal(Result{Status: "OK", StatusMessage: "Connection added", ConID: strings.ToUpper(connection.ID)})
 	fmt.Println(string(response))
 	os.Exit(0)
 }

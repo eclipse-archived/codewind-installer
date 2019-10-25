@@ -41,78 +41,78 @@
 # Connection command tests #
 ############################
 
-@test "invoke dep reset command - reset connections file" {
-  run go run main.go dep reset
+@test "invoke con reset command - reset connections file" {
+  run go run main.go con reset
   echo "status = ${status}"
   echo "output trace = ${output}"
    [ "$output" = '{"status":"OK","status_message":"Connection list reset"}' ]
    [ "$status" -eq 0 ]
 }
 
-@test "invoke dep list command - contains just 1 local connection" {
-  run go run main.go dep list
+@test "invoke con list command - contains just 1 local connection" {
+  run go run main.go con list
   echo "status = ${status}"
   echo "output trace = ${output}"
    [ "$output" = '{"schemaversion":1,"active":"local","connections":[{"id":"local","label":"Codewind local connection","url":"","auth":"","realm":"","clientid":""}]}' ]
    [ "$status" -eq 0 ]
 }
 
-@test "invoke dep add command - add new connection to the list" {
+@test "invoke con add command - add new connection to the list" {
   skip
-  run go run main.go dep add -d kube --label "kube-cluster" --url http://mykube:12345 --auth http://myauth:12345 --realm codewind-cloud --clientid codewind
+  run go run main.go con add -d kube --label "kube-cluster" --url http://mykube:12345 --auth http://myauth:12345 --realm codewind-cloud --clientid codewind
   echo "status = ${status}"
   echo "output trace = ${output}"
    [ "$output" = '{"status":"OK","status_message":"Connection added"}' ]
    [ "$status" -eq 0 ]
 }
 
-@test "invoke dep list command - ensure both connections exist " {
+@test "invoke con list command - ensure both connections exist " {
   skip
-  run go run main.go dep list
+  run go run main.go con list
   echo "status = ${status}"
   echo "output trace = ${output}"
    [ "$output" = '{"schemaversion":1,"active":"local","connections":[{"id":"local","label":"Codewind local connection","url":"","auth":"","realm":"","clientid":""},{"id":"kube","label":"kube-cluster","url":"http://mykube:12345","auth":"http://myauth:12345","realm":"codewind-cloud","clientid":"codewind"}]}' ]
    [ "$status" -eq 0 ]
 }
 
-@test "invoke dep target command - set a target to something unknown" {
+@test "invoke con target command - set a target to something unknown" {
   skip
-  run go run main.go dep target -d noname
+  run go run main.go con target -d noname
   echo "status = ${status}"
   echo "output trace = ${output}"
-   [ "$output" = '{"error":"dep_not_found","error_description":"Target connection not found"}' ]
+   [ "$output" = '{"error":"con_not_found","error_description":"Target connection not found"}' ]
    [ "$status" -eq 0 ]
 }
 
-@test "invoke dep target command - set the target to kube" {
+@test "invoke con target command - set the target to kube" {
   skip
-  run go run main.go dep target -d kube
+  run go run main.go con target -d kube
   echo "status = ${status}"
   echo "output trace = ${output}"
    [ "$output" = '{"status":"OK","status_message":"New target set"}' ]
    [ "$status" -eq 0 ]
 }
 
-@test "invoke dep target command - check the target is now kube" {
+@test "invoke con target command - check the target is now kube" {
   skip
-  run go run main.go dep target
+  run go run main.go con target
   echo "status = ${status}"
   echo "output trace = ${output}"
    [ "$output" = '{"id":"kube","label":"kube-cluster","url":"http://mykube:12345","auth":"http://myauth:12345","realm":"codewind-cloud","clientid":"codewind"}' ]
    [ "$status" -eq 0 ]
 }
 
-@test "invoke dep remove command - delete target kube" {
+@test "invoke con remove command - delete target kube" {
   skip
-  run go run main.go dep remove --id kube
+  run go run main.go con remove --id kube
   echo "status = ${status}"
   echo "output trace = ${output}"
    [ "$output" = '{"status":"OK","status_message":"Connection removed"}' ]
    [ "$status" -eq 0 ]
 }
 
-@test "invoke dep target command - check target returns to local" {
-  run go run main.go dep target
+@test "invoke con target command - check target returns to local" {
+  run go run main.go con target
   echo "status = ${status}"
   echo "output trace = ${output}"
    [ "$output" = '{"id":"local","label":"Codewind local connection","url":"","auth":"","realm":"","clientid":""}' ]
