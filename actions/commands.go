@@ -40,6 +40,10 @@ func Commands() {
 			Name:  "insecure",
 			Usage: "disable certificate checking",
 		},
+		cli.BoolFlag{
+			Name:  "json, j",
+			Usage: "ouput as JSON",
+		},
 	}
 
 	// create commands
@@ -156,7 +160,7 @@ func Commands() {
 				},
 				cli.BoolFlag{
 					Name:  "json, j",
-					Usage: "specify terminal output",
+					Usage: "ouput as JSON",
 				},
 			},
 			Action: func(c *cli.Context) error {
@@ -191,7 +195,7 @@ func Commands() {
 			Flags: []cli.Flag{
 				cli.BoolFlag{
 					Name:  "json, j",
-					Usage: "specify terminal output",
+					Usage: "ouput as JSON",
 				},
 			},
 			Action: func(c *cli.Context) error {

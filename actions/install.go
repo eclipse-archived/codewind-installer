@@ -21,7 +21,7 @@ import (
 //InstallCommand to pull images from dockerhub
 func InstallCommand(c *cli.Context) {
 	tag := c.String("tag")
-	jsonOutput := c.Bool("json")
+	jsonOutput := c.Bool("json") || c.GlobalBool("json")
 
 	imageArr := [3]string{"docker.io/eclipse/codewind-pfe-amd64:",
 		"docker.io/eclipse/codewind-performance-amd64:",

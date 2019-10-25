@@ -167,7 +167,6 @@ func PullImage(image string, jsonOutput bool) {
 	codewindOut, err = cli.ImagePull(ctx, image, types.ImagePullOptions{})
 
 	errors.CheckErr(err, 100, "")
-
 	if jsonOutput == true {
 		defer codewindOut.Close()
 		io.Copy(os.Stdout, codewindOut)

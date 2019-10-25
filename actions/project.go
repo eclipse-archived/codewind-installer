@@ -17,6 +17,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/eclipse/codewind-installer/utils"
 	"github.com/eclipse/codewind-installer/utils/project"
 	"github.com/urfave/cli"
 )
@@ -37,18 +38,21 @@ func ProjectCreate(c *cli.Context) {
 }
 
 func ProjectSync(c *cli.Context) {
-	err := project.SyncProject(c)
+	// PrintAsJSON := c.GlobalBool("json")
+	response, err := project.SyncProject(c)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
+	utils.PrettyPrintJSON(response)
 	os.Exit(0)
 }
 
 func ProjectBind(c *cli.Context) {
-	err := project.BindProject(c)
+	response, err := project.BindProject(c)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
+	utils.PrettyPrintJSON(response)
 	os.Exit(0)
 }
 

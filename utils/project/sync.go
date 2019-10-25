@@ -42,10 +42,19 @@ type (
 		RelativePath string `json:"path"`
 		Message      string `json:"msg"`
 	}
+	UploadedFile struct {
+		FilePath           string `json:"FilePath"`
+		ResponseStatus     string `json:"ResponseStatus"`
+		ResponseStatusCode int    `json:"ResponseStatusCode"`
+	}
+	SyncResponse struct {
+		ResponseStatus     string         `json:"ResponseStatus"`
+		ResponseStatusCode int            `json:"ResponseStatusCode"`
+		UploadedFiles      []UploadedFile `json:"UploadedFiles"`
+	}
 )
 
-// SyncProject syncs a project with its remote deployment
-func SyncProject(c *cli.Context) *ProjectError {
+func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	projectPath := strings.TrimSpace(c.String("path"))
 	projectID := strings.TrimSpace(c.String("id"))
 	synctime := int64(c.Int("time"))
@@ -53,13 +62,13 @@ func SyncProject(c *cli.Context) *ProjectError {
 
 	_, err := os.Stat(projectPath)
 	if err != nil {
-		return &ProjectError{errBadPath, err, err.Error()}
+		return nil, &ProjectError{errBadPath, err, err.Error()}
 	}
 
 	deploymentInfo, err := deployments.GetDeploymentByID(depID)
 
 	if err != nil {
-		return &ProjectError{errOpNotFound, err, err.Error()}
+		return nil, &ProjectError{errOpNotFound, err, err.Error()}
 	}
 
 	var depURL string
@@ -70,20 +79,25 @@ func SyncProject(c *cli.Context) *ProjectError {
 	}
 
 	// Sync all the necessary project files
-	fileList, modifiedList := syncFiles(projectPath, projectID, depURL, synctime)
-
+	fileList, modifiedList, uploadedFilesList := syncFiles(projectPath, projectID, depURL, synctime)
 	// Complete the upload
-	completeUpload(projectID, fileList, modifiedList, depURL, synctime)
-	return nil
+	completeStatus, completeStatusCode := completeUpload(projectID, fileList, modifiedList, depURL, synctime)
+	response := SyncResponse{
+		UploadedFiles:      uploadedFilesList,
+		ResponseStatus:     completeStatus,
+		ResponseStatusCode: completeStatusCode,
+	}
+
+	return &response, nil
 }
 
-func syncFiles(projectPath string, projectID string, depURL string, synctime int64) ([]string, []string) {
+func syncFiles(projectPath string, projectID string, depURL string, synctime int64) ([]string, []string, []UploadedFile) {
 	var fileList []string
 	var modifiedList []string
+	var uploadedFiles []UploadedFile
 
 	projectUploadURL := depURL + "projects/" + projectID + "/upload"
 	client := &http.Client{}
-	//	fmt.Println("Uploading to " + projectUploadUrl)
 
 	err := filepath.Walk(projectPath, func(path string, info os.FileInfo, err error) error {
 
@@ -136,7 +150,11 @@ func syncFiles(projectPath string, projectID string, depURL string, synctime int
 				request, err := http.NewRequest("PUT", projectUploadURL, bytes.NewReader(buf.Bytes()))
 				request.Header.Set("Content-Type", "application/json")
 				resp, err := client.Do(request)
-				fmt.Println("Upload status:" + resp.Status + " for file: " + relativePath)
+				uploadedFiles = append(uploadedFiles, UploadedFile{
+					FilePath:           relativePath,
+					ResponseStatus:     resp.Status,
+					ResponseStatusCode: resp.StatusCode,
+				})
 				if err != nil {
 					return nil
 				}
@@ -154,12 +172,12 @@ func syncFiles(projectPath string, projectID string, depURL string, synctime int
 	})
 	if err != nil {
 		fmt.Printf("error walking the path %q: %v\n", projectPath, err)
-		return nil, nil
+		return nil, nil, nil
 	}
-	return fileList, modifiedList
+	return fileList, modifiedList, uploadedFiles
 }
 
-func completeUpload(projectID string, files []string, modfiles []string, depURL string, timestamp int64) {
+func completeUpload(projectID string, files []string, modfiles []string, depURL string, timestamp int64) (string, int) {
 	uploadEndURL := depURL + "projects/" + projectID + "/upload/end"
 
 	payload := &CompleteRequest{FileList: files, ModifiedList: modfiles, TimeStamp: timestamp}
@@ -167,11 +185,11 @@ func completeUpload(projectID string, files []string, modfiles []string, depURL 
 
 	// Make the request to end the sync process.
 	resp, err := http.Post(uploadEndURL, "application/json", bytes.NewBuffer(jsonPayload))
-	fmt.Println("Upload end status:" + resp.Status)
 	if err != nil {
 		panic(err)
 		// TODO - Need to handle this gracefully.
 	}
+	return resp.Status, resp.StatusCode
 }
 
 func ignoreFileOrDirectory(name string, isDir bool) bool {

@@ -46,10 +46,16 @@ type (
 	BindEndRequest struct {
 		ProjectID string `json:"id"`
 	}
+
+	BindResponse struct {
+		ProjectID          string         `json:"ProjectID"`
+		ResponseStatus     string         `json:"ResponseStatus"`
+		ResponseStatusCode int            `json:"ResponseStatusCode"`
+		UploadedFiles      []UploadedFile `json:"UploadedFiles"`
+	}
 )
 
-// BindProject is used to bind a project for building and running, with CLI context
-func BindProject(c *cli.Context) *ProjectError {
+func BindProject(c *cli.Context) (*BindResponse, *ProjectError) {
 	projectPath := strings.TrimSpace(c.String("path"))
 	Name := strings.TrimSpace(c.String("name"))
 	Language := strings.TrimSpace(c.String("language"))
@@ -64,11 +70,10 @@ func BindProject(c *cli.Context) *ProjectError {
 }
 
 // Bind is used to bind a project for building and running
-func Bind(projectPath string, name string, language string, projectType string, depID string) *ProjectError {
-	//	fmt.Println(projectPath + " " + Name + " " + Language + " " + projectType)
+func Bind(projectPath string, name string, language string, projectType string, depID string) (*BindResponse, *ProjectError) {
 	_, err := os.Stat(projectPath)
 	if err != nil {
-		return &ProjectError{errBadPath, err, err.Error()}
+		return nil, &ProjectError{errBadPath, err, err.Error()}
 	}
 
 	depInfo, depError := deployments.GetDeploymentByID(depID)
@@ -100,19 +105,19 @@ func Bind(projectPath string, name string, language string, projectType string, 
 	resp, err := client.Do(request)
 	if err != nil {
 		bindError := errors.New(textNoCodewind)
-		return &ProjectError{errOpResponse, bindError, bindError.Error()}
+		return nil, &ProjectError{errOpResponse, bindError, bindError.Error()}
 	}
 
 	switch httpCode := resp.StatusCode; {
 	case httpCode == 400:
 		err = errors.New(textInvalidType)
-		return &ProjectError{errOpResponse, err, textInvalidType}
+		return nil, &ProjectError{errOpResponse, err, textInvalidType}
 	case httpCode == 404:
 		err = errors.New(textAPINotFound)
-		return &ProjectError{errOpResponse, err, textAPINotFound}
+		return nil, &ProjectError{errOpResponse, err, textAPINotFound}
 	case httpCode == 409:
 		err = errors.New(textDupName)
-		return &ProjectError{errOpResponse, err, textDupName}
+		return nil, &ProjectError{errOpResponse, err, textDupName}
 	}
 
 	defer resp.Body.Close()
@@ -124,7 +129,6 @@ func Bind(projectPath string, name string, language string, projectType string, 
 	}
 
 	projectID := projectInfo["projectID"].(string)
-	fmt.Println("Returned projectID " + projectID)
 
 	// Generate the .codewind/deployments/{projectID}.json file based on the given depID
 	AddDeploymentTarget(projectID, depID)
@@ -133,27 +137,33 @@ func Bind(projectPath string, name string, language string, projectType string, 
 	depURL, projErr := GetDeploymentURL(projectID)
 
 	if projErr != nil {
-		return projErr
+		return nil, projErr
 	}
 
 	// Sync all the project files
-	syncFiles(projectPath, projectID, depURL, 0)
+	_, _, uploadedFilesList := syncFiles(projectPath, projectID, depURL, 0)
 
 	// Call bind/end to complete
-	completeBind(projectID, depURL)
-	return nil
+	completeStatus, completeStatusCode := completeBind(projectID, depURL)
+	response := BindResponse{
+		ProjectID:          projectID,
+		UploadedFiles:      uploadedFilesList,
+		ResponseStatus:     completeStatus,
+		ResponseStatusCode: completeStatusCode,
+	}
+	return &response, nil
 }
 
-func completeBind(projectID string, depURL string) {
+func completeBind(projectID string, depURL string) (string, int) {
 	uploadEndURL := depURL + "projects/" + projectID + "/bind/end"
 
 	payload := &BindEndRequest{ProjectID: projectID}
 	jsonPayload, _ := json.Marshal(payload)
 
 	// Make the request to end the sync process.
-	resp, err := http.Post(uploadEndURL, "application/json", bytes.NewBuffer(jsonPayload))
-	fmt.Println("Upload end status:" + resp.Status)
+	resp, err := http.Post(uploadEndUrl, "application/json", bytes.NewBuffer(jsonPayload))
 	if err != nil {
 		panic(err)
 	}
+	return resp.Status, resp.StatusCode
 }
