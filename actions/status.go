@@ -39,7 +39,7 @@ func StatusCommand(c *cli.Context) {
 
 // StatusCommandRemoteDeployment : Output remote deployment details
 func StatusCommandRemoteDeployment(c *cli.Context, d *deployments.Deployment) {
-	jsonOutput := c.Bool("json")
+	jsonOutput := c.Bool("json") || c.GlobalBool("json")
 	apiResponse, err := apiroutes.GetAPIEnvironment(c, d.URL)
 	if err != nil {
 		if jsonOutput {
@@ -89,7 +89,7 @@ func StatusCommandRemoteDeployment(c *cli.Context, d *deployments.Deployment) {
 
 // StatusCommandLocalDeployment : Output local deployment details
 func StatusCommandLocalDeployment(c *cli.Context) {
-	jsonOutput := c.Bool("json")
+	jsonOutput := c.Bool("json") || c.GlobalBool("json")
 	if utils.CheckContainerStatus() {
 		// Started
 		hostname, port := utils.GetPFEHostAndPort()
