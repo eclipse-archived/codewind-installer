@@ -80,7 +80,7 @@ func Commands() {
 						cli.StringFlag{Name: "language, l", Usage: "the project language", Required: true},
 						cli.StringFlag{Name: "type, t", Usage: "the type of the project", Required: true},
 						cli.StringFlag{Name: "path, p", Usage: "the path to the project", Required: true},
-						cli.StringFlag{Name: "depid, d", Usage: "the deployment id for the project", Required: false},
+						cli.StringFlag{Name: "conid", Usage: "the connection id for the project", Required: false},
 					},
 					Action: func(c *cli.Context) error {
 						ProjectBind(c)
@@ -102,27 +102,27 @@ func Commands() {
 					},
 				},
 				{
-					Name:    "deployment",
-					Aliases: []string{"dep"},
-					Usage:   "Manage project deployments",
+					Name:    "connection",
+					Aliases: []string{"con"},
+					Usage:   "Manage project connections",
 					Subcommands: []cli.Command{
 						{
 							Name:    "add",
 							Aliases: []string{"a"},
-							Usage:   "Add a deployment target",
+							Usage:   "Add a connection target",
 							Flags: []cli.Flag{
 								cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
-								cli.StringFlag{Name: "depid,d", Usage: "Deployment ID", Required: true},
+								cli.StringFlag{Name: "conid", Usage: "Connection ID", Required: true},
 							},
 							Action: func(c *cli.Context) error {
-								ProjectAddTargetDeployment(c)
+								ProjectAddTargetConnection(c)
 								return nil
 							},
 						},
 						{
 							Name:    "list",
 							Aliases: []string{"l"},
-							Usage:   "List the registered deployments for a project",
+							Usage:   "List the registered connections for a project",
 							Flags: []cli.Flag{
 								cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
 							},
@@ -133,13 +133,13 @@ func Commands() {
 						}, {
 							Name:    "remove",
 							Aliases: []string{"r"},
-							Usage:   "Remove a deployment target",
+							Usage:   "Remove a connection target",
 							Flags: []cli.Flag{
 								cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
-								cli.StringFlag{Name: "depid,d", Usage: "Deployment ID", Required: true},
+								cli.StringFlag{Name: "conid", Usage: "Connection ID", Required: true},
 							},
 							Action: func(c *cli.Context) error {
-								ProjectRemoveTargetDeployment(c)
+								ProjectRemoveTargetConnection(c)
 								return nil
 							},
 						},
@@ -344,7 +344,7 @@ func Commands() {
 						cli.StringFlag{Name: "username,u", Usage: "Account Username", Required: true},
 						cli.StringFlag{Name: "password,p", Usage: "Account Password", Required: false},
 						cli.StringFlag{Name: "client,c", Usage: "Client", Required: false},
-						cli.StringFlag{Name: "depid,d", Usage: "Deployment ID", Required: false},
+						cli.StringFlag{Name: "conid", Usage: "Connection ID", Required: false},
 					},
 					Action: func(c *cli.Context) error {
 						SecurityTokenGet(c)
@@ -363,7 +363,7 @@ func Commands() {
 					Aliases: []string{"u"},
 					Usage:   "Add new or update existing Codewind credentials in the keyring",
 					Flags: []cli.Flag{
-						cli.StringFlag{Name: "depid,d", Usage: "Deployment ID (see the deployments cmd)", Required: true},
+						cli.StringFlag{Name: "conid", Usage: "Connection ID (see the connections cmd)", Required: true},
 						cli.StringFlag{Name: "username,u", Usage: "Username", Required: true},
 						cli.StringFlag{Name: "password,p", Usage: "New password", Required: true},
 					},
@@ -376,7 +376,7 @@ func Commands() {
 					Aliases: []string{"v"},
 					Usage:   "Checks if Codewind credentials exist in the keyring",
 					Flags: []cli.Flag{
-						cli.StringFlag{Name: "depid,d", Usage: "Keycloak login ID", Required: true},
+						cli.StringFlag{Name: "conid,d", Usage: "Keycloak login ID", Required: true},
 						cli.StringFlag{Name: "username,u", Usage: "Username", Required: true},
 					},
 					Action: func(c *cli.Context) error {
@@ -522,61 +522,61 @@ func Commands() {
 				},
 			},
 		},
-		//  Deployment maintenance //
+		//  Connection maintenance //
 		{
-			Name:    "deployments",
-			Aliases: []string{"dep"},
-			Usage:   "Manage deployments list",
+			Name:    "connections",
+			Aliases: []string{"con"},
+			Usage:   "Manage connections list",
 			Subcommands: []cli.Command{
 				{
 					Name:    "add",
 					Aliases: []string{"a"},
-					Usage:   "Add a new deployment to the configuration file",
+					Usage:   "Add a new connection to the configuration file",
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "label", Usage: "A displayable name", Required: true},
 						cli.StringFlag{Name: "url", Usage: "The ingress URL of Codewind gatekeeper", Required: true},
 					},
 					Action: func(c *cli.Context) error {
-						DeploymentAddToList(c)
+						ConnectionAddToList(c)
 						return nil
 					},
 				},
 				{
 					Name:    "get",
 					Aliases: []string{"g"},
-					Usage:   "Get a deployment config by id",
+					Usage:   "Get a connection config by id",
 					Flags: []cli.Flag{
-						cli.StringFlag{Name: "depid,d", Usage: "Deployment ID to retrieve", Required: true},
+						cli.StringFlag{Name: "conid", Usage: "Connection ID to retrieve", Required: true},
 					},
 					Action: func(c *cli.Context) error {
-						DeploymentGetByID(c)
+						ConnectionGetByID(c)
 						return nil
 					},
 				},
 				{
 					Name:    "remove",
 					Aliases: []string{"rm"},
-					Usage:   "Remove a deployment from the configuration file",
+					Usage:   "Remove a connection from the configuration file",
 					Flags: []cli.Flag{
-						cli.StringFlag{Name: "depid,d", Usage: "The reference ID of the deployment to be removed", Required: true},
+						cli.StringFlag{Name: "conid", Usage: "The reference ID of the connection to be removed", Required: true},
 					},
 					Action: func(c *cli.Context) error {
-						DeploymentRemoveFromList(c)
+						ConnectionRemoveFromList(c)
 						return nil
 					},
 				},
 				{
 					Name:    "target",
 					Aliases: []string{"t"},
-					Usage:   "Show/Change the current target deployment",
+					Usage:   "Show/Change the current target connection",
 					Flags: []cli.Flag{
-						cli.StringFlag{Name: "depid,d", Usage: "The deployment id of the target to switch to"},
+						cli.StringFlag{Name: "conid", Usage: "The connection id of the target to switch to"},
 					},
 					Action: func(c *cli.Context) error {
 						if c.NumFlags() == 0 {
-							DeploymentGetTarget()
+							ConnectionGetTarget()
 						} else {
-							DeploymentSetTarget(c)
+							ConnectionSetTarget(c)
 						}
 						return nil
 					},
@@ -584,17 +584,17 @@ func Commands() {
 				{
 					Name:    "list",
 					Aliases: []string{"ls"},
-					Usage:   "List known deployments",
+					Usage:   "List known connections",
 					Action: func(c *cli.Context) error {
-						DeploymentListAll()
+						ConnectionListAll()
 						return nil
 					},
 				},
 				{
 					Name:  "reset",
-					Usage: "Resets the deployments list",
+					Usage: "Resets the connections list",
 					Action: func(c *cli.Context) error {
-						DeploymentResetList()
+						ConnectionResetList()
 						return nil
 					},
 				},

@@ -77,11 +77,11 @@ func UpgradeProjects(c *cli.Context) {
 	os.Exit(0)
 }
 
-// ProjectAddTargetDeployment : Add project to a deployment
-func ProjectAddTargetDeployment(c *cli.Context) {
+// ProjectAddTargetConnection : Add project to a connection
+func ProjectAddTargetConnection(c *cli.Context) {
 	projectID := strings.TrimSpace(strings.ToLower(c.String("id")))
-	depID := strings.TrimSpace(strings.ToLower(c.String("depid")))
-	err := project.AddDeploymentTarget(projectID, depID)
+	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
+	err := project.AddConnectionTarget(projectID, conID)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(0)
@@ -91,24 +91,24 @@ func ProjectAddTargetDeployment(c *cli.Context) {
 	os.Exit(0)
 }
 
-// ProjectTargetList : List deployment targets for a project
+// ProjectTargetList : List connectiontargets for a project
 func ProjectTargetList(c *cli.Context) {
 	projectID := strings.TrimSpace(strings.ToLower(c.String("id")))
-	deploymentTargets, err := project.ListTargetDeployments(projectID)
+	connectionTargets, err := project.ListTargetConnections(projectID)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(0)
 	}
-	response, _ := json.Marshal(deploymentTargets)
+	response, _ := json.Marshal(connectionTargets)
 	fmt.Println(string(response))
 	os.Exit(0)
 }
 
-// ProjectRemoveTargetDeployment : Remove a project from a deployment
-func ProjectRemoveTargetDeployment(c *cli.Context) {
+// ProjectRemoveTargetConnection : Remove a project from a connection
+func ProjectRemoveTargetConnection(c *cli.Context) {
 	projectID := strings.TrimSpace(strings.ToLower(c.String("id")))
-	depID := strings.TrimSpace(strings.ToLower(c.String("depid")))
-	err := project.RemoveDeploymentTarget(projectID, depID)
+	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
+	err := project.RemoveConnectionTarget(projectID, conID)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(0)

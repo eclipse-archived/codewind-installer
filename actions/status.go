@@ -20,25 +20,25 @@ import (
 
 	"github.com/eclipse/codewind-installer/apiroutes"
 	"github.com/eclipse/codewind-installer/utils"
-	"github.com/eclipse/codewind-installer/utils/deployments"
+	"github.com/eclipse/codewind-installer/utils/connections"
 	"github.com/urfave/cli"
 )
 
 // StatusCommand : to show the status
 func StatusCommand(c *cli.Context) {
-	targetDeployment, err := deployments.GetTargetDeployment()
+	targetConnection, err := connections.GetTargetConnection()
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	if strings.EqualFold(targetDeployment.ID, "local") {
-		StatusCommandLocalDeployment(c)
+	if strings.EqualFold(targetConnection.ID, "local") {
+		StatusCommandLocalConnection(c)
 	} else {
-		StatusCommandRemoteDeployment(c, targetDeployment)
+		StatusCommandRemoteConnection(c, targetConnection)
 	}
 }
 
-// StatusCommandRemoteDeployment : Output remote deployment details
-func StatusCommandRemoteDeployment(c *cli.Context, d *deployments.Deployment) {
+// StatusCommandRemoteConnection : Output remote connection details
+func StatusCommandRemoteConnection(c *cli.Context, d *connections.Connection) {
 	jsonOutput := c.Bool("json") || c.GlobalBool("json")
 	apiResponse, err := apiroutes.GetAPIEnvironment(c, d.URL)
 	if err != nil {
@@ -57,7 +57,7 @@ func StatusCommandRemoteDeployment(c *cli.Context, d *deployments.Deployment) {
 			}
 			fmt.Println(string(output))
 		} else {
-			fmt.Println("Codewind remote deployment did not respond on " + d.URL)
+			fmt.Println("Codewind remote connection did not respond on " + d.URL)
 			log.Println(err)
 		}
 		os.Exit(0)
@@ -87,8 +87,8 @@ func StatusCommandRemoteDeployment(c *cli.Context, d *deployments.Deployment) {
 
 }
 
-// StatusCommandLocalDeployment : Output local deployment details
-func StatusCommandLocalDeployment(c *cli.Context) {
+// StatusCommandLocalConnection : Output local connection details
+func StatusCommandLocalConnection(c *cli.Context) {
 	jsonOutput := c.Bool("json") || c.GlobalBool("json")
 	if utils.CheckContainerStatus() {
 		// Started
