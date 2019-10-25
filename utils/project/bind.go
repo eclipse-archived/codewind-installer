@@ -54,7 +54,12 @@ func BindProject(c *cli.Context) *ProjectError {
 	Name := strings.TrimSpace(c.String("name"))
 	Language := strings.TrimSpace(c.String("language"))
 	BuildType := strings.TrimSpace(c.String("type"))
-	depID := strings.TrimSpace(strings.ToLower(c.String("depID")))
+	var depID string
+	if c.String("depID") != "" {
+		depID = strings.TrimSpace(strings.ToLower(c.String("depID")))
+	} else {
+		depID = "local"
+	}
 	return Bind(projectPath, Name, Language, BuildType, depID)
 }
 

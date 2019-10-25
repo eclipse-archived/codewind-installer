@@ -112,18 +112,17 @@ Subcommands:</br>
 `bind` - Bind a project to Codewind for building and running
 
 > **Flags:**
-> --name,n value                Project name
-> --language,l value            Project language
-> --type,t value                Project Type
-> --path,p value                Project Path
-> --deployment ID,d value       Deployment ID
+> --name,-n value               Project name
+> --language,-l value           Project language
+> --type,-t value               Project Type
+> --path,-p value               Project Path
+> --depid,-d value              Deployment ID
 
-`sync` - Synchronize a bound projects files, to its deployment
-
+`sync` - Synchronize a bound project to its deployment
 > **Flags:**
-> --path,l value                Project Path
-> --id, i value                 Project ID
-> --time, t value               Time of last sync for Project
+> --path,-p value               Project Path
+> --id,-i value                 Project ID
+> --time,-t value               Time of last project sync
 
 `deployment/dep` - Manage the deployment targets for a project
 

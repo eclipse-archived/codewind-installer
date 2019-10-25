@@ -76,7 +76,7 @@ func Commands() {
 						cli.StringFlag{Name: "language, l", Usage: "the project language", Required: true},
 						cli.StringFlag{Name: "type, t", Usage: "the type of the project", Required: true},
 						cli.StringFlag{Name: "path, p", Usage: "the path to the project", Required: true},
-						cli.StringFlag{Name: "depID, d", Usage: "the deployment id for the project", Required: true},
+						cli.StringFlag{Name: "depID, d", Usage: "the deployment id for the project", Required: false},
 					},
 					Action: func(c *cli.Context) error {
 						ProjectBind(c)
