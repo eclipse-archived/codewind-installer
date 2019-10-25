@@ -40,8 +40,8 @@ const (
 	textDupName          = "project name is already in use"
 	textInvalidType      = "project type is invalid"
 	textInvalidProjectID = "project ID is invalid"
-	textDeploymentExists = "project already added to this deployment"
-	textDepMissing       = "project deployment not found"
+	textConnectionExists = "project already added to this connection"
+	textConMissing       = "project connection not found"
 	textNoCodewind       = "unable to connect to Codewind server"
 	textAPINotFound      = "unable to find requested resource on Codewind server"
 )

@@ -22,29 +22,29 @@ import (
 
 	"github.com/eclipse/codewind-installer/config"
 
-	"github.com/eclipse/codewind-installer/utils/deployments"
+	"github.com/eclipse/codewind-installer/utils/connections"
 )
 
-// Target : A Deployment target
+// Target : A Connection target
 type Target struct {
-	DeploymentID string `json:"id"`
+	ConnectionID string `json:"id"`
 }
 
-// DeploymentTargets : Structure of the project-deployments file
-type DeploymentTargets struct {
+// ConnectionTargets : Structure of the project-connections file
+type ConnectionTargets struct {
 	SchemaVersion     int      `json:"schemaVersion"`
-	DeploymentTargets []Target `json:"deploymentTargets"`
+	ConnectionTargets []Target `json:"connectionTargets"`
 }
 
-const deploymentTargetSchemaVersion = 1
+const connectionTargetSchemaVersion = 1
 
-// AddDeploymentTarget : Add a deployment target
-func AddDeploymentTarget(projectID string, depID string) *ProjectError {
+// AddConnectionTarget : Add a connection target
+func AddConnectionTarget(projectID string, conID string) *ProjectError {
 
-	deployment, depErr := deployments.GetDeploymentByID(depID)
-	if depErr != nil || deployment == nil {
-		projError := errors.New("Deployment unknown")
-		return &ProjectError{"dep_not_found", projError, projError.Error()}
+	connection, conErr := connections.GetConnectionByID(conID)
+	if conErr != nil || connection == nil {
+		projError := errors.New("Connection unknown")
+		return &ProjectError{"con_not_found", projError, projError.Error()}
 	}
 
 	// Check if projectID is supplied in correct format
@@ -53,49 +53,49 @@ func AddDeploymentTarget(projectID string, depID string) *ProjectError {
 		return &ProjectError{errOpInvalidID, projError, projError.Error()}
 	}
 
-	// Load the project-deployment.json
-	deploymentTargets, projError := loadTargets(projectID)
+	// Load the project-connection.json
+	connectionTargets, projError := loadTargets(projectID)
 
-	if projError != nil && deploymentTargets == nil {
-		_, err := os.Stat(getProjectDeploymentsFilename(projectID))
+	if projError != nil && connectionTargets == nil {
+		_, err := os.Stat(getProjectConnectionsFilename(projectID))
 		if os.IsNotExist(err) {
-			os.MkdirAll(getProjectDeploymentConfigDir(), 0777)
+			os.MkdirAll(getProjectConnectionConfigDir(), 0777)
 			projErr := ResetTargetFile(projectID)
 			if projErr != nil {
 				return projErr
 			}
 		}
-		deploymentTargets, projErr := loadTargets(projectID)
+		connectionTargets, projErr := loadTargets(projectID)
 		if projErr != nil {
 			return projErr
 		}
 		target := Target{
-			DeploymentID: depID,
+			ConnectionID: conID,
 		}
-		deploymentTargets.DeploymentTargets = append(deploymentTargets.DeploymentTargets, target)
-		projError := saveDeploymentTargets(projectID, deploymentTargets)
+		connectionTargets.ConnectionTargets = append(connectionTargets.ConnectionTargets, target)
+		projError := saveConnectionTargets(projectID, connectionTargets)
 		if projError != nil {
 			return projError
 		}
 		return nil
 	}
 
-	// Check if the deployment has been added to the project already
-	for i := 0; i < len(deploymentTargets.DeploymentTargets); i++ {
-		if strings.EqualFold(depID, deploymentTargets.DeploymentTargets[i].DeploymentID) {
-			projError := errors.New(textDeploymentExists)
+	// Check if the connection has been added to the project already
+	for i := 0; i < len(connectionTargets.ConnectionTargets); i++ {
+		if strings.EqualFold(conID, connectionTargets.ConnectionTargets[i].ConnectionID) {
+			projError := errors.New(textConnectionExists)
 			return &ProjectError{errOpConflict, projError, projError.Error()}
 		}
 	}
 
-	// Add the deployment to the project-deployments file
+	// Add the connection to the project-connections file
 	target := Target{
-		DeploymentID: depID,
+		ConnectionID: conID,
 	}
-	deploymentTargets.DeploymentTargets = append(deploymentTargets.DeploymentTargets, target)
+	connectionTargets.ConnectionTargets = append(connectionTargets.ConnectionTargets, target)
 
-	// Save the project-deployments file
-	projError = saveDeploymentTargets(projectID, deploymentTargets)
+	// Save the project-connections file
+	projError = saveConnectionTargets(projectID, connectionTargets)
 	if projError != nil {
 		return projError
 	}
@@ -104,23 +104,23 @@ func AddDeploymentTarget(projectID string, depID string) *ProjectError {
 
 // ResetTargetFile : Reset target file
 func ResetTargetFile(projectID string) *ProjectError {
-	deploymentTargets := DeploymentTargets{
-		SchemaVersion: deploymentTargetSchemaVersion,
+	connectionTargets := ConnectionTargets{
+		SchemaVersion: connectionTargetSchemaVersion,
 	}
-	projError := saveDeploymentTargets(projectID, &deploymentTargets)
+	projError := saveConnectionTargets(projectID, &connectionTargets)
 	if projError != nil {
 		return projError
 	}
 	return nil
 }
 
-// RemoveDeploymentTarget : Remove deployment target from project-deployments file
-func RemoveDeploymentTarget(projectID string, depID string) *ProjectError {
+// RemoveConnectionTarget : Remove connection target from project-connections file
+func RemoveConnectionTarget(projectID string, conID string) *ProjectError {
 
-	deployment, depErr := deployments.GetDeploymentByID(depID)
-	if depErr != nil || deployment == nil {
-		projError := errors.New("Deployment unknown")
-		return &ProjectError{"dep_not_found", projError, projError.Error()}
+	connection, conErr := connections.GetConnectionByID(conID)
+	if conErr != nil || connection == nil {
+		projError := errors.New("Connection unknown")
+		return &ProjectError{"con_not_found", projError, projError.Error()}
 	}
 
 	// Check if projectID is supplied in correct format
@@ -129,83 +129,83 @@ func RemoveDeploymentTarget(projectID string, depID string) *ProjectError {
 		return &ProjectError{errOpInvalidID, projError, projError.Error()}
 	}
 
-	// Load the deployments
-	deploymentTargets, projErr := loadTargets(projectID)
+	// Load the connections
+	connectionTargets, projErr := loadTargets(projectID)
 	if projErr != nil {
 		return projErr
 	}
 
-	deploymentFound := false
+	connectionFound := false
 
-	// Remove the deployment
-	for i := 0; i < len(deploymentTargets.DeploymentTargets); i++ {
-		if strings.EqualFold(depID, deploymentTargets.DeploymentTargets[i].DeploymentID) {
-			copy(deploymentTargets.DeploymentTargets[i:], deploymentTargets.DeploymentTargets[i+1:])
-			deploymentFound = true
-			deploymentTargets.DeploymentTargets = deploymentTargets.DeploymentTargets[:len(deploymentTargets.DeploymentTargets)-1]
+	// Remove the connection
+	for i := 0; i < len(connectionTargets.ConnectionTargets); i++ {
+		if strings.EqualFold(conID, connectionTargets.ConnectionTargets[i].ConnectionID) {
+			copy(connectionTargets.ConnectionTargets[i:], connectionTargets.ConnectionTargets[i+1:])
+			connectionFound = true
+			connectionTargets.ConnectionTargets = connectionTargets.ConnectionTargets[:len(connectionTargets.ConnectionTargets)-1]
 		}
 	}
 
-	if !deploymentFound {
-		projErr := errors.New(textDepMissing)
+	if !connectionFound {
+		projErr := errors.New(textConMissing)
 		return &ProjectError{errOpNotFound, projErr, projErr.Error()}
 	}
 
-	// Save the project-deployments file
-	projError := saveDeploymentTargets(projectID, deploymentTargets)
+	// Save the project-connections file
+	projError := saveConnectionTargets(projectID, connectionTargets)
 	if projError != nil {
 		return projError
 	}
 	return nil
 }
 
-// ListTargetDeployments : List the target deployments for this project
-func ListTargetDeployments(projectID string) (*DeploymentTargets, *ProjectError) {
-	deploymentTargets, projErr := loadTargets(projectID)
+// ListTargetConnections : List the target connections for this project
+func ListTargetConnections(projectID string) (*ConnectionTargets, *ProjectError) {
+	connectionTargets, projErr := loadTargets(projectID)
 	if projErr != nil {
 		return nil, projErr
 	}
-	return deploymentTargets, nil
+	return connectionTargets, nil
 }
 
-// GetDeploymentURL returns to the deployment URL for a given projectID, unique to each project deployment
-func GetDeploymentURL(projectID string) (string, *ProjectError) {
-	depID, err := GetDeploymentID(projectID)
+// GetConnectionURL returns to the connection URL for a given projectID, unique to each project connection
+func GetConnectionURL(projectID string) (string, *ProjectError) {
+	depID, err := GetConnectionID(projectID)
 
 	if err != nil {
 		return "", err
 	}
 
-	projectDepInfo, depErr := deployments.GetDeploymentByID(depID)
-	if depErr != nil {
-		return "", &ProjectError{errOpNotFound, depErr, depErr.Error()}
+	projectConInfo, conErr := connections.GetConnectionByID(conID)
+	if conErr != nil {
+		return "", &ProjectError{errOpNotFound, conErr, conErr.Error()}
 	}
 
-	if depID == "local" {
+	if conID == "local" {
 		return config.PFEApiRoute(), nil
 	}
-	return projectDepInfo.URL, nil
+	return projectConInfo.URL, nil
 }
 
-// GetDeploymentID gets the the deploymentID for a given projectID
-func GetDeploymentID(projectID string) (string, *ProjectError) {
-	targetDeployments, err := ListTargetDeployments(projectID)
+// GetConnectionID gets the the connectionID for a given projectID
+func GetConnectionID(projectID string) (string, *ProjectError) {
+	targetConnections, err := ListTargetConnections(projectID)
 	if err != nil {
 		return "", err
 	}
-	depTargets := targetDeployments.DeploymentTargets
-	var depID string
-	if len(depTargets) > 0 {
-		depID = depTargets[0].DeploymentID
+	conTargets := targetConnections.ConnectionTargets
+	var conID string
+	if len(conTargets) > 0 {
+		conID = conTargets[0].ConnectionID
 	} else {
-		projError := errors.New("Deployment not found for project " + projectID)
+		projError := errors.New("Connection not found for project " + projectID)
 		return "", &ProjectError{errOpNotFound, projError, projError.Error()}
 	}
 	return depID, nil
 }
 
-// getProjectDeploymentConfigDir : get directory path to the deployments file
-func getProjectDeploymentConfigDir() string {
+// getProjectConnectionConfigDir : get directory path to the connections file
+func getProjectConnectionConfigDir() string {
 	const GOOS string = runtime.GOOS
 	homeDir := ""
 	if GOOS == "windows" {
@@ -213,21 +213,21 @@ func getProjectDeploymentConfigDir() string {
 	} else {
 		homeDir = os.Getenv("HOME")
 	}
-	return path.Join(homeDir, ".codewind", "config", "deployments")
+	return path.Join(homeDir, ".codewind", "config", "connections")
 }
 
-// getProjectDeploymentsFilename  : get full file path of deployments file
-func getProjectDeploymentsFilename(projectID string) string {
-	return path.Join(getProjectDeploymentConfigDir(), projectID+".json")
+// getProjectConnectionsFilename  : get full file path of connections file
+func getProjectConnectionsFilename(projectID string) string {
+	return path.Join(getProjectConnectionConfigDir(), projectID+".json")
 }
 
-// saveDeploymentTargets : write the targets file in JSON format
-func saveDeploymentTargets(projectID string, deploymentTargets *DeploymentTargets) *ProjectError {
-	body, err := json.MarshalIndent(deploymentTargets, "", "\t")
+// saveConnectionTargets : write the targets file in JSON format
+func saveConnectionTargets(projectID string, connectionTargets *ConnectionTargets) *ProjectError {
+	body, err := json.MarshalIndent(connectionTargets, "", "\t")
 	if err != nil {
 		return &ProjectError{errOpFileParse, err, err.Error()}
 	}
-	projError := ioutil.WriteFile(getProjectDeploymentsFilename(projectID), body, 0644)
+	projError := ioutil.WriteFile(getProjectConnectionsFilename(projectID), body, 0644)
 	if projError != nil {
 		return &ProjectError{errOpFileWrite, projError, projError.Error()}
 	}
@@ -235,18 +235,18 @@ func saveDeploymentTargets(projectID string, deploymentTargets *DeploymentTarget
 }
 
 // loadTargets :  Loads the config file for a project
-func loadTargets(projectID string) (*DeploymentTargets, *ProjectError) {
+func loadTargets(projectID string) (*ConnectionTargets, *ProjectError) {
 	projectID = strings.ToLower(projectID)
-	file, err := ioutil.ReadFile(getProjectDeploymentsFilename(projectID))
+	file, err := ioutil.ReadFile(getProjectConnectionsFilename(projectID))
 	if err != nil {
 		return nil, &ProjectError{errOpFileLoad, err, err.Error()}
 	}
 
 	// parse the file
-	projectDeploymentTargets := DeploymentTargets{}
-	err = json.Unmarshal([]byte(file), &projectDeploymentTargets)
+	projectConnectionTargets := ConnectionTargets{}
+	err = json.Unmarshal([]byte(file), &projectConnectionTargets)
 	if err != nil {
 		return nil, &ProjectError{errOpFileParse, err, err.Error()}
 	}
-	return &projectDeploymentTargets, nil
+	return &projectConnectionTargets, nil
 }

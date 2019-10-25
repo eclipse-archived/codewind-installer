@@ -9,7 +9,7 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 
-package deployments
+package connections
 
 import (
 	"encoding/json"
@@ -26,18 +26,18 @@ import (
 	"github.com/urfave/cli"
 )
 
-// deploymentsSchemaVersion must be incremented when changing the Deployment Config or Deployment Entry
-const deploymentsSchemaVersion = 1
+// connectionsSchemaVersion must be incremented when changing the Connections Config or Connection Entry
+const connectionsSchemaVersion = 1
 
-// DeploymentConfig state and possible deployments
-type DeploymentConfig struct {
+// ConnectionConfig state and possible connections
+type ConnectionConfig struct {
 	SchemaVersion int          `json:"schemaversion"`
 	Active        string       `json:"active"`
-	Deployments   []Deployment `json:"deployments"`
+	Connections   []Connection `json:"connections"`
 }
 
-// Deployment entry
-type Deployment struct {
+// Connection entry
+type Connection struct {
 	ID       string `json:"id"`
 	Label    string `json:"label"`
 	URL      string `json:"url"`
@@ -47,25 +47,25 @@ type Deployment struct {
 }
 
 // InitConfigFileIfRequired : Check the config file exist, if it does not then create a new default configuration
-func InitConfigFileIfRequired() *DepError {
-	_, err := os.Stat(getDeploymentConfigFilename())
+func InitConfigFileIfRequired() *ConError {
+	_, err := os.Stat(getConnectionConfigFilename())
 	if os.IsNotExist(err) {
-		os.MkdirAll(getDeploymentConfigDir(), 0777)
-		return ResetDeploymentsFile()
+		os.MkdirAll(getConnectionConfigDir(), 0777)
+		return ResetConnectionsFile()
 	}
 	return applySchemaUpdates()
 }
 
-// ResetDeploymentsFile : Creates a new / overwrites deployment config file with a default single local Codewind deployment
-func ResetDeploymentsFile() *DepError {
-	// create the default local deployment
-	initialConfig := DeploymentConfig{
+// ResetConnectionsFile : Creates a new / overwrites connection config file with a default single local Codewind connection
+func ResetConnectionsFile() *ConError {
+	// create the default local connection
+	initialConfig := ConnectionConfig{
 		Active:        "local",
-		SchemaVersion: deploymentsSchemaVersion,
-		Deployments: []Deployment{
-			Deployment{
+		SchemaVersion: connectionsSchemaVersion,
+		Connections: []Connection{
+			Connection{
 				ID:       "local",
-				Label:    "Codewind local deployment",
+				Label:    "Codewind local connection",
 				URL:      "",
 				AuthURL:  "",
 				Realm:    "",
@@ -75,120 +75,120 @@ func ResetDeploymentsFile() *DepError {
 	}
 	body, err := json.MarshalIndent(initialConfig, "", "\t")
 	if err != nil {
-		return &DepError{errOpFileParse, err, err.Error()}
+		return &ConError{errOpFileParse, err, err.Error()}
 	}
 
-	err = ioutil.WriteFile(getDeploymentConfigFilename(), body, 0644)
+	err = ioutil.WriteFile(getConnectionConfigFilename(), body, 0644)
 	if err != nil {
-		return &DepError{errOpFileWrite, err, err.Error()}
+		return &ConError{errOpFileWrite, err, err.Error()}
 	}
 	return nil
 }
 
-// FindTargetDeployment : Returns the single active deployment
-func FindTargetDeployment() (*Deployment, *DepError) {
-	data, depError := loadDeploymentsConfigFile()
-	if depError != nil {
-		return nil, depError
+// FindTargetConnection : Returns the single active connection
+func FindTargetConnection() (*Connection, *ConError) {
+	data, conErr := loadConnectionsConfigFile()
+	if conErr != nil {
+		return nil, conErr
 	}
 
 	activeID := data.Active
-	for i := 0; i < len(data.Deployments); i++ {
-		if strings.EqualFold(activeID, data.Deployments[i].ID) {
-			targetDeployment := data.Deployments[i]
-			targetDeployment.URL = strings.TrimSuffix(targetDeployment.URL, "/")
-			targetDeployment.AuthURL = strings.TrimSuffix(targetDeployment.AuthURL, "/")
-			return &targetDeployment, nil
+	for i := 0; i < len(data.Connections); i++ {
+		if strings.EqualFold(activeID, data.Connections[i].ID) {
+			targetConnection := data.Connections[i]
+			targetConnection.URL = strings.TrimSuffix(targetConnection.URL, "/")
+			targetConnection.AuthURL = strings.TrimSuffix(targetConnection.AuthURL, "/")
+			return &targetConnection, nil
 		}
 	}
 
 	err := errors.New(errTargetNotFound)
-	return nil, &DepError{errOpNotFound, err, err.Error()}
+	return nil, &ConError{errOpNotFound, err, err.Error()}
 }
 
-// GetDeploymentByID : retrieve a single deployment with matching ID
-func GetDeploymentByID(depID string) (*Deployment, *DepError) {
-	deploymentList, depErr := GetAllDeployments()
-	if depErr != nil {
-		return nil, depErr
+// GetConnectionByID : retrieve a single connection with matching ID
+func GetConnectionByID(conID string) (*Connection, *ConError) {
+	connectionList, conErr := GetAllConnections()
+	if conErr != nil {
+		return nil, conErr
 	}
-	for _, deployment := range deploymentList {
-		if strings.ToUpper(deployment.ID) == strings.ToUpper(depID) {
-			return &deployment, nil
+	for _, connection := range connectionList {
+		if strings.ToUpper(connection.ID) == strings.ToUpper(conID) {
+			return &connection, nil
 		}
 	}
-	depError := errors.New("Deployment " + strings.ToUpper(depID) + " not found")
-	return nil, &DepError{errOpNotFound, depError, depError.Error()}
+	err := errors.New("Connection " + strings.ToUpper(conID) + " not found")
+	return nil, &ConError{errOpNotFound, err, err.Error()}
 }
 
-// GetDeploymentsConfig : Retrieves and returns the entire Deployment configuration contents
-func GetDeploymentsConfig() (*DeploymentConfig, *DepError) {
-	data, depErr := loadDeploymentsConfigFile()
-	if depErr != nil {
-		return nil, depErr
+// GetConnectionsConfig : Retrieves and returns the entire Connection configuration contents
+func GetConnectionsConfig() (*ConnectionConfig, *ConError) {
+	data, conErr := loadConnectionsConfigFile()
+	if conErr != nil {
+		return nil, conErr
 	}
 	return data, nil
 }
 
-// SetTargetDeployment : If the deployment is unknown return an error
-func SetTargetDeployment(c *cli.Context) *DepError {
-	newTargetName := c.String("depid")
-	data, depErr := loadDeploymentsConfigFile()
-	if depErr != nil {
-		return depErr
+// SetTargetConnection : If the connection is unknown return an error
+func SetTargetConnection(c *cli.Context) *ConError {
+	newTargetName := c.String("conid")
+	data, conErr := loadConnectionsConfigFile()
+	if conErr != nil {
+		return conErr
 	}
 	foundID := ""
-	for i := 0; i < len(data.Deployments); i++ {
-		if strings.EqualFold(newTargetName, data.Deployments[i].ID) {
-			foundID = data.Deployments[i].ID
+	for i := 0; i < len(data.Connections); i++ {
+		if strings.EqualFold(newTargetName, data.Connections[i].ID) {
+			foundID = data.Connections[i].ID
 			break
 		}
 	}
 	if foundID == "" {
 		err := errors.New(errTargetNotFound)
-		return &DepError{errOpNotFound, err, err.Error()}
+		return &ConError{errOpNotFound, err, err.Error()}
 	}
 	data.Active = foundID
 	body, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {
-		return &DepError{errOpFileParse, err, err.Error()}
+		return &ConError{errOpFileParse, err, err.Error()}
 	}
-	err = ioutil.WriteFile(getDeploymentConfigFilename(), body, 0644)
+	err = ioutil.WriteFile(getConnectionConfigFilename(), body, 0644)
 	if err != nil {
-		return &DepError{errOpFileWrite, err, err.Error()}
+		return &ConError{errOpFileWrite, err, err.Error()}
 	}
 	return nil
 }
 
-// AddDeploymentToList : validates then adds a new deployment to the deployment config
-func AddDeploymentToList(httpClient utils.HTTPClient, c *cli.Context) (*Deployment, *DepError) {
-	deploymentID := strings.ToUpper(strconv.FormatInt(utils.CreateTimestamp(), 36))
+// AddConnectionToList : validates then adds a new connection to the connection config
+func AddConnectionToList(httpClient utils.HTTPClient, c *cli.Context) (*Connection, *ConError) {
+	connectionID := strings.ToUpper(strconv.FormatInt(utils.CreateTimestamp(), 36))
 	label := strings.TrimSpace(c.String("label"))
 	url := strings.TrimSpace(c.String("url"))
 	if url != "" && len(strings.TrimSpace(url)) > 0 {
 		url = strings.TrimSuffix(url, "/")
 	}
-	data, depErr := loadDeploymentsConfigFile()
-	if depErr != nil {
-		return nil, depErr
+	data, conErr := loadConnectionsConfigFile()
+	if conErr != nil {
+		return nil, conErr
 	}
 
 	// check the url and label are not already in use
-	for i := 0; i < len(data.Deployments); i++ {
-		if strings.EqualFold(label, data.Deployments[i].Label) || strings.EqualFold(url, data.Deployments[i].URL) {
-			depError := errors.New("Deployment ID: " + deploymentID + " already exists. To update, first remove and then re-add")
-			return nil, &DepError{errOpConflict, depError, depError.Error()}
+	for i := 0; i < len(data.Connections); i++ {
+		if strings.EqualFold(label, data.Connections[i].Label) || strings.EqualFold(url, data.Connections[i].URL) {
+			conErr := errors.New("Connection ID: " + connectionID + " already exists. To update, first remove and then re-add")
+			return nil, &ConError{errOpConflict, conErr, conErr.Error()}
 		}
 	}
 
 	gatekeeperEnv, err := apiroutes.GetGatekeeperEnvironment(httpClient, url)
 	if err != nil {
-		return nil, &DepError{errOpGetEnv, err, err.Error()}
+		return nil, &ConError{errOpGetEnv, err, err.Error()}
 	}
 
-	// create the new deployment
-	newDeployment := Deployment{
-		ID:       deploymentID,
+	// create the new connection
+	newConnection := Connection{
+		ID:       connectionID,
 		Label:    label,
 		URL:      url,
 		AuthURL:  gatekeeperEnv.AuthURL,
@@ -197,115 +197,115 @@ func AddDeploymentToList(httpClient utils.HTTPClient, c *cli.Context) (*Deployme
 	}
 
 	// append it to the list
-	data.Deployments = append(data.Deployments, newDeployment)
+	data.Connections = append(data.Connections, newConnection)
 	body, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {
-		return nil, &DepError{errOpFileParse, err, err.Error()}
+		return nil, &ConError{errOpFileParse, err, err.Error()}
 	}
 
-	err = ioutil.WriteFile(getDeploymentConfigFilename(), body, 0644)
+	err = ioutil.WriteFile(getConnectionConfigFilename(), body, 0644)
 	if err != nil {
-		return nil, &DepError{errOpFileWrite, err, err.Error()}
+		return nil, &ConError{errOpFileWrite, err, err.Error()}
 	}
-	return &newDeployment, nil
+	return &newConnection, nil
 }
 
-// RemoveDeploymentFromList : Removes the stored entry
-func RemoveDeploymentFromList(c *cli.Context) *DepError {
-	id := strings.ToUpper(c.String("depid"))
+// RemoveConnectionFromList : Removes the stored entry
+func RemoveConnectionFromList(c *cli.Context) *ConError {
+	id := strings.ToUpper(c.String("conid"))
 
 	if strings.EqualFold(id, "LOCAL") {
-		depError := errors.New("Local is a required deployment and must not be removed")
-		return &DepError{errOpProtected, depError, depError.Error()}
+		err := errors.New("Local is a required connection and must not be removed")
+		return &ConError{errOpProtected, err, err.Error()}
 	}
 
-	// check deployment has been registered
-	_, depErr := GetDeploymentByID(id)
-	if depErr != nil {
-		return depErr
+	// check connection has been registered
+	_, conErr := GetConnectionByID(id)
+	if conErr != nil {
+		return conErr
 	}
 
-	data, depErr := loadDeploymentsConfigFile()
-	if depErr != nil {
-		return depErr
+	data, conErr := loadConnectionsConfigFile()
+	if conErr != nil {
+		return conErr
 	}
 
-	for i := 0; i < len(data.Deployments); i++ {
-		if strings.EqualFold(id, data.Deployments[i].ID) {
-			copy(data.Deployments[i:], data.Deployments[i+1:])
-			data.Deployments = data.Deployments[:len(data.Deployments)-1]
+	for i := 0; i < len(data.Connections); i++ {
+		if strings.EqualFold(id, data.Connections[i].ID) {
+			copy(data.Connections[i:], data.Connections[i+1:])
+			data.Connections = data.Connections[:len(data.Connections)-1]
 		}
 	}
 	data.Active = "local"
 	body, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {
-		return &DepError{errOpFileParse, err, err.Error()}
+		return &ConError{errOpFileParse, err, err.Error()}
 	}
 
-	err = ioutil.WriteFile(getDeploymentConfigFilename(), body, 0644)
+	err = ioutil.WriteFile(getConnectionConfigFilename(), body, 0644)
 	if err != nil {
-		return &DepError{errOpFileWrite, err, err.Error()}
+		return &ConError{errOpFileWrite, err, err.Error()}
 	}
 	return nil
 }
 
-// GetTargetDeployment : Retrieve the deployment details for the current target deployment
-func GetTargetDeployment() (*Deployment, *DepError) {
-	targetDeployment, depErr := FindTargetDeployment()
-	if depErr != nil {
-		return nil, depErr
-	}
-	if targetDeployment != nil {
-		return targetDeployment, nil
-	}
-	depError := errors.New("Unable to find a matching target - set one now using the target command")
-	return nil, &DepError{errOpNotFound, depError, depError.Error()}
-}
-
-// GetAllDeployments : Retrieve all saved deployments
-func GetAllDeployments() ([]Deployment, *DepError) {
-	deploymentConfig, depErr := GetDeploymentsConfig()
-	if depErr != nil {
-		return nil, depErr
-	}
-	if deploymentConfig != nil && deploymentConfig.Deployments != nil && len(deploymentConfig.Deployments) > 0 {
-		return deploymentConfig.Deployments, nil
-	}
-	depError := errors.New("No Deployments found")
-	return nil, &DepError{errOpNotFound, depError, depError.Error()}
-}
-
-// loadDeploymentsConfigFile : Load the deployments configuration file from disk
-// and returns the contents of the file or an error
-func loadDeploymentsConfigFile() (*DeploymentConfig, *DepError) {
-	file, err := ioutil.ReadFile(getDeploymentConfigFilename())
+// GetTargetConnection : Retrieve the connection details for the current target connection
+func GetTargetConnection() (*Connection, *ConError) {
+	targetConnection, err := FindTargetConnection()
 	if err != nil {
-		return nil, &DepError{errOpFileLoad, err, err.Error()}
+		return nil, err
 	}
-	data := DeploymentConfig{}
+	if targetConnection != nil {
+		return targetConnection, nil
+	}
+	conErr := errors.New("Unable to find a matching target - set one now using the target command")
+	return nil, &ConError{errOpNotFound, conErr, conErr.Error()}
+}
+
+// GetAllConnections : Retrieve all saved connections
+func GetAllConnections() ([]Connection, *ConError) {
+	ConnectionConfig, conErr := GetConnectionsConfig()
+	if conErr != nil {
+		return nil, conErr
+	}
+	if ConnectionConfig != nil && ConnectionConfig.Connections != nil && len(ConnectionConfig.Connections) > 0 {
+		return ConnectionConfig.Connections, nil
+	}
+	err := errors.New("No Connections found")
+	return nil, &ConError{errOpNotFound, err, err.Error()}
+}
+
+// loadConnectionsConfigFile : Load the connections configuration file from disk
+// and returns the contents of the file or an error
+func loadConnectionsConfigFile() (*ConnectionConfig, *ConError) {
+	file, err := ioutil.ReadFile(getConnectionConfigFilename())
+	if err != nil {
+		return nil, &ConError{errOpFileLoad, err, err.Error()}
+	}
+	data := ConnectionConfig{}
 	err = json.Unmarshal([]byte(file), &data)
 	if err != nil {
-		return nil, &DepError{errOpFileParse, err, err.Error()}
+		return nil, &ConError{errOpFileParse, err, err.Error()}
 	}
 	return &data, nil
 }
 
-// saveDeploymentsConfigFile : Save the deployments configuration file to disk
+// saveConnectionsConfigFile : Save the connections configuration file to disk
 // returns an error, and error code
-func saveDeploymentsConfigFile(deploymentConfig *DeploymentConfig) *DepError {
-	body, err := json.MarshalIndent(deploymentConfig, "", "\t")
+func saveConnectionsConfigFile(ConnectionConfig *ConnectionConfig) *ConError {
+	body, err := json.MarshalIndent(ConnectionConfig, "", "\t")
 	if err != nil {
-		return &DepError{errOpFileParse, err, err.Error()}
+		return &ConError{errOpFileParse, err, err.Error()}
 	}
-	depErr := ioutil.WriteFile(getDeploymentConfigFilename(), body, 0644)
-	if depErr != nil {
-		return &DepError{errOpFileWrite, depErr, depErr.Error()}
+	conErr := ioutil.WriteFile(getConnectionConfigFilename(), body, 0644)
+	if conErr != nil {
+		return &ConError{errOpFileWrite, conErr, conErr.Error()}
 	}
 	return nil
 }
 
-// getDeploymentConfigDir : get directory path to the deployments file
-func getDeploymentConfigDir() string {
+// getConnectionConfigDir : get directory path to the connections file
+func getConnectionConfigDir() string {
 	const GOOS string = runtime.GOOS
 	homeDir := ""
 	if GOOS == "windows" {
@@ -316,73 +316,73 @@ func getDeploymentConfigDir() string {
 	return path.Join(homeDir, ".codewind", "config")
 }
 
-// getDeploymentConfigFilename  : get full file path of deployments file
-func getDeploymentConfigFilename() string {
-	return path.Join(getDeploymentConfigDir(), "deployments.json")
+// getConnectionConfigFilename  : get full file path of connections file
+func getConnectionConfigFilename() string {
+	return path.Join(getConnectionConfigDir(), "connections.json")
 }
 
-func loadRawDeploymentsFile() ([]byte, *DepError) {
-	file, err := ioutil.ReadFile(getDeploymentConfigFilename())
+func loadRawConnectionsFile() ([]byte, *ConError) {
+	file, err := ioutil.ReadFile(getConnectionConfigFilename())
 	if err != nil {
-		return nil, &DepError{errOpFileLoad, err, err.Error()}
+		return nil, &ConError{errOpFileLoad, err, err.Error()}
 	}
 	return file, nil
 }
 
 // applySchemaUpdates : update any existing entries to use the new schema design
-func applySchemaUpdates() *DepError {
+func applySchemaUpdates() *ConError {
 
-	loadedFile, depErr := loadDeploymentsConfigFile()
-	if depErr != nil {
-		return depErr
+	loadedFile, conErr := loadConnectionsConfigFile()
+	if conErr != nil {
+		return conErr
 	}
 	savedSchemaVersion := loadedFile.SchemaVersion
 
 	// upgrade the schema if needed
-	if savedSchemaVersion < deploymentsSchemaVersion {
-		file, depErr := loadRawDeploymentsFile()
-		if depErr != nil {
-			return depErr
+	if savedSchemaVersion < connectionsSchemaVersion {
+		file, conErr := loadRawConnectionsFile()
+		if conErr != nil {
+			return conErr
 		}
 
 		// apply schama updates from version 0 to version 1
 		if savedSchemaVersion == 0 {
 
 			// current config file
-			deploymentConfig := DeploymentConfigV0{}
+			ConnectionConfig := ConnectionConfigV0{}
 
 			// create new config structure
-			newDeploymentConfig := DeploymentConfigV1{}
+			newConnectionConfig := ConnectionConfigV1{}
 
-			err := json.Unmarshal([]byte(file), &deploymentConfig)
+			err := json.Unmarshal([]byte(file), &ConnectionConfig)
 			if err != nil {
-				return &DepError{errOpFileParse, err, err.Error()}
+				return &ConError{errOpFileParse, err, err.Error()}
 			}
 
-			newDeploymentConfig.Active = deploymentConfig.Active
-			newDeploymentConfig.SchemaVersion = 1
+			newConnectionConfig.Active = ConnectionConfig.Active
+			newConnectionConfig.SchemaVersion = 1
 
-			// copy deployments from old to new config
-			originalDeploymentsV0 := deploymentConfig.Deployments
-			for i := 0; i < len(originalDeploymentsV0); i++ {
-				originalDeployment := originalDeploymentsV0[i]
-				deploymentJSON, _ := json.Marshal(originalDeployment)
-				var upgradedDeployment DeploymentV1
-				json.Unmarshal(deploymentJSON, &upgradedDeployment)
+			// copy connections from old to new config
+			originalConnectionsV0 := ConnectionConfig.Connections
+			for i := 0; i < len(originalConnectionsV0); i++ {
+				originalConnection := originalConnectionsV0[i]
+				connectionJSON, _ := json.Marshal(originalConnection)
+				var upgradedConnection ConnectionV1
+				json.Unmarshal(connectionJSON, &upgradedConnection)
 
 				// rename 'name' field to 'id'
-				upgradedDeployment.ID = originalDeployment.Name
-				newDeploymentConfig.Deployments = append(newDeploymentConfig.Deployments, upgradedDeployment)
+				upgradedConnection.ID = originalConnection.Name
+				newConnectionConfig.Connections = append(newConnectionConfig.Connections, upgradedConnection)
 			}
 
 			// schema has been updated
-			body, err := json.MarshalIndent(newDeploymentConfig, "", "\t")
+			body, err := json.MarshalIndent(newConnectionConfig, "", "\t")
 			if err != nil {
-				return &DepError{errOpFileParse, err, err.Error()}
+				return &ConError{errOpFileParse, err, err.Error()}
 			}
-			err = ioutil.WriteFile(getDeploymentConfigFilename(), body, 0644)
+			err = ioutil.WriteFile(getConnectionConfigFilename(), body, 0644)
 			if err != nil {
-				return &DepError{errOpFileWrite, err, err.Error()}
+				return &ConError{errOpFileWrite, err, err.Error()}
 			}
 		}
 	}

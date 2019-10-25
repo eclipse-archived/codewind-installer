@@ -15,7 +15,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/eclipse/codewind-installer/utils/deployments"
+	"github.com/eclipse/codewind-installer/utils/connections"
 	"github.com/zalando/go-keyring"
 )
 
@@ -26,20 +26,20 @@ type KeyringSecret struct {
 }
 
 // SecKeyUpdate : Creates or updates a key in the platforms keyring
-func SecKeyUpdate(deploymentID string, username string, password string) *SecError {
+func SecKeyUpdate(connectionID string, username string, password string) *SecError {
 
-	depID := strings.TrimSpace(strings.ToLower(deploymentID))
+	conID := strings.TrimSpace(strings.ToLower(connectionID))
 	uName := strings.TrimSpace(strings.ToLower(username))
 	pass := strings.TrimSpace(password)
 
-	// check deployment has been registered
-	_, depErr := deployments.GetDeploymentByID(depID)
-	if depErr != nil {
-		err := errors.New("Deployment " + strings.ToUpper(depID) + " not found")
-		return &SecError{errOpNotFound, err, depErr.Error()}
+	// check connection has been registered
+	_, conErr := connections.GetConnectionByID(conID)
+	if conErr != nil {
+		err := errors.New("Connection " + strings.ToUpper(conID) + " not found")
+		return &SecError{errOpNotFound, err, conErr.Error()}
 	}
 
-	err := keyring.Set(KeyringServiceName+"."+depID, uName, pass)
+	err := keyring.Set(KeyringServiceName+"."+conID, uName, pass)
 	if err != nil {
 		return &SecError{errOpKeyring, err, err.Error()}
 	}
@@ -47,12 +47,12 @@ func SecKeyUpdate(deploymentID string, username string, password string) *SecErr
 }
 
 // SecKeyGetSecret : retrieve secret / credentials from the keyring
-func SecKeyGetSecret(deploymentID string, username string) (string, *SecError) {
+func SecKeyGetSecret(connectionID string, username string) (string, *SecError) {
 
-	depID := strings.TrimSpace(strings.ToLower(deploymentID))
+	conID := strings.TrimSpace(strings.ToLower(connectionID))
 	uName := strings.TrimSpace(strings.ToLower(username))
 
-	secret, err := keyring.Get(KeyringServiceName+"."+depID, uName)
+	secret, err := keyring.Get(KeyringServiceName+"."+conID, uName)
 	if err != nil {
 		return "", &SecError{errOpKeyring, err, err.Error()}
 	}

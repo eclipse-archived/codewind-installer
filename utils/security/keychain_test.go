@@ -25,10 +25,10 @@ const testPasswordUpdated = "pAss%-w0rd-&'cha*s-with_more_chars"
 func Test_Keychain(t *testing.T) {
 
 	// remove test key if one exists
-	keyring.Delete(strings.ToLower(KeyringServiceName+"."+testDeployment), testUsername)
+	keyring.Delete(strings.ToLower(KeyringServiceName+"."+testConnection), testUsername)
 
 	t.Run("Secret can not be retrieved for an unknown account", func(t *testing.T) {
-		retrievedSecret, err := SecKeyGetSecret(testDeployment, testUsername)
+		retrievedSecret, err := SecKeyGetSecret(testConnection, testUsername)
 		if err == nil {
 			t.Fail()
 		}
@@ -36,14 +36,14 @@ func Test_Keychain(t *testing.T) {
 	})
 
 	t.Run("A new key can be created in the platform keychain", func(t *testing.T) {
-		err := SecKeyUpdate(testDeployment, testUsername, testPassword)
+		err := SecKeyUpdate(testConnection, testUsername, testPassword)
 		if err != nil {
 			t.Fail()
 		}
 	})
 
 	t.Run("The secret can be retrieved from the keychain", func(t *testing.T) {
-		storedSecret, err := SecKeyGetSecret(testDeployment, testUsername)
+		storedSecret, err := SecKeyGetSecret(testConnection, testUsername)
 		if err != nil {
 			t.Fail()
 		}
@@ -51,14 +51,14 @@ func Test_Keychain(t *testing.T) {
 	})
 
 	t.Run("An existing key in the keychain can be updated", func(t *testing.T) {
-		err := SecKeyUpdate(testDeployment, testUsername, testPasswordUpdated)
+		err := SecKeyUpdate(testConnection, testUsername, testPasswordUpdated)
 		if err != nil {
 			t.Fail()
 		}
 	})
 
 	t.Run("Retrieved secret matches the saved secret", func(t *testing.T) {
-		storedSecret, err := SecKeyGetSecret(testDeployment, testUsername)
+		storedSecret, err := SecKeyGetSecret(testConnection, testUsername)
 		if err != nil {
 			t.Fail()
 		}
@@ -66,7 +66,7 @@ func Test_Keychain(t *testing.T) {
 	})
 
 	t.Run("Test keyring entry can be removed", func(t *testing.T) {
-		err := keyring.Delete(strings.ToLower(KeyringServiceName+"."+testDeployment), testUsername)
+		err := keyring.Delete(strings.ToLower(KeyringServiceName+"."+testConnection), testUsername)
 		if err != nil {
 			t.Fail()
 		}

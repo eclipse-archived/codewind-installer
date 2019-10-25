@@ -9,25 +9,25 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 
-// File schema versions of the Deployments configuration file
+// File schema versions of the Connections configuration file
 
-package deployments
+package connections
 
-// DeploymentConfigV0 : DeploymentsConfig Schema Version 0
-type DeploymentConfigV0 struct {
+// ConnectionConfigV0 : ConnectionsConfig Schema Version 0
+type ConnectionConfigV0 struct {
 	Active      string         `json:"active"`
-	Deployments []DeploymentV0 `json:"deployments"`
+	Connections []ConnectionV0 `json:"connections"`
 }
 
-// DeploymentConfigV1 : Deployments Schema Version 1
-type DeploymentConfigV1 struct {
+// ConnectionConfigV1 : Connections Schema Version 1
+type ConnectionConfigV1 struct {
 	SchemaVersion int            `json:"schemaversion"`
 	Active        string         `json:"active"`
-	Deployments   []DeploymentV1 `json:"deployments"`
+	Connections   []ConnectionV1 `json:"connections"`
 }
 
-// DeploymentV0 : Deployments Schema Version 0
-type DeploymentV0 struct {
+// ConnectionV0 : Connections Schema Version 0
+type ConnectionV0 struct {
 	Name     string `json:"name"`
 	Label    string `json:"label"`
 	URL      string `json:"url"`
@@ -36,8 +36,8 @@ type DeploymentV0 struct {
 	ClientID string `json:"client_id"`
 }
 
-// DeploymentV1 : Deployments Schema Version 1
-type DeploymentV1 struct {
+// ConnectionV1 : Connections Schema Version 1
+type ConnectionV1 struct {
 	ID       string `json:"id"`
 	Label    string `json:"label"`
 	URL      string `json:"url"`

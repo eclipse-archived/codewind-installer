@@ -18,76 +18,76 @@ import (
 )
 
 const testProjectID = "a9384430-f177-11e9-b862-edc28aca827a"
-const testDeploymentID = "local"
+const testConnectionID = "local"
 
-// Test_ProjectDeployment :  Tests
-func Test_ProjectDeployment(t *testing.T) {
+// Test_ProjectConnection :  Tests
+func Test_ProjectConnection(t *testing.T) {
 	ResetTargetFile(testProjectID)
 
-	t.Run("Asserts there are no target deployments", func(t *testing.T) {
-		deploymentTargets, projError := ListTargetDeployments(testProjectID)
+	t.Run("Asserts there are no target connections", func(t *testing.T) {
+		connectionTargets, projError := ListTargetConnections(testProjectID)
 		if projError != nil {
 			t.Fail()
 		}
-		assert.Len(t, deploymentTargets.DeploymentTargets, 0)
+		assert.Len(t, connectionTargets.ConnectionTargets, 0)
 	})
 
-	t.Run("Asserts getting deployment URL fails", func(t *testing.T) {
-		_, projError := GetDeploymentURL(testProjectID)
+	t.Run("Asserts getting connection URL fails", func(t *testing.T) {
+		_, projError := GetConnectionURL(testProjectID)
 		if projError == nil {
 			t.Fail()
 		}
 		assert.Equal(t, errOpNotFound, projError.Op)
 	})
 
-	t.Run("Add project to local deployment", func(t *testing.T) {
-		projError := AddDeploymentTarget(testProjectID, testDeploymentID)
+	t.Run("Add project to local connection", func(t *testing.T) {
+		projError := AddConnectionTarget(testProjectID, testConnectionID)
 		if projError != nil {
 			t.Fail()
 		}
 	})
 
-	t.Run("Asserts re-adding the same deployment fails", func(t *testing.T) {
-		projError := AddDeploymentTarget(testProjectID, testDeploymentID)
+	t.Run("Asserts re-adding the same connection fails", func(t *testing.T) {
+		projError := AddConnectionTarget(testProjectID, testConnectionID)
 		if projError == nil {
 			t.Fail()
 		}
 		assert.Equal(t, errOpConflict, projError.Op)
 	})
 
-	t.Run("Asserts there is just 1 target deployment added", func(t *testing.T) {
-		deploymentTargets, projError := ListTargetDeployments(testProjectID)
+	t.Run("Asserts there is just 1 target connection added", func(t *testing.T) {
+		connectionTargets, projError := ListTargetConnections(testProjectID)
 		if projError != nil {
 			t.Fail()
 		}
-		assert.Len(t, deploymentTargets.DeploymentTargets, 1)
+		assert.Len(t, connectionTargets.ConnectionTargets, 1)
 	})
 
-	t.Run("Asserts an unknown deployment can not be removed", func(t *testing.T) {
-		projError := RemoveDeploymentTarget(testProjectID, "test-AnUnknownDeploymentID")
+	t.Run("Asserts an unknown connection can not be removed", func(t *testing.T) {
+		projError := RemoveConnectionTarget(testProjectID, "test-AnUnknownConnectionID")
 		if projError == nil {
 			t.Fail()
 		}
-		assert.Equal(t, "dep_not_found", projError.Op)
+		assert.Equal(t, "con_not_found", projError.Op)
 	})
 
-	t.Run("Asserts removing a known deployment is successful", func(t *testing.T) {
-		projError := RemoveDeploymentTarget(testProjectID, "local")
+	t.Run("Asserts removing a known connection is successful", func(t *testing.T) {
+		projError := RemoveConnectionTarget(testProjectID, "local")
 		if projError != nil {
 			t.Fail()
 		}
 	})
 
 	t.Run("Asserts there are no targets left for this project", func(t *testing.T) {
-		deploymentTargets, projError := ListTargetDeployments(testProjectID)
+		connectionTargets, projError := ListTargetConnections(testProjectID)
 		if projError != nil {
 			t.Fail()
 		}
-		assert.Len(t, deploymentTargets.DeploymentTargets, 0)
+		assert.Len(t, connectionTargets.ConnectionTargets, 0)
 	})
 
 	t.Run("Asserts attempting to manage an invalid project ID fails", func(t *testing.T) {
-		projError := AddDeploymentTarget("bad-project-ID", testDeploymentID)
+		projError := AddConnectionTarget("bad-project-ID", testConnectionID)
 		if projError == nil {
 			t.Fail()
 		}

@@ -22,7 +22,7 @@ import (
 	"strings"
 
 	"github.com/eclipse/codewind-installer/config"
-	"github.com/eclipse/codewind-installer/utils/deployments"
+	"github.com/eclipse/codewind-installer/utils/connections"
 	"github.com/urfave/cli"
 )
 
@@ -60,25 +60,25 @@ func BindProject(c *cli.Context) (*BindResponse, *ProjectError) {
 	Name := strings.TrimSpace(c.String("name"))
 	Language := strings.TrimSpace(c.String("language"))
 	BuildType := strings.TrimSpace(c.String("type"))
-	var depID string
-	if c.String("depID") != "" {
-		depID = strings.TrimSpace(strings.ToLower(c.String("depID")))
+	var conID string
+	if c.String("conid") != "" {
+		conID = strings.TrimSpace(strings.ToLower(c.String("conid")))
 	} else {
-		depID = "local"
+		conID = "local"
 	}
-	return Bind(projectPath, Name, Language, BuildType, depID)
+	return Bind(projectPath, Name, Language, BuildType, conID)
 }
 
 // Bind is used to bind a project for building and running
-func Bind(projectPath string, name string, language string, projectType string, depID string) (*BindResponse, *ProjectError) {
+func Bind(projectPath string, name string, language string, projectType string, conID string) (*BindResponse, *ProjectError) {
 	_, err := os.Stat(projectPath)
 	if err != nil {
 		return nil, &ProjectError{errBadPath, err, err.Error()}
 	}
 
-	depInfo, depError := deployments.GetDeploymentByID(depID)
-	if depError != nil {
-		fmt.Printf(depError.Op)
+	conInfo, conErr := connections.GetConnectionByID(conID)
+	if conErr != nil {
+		fmt.Printf(conErr.Op)
 		os.Exit(0)
 	}
 
@@ -91,12 +91,12 @@ func Bind(projectPath string, name string, language string, projectType string, 
 	buf := new(bytes.Buffer)
 	json.NewEncoder(buf).Encode(bindRequest)
 
-	// use the given deploymentID to call api/v1/bind/start
-	depURL := config.PFEApiRoute()
-	if depInfo.ID != "local" {
-		depURL = depInfo.URL
+	// use the given connectionID to call api/v1/bind/start
+	conURL := config.PFEApiRoute()
+	if conInfo.ID != "local" {
+		conURL = conInfo.URL
 	}
-	bindURL := depURL + "projects/bind/start"
+	bindURL := conURL + "projects/bind/start"
 
 	client := &http.Client{}
 
@@ -130,21 +130,21 @@ func Bind(projectPath string, name string, language string, projectType string, 
 
 	projectID := projectInfo["projectID"].(string)
 
-	// Generate the .codewind/deployments/{projectID}.json file based on the given depID
-	AddDeploymentTarget(projectID, depID)
+	// Generate the .codewind/connections/{projectID}.json file based on the given conID
+	AddConnectionTarget(projectID, conID)
 
-	// Read deployments.json to find the URL of the deployment
-	depURL, projErr := GetDeploymentURL(projectID)
+	// Read connections.json to find the URL of the connection
+	conURL, projErr := GetConnectionURL(projectID)
 
 	if projErr != nil {
 		return nil, projErr
 	}
 
 	// Sync all the project files
-	_, _, uploadedFilesList := syncFiles(projectPath, projectID, depURL, 0)
+	_, _, uploadedFilesList := syncFiles(projectPath, projectID, conURL, 0)
 
 	// Call bind/end to complete
-	completeStatus, completeStatusCode := completeBind(projectID, depURL)
+	completeStatus, completeStatusCode := completeBind(projectID, conURL)
 	response := BindResponse{
 		ProjectID:     projectID,
 		UploadedFiles: uploadedFilesList,
@@ -154,8 +154,8 @@ func Bind(projectPath string, name string, language string, projectType string, 
 	return &response, nil
 }
 
-func completeBind(projectID string, depURL string) (string, int) {
-	uploadEndURL := depURL + "projects/" + projectID + "/bind/end"
+func completeBind(projectID string, conURL string) (string, int) {
+	uploadEndURL := conURL + "projects/" + projectID + "/bind/end"
 
 	payload := &BindEndRequest{ProjectID: projectID}
 	jsonPayload, _ := json.Marshal(payload)

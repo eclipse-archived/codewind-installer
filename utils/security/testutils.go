@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-const testDeployment = "LOCAL"
+const testConnection = "LOCAL"
 const testUsername = "unit_test_user"
 
 // ClientMockAuthenticate : Client Mock with a concrete response and status code

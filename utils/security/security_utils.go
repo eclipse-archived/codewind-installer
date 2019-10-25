@@ -46,7 +46,7 @@ const (
 	errOpPassword       = "sec_passwordcontent" // Password formatting
 	errOpHostname       = "sec_badhostname"     // Bad hostname / url
 	errOpKeyring        = "sec_keyring"         // Keyring operations
-	errOpDepConfig      = "sec_dep_config"      // Deployment configuration errors
+	errOpConConfig      = "sec_con_config"      // Connection configuration errors
 	errOpCLICommand     = "sec_cli_options"     // Invalid command line options
 )
 

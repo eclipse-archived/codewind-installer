@@ -38,40 +38,40 @@
 }
 
 ############################
-# Deployment command tests #
+# Connection command tests #
 ############################
 
-@test "invoke dep reset command - reset deployments file" {
+@test "invoke dep reset command - reset connections file" {
   run go run main.go dep reset
   echo "status = ${status}"
   echo "output trace = ${output}"
-   [ "$output" = '{"status":"OK","status_message":"Deployment list reset"}' ]
+   [ "$output" = '{"status":"OK","status_message":"Connection list reset"}' ]
    [ "$status" -eq 0 ]
 }
 
-@test "invoke dep list command - contains just 1 local deployment" {
+@test "invoke dep list command - contains just 1 local connection" {
   run go run main.go dep list
   echo "status = ${status}"
   echo "output trace = ${output}"
-   [ "$output" = '{"schemaversion":1,"active":"local","deployments":[{"id":"local","label":"Codewind local deployment","url":"","auth":"","realm":"","clientid":""}]}' ]
+   [ "$output" = '{"schemaversion":1,"active":"local","connections":[{"id":"local","label":"Codewind local connection","url":"","auth":"","realm":"","clientid":""}]}' ]
    [ "$status" -eq 0 ]
 }
 
-@test "invoke dep add command - add new deployment to the list" {
+@test "invoke dep add command - add new connection to the list" {
   skip
   run go run main.go dep add -d kube --label "kube-cluster" --url http://mykube:12345 --auth http://myauth:12345 --realm codewind-cloud --clientid codewind
   echo "status = ${status}"
   echo "output trace = ${output}"
-   [ "$output" = '{"status":"OK","status_message":"Deployment added"}' ]
+   [ "$output" = '{"status":"OK","status_message":"Connection added"}' ]
    [ "$status" -eq 0 ]
 }
 
-@test "invoke dep list command - ensure both deployments exist " {
+@test "invoke dep list command - ensure both connections exist " {
   skip
   run go run main.go dep list
   echo "status = ${status}"
   echo "output trace = ${output}"
-   [ "$output" = '{"schemaversion":1,"active":"local","deployments":[{"id":"local","label":"Codewind local deployment","url":"","auth":"","realm":"","clientid":""},{"id":"kube","label":"kube-cluster","url":"http://mykube:12345","auth":"http://myauth:12345","realm":"codewind-cloud","clientid":"codewind"}]}' ]
+   [ "$output" = '{"schemaversion":1,"active":"local","connections":[{"id":"local","label":"Codewind local connection","url":"","auth":"","realm":"","clientid":""},{"id":"kube","label":"kube-cluster","url":"http://mykube:12345","auth":"http://myauth:12345","realm":"codewind-cloud","clientid":"codewind"}]}' ]
    [ "$status" -eq 0 ]
 }
 
@@ -80,7 +80,7 @@
   run go run main.go dep target -d noname
   echo "status = ${status}"
   echo "output trace = ${output}"
-   [ "$output" = '{"error":"dep_not_found","error_description":"Target deployment not found"}' ]
+   [ "$output" = '{"error":"dep_not_found","error_description":"Target connection not found"}' ]
    [ "$status" -eq 0 ]
 }
 
@@ -107,7 +107,7 @@
   run go run main.go dep remove --id kube
   echo "status = ${status}"
   echo "output trace = ${output}"
-   [ "$output" = '{"status":"OK","status_message":"Deployment removed"}' ]
+   [ "$output" = '{"status":"OK","status_message":"Connection removed"}' ]
    [ "$status" -eq 0 ]
 }
 
@@ -115,7 +115,7 @@
   run go run main.go dep target
   echo "status = ${status}"
   echo "output trace = ${output}"
-   [ "$output" = '{"id":"local","label":"Codewind local deployment","url":"","auth":"","realm":"","clientid":""}' ]
+   [ "$output" = '{"id":"local","label":"Codewind local connection","url":"","auth":"","realm":"","clientid":""}' ]
    [ "$status" -eq 0 ]
 }
 
@@ -124,7 +124,7 @@
 #########################
 
 @test "invoke seckeyring update command - create a key" {
-  run go run main.go seckeyring update --depid local --username testuser --password seCretphrase
+  run go run main.go seckeyring update --conid local --username testuser --password seCretphrase
   echo "status = ${status}"
   echo "output trace = ${output}"
   [ "$output" = '{"status":"OK"}' ]
@@ -132,7 +132,7 @@
 }
 
 @test "invoke seckeyring update command - update a key" {
-  run go run main.go seckeyring update --depid local --username testuser --password new_secretPhrase
+  run go run main.go seckeyring update --conid local --username testuser --password new_secretPhrase
   echo "status = ${status}"
   echo "output trace = ${output}"
   [ "$output" = '{"status":"OK"}' ]
@@ -140,15 +140,15 @@
 }
 
 @test "invoke seckeyring validate command - validate a key" {
-  run go run main.go seckeyring validate --depid local --username testuser
+  run go run main.go seckeyring validate --conid local --username testuser
   echo "status = ${status}"
   echo "output trace = ${output}"
   [ "$output" = '{"status":"OK"}' ]
   [ "$status" -eq 0 ]
 }
 
-@test "invoke seckeyring validate command - key not found (incorrect deployment)" {
-  run go run main.go seckeyring validate --depid remoteNotKnown --username testuser
+@test "invoke seckeyring validate command - key not found (incorrect connection)" {
+  run go run main.go seckeyring validate --conid remoteNotKnown --username testuser
   echo "status = ${status}"
   echo "output trace = ${output}"
   [ "$output" = '{"error":"sec_keyring","error_description":"secret not found in keyring"}' ]
@@ -156,7 +156,7 @@
 }
 
 @test "invoke seckeyring validate command - key not found (incorrect username)"  {
-  run go run main.go seckeyring validate --depid local --username testuser_unknown
+  run go run main.go seckeyring validate --conid local --username testuser_unknown
   echo "status = ${status}"
   echo "output trace = ${output}"
   [ "$output" = '{"error":"sec_keyring","error_description":"secret not found in keyring"}' ]

@@ -37,7 +37,7 @@ func Test_Authenticate(t *testing.T) {
 	set.String("username", testUsername, "doc")
 	set.String("password", "testpassword", "doc")
 	set.String("client", "testclient", "doc")
-	set.String("depid", testDeployment, "doc") // must be a valid deployment (using local which will always exist)
+	set.String("conid", testConnection, "doc") // must be a valid connection (using local which will always exist)
 
 	c := cli.NewContext(nil, set, nil)
 
@@ -77,7 +77,7 @@ func Test_Authenticate(t *testing.T) {
 
 	t.Run("Cleanup stored access_token and refresh_token", func(t *testing.T) {
 		// Clean up test entries
-		keyring.Delete(strings.ToLower(KeyringServiceName+"."+testDeployment), "access_token")
-		keyring.Delete(strings.ToLower(KeyringServiceName+"."+testDeployment), "refresh_token")
+		keyring.Delete(strings.ToLower(KeyringServiceName+"."+testConnection), "access_token")
+		keyring.Delete(strings.ToLower(KeyringServiceName+"."+testConnection), "refresh_token")
 	})
 }

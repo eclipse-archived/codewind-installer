@@ -13,10 +13,10 @@ package main
 
 import (
 	"github.com/eclipse/codewind-installer/actions"
-	"github.com/eclipse/codewind-installer/utils/deployments"
+	"github.com/eclipse/codewind-installer/utils/connections"
 )
 
 func main() {
-	deployments.InitConfigFileIfRequired()
+	connections.InitConfigFileIfRequired()
 	actions.Commands()
 }

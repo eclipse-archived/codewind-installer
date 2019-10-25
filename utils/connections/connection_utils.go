@@ -9,37 +9,37 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 
-package deployments
+package connections
 
 import (
 	"encoding/json"
 )
 
-// DepError : Deployment package errors
-type DepError struct {
+// ConError : Connection package errors
+type ConError struct {
 	Op   string
 	Err  error
 	Desc string
 }
 
 const (
-	errOpFileParse    = "dep_parse"
-	errOpFileLoad     = "dep_load"
-	errOpFileWrite    = "dep_write"
-	errOpSchemaUpdate = "dep_schema_update"
-	errOpConflict     = "dep_conflict"
-	errOpNotFound     = "dep_not_found"
-	errOpProtected    = "dep_protected"
-	errOpGetEnv       = "dep_environment"
+	errOpFileParse    = "con_parse"
+	errOpFileLoad     = "con_load"
+	errOpFileWrite    = "con_write"
+	errOpSchemaUpdate = "con_schema_update"
+	errOpConflict     = "con_conflict"
+	errOpNotFound     = "con_not_found"
+	errOpProtected    = "con_protected"
+	errOpGetEnv       = "con_environment"
 )
 
 const (
-	errTargetNotFound = "Target deployment not found"
+	errTargetNotFound = "Target connection not found"
 )
 
-// DepError : Error formatted in JSON containing an errorOp and a description from
+// ConError : Error formatted in JSON containing an errorOp and a description from
 // either a fault condition in the CLI, or an error payload from a REST request
-func (se *DepError) Error() string {
+func (se *ConError) Error() string {
 	type Output struct {
 		Operation   string `json:"error"`
 		Description string `json:"error_description"`
