@@ -24,16 +24,19 @@ import (
 	"strings"
 
 	"github.com/eclipse/codewind-installer/config"
+	"github.com/eclipse/codewind-installer/utils/deployments"
 	"github.com/urfave/cli"
 )
 
 type (
+	// CompleteRequest is the request body format for calling the upload complete API
 	CompleteRequest struct {
 		FileList     []string `json:"fileList"`
 		ModifiedList []string `json:"modifiedList"`
 		TimeStamp    int64    `json:"timeStamp"`
 	}
 
+	// FileUploadMsg is the message sent on uploading a file
 	FileUploadMsg struct {
 		IsDirectory  bool   `json:"isDirectory"`
 		RelativePath string `json:"path"`
@@ -41,29 +44,44 @@ type (
 	}
 )
 
+// SyncProject syncs a project with its remote deployment
 func SyncProject(c *cli.Context) *ProjectError {
 	projectPath := strings.TrimSpace(c.String("path"))
 	projectID := strings.TrimSpace(c.String("id"))
 	synctime := int64(c.Int("time"))
+	depID := strings.TrimSpace(c.String("d"))
 
 	_, err := os.Stat(projectPath)
 	if err != nil {
 		return &ProjectError{errBadPath, err, err.Error()}
 	}
 
+	deploymentInfo, err := deployments.GetDeploymentByID(depID)
+
+	if err != nil {
+		return &ProjectError{errOpNotFound, err, err.Error()}
+	}
+
+	var depURL string
+	if depID != "local" {
+		depURL = deploymentInfo.URL
+	} else {
+		depURL = config.PFEApiRoute()
+	}
+
 	// Sync all the necessary project files
-	fileList, modifiedList := syncFiles(projectPath, projectID, synctime)
+	fileList, modifiedList := syncFiles(projectPath, projectID, depURL, synctime)
 
 	// Complete the upload
-	completeUpload(projectID, fileList, modifiedList, synctime)
+	completeUpload(projectID, fileList, modifiedList, depURL, synctime)
 	return nil
 }
 
-func syncFiles(projectPath string, projectId string, synctime int64) ([]string, []string) {
+func syncFiles(projectPath string, projectID string, depURL string, synctime int64) ([]string, []string) {
 	var fileList []string
 	var modifiedList []string
 
-	projectUploadUrl := config.PFEApiRoute() + "projects/" + projectId + "/upload"
+	projectUploadURL := depURL + "projects/" + projectID + "/upload"
 	client := &http.Client{}
 	//	fmt.Println("Uploading to " + projectUploadUrl)
 
@@ -115,7 +133,7 @@ func syncFiles(projectPath string, projectId string, synctime int64) ([]string, 
 				json.NewEncoder(buf).Encode(fileUploadBody)
 
 				// TODO - How do we handle partial success?
-				request, err := http.NewRequest("PUT", projectUploadUrl, bytes.NewReader(buf.Bytes()))
+				request, err := http.NewRequest("PUT", projectUploadURL, bytes.NewReader(buf.Bytes()))
 				request.Header.Set("Content-Type", "application/json")
 				resp, err := client.Do(request)
 				fmt.Println("Upload status:" + resp.Status + " for file: " + relativePath)
@@ -141,14 +159,14 @@ func syncFiles(projectPath string, projectId string, synctime int64) ([]string, 
 	return fileList, modifiedList
 }
 
-func completeUpload(projectId string, files []string, modfiles []string, timestamp int64) {
-	uploadEndUrl := config.PFEApiRoute() + "projects/" + projectId + "/upload/end"
+func completeUpload(projectID string, files []string, modfiles []string, depURL string, timestamp int64) {
+	uploadEndURL := depURL + "projects/" + projectID + "/upload/end"
 
 	payload := &CompleteRequest{FileList: files, ModifiedList: modfiles, TimeStamp: timestamp}
 	jsonPayload, _ := json.Marshal(payload)
 
 	// Make the request to end the sync process.
-	resp, err := http.Post(uploadEndUrl, "application/json", bytes.NewBuffer(jsonPayload))
+	resp, err := http.Post(uploadEndURL, "application/json", bytes.NewBuffer(jsonPayload))
 	fmt.Println("Upload end status:" + resp.Status)
 	if err != nil {
 		panic(err)

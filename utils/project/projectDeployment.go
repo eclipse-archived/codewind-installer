@@ -20,6 +20,8 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/eclipse/codewind-installer/config"
+
 	"github.com/eclipse/codewind-installer/utils/deployments"
 )
 
@@ -164,6 +166,32 @@ func ListTargetDeployments(projectID string) (*DeploymentTargets, *ProjectError)
 		return nil, projErr
 	}
 	return deploymentTargets, nil
+}
+
+// GetDeploymentURL returns to the deployment URL for a given projectID, unique to each project deployment
+func GetDeploymentURL(projectID string) (string, *ProjectError) {
+	targetDeployments, err := ListTargetDeployments(projectID)
+	if err != nil {
+		return "", err
+	}
+	depTargets := targetDeployments.DeploymentTargets
+	var depID string
+	if len(depTargets) > 0 {
+		depID = depTargets[0].DeploymentID
+	} else {
+		projError := errors.New("Deployment not found for project " + projectID)
+		return "", &ProjectError{errOpNotFound, projError, textDepMissing}
+	}
+
+	projectDepInfo, depErr := deployments.GetDeploymentByID(depID)
+	if depErr != nil {
+		return "", &ProjectError{errOpNotFound, depErr, depErr.Error()}
+	}
+
+	if depID == "local" {
+		return config.PFEApiRoute(), nil
+	}
+	return projectDepInfo.URL, nil
 }
 
 // getProjectDeploymentConfigDir : get directory path to the deployments file

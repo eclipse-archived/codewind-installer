@@ -109,6 +109,20 @@ $ brew upgrade dep
 
 Subcommands:</br>
 
+`bind` - Bind a project to Codewind for building and running
+> **Flags:**
+> --name,-n value               Project name
+> --language,-l value           Project language
+> --type,-t value               Project Type
+> --path,-p value               Project Path
+> --depid,-d value              Deployment ID
+
+`sync` - Synchronize a bound project to its deployment
+> **Flags:**
+> --path,-p value               Project Path
+> --id,-i value                 Project ID
+> --time,-t value               Time of last project sync
+
 `deployment/dep` - Manage the deployment targets for a project
 
 `add,a` - Add a deployment to a project
@@ -165,7 +179,7 @@ Subcommands:</br>
 
 Subcommands:</br>
 
-`get/g` - Authenticate and obtain an access_token. 
+`get/g` - Authenticate and obtain an access_token.
 
 >**Note 1:**: The preferred way to authenticate is by supplying just the depid and username. In this mode the command will use the stored password from the platform keyring
 >**Note 2:**: If you dont have a depid you must supply use the host, realm and client flags
