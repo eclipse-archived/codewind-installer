@@ -91,7 +91,7 @@ func ProjectAddTargetConnection(c *cli.Context) {
 	os.Exit(0)
 }
 
-// ProjectTargetList : List connectiontargets for a project
+// ProjectTargetList : List connection targets for a project
 func ProjectTargetList(c *cli.Context) {
 	projectID := strings.TrimSpace(strings.ToLower(c.String("id")))
 	connectionTargets, err := project.ListTargetConnections(projectID)

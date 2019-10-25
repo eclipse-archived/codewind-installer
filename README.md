@@ -181,10 +181,10 @@ Subcommands:</br>
 
 `get/g` - Authenticate and obtain an access_token.
 
->**Note 1:**: The preferred way to authenticate is by supplying just the connection ID and username. In this mode the command will use the stored password from the platform keyring
->**Note 2:**: If you dont have a connection ID you must supply use the host, realm and client flags
->**Note 3:**: You can use a combination of both the connection ID and host/realm/client flags. In this mode, the host/realm/client flags take precedence override the connection defaults
->**Note 4:**: The password flag is optional when used with the connection ID flag and when a password already exists in the platform keyring. Including the password flag will update the keychain password after a successful login or add a password to the keychain if one does not exist
+>**Note 1:**: The preferred way to authenticate is by supplying just the connection ID (conid) and username. In this mode the command will use the stored password from the platform keyring
+>**Note 2:**: If you dont have a connection ID (conid) you must supply use the host, realm and client flags
+>**Note 3:**: You can use a combination of both the connection ID (conid) and host/realm/client flags. In this mode, the host/realm/client flags take precedence override the connection defaults
+>**Note 4:**: The password flag is optional when used with the connection ID (conid) flag and when a password already exists in the platform keyring. Including the password flag will update the keychain password after a successful login or add a password to the keychain if one does not exist
 
 > **Flags:**
 > --host value                  URL or ingress to Keycloak service
