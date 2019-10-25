@@ -24,15 +24,16 @@ type ProjectError struct {
 }
 
 const (
-	errBadPath     = "proj_path"     // Invalid path provided
-	errBadType     = "proj_type"     // Invalid type provided
-	errOpResponse  = "proj_response" // Bad response to http
-	errOpFileParse = "proj_parse"
-	errOpFileLoad  = "proj_load"
-	errOpFileWrite = "proj_write"
-	errOpConflict  = "proj_conflict"
-	errOpNotFound  = "proj_notfound"
-	errOpInvalidID = "proj_id_invalid"
+	errBadPath       = "proj_path"     // Invalid path provided
+	errBadType       = "proj_type"     // Invalid type provided
+	errOpResponse    = "proj_response" // Bad response to http
+	errOpFileParse   = "proj_parse"
+	errOpFileLoad    = "proj_load"
+	errOpFileWrite   = "proj_write"
+	errOpConflict    = "proj_conflict"
+	errOpNotFound    = "proj_notfound"
+	errOpDepNotFound = "proj_notfound"
+	errOpInvalidID   = "proj_id_invalid"
 )
 
 const (

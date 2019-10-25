@@ -40,7 +40,7 @@ func ProjectSync(c *cli.Context) {
 	PrintAsJSON := c.GlobalBool("json")
 	response, err := project.SyncProject(c)
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println(err.Err)
 	} else {
 		if PrintAsJSON {
 			jsonResponse, _ := json.Marshal(response)

@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/eclipse/codewind-installer/config"
+	"github.com/eclipse/codewind-installer/utils/deployments"
 	"github.com/urfave/cli"
 )
 
@@ -53,29 +54,34 @@ type (
 	}
 )
 
+// SyncProject syncs a project with its deployment, given CLI contex
 func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	projectPath := strings.TrimSpace(c.String("path"))
 	projectID := strings.TrimSpace(c.String("id"))
 	synctime := int64(c.Int("time"))
+
+	var depURL string
 
 	_, err := os.Stat(projectPath)
 	if err != nil {
 		return nil, &ProjectError{errBadPath, err, err.Error()}
 	}
 
-	// deploymentInfo, err := deployments.GetDeploymentByID(depID)
+	depID, projErr := GetDeploymentID(projectID)
+	if projErr != nil {
+		return nil, projErr
+	}
 
-	// if err != nil {
-	// 	return nil, &ProjectError{errOpNotFound, err, err.Error()}
-	// }
+	depInfo, depInfoErr := deployments.GetDeploymentByID(depID)
+	if depInfoErr != nil {
+		return nil, &ProjectError{errOpDepNotFound, depInfoErr, depInfoErr.Desc}
+	}
 
-	// var depURL string
-	// if depID != "local" {
-	// 	depURL = deploymentInfo.URL
-	// } else {
-	// 	depURL = config.PFEApiRoute()
-	// }
-	depURL := config.PFEApiRoute()
+	if depInfo.ID != "local" {
+		depURL = depInfo.URL
+	} else {
+		depURL = config.PFEApiRoute()
+	}
 
 	// Sync all the necessary project files
 	fileList, modifiedList, uploadedFilesList := syncFiles(projectPath, projectID, depURL, synctime)
@@ -244,4 +250,10 @@ func ignoreFileOrDirectory(name string, isDir bool) bool {
 		}
 	}
 	return isFileInIgnoredList
+}
+
+// PrettyPrintJSON : Format JSON output for display
+func PrettyPrintJSON(i interface{}) {
+	s, _ := json.MarshalIndent(i, "", "\t")
+	fmt.Println(string(s))
 }
