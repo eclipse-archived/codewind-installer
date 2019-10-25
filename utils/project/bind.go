@@ -48,10 +48,10 @@ type (
 	}
 
 	BindResponse struct {
-		ProjectID     string         `json:"ProjectID"`
-		Status        string         `json:"Status"`
-		StatusCode    int            `json:"StatusCode"`
-		UploadedFiles []UploadedFile `json:"UploadedFiles"`
+		ProjectID     string         `json:"projectID"`
+		Status        string         `json:"status"`
+		StatusCode    int            `json:"statusCode"`
+		UploadedFiles []UploadedFile `json:"uploadedFiles"`
 	}
 )
 

@@ -42,14 +42,14 @@ type (
 		Message      string `json:"msg"`
 	}
 	UploadedFile struct {
-		FilePath   string `json:"FilePath"`
-		Status     string `json:"Status"`
-		StatusCode int    `json:"StatusCode"`
+		FilePath   string `json:"filePath"`
+		Status     string `json:"status"`
+		StatusCode int    `json:"statusCode"`
 	}
 	SyncResponse struct {
-		Status        string         `json:"Status"`
-		StatusCode    int            `json:"StatusCode"`
-		UploadedFiles []UploadedFile `json:"UploadedFiles"`
+		Status        string         `json:"status"`
+		StatusCode    int            `json:"statusCode"`
+		UploadedFiles []UploadedFile `json:"uploadedFiles"`
 	}
 )
 

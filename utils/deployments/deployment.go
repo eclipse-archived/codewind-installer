@@ -14,7 +14,6 @@ package deployments
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -110,7 +109,6 @@ func FindTargetDeployment() (*Deployment, *DepError) {
 // GetDeploymentByID : retrieve a single deployment with matching ID
 func GetDeploymentByID(depID string) (*Deployment, *DepError) {
 	deploymentList, depErr := GetAllDeployments()
-	fmt.Println(depID)
 	if depErr != nil {
 		return nil, depErr
 	}
