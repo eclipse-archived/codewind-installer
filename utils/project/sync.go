@@ -24,7 +24,6 @@ import (
 	"strings"
 
 	"github.com/eclipse/codewind-installer/config"
-	"github.com/eclipse/codewind-installer/utils/deployments"
 	"github.com/urfave/cli"
 )
 
@@ -58,25 +57,25 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	projectPath := strings.TrimSpace(c.String("path"))
 	projectID := strings.TrimSpace(c.String("id"))
 	synctime := int64(c.Int("time"))
-	depID := strings.TrimSpace(c.String("d"))
 
 	_, err := os.Stat(projectPath)
 	if err != nil {
 		return nil, &ProjectError{errBadPath, err, err.Error()}
 	}
 
-	deploymentInfo, err := deployments.GetDeploymentByID(depID)
+	// deploymentInfo, err := deployments.GetDeploymentByID(depID)
 
-	if err != nil {
-		return nil, &ProjectError{errOpNotFound, err, err.Error()}
-	}
+	// if err != nil {
+	// 	return nil, &ProjectError{errOpNotFound, err, err.Error()}
+	// }
 
-	var depURL string
-	if depID != "local" {
-		depURL = deploymentInfo.URL
-	} else {
-		depURL = config.PFEApiRoute()
-	}
+	// var depURL string
+	// if depID != "local" {
+	// 	depURL = deploymentInfo.URL
+	// } else {
+	// 	depURL = config.PFEApiRoute()
+	// }
+	depURL := config.PFEApiRoute()
 
 	// Sync all the necessary project files
 	fileList, modifiedList, uploadedFilesList := syncFiles(projectPath, projectID, depURL, synctime)
