@@ -131,7 +131,7 @@ func Bind(projectPath string, name string, language string, projectType string, 
 	projectID := projectInfo["projectID"].(string)
 
 	// Generate the .codewind/connections/{projectID}.json file based on the given conID
-	AddConnectionTarget(projectID, conID)
+	SetConnection(projectID, conID)
 
 	// Read connections.json to find the URL of the connection
 	conURL, projErr := GetConnectionURL(projectID)

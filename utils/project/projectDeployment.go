@@ -32,14 +32,14 @@ type Target struct {
 
 // ConnectionTargets : Structure of the project-connections file
 type ConnectionTargets struct {
-	SchemaVersion     int      `json:"schemaVersion"`
-	ConnectionTargets []Target `json:"connectionTargets"`
+	SchemaVersion     int    `json:"schemaVersion"`
+	ConnectionTargets Target `json:"connectionTargets"`
 }
 
 const connectionTargetSchemaVersion = 1
 
-// AddConnectionTarget : Add a connection target
-func AddConnectionTarget(projectID string, conID string) *ProjectError {
+// SetConnection : Add a connection target
+func SetConnection(projectID string, conID string) *ProjectError {
 
 	connection, conErr := connections.GetConnectionByID(conID)
 	if conErr != nil || connection == nil {
@@ -65,34 +65,13 @@ func AddConnectionTarget(projectID string, conID string) *ProjectError {
 				return projErr
 			}
 		}
-		connectionTargets, projErr := loadTargets(projectID)
-		if projErr != nil {
-			return projErr
-		}
-		target := Target{
-			ConnectionID: conID,
-		}
-		connectionTargets.ConnectionTargets = append(connectionTargets.ConnectionTargets, target)
-		projError := saveConnectionTargets(projectID, connectionTargets)
-		if projError != nil {
-			return projError
-		}
-		return nil
-	}
-
-	// Check if the connection has been added to the project already
-	for i := 0; i < len(connectionTargets.ConnectionTargets); i++ {
-		if strings.EqualFold(conID, connectionTargets.ConnectionTargets[i].ConnectionID) {
-			projError := errors.New(textConnectionExists)
-			return &ProjectError{errOpConflict, projError, projError.Error()}
-		}
 	}
 
 	// Add the connection to the project-connections file
 	target := Target{
 		ConnectionID: conID,
 	}
-	connectionTargets.ConnectionTargets = append(connectionTargets.ConnectionTargets, target)
+	connectionTargets.ConnectionTargets = target
 
 	// Save the project-connections file
 	projError = saveConnectionTargets(projectID, connectionTargets)
@@ -114,53 +93,8 @@ func ResetTargetFile(projectID string) *ProjectError {
 	return nil
 }
 
-// RemoveConnectionTarget : Remove connection target from project-connections file
-func RemoveConnectionTarget(projectID string, conID string) *ProjectError {
-
-	connection, conErr := connections.GetConnectionByID(conID)
-	if conErr != nil || connection == nil {
-		projError := errors.New("Connection unknown")
-		return &ProjectError{"con_not_found", projError, projError.Error()}
-	}
-
-	// Check if projectID is supplied in correct format
-	if !IsProjectIDValid(projectID) {
-		projError := errors.New(textInvalidProjectID)
-		return &ProjectError{errOpInvalidID, projError, projError.Error()}
-	}
-
-	// Load the connections
-	connectionTargets, projErr := loadTargets(projectID)
-	if projErr != nil {
-		return projErr
-	}
-
-	connectionFound := false
-
-	// Remove the connection
-	for i := 0; i < len(connectionTargets.ConnectionTargets); i++ {
-		if strings.EqualFold(conID, connectionTargets.ConnectionTargets[i].ConnectionID) {
-			copy(connectionTargets.ConnectionTargets[i:], connectionTargets.ConnectionTargets[i+1:])
-			connectionFound = true
-			connectionTargets.ConnectionTargets = connectionTargets.ConnectionTargets[:len(connectionTargets.ConnectionTargets)-1]
-		}
-	}
-
-	if !connectionFound {
-		projErr := errors.New(textConMissing)
-		return &ProjectError{errOpNotFound, projErr, projErr.Error()}
-	}
-
-	// Save the project-connections file
-	projError := saveConnectionTargets(projectID, connectionTargets)
-	if projError != nil {
-		return projError
-	}
-	return nil
-}
-
-// ListTargetConnections : List the target connections for this project
-func ListTargetConnections(projectID string) (*ConnectionTargets, *ProjectError) {
+// GetConnection : List the connection for a projectID
+func GetConnection(projectID string) (*ConnectionTargets, *ProjectError) {
 	connectionTargets, projErr := loadTargets(projectID)
 	if projErr != nil {
 		return nil, projErr
@@ -189,17 +123,17 @@ func GetConnectionURL(projectID string) (string, *ProjectError) {
 
 // GetConnectionID gets the the connectionID for a given projectID
 func GetConnectionID(projectID string) (string, *ProjectError) {
-	targetConnections, err := ListTargetConnections(projectID)
+	targetConnections, err := GetConnection(projectID)
 	if err != nil {
 		return "", err
 	}
 	conTargets := targetConnections.ConnectionTargets
 	var conID string
-	if len(conTargets) > 0 {
-		conID = conTargets[0].ConnectionID
+	if conTargets.ConnectionID != "" {
+		conID = conTargets.ConnectionID
 	} else {
 		projError := errors.New("Connection not found for project " + projectID)
-		return "", &ProjectError{errOpNotFound, projError, projError.Error()}
+		return "", &ProjectError{errOpConNotFound, projError, projError.Error()}
 	}
 	return conID, nil
 }

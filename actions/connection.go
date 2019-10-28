@@ -68,7 +68,7 @@ func ConnectionRemoveFromList(c *cli.Context) {
 
 // ConnectionGetTarget : Fetch the target connection
 func ConnectionGetTarget() {
-	targetConnection, err := connections.GetTargetConnection()
+	targetConnection, err := connections.GetConnection()
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(0)

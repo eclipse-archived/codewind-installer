@@ -107,39 +107,39 @@ func Commands() {
 					Usage:   "Manage project connections",
 					Subcommands: []cli.Command{
 						{
-							Name:    "add",
-							Aliases: []string{"a"},
-							Usage:   "Add a connection target",
+							Name:    "set",
+							Aliases: []string{"s"},
+							Usage:   "Set connection for a project",
 							Flags: []cli.Flag{
 								cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
 								cli.StringFlag{Name: "conid", Usage: "Connection ID", Required: true},
 							},
 							Action: func(c *cli.Context) error {
-								ProjectAddTargetConnection(c)
+								ProjectSetConnection(c)
 								return nil
 							},
 						},
 						{
-							Name:    "list",
-							Aliases: []string{"l"},
-							Usage:   "List the registered connections for a project",
+							Name:    "get",
+							Aliases: []string{"g"},
+							Usage:   "Get connectionID for a project",
 							Flags: []cli.Flag{
 								cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
 							},
 							Action: func(c *cli.Context) error {
-								ProjectTargetList(c)
+								ProjectGetConnection(c)
 								return nil
 							},
 						}, {
 							Name:    "remove",
 							Aliases: []string{"r"},
-							Usage:   "Remove a connection target",
+							Usage:   "Remove connection from a project",
+
 							Flags: []cli.Flag{
 								cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
-								cli.StringFlag{Name: "conid", Usage: "Connection ID", Required: true},
 							},
 							Action: func(c *cli.Context) error {
-								ProjectRemoveTargetConnection(c)
+								ProjectRemoveConnection(c)
 								return nil
 							},
 						},
@@ -562,22 +562,6 @@ func Commands() {
 					},
 					Action: func(c *cli.Context) error {
 						ConnectionRemoveFromList(c)
-						return nil
-					},
-				},
-				{
-					Name:    "target",
-					Aliases: []string{"t"},
-					Usage:   "Show/Change the current target connection",
-					Flags: []cli.Flag{
-						cli.StringFlag{Name: "conid", Usage: "The connection id of the target to switch to"},
-					},
-					Action: func(c *cli.Context) error {
-						if c.NumFlags() == 0 {
-							ConnectionGetTarget()
-						} else {
-							ConnectionSetTarget(c)
-						}
 						return nil
 					},
 				},

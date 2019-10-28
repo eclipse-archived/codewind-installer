@@ -26,7 +26,7 @@ import (
 
 // StatusCommand : to show the status
 func StatusCommand(c *cli.Context) {
-	targetConnection, err := connections.GetTargetConnection()
+	targetConnection, err := connections.GetConnection()
 	if err != nil {
 		log.Fatal(err.Error())
 	}

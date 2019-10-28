@@ -249,8 +249,8 @@ func RemoveConnectionFromList(c *cli.Context) *ConError {
 	return nil
 }
 
-// GetTargetConnection : Retrieve the connection details for the current target connection
-func GetTargetConnection() (*Connection, *ConError) {
+// GetConnection : Retrieve the connection details for the current target connection
+func GetConnection() (*Connection, *ConError) {
 	targetConnection, err := FindTargetConnection()
 	if err != nil {
 		return nil, err

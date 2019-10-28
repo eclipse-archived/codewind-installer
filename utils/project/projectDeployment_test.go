@@ -25,11 +25,11 @@ func Test_ProjectConnection(t *testing.T) {
 	ResetTargetFile(testProjectID)
 
 	t.Run("Asserts there are no target connections", func(t *testing.T) {
-		connectionTargets, projError := ListTargetConnections(testProjectID)
+		connectionTargets, projError := GetConnection(testProjectID)
 		if projError != nil {
 			t.Fail()
 		}
-		assert.Len(t, connectionTargets.ConnectionTargets, 0)
+		assert.Equal(t, connectionTargets.ConnectionTargets.ConnectionID, "")
 	})
 
 	t.Run("Asserts getting connection URL fails", func(t *testing.T) {
@@ -37,57 +37,48 @@ func Test_ProjectConnection(t *testing.T) {
 		if projError == nil {
 			t.Fail()
 		}
-		assert.Equal(t, errOpNotFound, projError.Op)
+		assert.Equal(t, errOpConNotFound, projError.Op)
 	})
 
 	t.Run("Add project to local connection", func(t *testing.T) {
-		projError := AddConnectionTarget(testProjectID, testConnectionID)
+		projError := SetConnection(testProjectID, testConnectionID)
 		if projError != nil {
 			t.Fail()
 		}
 	})
 
-	t.Run("Asserts re-adding the same connection fails", func(t *testing.T) {
-		projError := AddConnectionTarget(testProjectID, testConnectionID)
-		if projError == nil {
+	t.Run("Asserts re-adding the same connection succeeds", func(t *testing.T) {
+		projError := SetConnection(testProjectID, testConnectionID)
+		if projError != nil {
 			t.Fail()
 		}
-		assert.Equal(t, errOpConflict, projError.Op)
 	})
 
 	t.Run("Asserts there is just 1 target connection added", func(t *testing.T) {
-		connectionTargets, projError := ListTargetConnections(testProjectID)
+		connectionTargets, projError := GetConnection(testProjectID)
 		if projError != nil {
 			t.Fail()
 		}
-		assert.Len(t, connectionTargets.ConnectionTargets, 1)
-	})
-
-	t.Run("Asserts an unknown connection can not be removed", func(t *testing.T) {
-		projError := RemoveConnectionTarget(testProjectID, "test-AnUnknownConnectionID")
-		if projError == nil {
-			t.Fail()
-		}
-		assert.Equal(t, "con_not_found", projError.Op)
+		assert.Equal(t, connectionTargets.ConnectionTargets.ConnectionID, testConnectionID)
 	})
 
 	t.Run("Asserts removing a known connection is successful", func(t *testing.T) {
-		projError := RemoveConnectionTarget(testProjectID, "local")
+		projError := ResetTargetFile(testProjectID)
 		if projError != nil {
 			t.Fail()
 		}
 	})
 
 	t.Run("Asserts there are no targets left for this project", func(t *testing.T) {
-		connectionTargets, projError := ListTargetConnections(testProjectID)
+		connectionTargets, projError := GetConnection(testProjectID)
 		if projError != nil {
 			t.Fail()
 		}
-		assert.Len(t, connectionTargets.ConnectionTargets, 0)
+		assert.Equal(t, connectionTargets.ConnectionTargets.ConnectionID, "")
 	})
 
 	t.Run("Asserts attempting to manage an invalid project ID fails", func(t *testing.T) {
-		projError := AddConnectionTarget("bad-project-ID", testConnectionID)
+		projError := SetConnection("bad-project-ID", testConnectionID)
 		if projError == nil {
 			t.Fail()
 		}
