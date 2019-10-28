@@ -106,7 +106,7 @@ func ProjectGetConnection(c *cli.Context) {
 // ProjectRemoveConnection : Remove Connection from  a project
 func ProjectRemoveConnection(c *cli.Context) {
 	projectID := strings.TrimSpace(strings.ToLower(c.String("id")))
-	err := project.ResetTargetFile(projectID)
+	err := project.ResetConnectionFile(projectID)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(0)
