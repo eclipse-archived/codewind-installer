@@ -51,6 +51,8 @@ services:
   networks: [network]
 networks:
   network:
+   driver_opts:
+    com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
 volumes:
   cw-workspace:
 `
@@ -80,8 +82,12 @@ type Compose struct {
 	VOLUME struct {
 		CodewindWorkspace map[string]string `yaml:"cw-workspace"`
 	} `yaml:"volumes"`
-	NETWORK struct {
-		Network map[string]string `yaml:"network"`
+	NETWORKS struct {
+		NETWORK struct {
+			DRIVEROPTS struct {
+				HostIP string `yaml:"com.docker.network.bridge.host_binding_ipv4"`
+			} `yaml:"driver_opts"`
+		} `yaml:"network"`
 	} `yaml:"networks"`
 }
 
