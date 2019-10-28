@@ -170,17 +170,10 @@ func ListTargetDeployments(projectID string) (*DeploymentTargets, *ProjectError)
 
 // GetDeploymentURL returns to the deployment URL for a given projectID, unique to each project deployment
 func GetDeploymentURL(projectID string) (string, *ProjectError) {
-	targetDeployments, err := ListTargetDeployments(projectID)
+	depID, err := GetDeploymentID(projectID)
+
 	if err != nil {
 		return "", err
-	}
-	depTargets := targetDeployments.DeploymentTargets
-	var depID string
-	if len(depTargets) > 0 {
-		depID = depTargets[0].DeploymentID
-	} else {
-		projError := errors.New("Deployment not found for project " + projectID)
-		return "", &ProjectError{errOpNotFound, projError, textDepMissing}
 	}
 
 	projectDepInfo, depErr := deployments.GetDeploymentByID(depID)
@@ -192,6 +185,23 @@ func GetDeploymentURL(projectID string) (string, *ProjectError) {
 		return config.PFEApiRoute(), nil
 	}
 	return projectDepInfo.URL, nil
+}
+
+// GetDeploymentID gets the the deploymentID for a given projectID
+func GetDeploymentID(projectID string) (string, *ProjectError) {
+	targetDeployments, err := ListTargetDeployments(projectID)
+	if err != nil {
+		return "", err
+	}
+	depTargets := targetDeployments.DeploymentTargets
+	var depID string
+	if len(depTargets) > 0 {
+		depID = depTargets[0].DeploymentID
+	} else {
+		projError := errors.New("Deployment not found for project " + projectID)
+		return "", &ProjectError{errOpNotFound, projError, projError.Error()}
+	}
+	return depID, nil
 }
 
 // getProjectDeploymentConfigDir : get directory path to the deployments file
