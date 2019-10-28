@@ -22,14 +22,14 @@ const testConnectionID = "local"
 
 // Test_ProjectConnection :  Tests
 func Test_ProjectConnection(t *testing.T) {
-	ResetTargetFile(testProjectID)
+	ResetConnectionFile(testProjectID)
 
 	t.Run("Asserts there are no target connections", func(t *testing.T) {
-		connectionTargets, projError := GetConnection(testProjectID)
+		connection, projError := GetConnection(testProjectID)
 		if projError != nil {
 			t.Fail()
 		}
-		assert.Equal(t, connectionTargets.ConnectionTargets.ConnectionID, "")
+		assert.Equal(t, connection.ID, "")
 	})
 
 	t.Run("Asserts getting connection URL fails", func(t *testing.T) {
@@ -55,26 +55,26 @@ func Test_ProjectConnection(t *testing.T) {
 	})
 
 	t.Run("Asserts there is just 1 target connection added", func(t *testing.T) {
-		connectionTargets, projError := GetConnection(testProjectID)
+		connection, projError := GetConnection(testProjectID)
 		if projError != nil {
 			t.Fail()
 		}
-		assert.Equal(t, connectionTargets.ConnectionTargets.ConnectionID, testConnectionID)
+		assert.Equal(t, connection.ID, testConnectionID)
 	})
 
 	t.Run("Asserts removing a known connection is successful", func(t *testing.T) {
-		projError := ResetTargetFile(testProjectID)
+		projError := ResetConnectionFile(testProjectID)
 		if projError != nil {
 			t.Fail()
 		}
 	})
 
 	t.Run("Asserts there are no targets left for this project", func(t *testing.T) {
-		connectionTargets, projError := GetConnection(testProjectID)
+		connection, projError := GetConnection(testProjectID)
 		if projError != nil {
 			t.Fail()
 		}
-		assert.Equal(t, connectionTargets.ConnectionTargets.ConnectionID, "")
+		assert.Equal(t, connection.ID, "")
 	})
 
 	t.Run("Asserts attempting to manage an invalid project ID fails", func(t *testing.T) {
