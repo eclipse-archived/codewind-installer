@@ -97,7 +97,7 @@ $ brew upgrade dep
 |secclient       |`sc`          |'Manage new or existing APPLICATION access configurations'          |
 |seckeyring      |`sk`          |'Manage Codewind keys in the desktop keyring'                       |
 |secuser         |`su`          |'Manage new or existing USER access configurations'                 |
-|deployments     |`dep`         |'Manage deployments configuration list'                             |
+|connections     |`con`         |'Manage connections configuration list'                             |
 |help            |`h`           |'Shows a list of commands or help for one command'                  |
 
 ## CLI Command Options
@@ -115,29 +115,29 @@ Subcommands:</br>
 > --language,-l value           Project language
 > --type,-t value               Project Type
 > --path,-p value               Project Path
-> --depid,-d value              Deployment ID
+> --conid value                 Connection ID
 
-`sync` - Synchronize a bound project to its deployment
+`sync` - Synchronize a bound project to its connection
 > **Flags:**
 > --path,-p value               Project Path
 > --id,-i value                 Project ID
 > --time,-t value               Time of last project sync
 
-`deployment/dep` - Manage the deployment targets for a project
+`connection/con` - Manage the connection targets for a project
 
-`add,a` - Add a deployment to a project
+`add,a` - Add a connection to a project
 > **Flags:**
 > --id,i value                  Project ID
-> --depid,d value               Deployment ID
+> --conid value                 Connection ID
 
-`list,l` - List deployments for a project
+`list,l` - List connections for a project
 > **Flags:**
 > --id,i value                  Project ID
 
-`remove,r` - Remove a deployment from a project
+`remove,r` - Remove a connection from a project
 > **Flags:**
 > --id,i value                  Project ID
-> --depid,d value               Deployment ID
+> --conid value                 Connection ID
 
 
 ## install
@@ -181,10 +181,10 @@ Subcommands:</br>
 
 `get/g` - Authenticate and obtain an access_token.
 
->**Note 1:**: The preferred way to authenticate is by supplying just the depid and username. In this mode the command will use the stored password from the platform keyring
->**Note 2:**: If you dont have a depid you must supply use the host, realm and client flags
->**Note 3:**: You can use a combination of both the depid and host/realm/client flags. In this mode, the host/realm/client flags take precedence override the deployment defaults
->**Note 4:**: The password flag is optional when used with the depid flag and when a password already exists in the platform keyring. Including the password flag will update the keychain password after a successful login or add a password to the keychain if one does not exist
+>**Note 1:**: The preferred way to authenticate is by supplying just the connection ID (conid) and username. In this mode the command will use the stored password from the platform keyring
+>**Note 2:**: If you dont have a connection ID (conid) you must supply use the host, realm and client flags
+>**Note 3:**: You can use a combination of both the connection ID (conid) and host/realm/client flags. In this mode, the host/realm/client flags take precedence override the connection defaults
+>**Note 4:**: The password flag is optional when used with the connection ID (conid) flag and when a password already exists in the platform keyring. Including the password flag will update the keychain password after a successful login or add a password to the keychain if one does not exist
 
 > **Flags:**
 > --host value                  URL or ingress to Keycloak service
@@ -192,7 +192,7 @@ Subcommands:</br>
 > --username value              Account Username
 > --password value              Account Password
 > --client value                Client
-> --depid,-d value              Use connection details from a deployment configuration
+> --conid  value              Use connection details from a connection configuration
 
 ## secrealm
 
@@ -241,13 +241,13 @@ Subcommands:</br>
 
 `update/u` - Add new or update existing Codewind credentials key in keyring
 
-> --depid,-d `<value>`              Deployment ID (see the deployments cmd)
+> --conid  `<value>`              Connection ID (see the connections cmd)
 > --username `<value>`              Username
 > --password `<value>`              Password
 
 `validate/v` - Checks if credentials key exist in the keyring
 
-> --depid,-d `<value>`              Deployment ID (see the deployments cmd)
+> --conid  `<value>`              Connection ID (see the connections cmd)
 > --username `<value>`              Username
 
 ## secuser
@@ -282,37 +282,37 @@ Subcommands:</br>
 > --name value                   Username to query
 > --newpw value                  New replacement password
 
-## deployments
+## connections
 
 Subcommands:</br>
 
-`add/a` - Add a new deployment to the list
+`add/a` - Add a new connection to the list
 
 > **Flags:**
 > --label value  A displayable name
 > --url value    The ingress URL of the PFE instance
 
-`get/g` - Get a deployment using its ID
+`get/g` - Get a connection using its ID
 
 > **Flags:**
-> --depid,-d value   The Deployment ID to retrieve
+> --conid  value   The Connection ID to retrieve
 
-`remove/rm` - Remove a deployment from the list
+`remove/rm` - Remove a connection from the list
 
 > **Flags:**
-> --depid,-d value     A deployment id
+> --conid  value     A connection id
 
-`target/t` - Show/Change the current target deployment
+`target/t` - Show/Change the current target connection
 
 > *Note:* Not supplying any flag will return the current selected target
-> --depid,-d value  The deployment id of the target to switch to
+> --conid  value  The connection id of the target to switch to
 
 
-`list/ls` - List known deployments
+`list/ls` - List known connections
 
 >**Note:** No additional flags
 
-`reset` - Resets the deployments list to a single local deployment
+`reset` - Resets the connections list to a single local connection
 
 >**Note:** No additional flags
 

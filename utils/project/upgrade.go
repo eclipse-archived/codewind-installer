@@ -52,11 +52,11 @@ func UpgradeProjects(c *cli.Context) *ProjectError {
 			location := result["workspace"] + name
 			projectID := result["projectID"]
 
-			depID, err := GetDeploymentURL(projectID)
+			conID, err := GetConnectionURL(projectID)
 			if err != nil {
 				return err
 			}
-			Bind(location, name, language, projectType, depID)
+			Bind(location, name, language, projectType, conID)
 		}
 		return nil
 	})

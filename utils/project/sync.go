@@ -24,7 +24,7 @@ import (
 	"strings"
 
 	"github.com/eclipse/codewind-installer/config"
-	"github.com/eclipse/codewind-installer/utils/deployments"
+	"github.com/eclipse/codewind-installer/utils/connections"
 	"github.com/urfave/cli"
 )
 
@@ -54,39 +54,38 @@ type (
 	}
 )
 
-// SyncProject syncs a project with its deployment, given CLI contex
+// SyncProject syncs a project with its remote connection
 func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	projectPath := strings.TrimSpace(c.String("path"))
 	projectID := strings.TrimSpace(c.String("id"))
 	synctime := int64(c.Int("time"))
-
-	var depURL string
 
 	_, err := os.Stat(projectPath)
 	if err != nil {
 		return nil, &ProjectError{errBadPath, err, err.Error()}
 	}
 
-	depID, projErr := GetDeploymentID(projectID)
+	conID, projErr := GetConnectionID(projectID)
 	if projErr != nil {
 		return nil, projErr
 	}
 
-	depInfo, depInfoErr := deployments.GetDeploymentByID(depID)
-	if depInfoErr != nil {
-		return nil, &ProjectError{errOpDepNotFound, depInfoErr, depInfoErr.Desc}
+	conInfo, conInfoErr := connections.GetConnectionByID(conID)
+	if conInfoErr != nil {
+		return nil, &ProjectError{errOpConNotFound, conInfoErr, conInfoErr.Desc}
 	}
 
-	if depInfo.ID != "local" {
-		depURL = depInfo.URL
+	var conURL string
+	if conInfo.ID != "local" {
+		conURL = conInfo.URL
 	} else {
-		depURL = config.PFEApiRoute()
+		conURL = config.PFEApiRoute()
 	}
 
 	// Sync all the necessary project files
-	fileList, modifiedList, uploadedFilesList := syncFiles(projectPath, projectID, depURL, synctime)
+	fileList, modifiedList, uploadedFilesList := syncFiles(projectPath, projectID, conURL, synctime)
 	// Complete the upload
-	completeStatus, completeStatusCode := completeUpload(projectID, fileList, modifiedList, depURL, synctime)
+	completeStatus, completeStatusCode := completeUpload(projectID, fileList, modifiedList, conURL, synctime)
 	response := SyncResponse{
 		UploadedFiles: uploadedFilesList,
 		Status:        completeStatus,
@@ -96,12 +95,12 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	return &response, nil
 }
 
-func syncFiles(projectPath string, projectID string, depURL string, synctime int64) ([]string, []string, []UploadedFile) {
+func syncFiles(projectPath string, projectID string, conURL string, synctime int64) ([]string, []string, []UploadedFile) {
 	var fileList []string
 	var modifiedList []string
 	var uploadedFiles []UploadedFile
 
-	projectUploadURL := depURL + "projects/" + projectID + "/upload"
+	projectUploadURL := conURL + "projects/" + projectID + "/upload"
 	client := &http.Client{}
 
 	err := filepath.Walk(projectPath, func(path string, info os.FileInfo, err error) error {
@@ -182,8 +181,8 @@ func syncFiles(projectPath string, projectID string, depURL string, synctime int
 	return fileList, modifiedList, uploadedFiles
 }
 
-func completeUpload(projectID string, files []string, modfiles []string, depURL string, timestamp int64) (string, int) {
-	uploadEndURL := depURL + "projects/" + projectID + "/upload/end"
+func completeUpload(projectID string, files []string, modfiles []string, conURL string, timestamp int64) (string, int) {
+	uploadEndURL := conURL + "projects/" + projectID + "/upload/end"
 
 	payload := &CompleteRequest{FileList: files, ModifiedList: modfiles, TimeStamp: timestamp}
 	jsonPayload, _ := json.Marshal(payload)

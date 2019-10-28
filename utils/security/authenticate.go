@@ -19,7 +19,7 @@ import (
 	"strings"
 
 	"github.com/eclipse/codewind-installer/utils"
-	"github.com/eclipse/codewind-installer/utils/deployments"
+	"github.com/eclipse/codewind-installer/utils/connections"
 	"github.com/urfave/cli"
 )
 
@@ -43,12 +43,12 @@ func SecAuthenticate(httpClient utils.HTTPClient, c *cli.Context, connectionReal
 	cliRealm := strings.TrimSpace(strings.ToLower(c.String("realm")))
 	cliClient := strings.TrimSpace(strings.ToLower(c.String("client")))
 	cliPassword := strings.TrimSpace(c.String("password"))
-	deploymentID := strings.TrimSpace(strings.ToLower(c.String("depid")))
+	connectionID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 
 	// Check supplied context flags
-	if deploymentID == "" && (cliHostname == "" || cliUsername == "" || cliRealm == "" || cliClient == "") {
-		err := errors.New("Must supply a deployment ID or connection details")
-		return nil, &SecError{errOpDepConfig, err, err.Error()}
+	if connectionID == "" && (cliHostname == "" || cliUsername == "" || cliRealm == "" || cliClient == "") {
+		err := errors.New("Must supply a connection ID or connection details")
+		return nil, &SecError{errOpConConfig, err, err.Error()}
 	}
 
 	hostname := ""
@@ -57,19 +57,19 @@ func SecAuthenticate(httpClient utils.HTTPClient, c *cli.Context, connectionReal
 	realm := ""
 	client := ""
 
-	// Check deployment is known
-	deployment, depErr := deployments.GetDeploymentByID(deploymentID)
-	if deploymentID != "" && depErr != nil {
-		return nil, &SecError{errOpDepConfig, depErr.Err, depErr.Desc}
+	// Check connection is known
+	connection, ConErr := connections.GetConnectionByID(connectionID)
+	if connectionID != "" && ConErr != nil {
+		return nil, &SecError{errOpConConfig, ConErr.Err, ConErr.Desc}
 	}
 
-	if deployment != nil {
-		hostname = deployment.AuthURL
-		realm = deployment.Realm
-		client = deployment.ClientID
+	if connection != nil {
+		hostname = connection.AuthURL
+		realm = connection.Realm
+		client = connection.ClientID
 	}
 
-	// Use command line context flags in preference to loaded deployment fields
+	// Use command line context flags in preference to loaded connection fields
 	if cliHostname != "" {
 		hostname = cliHostname
 	}
@@ -83,9 +83,9 @@ func SecAuthenticate(httpClient utils.HTTPClient, c *cli.Context, connectionReal
 		client = cliClient
 	}
 
-	// When a matching deployment exist retrieve secret from the keyring
-	if deployment != nil {
-		secret, secError := SecKeyGetSecret(deployment.ID, username)
+	// When a matching connection exist retrieve secret from the keyring
+	if connection != nil {
+		secret, secError := SecKeyGetSecret(connection.ID, username)
 		if secError != nil && cliPassword == "" {
 			return nil, secError
 		}
@@ -150,20 +150,20 @@ func SecAuthenticate(httpClient utils.HTTPClient, c *cli.Context, connectionReal
 		return nil, &SecError{errOpResponseFormat, err, textUnableToParse}
 	}
 
-	// store access and refresh tokens in keyring if a deployment is known
-	if deployment != nil {
-		secErr := SecKeyUpdate(deploymentID, "access_token", authToken.AccessToken)
+	// store access and refresh tokens in keyring if a connection is known
+	if connection != nil {
+		secErr := SecKeyUpdate(connectionID, "access_token", authToken.AccessToken)
 		if secErr != nil {
 			return &authToken, secErr
 		}
-		secErr = SecKeyUpdate(deploymentID, "refresh_token", authToken.RefreshToken)
+		secErr = SecKeyUpdate(connectionID, "refresh_token", authToken.RefreshToken)
 		if secErr != nil {
 			return &authToken, secErr
 		}
 
 		// login successful, update users password in keyring
 		if password != "" {
-			secErr = SecKeyUpdate(deploymentID, username, password)
+			secErr = SecKeyUpdate(connectionID, username, password)
 			if secErr != nil {
 				return &authToken, secErr
 			}
