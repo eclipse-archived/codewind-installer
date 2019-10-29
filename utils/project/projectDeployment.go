@@ -89,7 +89,7 @@ func GetConnection(projectID string) (*ConnectionFile, *ProjectError) {
 	return connectionTargets, nil
 }
 
-// GetConnectionURL returns to the connection URL for a given projectID, unique to each project connection
+// GetConnectionURL : Return the connection URL for a given projectID, unique to each project connection
 func GetConnectionURL(projectID string) (string, *ProjectError) {
 	conID, err := GetConnectionID(projectID)
 
@@ -108,7 +108,7 @@ func GetConnectionURL(projectID string) (string, *ProjectError) {
 	return projectConInfo.URL, nil
 }
 
-// GetConnectionID gets the the connectionID for a given projectID
+// GetConnectionID : Gets the the connectionID for a given projectID
 func GetConnectionID(projectID string) (string, *ProjectError) {
 	connection, err := GetConnection(projectID)
 	if err != nil {
@@ -124,7 +124,7 @@ func GetConnectionID(projectID string) (string, *ProjectError) {
 	return conID, nil
 }
 
-// ConnectionFileExists returns true if connection file exists
+// ConnectionFileExists : Returns true if connection file exists for the projectID
 func ConnectionFileExists(projectID string) bool {
 	info, err := os.Stat(getConnectionFilename(projectID))
 	if os.IsNotExist(err) {
@@ -133,7 +133,7 @@ func ConnectionFileExists(projectID string) bool {
 	return !info.IsDir()
 }
 
-// CreateConnectionsFile creates the /connections/{project_id}.json file if one doesn't exist, with default local connection
+// CreateConnectionsFile : Creates the /connections/{project_id}.json file if one doesn't exist, with default local connection
 func CreateConnectionsFile(projectID string) *ProjectError {
 	_, err := os.Stat(getConnectionFilename(projectID))
 	if os.IsNotExist(err) {
@@ -146,7 +146,7 @@ func CreateConnectionsFile(projectID string) *ProjectError {
 	return nil
 }
 
-// RemoveConnectionFile removes the connection file for a project
+// RemoveConnectionFile : Remove the connection file for a project
 func RemoveConnectionFile(projectID string) *ProjectError {
 	// delete file
 	var err = os.Remove(getConnectionFilename(projectID))
@@ -156,7 +156,7 @@ func RemoveConnectionFile(projectID string) *ProjectError {
 	return nil
 }
 
-// getProjectConnectionConfigDir : get directory path to the connection file
+// getProjectConnectionConfigDir : Get directory path to the connection file
 func getProjectConnectionConfigDir() string {
 	const GOOS string = runtime.GOOS
 	homeDir := ""
@@ -168,12 +168,12 @@ func getProjectConnectionConfigDir() string {
 	return path.Join(homeDir, ".codewind", "config", "connections")
 }
 
-// getConnectionFilename  : get full file path of connection file
+// getConnectionFilename : Get full file path of connection file
 func getConnectionFilename(projectID string) string {
 	return path.Join(getProjectConnectionConfigDir(), projectID+".json")
 }
 
-// saveConnectionTargets : write the targets file in JSON format
+// saveConnectionTargets : Write the targets file in JSON format
 func saveConnectionTargets(projectID string, connectionTargets *ConnectionFile) *ProjectError {
 	body, err := json.MarshalIndent(connectionTargets, "", "\t")
 	if err != nil {
