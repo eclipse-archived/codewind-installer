@@ -26,6 +26,7 @@ type (
 		ProjectType string             `json:"projectType"`
 		Detection   string             `json:"detection"`
 		Commands    []ExtensionCommand `json:"commands"`
+		Config      ExtensionConfig    `json:"config"`
 	}
 
 	// ExtensionCommand represents a command defined by a project extension
@@ -33,6 +34,11 @@ type (
 		Name    string   `json:"name"`
 		Command string   `json:"command"`
 		Args    []string `json:"args"`
+	}
+
+	// ExtensionConfig represents a project extension's config element
+	ExtensionConfig struct {
+		Style string `json:"style"`
 	}
 )
 

@@ -68,7 +68,7 @@ func AddTemplateRepo(c *cli.Context) {
 		return
 	}
 	extensions, err := apiroutes.GetExtensions()
-	if err != nil {
+	if err == nil {
 		utils.OnRepositoryAdd(url, extensions, repos)
 	}
 	PrettyPrintJSON(repos)
@@ -78,7 +78,7 @@ func AddTemplateRepo(c *cli.Context) {
 func DeleteTemplateRepo(c *cli.Context) {
 	url := c.String("URL")
 	extensions, err := apiroutes.GetExtensions()
-	if err != nil {
+	if err == nil {
 		utils.OnRepositoryDelete(url, extensions)
 	}
 	repos, err := apiroutes.DeleteTemplateRepo(url)
