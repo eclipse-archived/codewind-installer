@@ -148,6 +148,16 @@ func CreateConnectionsFile(projectID string) *ProjectError {
 	return nil
 }
 
+// RemoveConnectionFile removes to connection file of a project
+func RemoveConnectionFile(projectID string) *ProjectError {
+	// delete file
+	var err = os.Remove(getConnectionFilename(projectID))
+	if err != nil {
+		return &ProjectError{errOpFileDelete, err, err.Error()}
+	}
+	return nil
+}
+
 // getProjectConnectionConfigDir : get directory path to the connections file
 func getProjectConnectionConfigDir() string {
 	const GOOS string = runtime.GOOS

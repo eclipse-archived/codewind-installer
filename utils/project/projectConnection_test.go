@@ -62,10 +62,34 @@ func WriteNewConfigFile() error {
 
 // Test_ProjectConnection :  Tests
 func Test_ProjectConnection(t *testing.T) {
-	ResetConnectionFile(testProjectID)
 	WriteNewConfigFile()
 
+	t.Run("Asserts project connection file doesn't exist", func(t *testing.T) {
+		connectionExists := ConnectionFileExists(testProjectID)
+		assert.Equal(t, false, connectionExists)
+	})
+
+	t.Run("Asserts setting a default connections file doesn't fail", func(t *testing.T) {
+		projError := ResetConnectionFile(testProjectID)
+		if projError != nil {
+			t.Fail()
+		}
+	})
+
+	t.Run("Asserts project connection file exists", func(t *testing.T) {
+		connectionExists := ConnectionFileExists(testProjectID)
+		assert.Equal(t, true, connectionExists)
+	})
+
 	t.Run("Asserts project without a set conID defaults to local", func(t *testing.T) {
+		connection, projError := GetConnection(testProjectID)
+		if projError != nil {
+			t.Fail()
+		}
+		assert.Equal(t, "local", connection.ID)
+	})
+
+	t.Run("Asserts project without a conID set defaults to local", func(t *testing.T) {
 		connection, projError := GetConnection(testProjectID)
 		if projError != nil {
 			t.Fail()
@@ -118,6 +142,6 @@ func Test_ProjectConnection(t *testing.T) {
 		}
 		assert.Equal(t, errOpInvalidID, projError.Op)
 	})
-
+	RemoveConnectionFile(testProjectID)
 	connections.ResetConnectionsFile()
 }
