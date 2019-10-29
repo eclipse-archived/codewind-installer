@@ -50,7 +50,7 @@ func SetConnection(projectID string, conID string) *ProjectError {
 
 	connectionTargets, projError := loadConnectionFile(projectID)
 	if projError != nil && connectionTargets == nil {
-		err := CreateConnectionsFile(projectID)
+		err := CreateConnectionFile(projectID)
 		if err != nil {
 			return err
 		}
@@ -133,8 +133,8 @@ func ConnectionFileExists(projectID string) bool {
 	return !info.IsDir()
 }
 
-// CreateConnectionsFile : Creates the /connections/{project_id}.json file if one doesn't exist, with default local connection
-func CreateConnectionsFile(projectID string) *ProjectError {
+// CreateConnectionFile : Creates the /connections/{project_id}.json file if one doesn't exist, with default local connection
+func CreateConnectionFile(projectID string) *ProjectError {
 	_, err := os.Stat(getConnectionFilename(projectID))
 	if os.IsNotExist(err) {
 		os.MkdirAll(getProjectConnectionConfigDir(), 0777)

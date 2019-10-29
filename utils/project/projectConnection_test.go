@@ -69,8 +69,8 @@ func Test_ProjectConnection(t *testing.T) {
 		assert.Equal(t, false, connectionExists)
 	})
 
-	t.Run("Asserts setting a default connections file doesn't fail", func(t *testing.T) {
-		projError := ResetConnectionFile(testProjectID)
+	t.Run("Asserts setting a default connection file doesn't fail", func(t *testing.T) {
+		projError := CreateConnectionFile(testProjectID)
 		if projError != nil {
 			t.Fail()
 		}
@@ -81,7 +81,7 @@ func Test_ProjectConnection(t *testing.T) {
 		assert.Equal(t, true, connectionExists)
 	})
 
-	t.Run("Asserts project without a set conID defaults to local", func(t *testing.T) {
+	t.Run("Asserts project defaults to local connection", func(t *testing.T) {
 		connection, projError := GetConnection(testProjectID)
 		if projError != nil {
 			t.Fail()
@@ -89,22 +89,14 @@ func Test_ProjectConnection(t *testing.T) {
 		assert.Equal(t, "local", connection.ID)
 	})
 
-	t.Run("Asserts project without a conID set defaults to local", func(t *testing.T) {
-		connection, projError := GetConnection(testProjectID)
-		if projError != nil {
-			t.Fail()
-		}
-		assert.Equal(t, "local", connection.ID)
-	})
-
-	t.Run("Add project to connection", func(t *testing.T) {
+	t.Run("Asserts a new connectionID can be set", func(t *testing.T) {
 		projError := SetConnection(testProjectID, testConnectionID)
 		if projError != nil {
 			t.Fail()
 		}
 	})
 
-	t.Run("Asserts the correct connection is added", func(t *testing.T) {
+	t.Run("Asserts the correct connection has been added", func(t *testing.T) {
 		connection, projError := GetConnection(testProjectID)
 		if projError != nil {
 			t.Fail()
@@ -135,13 +127,24 @@ func Test_ProjectConnection(t *testing.T) {
 		assert.Equal(t, "local", connection.ID)
 	})
 
-	t.Run("Asserts attempting to manage an invalid project ID fails", func(t *testing.T) {
+	t.Run("Asserts attempting to set an invalid project ID fails", func(t *testing.T) {
 		projError := SetConnection("bad-project-ID", testConnectionID)
 		if projError == nil {
 			t.Fail()
 		}
 		assert.Equal(t, errOpInvalidID, projError.Op)
 	})
-	RemoveConnectionFile(testProjectID)
+
+	t.Run("Asserts the connection file can be removed", func(t *testing.T) {
+		projError := RemoveConnectionFile(testProjectID)
+		if projError != nil {
+			t.Fail()
+		}
+	})
+
+	t.Run("Asserts the connection file has been removed", func(t *testing.T) {
+		connectionExists := ConnectionFileExists(testProjectID)
+		assert.Equal(t, false, connectionExists)
+	})
 	connections.ResetConnectionsFile()
 }
