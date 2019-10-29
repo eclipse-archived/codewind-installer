@@ -12,9 +12,16 @@
 package actions
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
+	"strconv"
+	"strings"
 
 	"github.com/eclipse/codewind-installer/utils"
+	"github.com/eclipse/codewind-installer/utils/project"
+	"github.com/eclipse/codewind-installer/utils/remote"
+	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -37,4 +44,56 @@ func InstallCommand(c *cli.Context) {
 	}
 
 	fmt.Println("Image Tagging Successful")
+}
+
+// DoRemoteInstall : Deploy a remote PFE and support containers
+func DoRemoteInstall(c *cli.Context) {
+	printAsJSON := c.GlobalBool("json")
+
+	session := c.String("session")
+	if session == "" {
+		session = strings.ToUpper(strconv.FormatInt(utils.CreateTimestamp(), 36))
+	}
+
+	deployOptions := remote.DeployOptions{
+		Namespace:             c.String("namespace"),
+		IngressDomain:         c.String("ingress"),
+		InstallKeycloak:       c.Bool("addkeycloak"),
+		KeycloakUser:          c.String("kadminuser"),
+		KeycloakPassword:      c.String("kadminpass"),
+		KeycloakDevUser:       c.String("kdevuser"),
+		KeycloakDevPassword:   c.String("kdevpass"),
+		KeycloakRealm:         c.String("krealm"),
+		KeycloakClient:        c.String("kclient"),
+		GateKeeperTLSSecure:   true,
+		KeycloakTLSSecure:     true,
+		CodewindSessionSecret: session,
+	}
+
+	deploymentResult, remInstError := remote.DeployRemote(&deployOptions)
+	if remInstError != nil {
+		if printAsJSON {
+			fmt.Println(remInstError.Error())
+		} else {
+			logr.Errorf("Error: %v - %v\n", remInstError.Op, remInstError.Desc)
+		}
+		os.Exit(0)
+	}
+
+	gatekeeperURL := deploymentResult.GatekeeperURL
+
+	logr.Infoln("Waiting for Codewind Gatekeeper to start on " + gatekeeperURL)
+	utils.WaitForService(gatekeeperURL+"/health", 200, 500)
+
+	logr.Infoln("Waiting for Codewind PFE to start")
+	utils.WaitForService(gatekeeperURL+"/api/pfe/ready", 200, 500)
+
+	result := project.Result{Status: "OK", StatusMessage: "Install Successful: " + gatekeeperURL}
+	if printAsJSON {
+		response, _ := json.Marshal(result)
+		fmt.Println(string(response))
+	} else {
+		logr.Infoln("Codewind is available at: " + gatekeeperURL)
+	}
+	os.Exit(0)
 }
