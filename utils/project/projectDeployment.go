@@ -77,7 +77,7 @@ func SetConnection(projectID string, conID string) *ProjectError {
 func ResetConnectionFile(projectID string) *ProjectError {
 	connectionTargets := ConnectionFile{
 		SchemaVersion: connectionTargetSchemaVersion,
-		ID:            "",
+		ID:            "local",
 	}
 	projError := saveConnectionTargets(projectID, &connectionTargets)
 	if projError != nil {
