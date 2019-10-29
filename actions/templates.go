@@ -17,6 +17,7 @@ import (
 	"log"
 
 	"github.com/eclipse/codewind-installer/apiroutes"
+	"github.com/eclipse/codewind-installer/utils"
 	"github.com/urfave/cli"
 )
 
@@ -56,8 +57,9 @@ func ListTemplateRepos() {
 
 // AddTemplateRepo adds the provided template repo to PFE.
 func AddTemplateRepo(c *cli.Context) {
+	url := c.String("URL")
 	repos, err := apiroutes.AddTemplateRepo(
-		c.String("URL"),
+		url,
 		c.String("description"),
 		c.String("name"),
 	)
@@ -65,12 +67,15 @@ func AddTemplateRepo(c *cli.Context) {
 		log.Printf("Error adding template repo: %q", err)
 		return
 	}
+	utils.OnRepositoryAdd(url, repos)
 	PrettyPrintJSON(repos)
 }
 
 // DeleteTemplateRepo deletes the provided template repo from PFE.
 func DeleteTemplateRepo(c *cli.Context) {
-	repos, err := apiroutes.DeleteTemplateRepo(c.String("URL"))
+	url := c.String("URL")
+	utils.OnRepositoryDelete(url)
+	repos, err := apiroutes.DeleteTemplateRepo(url)
 	if err != nil {
 		log.Printf("Error deleting template repo: %q", err)
 		return

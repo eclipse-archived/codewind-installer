@@ -20,6 +20,7 @@ import (
 	"net/url"
 
 	"github.com/eclipse/codewind-installer/config"
+	"github.com/eclipse/codewind-installer/utils"
 )
 
 type (
@@ -30,17 +31,6 @@ type (
 		Language    string `json:"language"`
 		URL         string `json:"url"`
 		ProjectType string `json:"projectType"`
-	}
-
-	// TemplateRepo represents a template repository.
-	TemplateRepo struct {
-		Description   string   `json:"description"`
-		URL           string   `json:"url"`
-		Name          string   `json:"name"`
-		ID            string   `json:"id"`
-		Enabled       bool     `json:"enabled"`
-		Protected     bool     `json:"protected"`
-		ProjectStyles []string `json:"projectStyles"`
 	}
 )
 
@@ -100,7 +90,7 @@ func GetTemplateStyles() ([]string, error) {
 }
 
 // GetTemplateRepos gets all template repos from PFE's REST API
-func GetTemplateRepos() ([]TemplateRepo, error) {
+func GetTemplateRepos() ([]utils.TemplateRepo, error) {
 	resp, err := http.Get(config.PFEApiRoute() + "templates/repositories")
 	if err != nil {
 		return nil, err
@@ -113,7 +103,7 @@ func GetTemplateRepos() ([]TemplateRepo, error) {
 		return nil, err
 	}
 
-	var repos []TemplateRepo
+	var repos []utils.TemplateRepo
 	json.Unmarshal(byteArray, &repos)
 
 	return repos, nil
@@ -121,7 +111,7 @@ func GetTemplateRepos() ([]TemplateRepo, error) {
 
 // AddTemplateRepo adds a template repo to PFE and
 // returns the new list of existing repos
-func AddTemplateRepo(URL, description string, name string) ([]TemplateRepo, error) {
+func AddTemplateRepo(URL, description string, name string) ([]utils.TemplateRepo, error) {
 	if _, err := url.ParseRequestURI(URL); err != nil {
 		return nil, fmt.Errorf("Error: '%s' is not a valid URL", URL)
 	}
@@ -152,7 +142,7 @@ func AddTemplateRepo(URL, description string, name string) ([]TemplateRepo, erro
 		return nil, err
 	}
 
-	var repos []TemplateRepo
+	var repos []utils.TemplateRepo
 	json.Unmarshal(byteArray, &repos)
 
 	return repos, nil
@@ -160,7 +150,7 @@ func AddTemplateRepo(URL, description string, name string) ([]TemplateRepo, erro
 
 // DeleteTemplateRepo deletes a template repo from PFE and
 // returns the new list of existing repos
-func DeleteTemplateRepo(URL string) ([]TemplateRepo, error) {
+func DeleteTemplateRepo(URL string) ([]utils.TemplateRepo, error) {
 	if _, err := url.ParseRequestURI(URL); err != nil {
 		return nil, err
 	}
@@ -191,7 +181,7 @@ func DeleteTemplateRepo(URL string) ([]TemplateRepo, error) {
 		return nil, err
 	}
 
-	var repos []TemplateRepo
+	var repos []utils.TemplateRepo
 	json.Unmarshal(byteArray, &repos)
 
 	return repos, nil
