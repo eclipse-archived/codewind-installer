@@ -34,9 +34,13 @@ type (
 
 	// TemplateRepo represents a template repository.
 	TemplateRepo struct {
-		Description string `json:"description"`
-		URL         string `json:"url"`
-		Name        string `json:"name"`
+		Description   string   `json:"description"`
+		URL           string   `json:"url"`
+		Name          string   `json:"name"`
+		ID            string   `json:"id"`
+		Enabled       bool     `json:"enabled"`
+		Protected     bool     `json:"protected"`
+		ProjectStyles []string `json:"projectStyles"`
 	}
 )
 

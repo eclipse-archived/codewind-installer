@@ -20,23 +20,6 @@ import (
 	"github.com/urfave/cli"
 )
 
-type (
-	// Template represents a project template.
-	Template struct {
-		Label       string `json:"label"`
-		Description string `json:"description"`
-		Language    string `json:"language"`
-		URL         string `json:"url"`
-		ProjectType string `json:"projectType"`
-	}
-
-	// TemplateRepo represents a template repository.
-	TemplateRepo struct {
-		Description string `json:"description"`
-		URL         string `json:"url"`
-	}
-)
-
 // ListTemplates lists project templates of which Codewind is aware.
 // Filter them by providing flags
 func ListTemplates(c *cli.Context) {
