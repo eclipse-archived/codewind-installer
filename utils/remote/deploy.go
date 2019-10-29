@@ -84,10 +84,11 @@ func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemIn
 	ingressDomain := remoteDeployOptions.IngressDomain
 
 	// Use a supplied ingress if one was not installed
-	if remoteDeployOptions.IngressDomain == "" {
+	if remoteDeployOptions.IngressDomain == "" && !onOpenShift {
+		logr.Infof("Attempting to discover Ingress Domain")
 		svcList := clientset.CoreV1().Services("ingress-nginx")
 		svc, err := svcList.List(v1.ListOptions{})
-		if err != nil && svc != nil && svc.Items != nil {
+		if err == nil && svc != nil && svc.Items != nil {
 			ingressDomain = svc.Items[0].Spec.ClusterIP + ".nip.io"
 		}
 	}
