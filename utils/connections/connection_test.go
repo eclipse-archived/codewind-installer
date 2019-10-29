@@ -41,7 +41,7 @@ func (c *ClientMockServerConfig) Do(req *http.Request) (*http.Response, error) {
 func Test_SchemaUpgrade0to1(t *testing.T) {
 	// create a v1 file :
 	v1File := "{\"active\": \"testlocal\",\"connections\": [{\"name\":\"testlocal\",\"label\": \"Codewind local test connection\",\"url\": \"\"}]}"
-	ioutil.WriteFile(getConnectionConfigFilename(), []byte(v1File), 0644)
+	ioutil.WriteFile(GetConnectionConfigFilename(), []byte(v1File), 0644)
 	t.Run("Asserts schema updated to v1 with a local target", func(t *testing.T) {
 		InitConfigFileIfRequired() // perform upgrade
 		result, err := GetConnectionsConfig()

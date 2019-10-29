@@ -48,7 +48,7 @@ type Connection struct {
 
 // InitConfigFileIfRequired : Check the config file exist, if it does not then create a new default configuration
 func InitConfigFileIfRequired() *ConError {
-	_, err := os.Stat(getConnectionConfigFilename())
+	_, err := os.Stat(GetConnectionConfigFilename())
 	if os.IsNotExist(err) {
 		os.MkdirAll(getConnectionConfigDir(), 0777)
 		return ResetConnectionsFile()
@@ -78,7 +78,7 @@ func ResetConnectionsFile() *ConError {
 		return &ConError{errOpFileParse, err, err.Error()}
 	}
 
-	err = ioutil.WriteFile(getConnectionConfigFilename(), body, 0644)
+	err = ioutil.WriteFile(GetConnectionConfigFilename(), body, 0644)
 	if err != nil {
 		return &ConError{errOpFileWrite, err, err.Error()}
 	}
@@ -153,7 +153,7 @@ func SetTargetConnection(c *cli.Context) *ConError {
 	if err != nil {
 		return &ConError{errOpFileParse, err, err.Error()}
 	}
-	err = ioutil.WriteFile(getConnectionConfigFilename(), body, 0644)
+	err = ioutil.WriteFile(GetConnectionConfigFilename(), body, 0644)
 	if err != nil {
 		return &ConError{errOpFileWrite, err, err.Error()}
 	}
@@ -203,7 +203,7 @@ func AddConnectionToList(httpClient utils.HTTPClient, c *cli.Context) (*Connecti
 		return nil, &ConError{errOpFileParse, err, err.Error()}
 	}
 
-	err = ioutil.WriteFile(getConnectionConfigFilename(), body, 0644)
+	err = ioutil.WriteFile(GetConnectionConfigFilename(), body, 0644)
 	if err != nil {
 		return nil, &ConError{errOpFileWrite, err, err.Error()}
 	}
@@ -242,7 +242,7 @@ func RemoveConnectionFromList(c *cli.Context) *ConError {
 		return &ConError{errOpFileParse, err, err.Error()}
 	}
 
-	err = ioutil.WriteFile(getConnectionConfigFilename(), body, 0644)
+	err = ioutil.WriteFile(GetConnectionConfigFilename(), body, 0644)
 	if err != nil {
 		return &ConError{errOpFileWrite, err, err.Error()}
 	}
@@ -278,7 +278,7 @@ func GetAllConnections() ([]Connection, *ConError) {
 // loadConnectionsConfigFile : Load the connections configuration file from disk
 // and returns the contents of the file or an error
 func loadConnectionsConfigFile() (*ConnectionConfig, *ConError) {
-	file, err := ioutil.ReadFile(getConnectionConfigFilename())
+	file, err := ioutil.ReadFile(GetConnectionConfigFilename())
 	if err != nil {
 		return nil, &ConError{errOpFileLoad, err, err.Error()}
 	}
@@ -297,7 +297,7 @@ func saveConnectionsConfigFile(ConnectionConfig *ConnectionConfig) *ConError {
 	if err != nil {
 		return &ConError{errOpFileParse, err, err.Error()}
 	}
-	conErr := ioutil.WriteFile(getConnectionConfigFilename(), body, 0644)
+	conErr := ioutil.WriteFile(GetConnectionConfigFilename(), body, 0644)
 	if conErr != nil {
 		return &ConError{errOpFileWrite, conErr, conErr.Error()}
 	}
@@ -316,13 +316,13 @@ func getConnectionConfigDir() string {
 	return path.Join(homeDir, ".codewind", "config")
 }
 
-// getConnectionConfigFilename  : get full file path of connections file
-func getConnectionConfigFilename() string {
+// GetConnectionConfigFilename  : get full file path of connections file
+func GetConnectionConfigFilename() string {
 	return path.Join(getConnectionConfigDir(), "connections.json")
 }
 
 func loadRawConnectionsFile() ([]byte, *ConError) {
-	file, err := ioutil.ReadFile(getConnectionConfigFilename())
+	file, err := ioutil.ReadFile(GetConnectionConfigFilename())
 	if err != nil {
 		return nil, &ConError{errOpFileLoad, err, err.Error()}
 	}
@@ -380,7 +380,7 @@ func applySchemaUpdates() *ConError {
 			if err != nil {
 				return &ConError{errOpFileParse, err, err.Error()}
 			}
-			err = ioutil.WriteFile(getConnectionConfigFilename(), body, 0644)
+			err = ioutil.WriteFile(GetConnectionConfigFilename(), body, 0644)
 			if err != nil {
 				return &ConError{errOpFileWrite, err, err.Error()}
 			}
