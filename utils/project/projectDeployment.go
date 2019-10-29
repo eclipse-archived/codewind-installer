@@ -52,13 +52,9 @@ func SetConnection(projectID string, conID string) *ProjectError {
 	connectionTargets, projError := loadConnectionFile(projectID)
 
 	if projError != nil && connectionTargets == nil {
-		_, err := os.Stat(getConnectionFilename(projectID))
-		if os.IsNotExist(err) {
-			os.MkdirAll(getProjectConnectionConfigDir(), 0777)
-			resetFileError := ResetConnectionFile(projectID)
-			if resetFileError != nil {
-				return resetFileError
-			}
+		err := CreateConnectionsFile(projectID)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -128,6 +124,19 @@ func GetConnectionID(projectID string) (string, *ProjectError) {
 		return "", &ProjectError{errOpConNotFound, projError, projError.Error()}
 	}
 	return conID, nil
+}
+
+// CreateConnectionsFile creates the /connections/{project_id.json} file if one doesn't exist, with default local connection
+func CreateConnectionsFile(projectID string) *ProjectError {
+	_, err := os.Stat(getConnectionFilename(projectID))
+	if os.IsNotExist(err) {
+		os.MkdirAll(getProjectConnectionConfigDir(), 0777)
+		resetFileError := ResetConnectionFile(projectID)
+		if resetFileError != nil {
+			return resetFileError
+		}
+	}
+	return nil
 }
 
 // getProjectConnectionConfigDir : get directory path to the connections file
