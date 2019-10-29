@@ -22,6 +22,7 @@ import (
 
 const testProjectID = "a9384430-f177-11e9-b862-edc28aca827a"
 const testConnectionID = "testCon"
+const testHost = "http://test-host"
 const schemaVersion = 1
 
 func WriteNewConfigFile() error {
@@ -40,7 +41,7 @@ func WriteNewConfigFile() error {
 			connections.Connection{
 				ID:       "testCon",
 				Label:    "Test remote connection",
-				URL:      "",
+				URL:      testHost,
 				AuthURL:  "",
 				Realm:    "",
 				ClientID: "",
@@ -85,6 +86,14 @@ func Test_ProjectConnection(t *testing.T) {
 			t.Fail()
 		}
 		assert.Equal(t, testConnectionID, connection.ID)
+	})
+
+	t.Run("Asserts the correct host URL is returned", func(t *testing.T) {
+		hostURL, projError := GetConnectionURL(testProjectID)
+		if projError != nil {
+			t.Fail()
+		}
+		assert.Equal(t, testHost, hostURL)
 	})
 
 	t.Run("Asserts resetting the connection is successful", func(t *testing.T) {
