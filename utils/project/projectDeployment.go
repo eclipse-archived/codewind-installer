@@ -55,9 +55,9 @@ func SetConnection(projectID string, conID string) *ProjectError {
 		_, err := os.Stat(getConnectionFilename(projectID))
 		if os.IsNotExist(err) {
 			os.MkdirAll(getProjectConnectionConfigDir(), 0777)
-			projErr2 := ResetConnectionFile(projectID)
-			if projErr2 != nil {
-				return projErr2
+			resetFileError := ResetConnectionFile(projectID)
+			if resetFileError != nil {
+				return resetFileError
 			}
 		}
 	}
@@ -160,7 +160,7 @@ func saveConnectionTargets(projectID string, connectionTargets *ConnectionFile) 
 	return nil
 }
 
-// loadConnectionFile :  Loads the config file for a project
+// loadConnectionFile :  Loads the connection file for a project
 func loadConnectionFile(projectID string) (*ConnectionFile, *ProjectError) {
 	projectID = strings.ToLower(projectID)
 	filePath := getConnectionFilename(projectID)

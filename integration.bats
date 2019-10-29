@@ -111,14 +111,6 @@
    [ "$status" -eq 0 ]
 }
 
-@test "invoke con target command - check target returns to local" {
-  run go run main.go con target
-  echo "status = ${status}"
-  echo "output trace = ${output}"
-   [ "$output" = '{"id":"local","label":"Codewind local connection","url":"","auth":"","realm":"","clientid":""}' ]
-   [ "$status" -eq 0 ]
-}
-
 #########################
 # Keyring command tests #
 #########################

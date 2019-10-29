@@ -109,7 +109,7 @@ func Commands() {
 						{
 							Name:    "set",
 							Aliases: []string{"s"},
-							Usage:   "Set connection for a project",
+							Usage:   "Set connectionID for a project",
 							Flags: []cli.Flag{
 								cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
 								cli.StringFlag{Name: "conid", Usage: "Connection ID", Required: true},
