@@ -120,13 +120,13 @@ func DockerCompose(tempFilePath string, tag string) {
 	os.Setenv("REPOSITORY", "")
 	os.Setenv("TAG", tag)
 	if GOOS == "windows" {
-		os.Setenv("WORKSPACE_DIRECTORY", "C:\\codewind-temp")
+		os.Setenv("WORKSPACE_DIRECTORY", "C:\\codewind-data")
 		// In Windows, calling the env variable "HOME" does not return
 		// the user directory correctly
 		os.Setenv("HOST_HOME", os.Getenv("USERPROFILE"))
 
 	} else {
-		os.Setenv("WORKSPACE_DIRECTORY", home+"/codewind-temp")
+		os.Setenv("WORKSPACE_DIRECTORY", home+"/codewind-data")
 		os.Setenv("HOST_HOME", home)
 	}
 	os.Setenv("HOST_OS", GOOS)
