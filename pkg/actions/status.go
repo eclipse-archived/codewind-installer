@@ -88,7 +88,6 @@ func StatusCommandRemoteConnection(c *cli.Context) {
 // StatusCommandLocalConnection : Output local connection details
 func StatusCommandLocalConnection(c *cli.Context) {
 	jsonOutput := c.Bool("json") || c.GlobalBool("json")
-	jsonOutput := c.Bool("json")
 	containersAreRunning, err := utils.CheckContainerStatus()
 	if err != nil {
 		fmt.Println(err.Error())
