@@ -26,10 +26,13 @@ type (
 
 func addRepo(repo TemplateRepo) {
 
+	if repo.ID == "" {
+		return
+	}
 }
 
 // OnRepositoryAdd runs any extension command associated with a repo add
-func OnRepositoryAdd(url string, repos []TemplateRepo) {
+func OnRepositoryAdd(url string, extensions []Extension, repos []TemplateRepo) {
 	for _, repo := range repos {
 		if repo.URL == url {
 			addRepo(repo)
@@ -39,6 +42,6 @@ func OnRepositoryAdd(url string, repos []TemplateRepo) {
 }
 
 // OnRepositoryDelete runs any extension command associated with a repo delete
-func OnRepositoryDelete(url string) {
+func OnRepositoryDelete(url string, extensions []Extension) {
 
 }

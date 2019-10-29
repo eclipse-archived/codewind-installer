@@ -21,6 +21,13 @@ import (
 )
 
 type (
+	// Extension represents a project extension defined by codewind.yaml
+	Extension struct {
+		ProjectType string             `json:"projectType"`
+		Detection   string             `json:"detection"`
+		Commands    []ExtensionCommand `json:"commands"`
+	}
+
 	// ExtensionCommand represents a command defined by a project extension
 	ExtensionCommand struct {
 		Name    string   `json:"name"`

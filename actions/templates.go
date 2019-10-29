@@ -67,14 +67,20 @@ func AddTemplateRepo(c *cli.Context) {
 		log.Printf("Error adding template repo: %q", err)
 		return
 	}
-	utils.OnRepositoryAdd(url, repos)
+	extensions, err := apiroutes.GetExtensions()
+	if err != nil {
+		utils.OnRepositoryAdd(url, extensions, repos)
+	}
 	PrettyPrintJSON(repos)
 }
 
 // DeleteTemplateRepo deletes the provided template repo from PFE.
 func DeleteTemplateRepo(c *cli.Context) {
 	url := c.String("URL")
-	utils.OnRepositoryDelete(url)
+	extensions, err := apiroutes.GetExtensions()
+	if err != nil {
+		utils.OnRepositoryDelete(url, extensions)
+	}
 	repos, err := apiroutes.DeleteTemplateRepo(url)
 	if err != nil {
 		log.Printf("Error deleting template repo: %q", err)
