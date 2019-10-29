@@ -126,7 +126,16 @@ func GetConnectionID(projectID string) (string, *ProjectError) {
 	return conID, nil
 }
 
-// CreateConnectionsFile creates the /connections/{project_id.json} file if one doesn't exist, with default local connection
+// ConnectionFileExists returns true if connections file exists
+func ConnectionFileExists(projectID string) bool {
+	info, err := os.Stat(getConnectionFilename(projectID))
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
+}
+
+// CreateConnectionsFile creates the /connections/{project_id}.json file if one doesn't exist, with default local connection
 func CreateConnectionsFile(projectID string) *ProjectError {
 	_, err := os.Stat(getConnectionFilename(projectID))
 	if os.IsNotExist(err) {

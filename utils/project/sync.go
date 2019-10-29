@@ -65,12 +65,15 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 		return nil, &ProjectError{errBadPath, err, err.Error()}
 	}
 
+	if !ConnectionFileExists(projectID) {
+		fmt.Println("Project connection file does not exist, creating default local connection")
+		CreateConnectionsFile(projectID)
+	}
+
 	conID, projErr := GetConnectionID(projectID)
 
 	if projErr != nil {
-		fmt.Println("Project connection file does not exist, creating default local connection")
-		CreateConnectionsFile(projectID)
-		conID = "local"
+		return nil, projErr
 	}
 
 	conInfo, conInfoErr := connections.GetConnectionByID(conID)
