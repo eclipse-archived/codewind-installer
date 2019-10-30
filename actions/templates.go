@@ -69,7 +69,7 @@ func AddTemplateRepo(c *cli.Context) {
 	}
 	extensions, err := apiroutes.GetExtensions()
 	if err == nil {
-		utils.OnRepositoryAdd(url, extensions, repos)
+		utils.OnAddTemplateRepo(extensions, url, repos)
 	}
 	PrettyPrintJSON(repos)
 }
@@ -79,7 +79,7 @@ func DeleteTemplateRepo(c *cli.Context) {
 	url := c.String("URL")
 	extensions, err := apiroutes.GetExtensions()
 	if err == nil {
-		utils.OnRepositoryDelete(url, extensions)
+		utils.OnDeleteTemplateRepo(extensions, url)
 	}
 	repos, err := apiroutes.DeleteTemplateRepo(url)
 	if err != nil {

@@ -24,24 +24,59 @@ type (
 	}
 )
 
-func addRepo(repo TemplateRepo) {
+func getApplicableCommand(extension Extension, repo TemplateRepo, name string) *ExtensionCommand {
+
+	// does extension specify a style?
+	style := extension.Config.Style
+	if style == "" {
+		return nil
+	}
+
+	// determine if repository has a matching style
+	// if so, look for an applicable command
+	for _, s := range repo.ProjectStyles {
+		if s == style {
+			for _, command := range extension.Commands {
+				if command.Name == name {
+					return &command
+				}
+			}
+			break
+		}
+	}
+
+	return nil
+}
+
+func onRepositoryAdd(extensions []Extension, repo TemplateRepo) {
 
 	if repo.ID == "" {
 		return
 	}
+
+	for _, extension := range extensions {
+		cmdPtr := getApplicableCommand(extension, repo, "onRepositoryAdd")
+		if cmdPtr != nil {
+			params := make(map[string]string)
+			params["id"] = repo.ID
+			params["url"] = repo.URL
+			RunCommand("", *cmdPtr, params)
+		}
+	}
 }
 
-// OnRepositoryAdd runs any extension command associated with a repo add
-func OnRepositoryAdd(url string, extensions []Extension, repos []TemplateRepo) {
+// OnAddTemplateRepo runs any extension command associated with a repo add
+func OnAddTemplateRepo(extensions []Extension, url string, repos []TemplateRepo) {
+	// look for what was just added
 	for _, repo := range repos {
 		if repo.URL == url {
-			addRepo(repo)
+			onRepositoryAdd(extensions, repo)
 			break
 		}
 	}
 }
 
-// OnRepositoryDelete runs any extension command associated with a repo delete
-func OnRepositoryDelete(url string, extensions []Extension) {
+// OnDeleteTemplateRepo runs any extension command associated with a repo delete
+func OnDeleteTemplateRepo(extensions []Extension, url string) {
 
 }

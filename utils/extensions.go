@@ -73,7 +73,7 @@ func RunCommand(projectPath string, command ExtensionCommand, params map[string]
 		log.Println("There was a problem running the command:", commandName)
 		return err
 	}
-	log.Printf("Please wait while the project is initialized... %s", output.String())
+	log.Printf("Please wait while the command runs... %s", output.String())
 	cmd.Wait()
 	log.Println(output.String()) // Wait to finish execution, so we can read all output
 	return nil
