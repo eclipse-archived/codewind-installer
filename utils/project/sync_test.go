@@ -43,13 +43,13 @@ func setup() {
 	cwSettingsPopulatedPath = testFolder + "/cwSettingsPopulated"
 	cwSettingsEmptyPath = testFolder + "/cwSettingsEmpty"
 	cwSettingsNoIgnoredPaths = testFolder + "/cwSettingsNoIgnoredPaths"
-	populatedIgnoredPaths := cwSettings{
+	populatedIgnoredPaths := CWSettings{
 		IgnoredPaths: []string{
 			"testfile",
 			"anothertestfile",
 		},
 	}
-	emptyIgnoredPaths := cwSettings{
+	emptyIgnoredPaths := CWSettings{
 		IgnoredPaths: []string{},
 	}
 	noIgnoredPaths := noIgnoredPaths{

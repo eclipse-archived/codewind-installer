@@ -52,9 +52,6 @@ type (
 		StatusCode    int            `json:"statusCode"`
 		UploadedFiles []UploadedFile `json:"uploadedFiles"`
 	}
-	cwSettings struct {
-		IgnoredPaths []string `json:"ignoredPaths"`
-	}
 )
 
 // SyncProject syncs a project with its remote connection
@@ -213,7 +210,7 @@ func retrieveIgnoredPathsListFromCWSettings(projectPath string) []string {
 	var cwSettingsIgnoredPathsList []string
 	if _, err := os.Stat(cwSettingsPath); !os.IsNotExist(err) {
 		plan, _ := ioutil.ReadFile(cwSettingsPath)
-		var cwSettingsJSON cwSettings
+		var cwSettingsJSON CWSettings
 		// Don't need to handle an invalid JSON file as we should just return []
 		json.Unmarshal(plan, &cwSettingsJSON)
 		cwSettingsIgnoredPathsList = cwSettingsJSON.IgnoredPaths
