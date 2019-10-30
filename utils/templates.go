@@ -58,8 +58,8 @@ func onRepositoryAdd(extensions []Extension, repo TemplateRepo) {
 		cmdPtr := getApplicableCommand(extension, repo, "onRepositoryAdd")
 		if cmdPtr != nil {
 			params := make(map[string]string)
-			params["id"] = repo.ID
-			params["url"] = repo.URL
+			params["$id"] = repo.ID
+			params["$url"] = repo.URL
 			RunCommand("", *cmdPtr, params)
 		}
 	}
