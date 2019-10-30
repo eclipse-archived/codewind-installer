@@ -49,6 +49,16 @@ func TestDetermineProjectInfo(t *testing.T) {
 			wantLanguage:  "swift",
 			wantBuildType: "swift",
 		},
+		"success case: python project": {
+			in:            path.Join("..", "resources", "test", "python-project"),
+			wantLanguage:  "python",
+			wantBuildType: "docker",
+		},
+		"success case: go project": {
+			in:            path.Join("..", "resources", "test", "go-project"),
+			wantLanguage:  "go",
+			wantBuildType: "docker",
+		},
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -110,6 +120,28 @@ func TestWriteNewCwSettings(t *testing.T) {
 		"success case: swift project": {
 			inProjectPath: "../resources/test/swift-project/.cw-settings",
 			inBuildType:   "swift",
+			wantCwSettings: CWSettings{
+				ContextRoot:  "",
+				InternalPort: "",
+				HealthCheck:  "",
+				IsHTTPS:      false,
+				IgnoredPaths: []string{""},
+			},
+		},
+		"success case: python project": {
+			inProjectPath: "../resources/test/python-project/.cw-settings",
+			inBuildType:   "docker",
+			wantCwSettings: CWSettings{
+				ContextRoot:  "",
+				InternalPort: "",
+				HealthCheck:  "",
+				IsHTTPS:      false,
+				IgnoredPaths: []string{""},
+			},
+		},
+		"success case: go project": {
+			inProjectPath: "../resources/test/go-project/.cw-settings",
+			inBuildType:   "docker",
 			wantCwSettings: CWSettings{
 				ContextRoot:  "",
 				InternalPort: "",
