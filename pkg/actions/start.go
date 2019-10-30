@@ -19,7 +19,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-// StartCommand to start the codewind conainers
+// StartCommand : start the codewind containers
 func StartCommand(c *cli.Context, tempFilePath string, healthEndpoint string) {
 	tag := c.String("tag")
 
@@ -30,6 +30,7 @@ func StartCommand(c *cli.Context, tempFilePath string, healthEndpoint string) {
 	}
 	if !imagesAreInstalled {
 		fmt.Println("Cannot find Codewind images, try running install to pull them")
+		os.Exit(0)
 	}
 
 	taggedImagesAreInstalled, err := utils.CheckImageTag(tag)
@@ -39,6 +40,7 @@ func StartCommand(c *cli.Context, tempFilePath string, healthEndpoint string) {
 	}
 	if !taggedImagesAreInstalled {
 		fmt.Println("Cannot find Codewind images with given tag, try running install to pull them")
+		os.Exit(0)
 	}
 
 	containersAreRunning, err := utils.CheckContainerStatus()

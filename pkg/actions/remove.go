@@ -39,7 +39,7 @@ func RemoveCommand(c *cli.Context) {
 		os.Exit(0)
 	}
 
-	fmt.Println("Removing Codewind docker images..")
+	fmt.Println("Removing Codewind docker images...")
 
 	for _, image := range images {
 		imageRepo := strings.Join(image.RepoDigests, " ")
