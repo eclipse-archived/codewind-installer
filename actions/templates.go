@@ -57,7 +57,7 @@ func ListTemplateRepos() {
 
 // AddTemplateRepo adds the provided template repo to PFE.
 func AddTemplateRepo(c *cli.Context) {
-	url := c.String("URL")
+	url := c.String("url")
 	repos, err := apiroutes.AddTemplateRepo(
 		url,
 		c.String("description"),
@@ -76,7 +76,7 @@ func AddTemplateRepo(c *cli.Context) {
 
 // DeleteTemplateRepo deletes the provided template repo from PFE.
 func DeleteTemplateRepo(c *cli.Context) {
-	url := c.String("URL")
+	url := c.String("url")
 	extensions, err := apiroutes.GetExtensions()
 	if err == nil {
 		repos, err2 := apiroutes.GetTemplateRepos()

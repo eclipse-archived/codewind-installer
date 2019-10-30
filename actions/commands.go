@@ -312,7 +312,7 @@ func Commands() {
 							Usage: "Add a template repo",
 							Flags: []cli.Flag{
 								cli.StringFlag{
-									Name:  "URL",
+									Name:  "url",
 									Usage: "URL of the template repo",
 								},
 								cli.StringFlag{
@@ -337,7 +337,7 @@ func Commands() {
 							Usage:   "Remove a template repo",
 							Flags: []cli.Flag{
 								cli.StringFlag{
-									Name:  "URL",
+									Name:  "url",
 									Usage: "URL of the template repo",
 								},
 							},
