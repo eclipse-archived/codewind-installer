@@ -27,7 +27,6 @@ const schemaVersion = 1
 
 func WriteNewConfigFile() error {
 	connectionsFile := connections.ConnectionConfig{
-		Active:        "local",
 		SchemaVersion: schemaVersion,
 		Connections: []connections.Connection{
 			connections.Connection{

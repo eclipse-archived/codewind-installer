@@ -53,7 +53,7 @@
   run go run main.go con list
   echo "status = ${status}"
   echo "output trace = ${output}"
-   [ "$output" = '{"schemaversion":1,"active":"local","connections":[{"id":"local","label":"Codewind local connection","url":"","auth":"","realm":"","clientid":""}]}' ]
+   [ "$output" = '{"schemaversion":1,"connections":[{"id":"local","label":"Codewind local connection","url":"","auth":"","realm":"","clientid":""}]}' ]
    [ "$status" -eq 0 ]
 }
 
@@ -71,7 +71,7 @@
   run go run main.go con list
   echo "status = ${status}"
   echo "output trace = ${output}"
-   [ "$output" = '{"schemaversion":1,"active":"local","connections":[{"id":"local","label":"Codewind local connection","url":"","auth":"","realm":"","clientid":""},{"id":"kube","label":"kube-cluster","url":"http://mykube:12345","auth":"http://myauth:12345","realm":"codewind-cloud","clientid":"codewind"}]}' ]
+   [ "$output" = '{"schemaversion":1,"connections":[{"id":"local","label":"Codewind local connection","url":"","auth":"","realm":"","clientid":""},{"id":"kube","label":"kube-cluster","url":"http://mykube:12345","auth":"http://myauth:12345","realm":"codewind-cloud","clientid":"codewind"}]}' ]
    [ "$status" -eq 0 ]
 }
 

@@ -32,7 +32,6 @@ const connectionsSchemaVersion = 1
 // ConnectionConfig state and possible connections
 type ConnectionConfig struct {
 	SchemaVersion int          `json:"schemaversion"`
-	Active        string       `json:"active"`
 	Connections   []Connection `json:"connections"`
 }
 
@@ -60,7 +59,6 @@ func InitConfigFileIfRequired() *ConError {
 func ResetConnectionsFile() *ConError {
 	// create the default local connection
 	initialConfig := ConnectionConfig{
-		Active:        "local",
 		SchemaVersion: connectionsSchemaVersion,
 		Connections: []Connection{
 			Connection{
@@ -85,27 +83,6 @@ func ResetConnectionsFile() *ConError {
 	return nil
 }
 
-// FindTargetConnection : Returns the single active connection
-func FindTargetConnection() (*Connection, *ConError) {
-	data, conErr := loadConnectionsConfigFile()
-	if conErr != nil {
-		return nil, conErr
-	}
-
-	activeID := data.Active
-	for i := 0; i < len(data.Connections); i++ {
-		if strings.EqualFold(activeID, data.Connections[i].ID) {
-			targetConnection := data.Connections[i]
-			targetConnection.URL = strings.TrimSuffix(targetConnection.URL, "/")
-			targetConnection.AuthURL = strings.TrimSuffix(targetConnection.AuthURL, "/")
-			return &targetConnection, nil
-		}
-	}
-
-	err := errors.New(errTargetNotFound)
-	return nil, &ConError{errOpNotFound, err, err.Error()}
-}
-
 // GetConnectionByID : retrieve a single connection with matching ID
 func GetConnectionByID(conID string) (*Connection, *ConError) {
 	connectionList, conErr := GetAllConnections()
@@ -128,36 +105,6 @@ func GetConnectionsConfig() (*ConnectionConfig, *ConError) {
 		return nil, conErr
 	}
 	return data, nil
-}
-
-// SetTargetConnection : If the connection is unknown return an error
-func SetTargetConnection(c *cli.Context) *ConError {
-	newTargetName := c.String("conid")
-	data, conErr := loadConnectionsConfigFile()
-	if conErr != nil {
-		return conErr
-	}
-	foundID := ""
-	for i := 0; i < len(data.Connections); i++ {
-		if strings.EqualFold(newTargetName, data.Connections[i].ID) {
-			foundID = data.Connections[i].ID
-			break
-		}
-	}
-	if foundID == "" {
-		err := errors.New(errTargetNotFound)
-		return &ConError{errOpNotFound, err, err.Error()}
-	}
-	data.Active = foundID
-	body, err := json.MarshalIndent(data, "", "\t")
-	if err != nil {
-		return &ConError{errOpFileParse, err, err.Error()}
-	}
-	err = ioutil.WriteFile(GetConnectionConfigFilename(), body, 0644)
-	if err != nil {
-		return &ConError{errOpFileWrite, err, err.Error()}
-	}
-	return nil
 }
 
 // AddConnectionToList : validates then adds a new connection to the connection config
@@ -236,7 +183,6 @@ func RemoveConnectionFromList(c *cli.Context) *ConError {
 			data.Connections = data.Connections[:len(data.Connections)-1]
 		}
 	}
-	data.Active = "local"
 	body, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {
 		return &ConError{errOpFileParse, err, err.Error()}
@@ -247,19 +193,6 @@ func RemoveConnectionFromList(c *cli.Context) *ConError {
 		return &ConError{errOpFileWrite, err, err.Error()}
 	}
 	return nil
-}
-
-// GetConnection : Retrieve the connection details for the current target connection
-func GetConnection() (*Connection, *ConError) {
-	targetConnection, err := FindTargetConnection()
-	if err != nil {
-		return nil, err
-	}
-	if targetConnection != nil {
-		return targetConnection, nil
-	}
-	conErr := errors.New("Unable to find a matching target - set one now using the target command")
-	return nil, &ConError{errOpNotFound, conErr, conErr.Error()}
 }
 
 // GetAllConnections : Retrieve all saved connections
@@ -359,7 +292,7 @@ func applySchemaUpdates() *ConError {
 				return &ConError{errOpFileParse, err, err.Error()}
 			}
 
-			newConnectionConfig.Active = ConnectionConfig.Active
+
 			newConnectionConfig.SchemaVersion = 1
 
 			// copy connections from old to new config

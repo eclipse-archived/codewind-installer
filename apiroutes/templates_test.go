@@ -132,7 +132,7 @@ func TestFailuresAddTemplateRepo(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := AddTemplateRepo(test.inURL, test.inDescription)
+			got, err := AddTemplateRepo(test.inURL, test.inDescription, "name")
 			assert.IsType(t, test.wantedType, got, "got: %v", got)
 			assert.Equal(t, test.wantedErr, err)
 		})
@@ -172,7 +172,7 @@ func TestSuccessfulAddAndDeleteTemplateRepo(t *testing.T) {
 	t.Run("Successfully add template repo", func(t *testing.T) {
 		wantedNumRepos := originalNumRepos + 1
 
-		got, err := AddTemplateRepo(testRepoURL, "example description")
+		got, err := AddTemplateRepo(testRepoURL, "example description", "name")
 
 		assert.IsType(t, []TemplateRepo{}, got)
 		assert.Equal(t, wantedNumRepos, len(got), "got: %v", got)

@@ -15,8 +15,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
-	"strings"
 
 	"github.com/eclipse/codewind-installer/apiroutes"
 	"github.com/eclipse/codewind-installer/utils"
@@ -26,38 +26,41 @@ import (
 
 // StatusCommand : to show the status
 func StatusCommand(c *cli.Context) {
-	targetConnection, err := connections.GetConnection()
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	if strings.EqualFold(targetConnection.ID, "local") {
-		StatusCommandLocalConnection(c)
+	conID := c.String("conid")
+	if conID != "" && conID != "local" {
+		StatusCommandRemoteConnection(c)
 	} else {
-		StatusCommandRemoteConnection(c, targetConnection)
+		StatusCommandLocalConnection(c)
 	}
 }
 
 // StatusCommandRemoteConnection : Output remote connection details
-func StatusCommandRemoteConnection(c *cli.Context, d *connections.Connection) {
+func StatusCommandRemoteConnection(c *cli.Context) {
 	jsonOutput := c.Bool("json") || c.GlobalBool("json")
-	apiResponse, err := apiroutes.GetAPIEnvironment(c, d.URL)
-	if err != nil {
+	conID := c.String("conid")
+	connection, conErr := connections.GetConnectionByID(conID)
+	if conErr != nil {
+		fmt.Println(conErr)
+		os.Exit(0)
+	}
+
+	PFEReady, err := apiroutes.IsPFEReady(http.DefaultClient, connection.URL)
+	if err != nil || PFEReady == false {
 		if jsonOutput {
 			type status struct {
-				Status   string   `json:"status"`
-				Versions []string `json:"installed-versions"`
+				Status string `json:"status"`
 			}
-			respStatus := &status{
-				Status:   "stopped",
-				Versions: []string{},
+			resp := &status{
+				Status: "stopped",
 			}
-			output, err := json.Marshal(respStatus)
 			if err != nil {
-				log.Fatal(err.Error())
+				fmt.Println(err)
+				os.Exit(0)
 			}
+			output, _ := json.Marshal(resp)
 			fmt.Println(string(output))
 		} else {
-			fmt.Println("Codewind remote connection did not respond on " + d.URL)
+			fmt.Println("Codewind did not respond on remote connection", conID)
 			log.Println(err)
 		}
 		os.Exit(0)
@@ -71,20 +74,15 @@ func StatusCommandRemoteConnection(c *cli.Context, d *connections.Connection) {
 			Versions []string `json:"installed-versions"`
 			Started  []string `json:"started"`
 		}
-		versions := []string{}
 		resp := &status{
-			Status:   "started",
-			Versions: append(versions, apiResponse.Version),
-			Started:  append(versions, apiResponse.Version),
-			URL:      d.URL,
+			Status: "started",
 		}
 		output, _ := json.Marshal(resp)
 		fmt.Println(string(output))
 	} else {
-		fmt.Println("Codewind is installed and running on: " + d.URL)
+		fmt.Println("Remote Codewind is installed and running")
 	}
 	os.Exit(0)
-
 }
 
 // StatusCommandLocalConnection : Output local connection details

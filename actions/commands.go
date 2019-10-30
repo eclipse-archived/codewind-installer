@@ -197,6 +197,10 @@ func Commands() {
 					Name:  "json, j",
 					Usage: "ouput as JSON",
 				},
+				cli.StringFlag{
+					Name:  "conid",
+					Usage: "ConnectionID to check",
+				},
 			},
 			Action: func(c *cli.Context) error {
 				StatusCommand(c)
