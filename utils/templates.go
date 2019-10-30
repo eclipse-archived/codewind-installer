@@ -65,6 +65,22 @@ func onRepositoryAdd(extensions []Extension, repo TemplateRepo) {
 	}
 }
 
+func onRepositoryRemove(extensions []Extension, repo TemplateRepo) {
+
+	if repo.ID == "" {
+		return
+	}
+
+	for _, extension := range extensions {
+		cmdPtr := getApplicableCommand(extension, repo, "onRepositoryRemove")
+		if cmdPtr != nil {
+			params := make(map[string]string)
+			params["$id"] = repo.ID
+			RunCommand("", *cmdPtr, params)
+		}
+	}
+}
+
 // OnAddTemplateRepo runs any extension command associated with a repo add
 func OnAddTemplateRepo(extensions []Extension, url string, repos []TemplateRepo) {
 	// look for what was just added
@@ -77,6 +93,12 @@ func OnAddTemplateRepo(extensions []Extension, url string, repos []TemplateRepo)
 }
 
 // OnDeleteTemplateRepo runs any extension command associated with a repo delete
-func OnDeleteTemplateRepo(extensions []Extension, url string) {
-
+func OnDeleteTemplateRepo(extensions []Extension, url string, repos []TemplateRepo) {
+	// look for what's to be deleted
+	for _, repo := range repos {
+		if repo.URL == url {
+			onRepositoryRemove(extensions, repo)
+			break
+		}
+	}
 }

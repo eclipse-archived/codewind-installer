@@ -79,7 +79,10 @@ func DeleteTemplateRepo(c *cli.Context) {
 	url := c.String("URL")
 	extensions, err := apiroutes.GetExtensions()
 	if err == nil {
-		utils.OnDeleteTemplateRepo(extensions, url)
+		repos, err2 := apiroutes.GetTemplateRepos()
+		if err2 == nil {
+			utils.OnDeleteTemplateRepo(extensions, url, repos)
+		}
 	}
 	repos, err := apiroutes.DeleteTemplateRepo(url)
 	if err != nil {
