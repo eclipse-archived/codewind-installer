@@ -1,5 +1,8 @@
 # Codewind Command Line Interface (CLI)
 
+REMOVE [TOBES]
+
+
 Install Codewind on MacOS or Windows.
 Prebuilt binary files are available for download [on Eclipse](https://download.eclipse.org/codewind/codewind-installer/).
 
