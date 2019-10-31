@@ -20,7 +20,9 @@ import (
 )
 
 var numCodewindTemplates int = 8
-var numAppsodyTemplates int = 9
+
+var numAppsodyTemplates int = 11
+
 var numTemplates int = numCodewindTemplates + numAppsodyTemplates
 
 var URLOfExistingRepo string = "https://raw.githubusercontent.com/kabanero-io/codewind-templates/master/devfiles/index.json"
@@ -100,7 +102,7 @@ func TestGetTemplateRepos(t *testing.T) {
 	}{
 		"success case": {
 			wantedType:   []TemplateRepo{},
-			wantedLength: 2,
+			wantedLength: 3,
 			wantedErr:    nil,
 		},
 	}
@@ -136,7 +138,7 @@ func TestFailuresAddTemplateRepo(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := AddTemplateRepo(test.inURL, test.inDescription, "name")
+			got, err := AddTemplateRepo(test.inURL, test.inDescription, "template-name")
 			assert.IsType(t, test.wantedType, got, "got: %v", got)
 			assert.Equal(t, test.wantedErr, err)
 		})
@@ -176,7 +178,7 @@ func TestSuccessfulAddAndDeleteTemplateRepo(t *testing.T) {
 	t.Run("Successfully add template repo", func(t *testing.T) {
 		wantedNumRepos := originalNumRepos + 1
 
-		got, err := AddTemplateRepo(testRepoURL, "example description", "name")
+		got, err := AddTemplateRepo(testRepoURL, "example description", "template-name")
 
 		assert.IsType(t, []TemplateRepo{}, got)
 		assert.Equal(t, wantedNumRepos, len(got), "got: %v", got)
