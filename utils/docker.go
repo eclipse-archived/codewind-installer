@@ -29,6 +29,7 @@ import (
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
 	"github.com/eclipse/codewind-installer/errors"
+	"gopkg.in/yaml.v3"
 )
 
 // codewind-docker-compose.yaml data
@@ -42,7 +43,7 @@ services:
   environment: ["HOST_WORKSPACE_DIRECTORY=${WORKSPACE_DIRECTORY}","CONTAINER_WORKSPACE_DIRECTORY=/codewind-workspace","HOST_OS=${HOST_OS}","CODEWIND_VERSION=${TAG}","PERFORMANCE_CONTAINER=codewind-performance${PLATFORM}:${TAG}","HOST_HOME=${HOST_HOME}","HOST_MAVEN_OPTS=${HOST_MAVEN_OPTS}"]
   depends_on: [codewind-performance]
   ports: ["127.0.0.1:${PFE_EXTERNAL_PORT}:9090"]
-  volumes: ["/var/run/docker.sock:/var/run/docker.sock","cw-workspace:/codewind-workspace","${WORKSPACE_DIRECTORY}:/mounted-workspace"]
+  volumes: ["/var/run/docker.sock:/var/run/docker.sock","cw-workspace:/codewind-workspace"]
   networks: [network]
  codewind-performance:
   image: codewind-performance${PLATFORM}:${TAG}
@@ -409,4 +410,35 @@ func GetContainerTags() []string {
 
 	tagArr = RemoveDuplicateEntries(tagArr)
 	return tagArr
+}
+
+// WriteToComposeFile the contents of the docker compose yaml
+func WriteToComposeFile(tempFilePath string, debug bool) bool {
+	if tempFilePath == "" {
+		return false
+	}
+
+	dataStruct := Compose{}
+
+	unmarshDataErr := yaml.Unmarshal([]byte(data), &dataStruct)
+	errors.CheckErr(unmarshDataErr, 202, "")
+
+	// Do not add a bind mounted directory in Windows as requires drive sharing
+	// which may not be enabled or even enablable.
+	if runtime.GOOS != "windows" {
+		dataStruct.SERVICES.PFE.Volumes = append(dataStruct.SERVICES.PFE.Volumes, "${WORKSPACE_DIRECTORY}:/mounted-workspace")
+	}
+
+	marshalledData, err := yaml.Marshal(&dataStruct)
+	errors.CheckErr(err, 203, "")
+
+	if debug == true {
+		fmt.Printf("==> %s structure is: \n%s\n\n", tempFilePath, string(marshalledData))
+	}
+
+	WriteToTempFile(tempFilePath, marshalledData);
+
+	fmt.Println("==> environment structure written to " + tempFilePath)
+
+	return true
 }
