@@ -187,8 +187,7 @@ func writeCwSettingsIfNotInProject(projectPath string, BuildType string) {
 	}
 }
 
-// checkProjectPath will stop the process and return an error if path does not
-// exist or is invalid
+// checkProjectPath will stop the process and return an error if path does not exist or is invalid
 func checkProjectPath(projectPath string) {
 	if projectPath == "" {
 		log.Fatal("Project path not given")

@@ -15,6 +15,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"path"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -25,24 +26,22 @@ type noIgnoredPaths struct {
 	Field2 string   `json:"field2"`
 }
 
-var testFolder string
-var cwSettingsPopulatedPath string
-var cwSettingsEmptyPath string
-var cwSettingsNoIgnoredPaths string
+var testFolder, cwSettingsPopulatedPath,
+	cwSettingsEmptyPath, cwSettingsNoIgnoredPathsObject string
 
 func TestMain(m *testing.M) {
 	setup()
 	code := m.Run()
-	shutdown()
+	os.RemoveAll(testFolder)
 	os.Exit(code)
 }
 
 func setup() {
 	// Create directories to write .cw-settings files to
 	testFolder = "sync_test_folder_delete_me"
-	cwSettingsPopulatedPath = testFolder + "/cwSettingsPopulated"
-	cwSettingsEmptyPath = testFolder + "/cwSettingsEmpty"
-	cwSettingsNoIgnoredPaths = testFolder + "/cwSettingsNoIgnoredPaths"
+	cwSettingsPopulatedPath = path.Join(testFolder, "cwSettingsPopulated")
+	cwSettingsEmptyPath = path.Join(testFolder, "cwSettingsEmpty")
+	cwSettingsNoIgnoredPathsObject = path.Join(testFolder, "cwSettingsNoIgnoredPathsObject")
 	populatedIgnoredPaths := CWSettings{
 		IgnoredPaths: []string{
 			"testfile",
@@ -61,19 +60,15 @@ func setup() {
 	os.Mkdir(testFolder, 0777)
 	os.Mkdir(cwSettingsPopulatedPath, 0777)
 	os.Mkdir(cwSettingsEmptyPath, 0777)
-	os.Mkdir(cwSettingsNoIgnoredPaths, 0777)
+	os.Mkdir(cwSettingsNoIgnoredPathsObject, 0777)
 
 	// Create .cw-settings files
 	file, _ := json.Marshal(populatedIgnoredPaths)
-	ioutil.WriteFile(cwSettingsPopulatedPath+"/.cw-settings", file, 0644)
+	ioutil.WriteFile(path.Join(cwSettingsPopulatedPath, ".cw-settings"), file, 0644)
 	file, _ = json.Marshal(emptyIgnoredPaths)
-	ioutil.WriteFile(cwSettingsEmptyPath+"/.cw-settings", file, 0644)
+	ioutil.WriteFile(path.Join(cwSettingsEmptyPath, ".cw-settings"), file, 0644)
 	file, _ = json.Marshal(noIgnoredPaths)
-	ioutil.WriteFile(cwSettingsNoIgnoredPaths+"/.cw-settings", file, 0644)
-}
-
-func shutdown() {
-	os.RemoveAll(testFolder)
+	ioutil.WriteFile(path.Join(cwSettingsNoIgnoredPathsObject, ".cw-settings"), file, 0644)
 }
 
 func TestIgnoreFileOrDirectory(t *testing.T) {
@@ -95,7 +90,7 @@ func TestIgnoreFileOrDirectory(t *testing.T) {
 			shouldBeIgnored:  true,
 			ignoredPathsList: []string{},
 		},
-		"success case: directory called not-a-load-test-23498729 should be ignored": {
+		"success case: directory called not-a-load-test-23498729 should not be ignored": {
 			name:             "not-a-load-test-23498729",
 			isDir:            true,
 			shouldBeIgnored:  false,
@@ -155,7 +150,7 @@ func TestIgnoreFileOrDirectory(t *testing.T) {
 	}
 }
 
-func TestRetrieveIgnoredPathsListFromCWSettings(t *testing.T) {
+func TestRetrieveIgnoredPathsList(t *testing.T) {
 	tests := map[string]struct {
 		projectPath           string
 		shouldBeIgnored       []string
@@ -181,15 +176,15 @@ func TestRetrieveIgnoredPathsListFromCWSettings(t *testing.T) {
 			shouldBeIgnored:       nil,
 			shouldBeIgnoredLength: 0,
 		},
-		"success case: calling on a path that does exist and is valid JSON but doesn't container ingnoredPaths": {
-			projectPath:           cwSettingsNoIgnoredPaths,
+		"success case: calling on a path that does exist and is valid JSON but doesn't contain ignnoredPaths": {
+			projectPath:           cwSettingsNoIgnoredPathsObject,
 			shouldBeIgnored:       nil,
 			shouldBeIgnoredLength: 0,
 		},
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			ignoredPathsList := retrieveIgnoredPathsListFromCWSettings(test.projectPath)
+			ignoredPathsList := retrieveIgnoredPathsList(test.projectPath)
 
 			assert.Equal(t, test.shouldBeIgnoredLength, len(ignoredPathsList), "Length of ignoredPathsList was %b but should have been %b", len(ignoredPathsList), test.shouldBeIgnoredLength)
 

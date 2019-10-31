@@ -20,6 +20,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -109,7 +110,7 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 	projectUploadURL := conURL + "projects/" + projectID + "/upload"
 	client := &http.Client{}
 
-	cwSettingsIgnoredPathsList := retrieveIgnoredPathsListFromCWSettings(projectPath)
+	cwSettingsIgnoredPathsList := retrieveIgnoredPathsList(projectPath)
 
 	err := filepath.Walk(projectPath, func(path string, info os.FileInfo, err error) error {
 
@@ -205,8 +206,8 @@ func completeUpload(projectID string, files []string, modfiles []string, conURL 
 }
 
 // Retrieve the ignoredPaths list from a .cw-settings file
-func retrieveIgnoredPathsListFromCWSettings(projectPath string) []string {
-	cwSettingsPath := projectPath + "/.cw-settings"
+func retrieveIgnoredPathsList(projectPath string) []string {
+	cwSettingsPath := path.Join(projectPath, ".cw-settings")
 	var cwSettingsIgnoredPathsList []string
 	if _, err := os.Stat(cwSettingsPath); !os.IsNotExist(err) {
 		plan, _ := ioutil.ReadFile(cwSettingsPath)
