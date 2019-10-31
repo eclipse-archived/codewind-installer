@@ -77,11 +77,11 @@ func UpgradeProjects(c *cli.Context) {
 	os.Exit(0)
 }
 
-// ProjectAddTargetConnection : Add project to a connection
-func ProjectAddTargetConnection(c *cli.Context) {
+// ProjectSetConnection : Set connection for a project
+func ProjectSetConnection(c *cli.Context) {
 	projectID := strings.TrimSpace(strings.ToLower(c.String("id")))
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
-	err := project.AddConnectionTarget(projectID, conID)
+	err := project.SetConnection(projectID, conID)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(0)
@@ -91,24 +91,22 @@ func ProjectAddTargetConnection(c *cli.Context) {
 	os.Exit(0)
 }
 
-// ProjectTargetList : List connection targets for a project
-func ProjectTargetList(c *cli.Context) {
+// ProjectGetConnection : List connection for a project
+func ProjectGetConnection(c *cli.Context) {
 	projectID := strings.TrimSpace(strings.ToLower(c.String("id")))
-	connectionTargets, err := project.ListTargetConnections(projectID)
+	connectionTargets, err := project.GetConnectionID(projectID)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(0)
 	}
-	response, _ := json.Marshal(connectionTargets)
-	fmt.Println(string(response))
+	fmt.Println(connectionTargets)
 	os.Exit(0)
 }
 
-// ProjectRemoveTargetConnection : Remove a project from a connection
-func ProjectRemoveTargetConnection(c *cli.Context) {
+// ProjectRemoveConnection : Remove Connection from  a project
+func ProjectRemoveConnection(c *cli.Context) {
 	projectID := strings.TrimSpace(strings.ToLower(c.String("id")))
-	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
-	err := project.RemoveConnectionTarget(projectID, conID)
+	err := project.ResetConnectionFile(projectID)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(0)

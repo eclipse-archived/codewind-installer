@@ -14,15 +14,21 @@ package apiroutes
 import (
 	"errors"
 	"log"
-	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 var numCodewindTemplates int = 8
+
 var numAppsodyTemplates int = 11
+
 var numTemplates int = numCodewindTemplates + numAppsodyTemplates
+
+var URLOfExistingRepo string = "https://raw.githubusercontent.com/kabanero-io/codewind-templates/master/devfiles/index.json"
+var URLOfNewRepo string = "https://raw.githubusercontent.com/kabanero-io/codewind-templates/aad4bafc14e1a295fb8e462c20fe8627248609a3/devfiles/index.json"
+var URLOfUnknownRepo string = "https://raw.githubusercontent.com/UNKNOWN"
+var URLOfUnknownRepo2 string = "https://raw.githubusercontent.com/UNKNOWN_2"
 
 func TestGetTemplates(t *testing.T) {
 	tests := map[string]struct {
@@ -124,7 +130,7 @@ func TestFailuresAddTemplateRepo(t *testing.T) {
 			wantedErr:     errors.New("Error: 'invalidURL' is not a valid URL"),
 		},
 		"fail case: add duplicate URL": {
-			inURL:         "https://raw.githubusercontent.com/kabanero-io/codewind-templates/master/devfiles/index.json",
+			inURL:         URLOfExistingRepo,
 			inDescription: "example repository containing links to templates",
 			wantedType:    nil,
 			wantedErr:     errors.New("Error: PFE responded with status code 400"),
@@ -148,20 +154,20 @@ func TestFailuresDeleteTemplateRepo(t *testing.T) {
 		"fail case: remove invalid URL": {
 			inURL:      "invalidURL",
 			wantedType: nil,
-			wantedErr:  new(url.Error),
+			wantedErr:  errors.New("Error: 'invalidURL' is not a valid URL"),
 		},
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			got, err := DeleteTemplateRepo(test.inURL)
 			assert.IsType(t, test.wantedType, got, "got: %v", got)
-			assert.IsType(t, test.wantedErr, err)
+			assert.Equal(t, test.wantedErr, err)
 		})
 	}
 }
 
 func TestSuccessfulAddAndDeleteTemplateRepo(t *testing.T) {
-	testRepoURL := "https://raw.githubusercontent.com/kabanero-io/codewind-templates/aad4bafc14e1a295fb8e462c20fe8627248609a3/devfiles/index.json"
+	testRepoURL := URLOfNewRepo
 
 	originalRepos, err := GetTemplateRepos()
 	if err != nil {
@@ -189,5 +195,241 @@ func TestSuccessfulAddAndDeleteTemplateRepo(t *testing.T) {
 		assert.Nil(t, err)
 	})
 
-	// This test cleans up after itself
+	// This test block cleans up after itself, assuming that the template repo tested was initially enabled. (This test block resets it to 'enabled')
+}
+
+func TestFailuresEnableTemplateRepos(t *testing.T) {
+	tests := map[string]struct {
+		in         []string
+		wantedType []TemplateRepo
+		wantedErr  error
+	}{
+		"nil repo URL": {
+			in:         nil,
+			wantedType: nil,
+			wantedErr:  errors.New("Error: '[]' is not a valid URL"),
+		},
+		"invalid repo URL": {
+			in:         []string{"invalidURL"},
+			wantedType: nil,
+			wantedErr:  errors.New("Error: 'invalidURL' is not a valid URL"),
+		},
+		"unknown repo URL": {
+			in:         []string{URLOfUnknownRepo},
+			wantedType: []TemplateRepo{},
+			wantedErr:  nil,
+		},
+		"multiple unknown repo URLs": {
+			in:         []string{URLOfUnknownRepo, URLOfUnknownRepo2},
+			wantedType: []TemplateRepo{},
+			wantedErr:  nil,
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			got, err := EnableTemplateRepos(test.in)
+			assert.IsType(t, test.wantedType, got, "got: %v", got)
+			assert.Equal(t, test.wantedErr, err)
+		})
+	}
+}
+
+func TestFailuresDisableTemplateRepos(t *testing.T) {
+	tests := map[string]struct {
+		in         []string
+		wantedType []TemplateRepo
+		wantedErr  error
+	}{
+		"nil repo URL": {
+			in:         nil,
+			wantedType: nil,
+			wantedErr:  errors.New("Error: '[]' is not a valid URL"),
+		},
+		"invalid repo URL": {
+			in:         []string{"invalidURL"},
+			wantedType: nil,
+			wantedErr:  errors.New("Error: 'invalidURL' is not a valid URL"),
+		},
+		"unknown repo URL": {
+			in:         []string{URLOfUnknownRepo},
+			wantedType: []TemplateRepo{},
+			wantedErr:  nil,
+		},
+		"multiple unknown repo URLs": {
+			in:         []string{URLOfUnknownRepo, URLOfUnknownRepo2},
+			wantedType: []TemplateRepo{},
+			wantedErr:  nil,
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			got, err := DisableTemplateRepos(test.in)
+			assert.IsType(t, test.wantedType, got, "got: %v", got)
+			assert.Equal(t, test.wantedErr, err)
+		})
+	}
+}
+
+func TestSuccessfulEnableAndDisableTemplateRepos(t *testing.T) {
+	testRepoURL := URLOfExistingRepo
+
+	t.Run("Successfully disable 1 template repo", func(t *testing.T) {
+		got, err := DisableTemplateRepos([]string{testRepoURL})
+
+		assert.IsType(t, []TemplateRepo{}, got)
+		assert.Nil(t, err)
+		for _, repo := range got {
+			if repo.URL == testRepoURL {
+				assert.False(t, repo.Enabled)
+			}
+		}
+	})
+
+	t.Run("Successfully enable 1 template repo", func(t *testing.T) {
+		got, err := EnableTemplateRepos([]string{testRepoURL})
+
+		assert.IsType(t, []TemplateRepo{}, got)
+		assert.Nil(t, err)
+		for _, repo := range got {
+			if repo.URL == testRepoURL {
+				assert.True(t, repo.Enabled)
+			}
+		}
+	})
+
+	// This test block cleans up after itself, assuming that the template repo tested was initially enabled. (This test block resets it to 'enabled')
+}
+
+func TestBatchPatchTemplateRepos(t *testing.T) {
+	tests := map[string]struct {
+		in        []RepoOperation
+		want      []SubResponseFromBatchOperation
+		wantedErr error
+	}{
+		"enable 1 valid repo": {
+			in: []RepoOperation{
+				RepoOperation{
+					Operation: "enable",
+					URL:       URLOfExistingRepo,
+					Value:     "true",
+				},
+			},
+			want: []SubResponseFromBatchOperation{
+				SubResponseFromBatchOperation{
+					Status: 200,
+					RequestedOperation: RepoOperation{
+						Operation: "enable",
+						URL:       URLOfExistingRepo,
+						Value:     "true",
+					},
+				},
+			},
+			wantedErr: nil,
+		},
+		"enable 1 unknown repo": {
+			in: []RepoOperation{
+				RepoOperation{
+					Operation: "enable",
+					URL:       URLOfUnknownRepo,
+					Value:     "true",
+				},
+			},
+			want: []SubResponseFromBatchOperation{
+				SubResponseFromBatchOperation{
+					Status: 404,
+					RequestedOperation: RepoOperation{
+						Operation: "enable",
+						URL:       URLOfUnknownRepo,
+						Value:     "true",
+					},
+					Error: "Unknown repository URL",
+				},
+			},
+			wantedErr: nil,
+		},
+		"disable 1 valid repo": {
+			in: []RepoOperation{
+				RepoOperation{
+					Operation: "enable",
+					URL:       URLOfExistingRepo,
+					Value:     "false",
+				},
+			},
+			want: []SubResponseFromBatchOperation{
+				SubResponseFromBatchOperation{
+					Status: 200,
+					RequestedOperation: RepoOperation{
+						Operation: "enable",
+						URL:       URLOfExistingRepo,
+						Value:     "false",
+					},
+				},
+			},
+			wantedErr: nil,
+		},
+		"disable 1 unknown repo": {
+			in: []RepoOperation{
+				RepoOperation{
+					Operation: "enable",
+					URL:       URLOfUnknownRepo,
+					Value:     "false",
+				},
+			},
+			want: []SubResponseFromBatchOperation{
+				SubResponseFromBatchOperation{
+					Status: 404,
+					RequestedOperation: RepoOperation{
+						Operation: "enable",
+						URL:       URLOfUnknownRepo,
+						Value:     "false",
+					},
+					Error: "Unknown repository URL",
+				},
+			},
+			wantedErr: nil,
+		},
+		"enable/disable multiple repos": {
+			in: []RepoOperation{
+				RepoOperation{
+					Operation: "enable",
+					URL:       URLOfExistingRepo,
+					Value:     "true",
+				},
+				RepoOperation{
+					Operation: "enable",
+					URL:       URLOfUnknownRepo,
+					Value:     "false",
+				},
+			},
+			want: []SubResponseFromBatchOperation{
+				SubResponseFromBatchOperation{
+					Status: 200,
+					RequestedOperation: RepoOperation{
+						Operation: "enable",
+						URL:       URLOfExistingRepo,
+						Value:     "true",
+					},
+				},
+				SubResponseFromBatchOperation{
+					Status: 404,
+					RequestedOperation: RepoOperation{
+						Operation: "enable",
+						URL:       URLOfUnknownRepo,
+						Value:     "false",
+					},
+					Error: "Unknown repository URL",
+				},
+			},
+			wantedErr: nil,
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			got, err := BatchPatchTemplateRepos(test.in)
+			assert.Equal(t, test.want, got)
+			assert.Equal(t, test.wantedErr, err)
+		})
+	}
+
+	// This test block cleans up after itself, assuming that the template repo tested was initially enabled. (This test block resets it to 'enabled')
 }

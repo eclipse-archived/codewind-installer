@@ -14,25 +14,12 @@ package apiroutes
 import (
 	"bytes"
 	"encoding/json"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
-
-type MockResponse struct {
-	StatusCode int
-	Body       io.ReadCloser
-}
-
-func (c *MockResponse) Do(req *http.Request) (*http.Response, error) {
-	return &http.Response{
-		StatusCode: c.StatusCode,
-		Body:       c.Body,
-	}, nil
-}
 
 func Test_GetGatekeeperEnvironment(t *testing.T) {
 

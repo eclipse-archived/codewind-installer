@@ -30,6 +30,7 @@ const (
 	errOpFileParse   = "proj_parse"
 	errOpFileLoad    = "proj_load"
 	errOpFileWrite   = "proj_write"
+	errOpFileDelete  = "proj_delete"
 	errOpConflict    = "proj_conflict"
 	errOpNotFound    = "proj_notfound"
 	errOpConNotFound = "connection_notfound"

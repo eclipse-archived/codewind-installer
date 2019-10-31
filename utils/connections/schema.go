@@ -15,14 +15,12 @@ package connections
 
 // ConnectionConfigV0 : ConnectionsConfig Schema Version 0
 type ConnectionConfigV0 struct {
-	Active      string         `json:"active"`
 	Connections []ConnectionV0 `json:"connections"`
 }
 
 // ConnectionConfigV1 : Connections Schema Version 1
 type ConnectionConfigV1 struct {
 	SchemaVersion int            `json:"schemaversion"`
-	Active        string         `json:"active"`
 	Connections   []ConnectionV1 `json:"connections"`
 }
 

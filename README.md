@@ -125,20 +125,18 @@ Subcommands:</br>
 
 `connection/con` - Manage the connection targets for a project
 
-`add,a` - Add a connection to a project
+`set,s` - Sets the connection for a projectID
 > **Flags:**
 > --id,i value                  Project ID
 > --conid value                 Connection ID
 
-`list,l` - List connections for a project
+`get,g` - Gets connections for a projectID
 > **Flags:**
 > --id,i value                  Project ID
 
-`remove,r` - Remove a connection from a project
+`remove,r` - Removes the connection from a projectID
 > **Flags:**
 > --id,i value                  Project ID
-> --conid value                 Connection ID
-
 
 ## install
 
@@ -301,12 +299,6 @@ Subcommands:</br>
 
 > **Flags:**
 > --conid  value     A connection id
-
-`target/t` - Show/Change the current target connection
-
-> *Note:* Not supplying any flag will return the current selected target
-> --conid  value  The connection id of the target to switch to
-
 
 `list/ls` - List known connections
 
