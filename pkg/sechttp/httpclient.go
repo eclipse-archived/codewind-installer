@@ -114,7 +114,7 @@ func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Requ
 		return nil, &HTTPSecError{errOpAuthFailed, secError.Err, secError.Desc}
 	}
 
-	// Try access the resource again with the new access token
+	// Try to access the resource again with the new access token
 	logr.Debugf("Try to access the resource again with the new access token")
 	response, err := sendRequest(httpClient, originalRequest, tokens.AccessToken)
 
@@ -123,8 +123,8 @@ func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Requ
 		return response, nil
 	}
 
-	// No other methods of authentication left to try,  tell the user and give up
-	logr.Debugf("No other methods of authentication left to try,  tell the user and give up")
+	// No other methods of authentication left to try, tell the user and give up
+	logr.Debugf("No other methods of authentication left to try, tell the user and give up")
 	failedError := errors.New("No other methods left to try")
 	return nil, &HTTPSecError{errOpFailed, failedError, failedError.Error()}
 }

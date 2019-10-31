@@ -73,7 +73,7 @@ func ProjectBind(c *cli.Context) {
 	os.Exit(0)
 }
 
-// UpgradeProjects : Upgrades a project
+// UpgradeProjects : Upgrades projects
 func UpgradeProjects(c *cli.Context) {
 	err := project.UpgradeProjects(c)
 	if err != nil {
