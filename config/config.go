@@ -12,6 +12,8 @@
 package config
 
 import (
+	"os"
+
 	"github.com/eclipse/codewind-installer/utils"
 )
 
@@ -23,6 +25,12 @@ func PFEHost() string {
 
 // PFEOrigin is the origin from which PFE is running, e.g. "http://127.0.0.1:9090"
 func PFEOrigin() string {
+	val, ok := os.LookupEnv("CHE_API_EXTERNAL")
+
+	if ok && (val != "") {
+		return "https://" + PFEHost()
+	}
+
 	return "http://" + PFEHost()
 }
 
