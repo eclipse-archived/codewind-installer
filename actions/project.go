@@ -21,6 +21,7 @@ import (
 	"github.com/urfave/cli"
 )
 
+// ProjectValidate : Validate a project
 func ProjectValidate(c *cli.Context) {
 	err := project.ValidateProject(c)
 	if err != nil {
@@ -29,6 +30,7 @@ func ProjectValidate(c *cli.Context) {
 	os.Exit(0)
 }
 
+// ProjectCreate : Downloads template and creates a new project
 func ProjectCreate(c *cli.Context) {
 	err := project.DownloadTemplate(c)
 	if err != nil {
@@ -36,6 +38,7 @@ func ProjectCreate(c *cli.Context) {
 	}
 }
 
+// ProjectSync : Does a project Sync
 func ProjectSync(c *cli.Context) {
 	PrintAsJSON := c.GlobalBool("json")
 	response, err := project.SyncProject(c)
@@ -52,6 +55,7 @@ func ProjectSync(c *cli.Context) {
 	os.Exit(0)
 }
 
+// ProjectBind : Does a project bind
 func ProjectBind(c *cli.Context) {
 	PrintAsJSON := c.GlobalBool("json")
 	response, err := project.BindProject(c)
@@ -69,6 +73,7 @@ func ProjectBind(c *cli.Context) {
 	os.Exit(0)
 }
 
+// UpgradeProjects : Upgrades projects
 func UpgradeProjects(c *cli.Context) {
 	err := project.UpgradeProjects(c)
 	if err != nil {

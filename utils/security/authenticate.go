@@ -138,6 +138,10 @@ func SecAuthenticate(httpClient utils.HTTPClient, c *cli.Context, connectionReal
 		keycloakAPIError := parseKeycloakError(string(body), res.StatusCode)
 		kcError := errors.New(string(keycloakAPIError.ErrorDescription))
 		return nil, &SecError{keycloakAPIError.Error, kcError, kcError.Error()}
+	case httpCode == http.StatusNotFound:
+		keycloakAPIError := parseKeycloakError(string(body), res.StatusCode)
+		kcError := errors.New(string(keycloakAPIError.Error))
+		return nil, &SecError{errOpResponse, kcError, kcError.Error()}
 	case httpCode != http.StatusOK:
 		err = errors.New(string(body))
 		return nil, &SecError{errOpResponse, err, err.Error()}
@@ -168,6 +172,63 @@ func SecAuthenticate(httpClient utils.HTTPClient, c *cli.Context, connectionReal
 				return &authToken, secErr
 			}
 		}
+	}
+
+	return &authToken, nil
+}
+
+// SecRefreshAccessToken : Obtain an access token using a refresh token
+func SecRefreshAccessToken(httpClient utils.HTTPClient, connection *connections.Connection, refreshToken string) (*AuthToken, *SecError) {
+
+	// build REST request
+	url := connection.AuthURL + "/auth/realms/" + connection.Realm + "/protocol/openid-connect/token"
+
+	payload := strings.NewReader("grant_type=refresh_token&client_id=" + connection.ClientID + "&refresh_token=" + refreshToken)
+	req, err := http.NewRequest("POST", url, payload)
+	if err != nil {
+		return nil, &SecError{errOpConnection, err, err.Error()}
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Cache-Control", "no-cache")
+	req.Header.Add("cache-control", "no-cache")
+
+	// send request
+	res, err := httpClient.Do(req)
+	if err != nil {
+		return nil, &SecError{errOpConnection, err, err.Error()}
+	}
+	defer res.Body.Close()
+	body, err := ioutil.ReadAll(res.Body)
+
+	// Handle special case http status codes
+	switch httpCode := res.StatusCode; {
+	case httpCode == http.StatusBadRequest, httpCode == http.StatusUnauthorized:
+		keycloakAPIError := parseKeycloakError(string(body), res.StatusCode)
+		kcError := errors.New(string(keycloakAPIError.ErrorDescription))
+		return nil, &SecError{keycloakAPIError.Error, kcError, kcError.Error()}
+	case httpCode != http.StatusOK:
+		err = errors.New(string(body))
+		return nil, &SecError{errOpResponse, err, err.Error()}
+	}
+
+	// Parse and return AuthToken
+	authToken := AuthToken{}
+	err = json.Unmarshal([]byte(body), &authToken)
+
+	if err != nil {
+		// re-save the access and refresh token
+		secErr := SecKeyUpdate(connection.ID, "access_token", authToken.AccessToken)
+		if secErr != nil {
+			return &authToken, secErr
+		}
+		secErr = SecKeyUpdate(connection.ID, "refresh_token", authToken.RefreshToken)
+
+		if secErr != nil {
+			return &authToken, secErr
+		}
+
+		respErr := errors.New(string(body))
+		return nil, &SecError{errOpResponse, respErr, respErr.Error()}
 	}
 
 	return &authToken, nil
