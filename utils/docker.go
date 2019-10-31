@@ -162,7 +162,7 @@ func DockerCompose(tempFilePath string, tag string) {
 	}
 }
 
-// PullImage - pull pfe/performance/initialize images from dockerhub
+// PullImage - pull pfe/performance images from dockerhub
 func PullImage(image string, jsonOutput bool) {
 	ctx := context.Background()
 	cli, err := client.NewEnvClient()
@@ -220,10 +220,9 @@ func CheckContainerStatus() bool {
 // CheckImageStatus of Codewind installed/uninstalled
 func CheckImageStatus() bool {
 	var imageStatus = false
-	imageArr := [3]string{}
+	imageArr := [2]string{}
 	imageArr[0] = "eclipse/codewind-pfe"
 	imageArr[1] = "eclipse/codewind-performance"
-	imageArr[2] = "eclipse/codewind-initialize"
 
 	images := GetImageList()
 
@@ -236,7 +235,7 @@ func CheckImageStatus() bool {
 			}
 		}
 	}
-	if imageCount >= 3 {
+	if imageCount >= 2 {
 		imageStatus = true
 	}
 
@@ -343,10 +342,9 @@ func GetPFEHostAndPort() (string, string) {
 
 // GetImageTags of Codewind images
 func GetImageTags() []string {
-	imageArr := [3]string{}
+	imageArr := [2]string{}
 	imageArr[0] = "eclipse/codewind-pfe"
 	imageArr[1] = "eclipse/codewind-performance"
-	imageArr[2] = "eclipse/codewind-initialize"
 	tagArr := []string{}
 
 	images := GetImageList()

@@ -85,7 +85,7 @@ $ brew upgrade dep
 |Command         |Alias         |Usage                                                               |
 |----------------|--------------|--------------------------------------------------------------------|
 |project         |              |'Manage Codewind projects'                                          |
-|install         |`in`          |'Pull pfe, performance & initialize images from dockerhub'          |
+|install         |`in`          |'Pull pfe & performance images from dockerhub'          |
 |start           |              |'Start the Codewind containers'                                     |
 |status          |              |'Print the installation status of Codewind'                         |
 |stop            |              |'Stop the running Codewind containers'                              |
