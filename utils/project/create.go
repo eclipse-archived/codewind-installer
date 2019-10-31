@@ -14,9 +14,11 @@ package project
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -32,6 +34,18 @@ type (
 		Status string      `json:"status"`
 		Path   string      `json:"projectPath"`
 		Result interface{} `json:"result"`
+	}
+
+	// CWSettings represents the .cw-settings file which is written to a project
+	CWSettings struct {
+		ContextRoot       string   `json:"contextRoot"`
+		InternalPort      string   `json:"internalPort"`
+		HealthCheck       string   `json:"healthCheck"`
+		InternalDebugPort *string  `json:"internalDebugPort,omitempty"`
+		IsHTTPS           bool     `json:"isHttps"`
+		IgnoredPaths      []string `json:"ignoredPaths"`
+		MavenProfiles     []string `json:"mavenProfiles,omitempty"`
+		MavenProperties   []string `json:"mavenProperties,omitempty"`
 	}
 )
 
@@ -124,11 +138,11 @@ func checkIsExtension(projectPath string, c *cli.Context) (string, error) {
 // and writes a default .cw-settings file to that project
 func ValidateProject(c *cli.Context) *ProjectError {
 	projectPath := c.Args().Get(0)
-	utils.CheckProjectPath(projectPath)
+	checkProjectPath(projectPath)
 	validationStatus := "success"
 	// result could be ProjectType or string, so define as an interface
 	var validationResult interface{}
-	language, buildType := utils.DetermineProjectInfo(projectPath)
+	language, buildType := determineProjectInfo(projectPath)
 	validationResult = ProjectType{
 		Language:  language,
 		BuildType: buildType,
@@ -167,8 +181,128 @@ func writeCwSettingsIfNotInProject(projectPath string, BuildType string) {
 	pathToLegacySettings := path.Join(projectPath, ".mc-settings")
 
 	if _, err := os.Stat(pathToLegacySettings); os.IsExist(err) {
-		utils.RenameLegacySettings(pathToLegacySettings, pathToCwSettings)
+		renameLegacySettings(pathToLegacySettings, pathToCwSettings)
 	} else if _, err := os.Stat(pathToCwSettings); os.IsNotExist(err) {
-		utils.WriteNewCwSettings(pathToCwSettings, BuildType)
+		writeNewCwSettings(pathToCwSettings, BuildType)
 	}
+}
+
+// checkProjectPath will stop the process and return an error if path does not exist or is invalid
+func checkProjectPath(projectPath string) {
+	if projectPath == "" {
+		log.Fatal("Project path not given")
+	}
+	if !utils.PathExists(projectPath) {
+		log.Fatal("Project not found at given path")
+	}
+}
+
+// determineProjectInfo returns the language and build-type of a project
+func determineProjectInfo(projectPath string) (string, string) {
+	language, buildType := "unknown", "docker"
+	if utils.PathExists(path.Join(projectPath, "pom.xml")) {
+		language = "java"
+		buildType = determineJavaBuildType(projectPath)
+	} else if utils.PathExists(path.Join(projectPath, "package.json")) {
+		language = "nodejs"
+		buildType = "nodejs"
+	} else if utils.PathExists(path.Join(projectPath, "Package.swift")) {
+		language = "swift"
+		buildType = "swift"
+	} else {
+		language = determineProjectLanguage(projectPath)
+		buildType = "docker"
+	}
+	return language, buildType
+}
+
+func determineJavaBuildType(projectPath string) string {
+	pathToPomXML := path.Join(projectPath, "pom.xml")
+	pomXMLContents, err := ioutil.ReadFile(pathToPomXML)
+	// if there is an error reading the pom.xml, we build as docker
+	if err != nil {
+		return "docker"
+	}
+	pomXMLString := string(pomXMLContents)
+	if strings.Contains(pomXMLString, "<groupId>org.springframework.boot</groupId>") {
+		return "spring"
+	}
+	pathToDockerfile := path.Join(projectPath, "Dockerfile")
+	dockerfileContents, err := ioutil.ReadFile(pathToDockerfile)
+	dockerfileString := string(dockerfileContents)
+	if strings.Contains(dockerfileString, "FROM websphere-liberty") {
+		return "liberty"
+	}
+	return "docker"
+}
+
+func determineProjectLanguage(projectPath string) string {
+	projectFiles, err := ioutil.ReadDir(projectPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, file := range projectFiles {
+		if !file.IsDir() {
+			switch filepath.Ext(file.Name()) {
+			case ".py":
+				return "python"
+			case ".go":
+				return "go"
+			default:
+				continue
+			}
+		}
+	}
+	return "unknown"
+}
+
+// RenameLegacySettings renames a .mc-settings file to .cw-settings
+func renameLegacySettings(pathToLegacySettings string, pathToCwSettings string) {
+	err := os.Rename(pathToLegacySettings, pathToCwSettings)
+	errors.CheckErr(err, 205, "")
+}
+
+// writeNewCwSettings writes a default .cw-settings file to the given path,
+// dependant on the build type of the project
+func writeNewCwSettings(pathToCwSettings string, BuildType string) {
+	defaultCwSettings := getDefaultCwSettings()
+	cwSettings := addNonDefaultFieldsToCwSettings(defaultCwSettings, BuildType)
+	settings, err := json.MarshalIndent(cwSettings, "", "  ")
+	errors.CheckErr(err, 203, "")
+	// File permission 0644 grants read and write access to the owner
+	err = ioutil.WriteFile(pathToCwSettings, settings, 0644)
+}
+
+func getDefaultCwSettings() CWSettings {
+	return CWSettings{
+		ContextRoot:  "",
+		InternalPort: "",
+		HealthCheck:  "",
+		IsHTTPS:      false,
+		IgnoredPaths: []string{""},
+	}
+}
+
+func addNonDefaultFieldsToCwSettings(cwSettings CWSettings, ProjectType string) CWSettings {
+	projectTypesWithInternalDebugPort := []string{"liberty", "spring", "nodejs"}
+	projectTypesWithMavenSettings := []string{"liberty", "spring"}
+	if stringInSlice(ProjectType, projectTypesWithInternalDebugPort) {
+		// We use a pointer, as an empty string would be removed due to omitempty on struct
+		defaultValue := ""
+		cwSettings.InternalDebugPort = &defaultValue
+	}
+	if stringInSlice(ProjectType, projectTypesWithMavenSettings) {
+		cwSettings.MavenProfiles = []string{""}
+		cwSettings.MavenProperties = []string{""}
+	}
+	return cwSettings
+}
+
+func stringInSlice(a string, slice []string) bool {
+	for _, b := range slice {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }

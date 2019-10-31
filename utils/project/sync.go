@@ -20,6 +20,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -109,6 +110,8 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 	projectUploadURL := conURL + "projects/" + projectID + "/upload"
 	client := &http.Client{}
 
+	cwSettingsIgnoredPathsList := retrieveIgnoredPathsList(projectPath)
+
 	err := filepath.Walk(projectPath, func(path string, info os.FileInfo, err error) error {
 
 		if err != nil {
@@ -117,7 +120,7 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 		}
 
 		if !info.IsDir() {
-			shouldIgnore := ignoreFileOrDirectory(info.Name(), false)
+			shouldIgnore := ignoreFileOrDirectory(info.Name(), false, cwSettingsIgnoredPathsList)
 			if shouldIgnore {
 				return nil
 			}
@@ -171,7 +174,7 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 				defer resp.Body.Close()
 			}
 		} else {
-			shouldIgnore := ignoreFileOrDirectory(info.Name(), true)
+			shouldIgnore := ignoreFileOrDirectory(info.Name(), true, cwSettingsIgnoredPathsList)
 			if shouldIgnore {
 				return filepath.SkipDir
 			}
@@ -202,7 +205,21 @@ func completeUpload(projectID string, files []string, modfiles []string, conURL 
 	return resp.Status, resp.StatusCode
 }
 
-func ignoreFileOrDirectory(name string, isDir bool) bool {
+// Retrieve the ignoredPaths list from a .cw-settings file
+func retrieveIgnoredPathsList(projectPath string) []string {
+	cwSettingsPath := path.Join(projectPath, ".cw-settings")
+	var cwSettingsIgnoredPathsList []string
+	if _, err := os.Stat(cwSettingsPath); !os.IsNotExist(err) {
+		plan, _ := ioutil.ReadFile(cwSettingsPath)
+		var cwSettingsJSON CWSettings
+		// Don't need to handle an invalid JSON file as we should just return []
+		json.Unmarshal(plan, &cwSettingsJSON)
+		cwSettingsIgnoredPathsList = cwSettingsJSON.IgnoredPaths
+	}
+	return cwSettingsIgnoredPathsList
+}
+
+func ignoreFileOrDirectory(name string, isDir bool, cwSettingsIgnoredPathsList []string) bool {
 	// List of files that will not be sent to PFE
 	ignoredFiles := []string{
 		".DS_Store",
@@ -241,6 +258,10 @@ func ignoreFileOrDirectory(name string, isDir bool) bool {
 	ignoredList := ignoredFiles
 	if isDir {
 		ignoredList = ignoredDirectories
+	}
+
+	if len(cwSettingsIgnoredPathsList) > 0 {
+		ignoredList = append(ignoredList, cwSettingsIgnoredPathsList...)
 	}
 
 	isFileInIgnoredList := false
