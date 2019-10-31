@@ -25,7 +25,6 @@ func RemoveCommand(c *cli.Context) {
 	imageArr := []string{
 		"eclipse/codewind-pfe-amd64:" + tag,
 		"eclipse/codewind-performance-amd64:" + tag,
-		"eclipse/codewind-initialize-amd64:" + tag,
 		"cw-",
 	}
 	networkName := "codewind"

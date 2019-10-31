@@ -32,13 +32,11 @@ func InstallCommand(c *cli.Context) {
 	tag := c.String("tag")
 	jsonOutput := c.Bool("json") || c.GlobalBool("json")
 
-	imageArr := [3]string{"docker.io/eclipse/codewind-pfe-amd64:",
-		"docker.io/eclipse/codewind-performance-amd64:",
-		"docker.io/eclipse/codewind-initialize-amd64:"}
+	imageArr := [2]string{"docker.io/eclipse/codewind-pfe-amd64:",
+		"docker.io/eclipse/codewind-performance-amd64:"}
 
-	targetArr := [3]string{"codewind-pfe-amd64:",
-		"codewind-performance-amd64:",
-		"codewind-initialize-amd64:"}
+	targetArr := [2]string{"codewind-pfe-amd64:",
+		"codewind-performance-amd64:"}
 
 	for i := 0; i < len(imageArr); i++ {
 		utils.PullImage(imageArr[i]+tag, jsonOutput)
