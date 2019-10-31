@@ -66,30 +66,6 @@ func ConnectionRemoveFromList(c *cli.Context) {
 	os.Exit(0)
 }
 
-// ConnectionGetTarget : Fetch the target connection
-func ConnectionGetTarget() {
-	targetConnection, err := connections.GetTargetConnection()
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(0)
-	}
-	response, _ := json.Marshal(targetConnection)
-	fmt.Println(string(response))
-	os.Exit(0)
-}
-
-// ConnectionSetTarget : Set a new connection by ID
-func ConnectionSetTarget(c *cli.Context) {
-	err := connections.SetTargetConnection(c)
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(0)
-	}
-	response, _ := json.Marshal(connections.Result{Status: "OK", StatusMessage: "New target set"})
-	fmt.Println(string(response))
-	os.Exit(0)
-}
-
 // ConnectionListAll : Fetch all connections
 func ConnectionListAll() {
 	allConnections, err := connections.GetConnectionsConfig()

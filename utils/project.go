@@ -17,6 +17,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/eclipse/codewind-installer/errors"
@@ -40,17 +41,14 @@ func DetermineProjectInfo(projectPath string) (string, string) {
 	if PathExists(path.Join(projectPath, "pom.xml")) {
 		language = "java"
 		buildType = determineJavaBuildType(projectPath)
-	}
-	if PathExists(path.Join(projectPath, "package.json")) {
+	} else if PathExists(path.Join(projectPath, "package.json")) {
 		language = "nodejs"
 		buildType = "nodejs"
-	}
-	if PathExists(path.Join(projectPath, "Package.swift")) {
+	} else if PathExists(path.Join(projectPath, "Package.swift")) {
 		language = "swift"
 		buildType = "swift"
-	}
-	if PathExists(path.Join(projectPath, "Pipfile")) {
-		language = "python"
+	} else {
+		language = determineProjectLanguage(projectPath)
 		buildType = "docker"
 	}
 	return language, buildType
@@ -86,6 +84,26 @@ func determineJavaBuildType(projectPath string) string {
 		return "liberty"
 	}
 	return "docker"
+}
+
+func determineProjectLanguage(projectPath string) string {
+	projectFiles, err := ioutil.ReadDir(projectPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, file := range projectFiles {
+		if !file.IsDir() {
+			switch filepath.Ext(file.Name()) {
+			case ".py":
+				return "python"
+			case ".go":
+				return "go"
+			default:
+				continue
+			}
+		}
+	}
+	return "unknown"
 }
 
 // WriteNewCwSettings writes a default .cw-settings file to the given path,
