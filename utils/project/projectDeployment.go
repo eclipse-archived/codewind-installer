@@ -25,21 +25,16 @@ import (
 	"github.com/eclipse/codewind-installer/utils/connections"
 )
 
-// Target : A Connection target
-type Target struct {
-	ConnectionID string `json:"id"`
-}
-
-// ConnectionTargets : Structure of the project-connections file
-type ConnectionTargets struct {
-	SchemaVersion     int      `json:"schemaVersion"`
-	ConnectionTargets []Target `json:"connectionTargets"`
+// ConnectionFile : Structure of the project-connections file
+type ConnectionFile struct {
+	SchemaVersion int    `json:"schemaVersion"`
+	ID            string `json:"connectionID"`
 }
 
 const connectionTargetSchemaVersion = 1
 
-// AddConnectionTarget : Add a connection target
-func AddConnectionTarget(projectID string, conID string) *ProjectError {
+// SetConnection : Add a connection target
+func SetConnection(projectID string, conID string) *ProjectError {
 
 	connection, conErr := connections.GetConnectionByID(conID)
 	if conErr != nil || connection == nil {
@@ -53,46 +48,16 @@ func AddConnectionTarget(projectID string, conID string) *ProjectError {
 		return &ProjectError{errOpInvalidID, projError, projError.Error()}
 	}
 
-	// Load the project-connection.json
-	connectionTargets, projError := loadTargets(projectID)
-
+	connectionTargets, projError := loadConnectionFile(projectID)
 	if projError != nil && connectionTargets == nil {
-		_, err := os.Stat(getProjectConnectionsFilename(projectID))
-		if os.IsNotExist(err) {
-			os.MkdirAll(getProjectConnectionConfigDir(), 0777)
-			projErr := ResetTargetFile(projectID)
-			if projErr != nil {
-				return projErr
-			}
-		}
-		connectionTargets, projErr := loadTargets(projectID)
-		if projErr != nil {
-			return projErr
-		}
-		target := Target{
-			ConnectionID: conID,
-		}
-		connectionTargets.ConnectionTargets = append(connectionTargets.ConnectionTargets, target)
-		projError := saveConnectionTargets(projectID, connectionTargets)
-		if projError != nil {
-			return projError
-		}
-		return nil
-	}
-
-	// Check if the connection has been added to the project already
-	for i := 0; i < len(connectionTargets.ConnectionTargets); i++ {
-		if strings.EqualFold(conID, connectionTargets.ConnectionTargets[i].ConnectionID) {
-			projError := errors.New(textConnectionExists)
-			return &ProjectError{errOpConflict, projError, projError.Error()}
+		err := CreateConnectionFile(projectID)
+		if err != nil {
+			return err
 		}
 	}
 
-	// Add the connection to the project-connections file
-	target := Target{
-		ConnectionID: conID,
-	}
-	connectionTargets.ConnectionTargets = append(connectionTargets.ConnectionTargets, target)
+	connectionTargets, projError = loadConnectionFile(projectID)
+	connectionTargets.ID = conID
 
 	// Save the project-connections file
 	projError = saveConnectionTargets(projectID, connectionTargets)
@@ -102,10 +67,11 @@ func AddConnectionTarget(projectID string, conID string) *ProjectError {
 	return nil
 }
 
-// ResetTargetFile : Reset target file
-func ResetTargetFile(projectID string) *ProjectError {
-	connectionTargets := ConnectionTargets{
+// ResetConnectionFile : Reset target file
+func ResetConnectionFile(projectID string) *ProjectError {
+	connectionTargets := ConnectionFile{
 		SchemaVersion: connectionTargetSchemaVersion,
+		ID:            "local",
 	}
 	projError := saveConnectionTargets(projectID, &connectionTargets)
 	if projError != nil {
@@ -114,61 +80,16 @@ func ResetTargetFile(projectID string) *ProjectError {
 	return nil
 }
 
-// RemoveConnectionTarget : Remove connection target from project-connections file
-func RemoveConnectionTarget(projectID string, conID string) *ProjectError {
-
-	connection, conErr := connections.GetConnectionByID(conID)
-	if conErr != nil || connection == nil {
-		projError := errors.New("Connection unknown")
-		return &ProjectError{"con_not_found", projError, projError.Error()}
-	}
-
-	// Check if projectID is supplied in correct format
-	if !IsProjectIDValid(projectID) {
-		projError := errors.New(textInvalidProjectID)
-		return &ProjectError{errOpInvalidID, projError, projError.Error()}
-	}
-
-	// Load the connections
-	connectionTargets, projErr := loadTargets(projectID)
-	if projErr != nil {
-		return projErr
-	}
-
-	connectionFound := false
-
-	// Remove the connection
-	for i := 0; i < len(connectionTargets.ConnectionTargets); i++ {
-		if strings.EqualFold(conID, connectionTargets.ConnectionTargets[i].ConnectionID) {
-			copy(connectionTargets.ConnectionTargets[i:], connectionTargets.ConnectionTargets[i+1:])
-			connectionFound = true
-			connectionTargets.ConnectionTargets = connectionTargets.ConnectionTargets[:len(connectionTargets.ConnectionTargets)-1]
-		}
-	}
-
-	if !connectionFound {
-		projErr := errors.New(textConMissing)
-		return &ProjectError{errOpNotFound, projErr, projErr.Error()}
-	}
-
-	// Save the project-connections file
-	projError := saveConnectionTargets(projectID, connectionTargets)
-	if projError != nil {
-		return projError
-	}
-	return nil
-}
-
-// ListTargetConnections : List the target connections for this project
-func ListTargetConnections(projectID string) (*ConnectionTargets, *ProjectError) {
-	connectionTargets, projErr := loadTargets(projectID)
+// GetConnection : List the connection for a projectID
+func GetConnection(projectID string) (*ConnectionFile, *ProjectError) {
+	connectionTargets, projErr := loadConnectionFile(projectID)
 	if projErr != nil {
 		return nil, projErr
 	}
 	return connectionTargets, nil
 }
 
-// GetConnectionURL returns to the connection URL for a given projectID, unique to each project connection
+// GetConnectionURL : Return the connection URL for a given projectID, unique to each project connection
 func GetConnectionURL(projectID string) (string, *ProjectError) {
 	conID, err := GetConnectionID(projectID)
 
@@ -187,24 +108,55 @@ func GetConnectionURL(projectID string) (string, *ProjectError) {
 	return projectConInfo.URL, nil
 }
 
-// GetConnectionID gets the the connectionID for a given projectID
+// GetConnectionID : Gets the the connectionID for a given projectID
 func GetConnectionID(projectID string) (string, *ProjectError) {
-	targetConnections, err := ListTargetConnections(projectID)
+	connection, err := GetConnection(projectID)
 	if err != nil {
 		return "", err
 	}
-	conTargets := targetConnections.ConnectionTargets
 	var conID string
-	if len(conTargets) > 0 {
-		conID = conTargets[0].ConnectionID
+	if connection.ID != "" {
+		conID = connection.ID
 	} else {
 		projError := errors.New("Connection not found for project " + projectID)
-		return "", &ProjectError{errOpNotFound, projError, projError.Error()}
+		return "", &ProjectError{errOpConNotFound, projError, projError.Error()}
 	}
 	return conID, nil
 }
 
-// getProjectConnectionConfigDir : get directory path to the connections file
+// ConnectionFileExists : Returns true if connection file exists for the projectID
+func ConnectionFileExists(projectID string) bool {
+	info, err := os.Stat(getConnectionFilename(projectID))
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
+}
+
+// CreateConnectionFile : Creates the /connections/{project_id}.json file if one doesn't exist, with default local connection
+func CreateConnectionFile(projectID string) *ProjectError {
+	_, err := os.Stat(getConnectionFilename(projectID))
+	if os.IsNotExist(err) {
+		os.MkdirAll(getProjectConnectionConfigDir(), 0777)
+		resetFileError := ResetConnectionFile(projectID)
+		if resetFileError != nil {
+			return resetFileError
+		}
+	}
+	return nil
+}
+
+// RemoveConnectionFile : Remove the connection file for a project
+func RemoveConnectionFile(projectID string) *ProjectError {
+	// delete file
+	var err = os.Remove(getConnectionFilename(projectID))
+	if err != nil {
+		return &ProjectError{errOpFileDelete, err, err.Error()}
+	}
+	return nil
+}
+
+// getProjectConnectionConfigDir : Get directory path to the connection file
 func getProjectConnectionConfigDir() string {
 	const GOOS string = runtime.GOOS
 	homeDir := ""
@@ -216,34 +168,36 @@ func getProjectConnectionConfigDir() string {
 	return path.Join(homeDir, ".codewind", "config", "connections")
 }
 
-// getProjectConnectionsFilename  : get full file path of connections file
-func getProjectConnectionsFilename(projectID string) string {
+// getConnectionFilename : Get full file path of connection file
+func getConnectionFilename(projectID string) string {
 	return path.Join(getProjectConnectionConfigDir(), projectID+".json")
 }
 
-// saveConnectionTargets : write the targets file in JSON format
-func saveConnectionTargets(projectID string, connectionTargets *ConnectionTargets) *ProjectError {
+// saveConnectionTargets : Write the targets file in JSON format
+func saveConnectionTargets(projectID string, connectionTargets *ConnectionFile) *ProjectError {
 	body, err := json.MarshalIndent(connectionTargets, "", "\t")
 	if err != nil {
 		return &ProjectError{errOpFileParse, err, err.Error()}
 	}
-	projError := ioutil.WriteFile(getProjectConnectionsFilename(projectID), body, 0644)
+	projError := ioutil.WriteFile(getConnectionFilename(projectID), body, 0644)
 	if projError != nil {
 		return &ProjectError{errOpFileWrite, projError, projError.Error()}
 	}
 	return nil
 }
 
-// loadTargets :  Loads the config file for a project
-func loadTargets(projectID string) (*ConnectionTargets, *ProjectError) {
+// loadConnectionFile :  Loads the connection file for a project
+func loadConnectionFile(projectID string) (*ConnectionFile, *ProjectError) {
 	projectID = strings.ToLower(projectID)
-	file, err := ioutil.ReadFile(getProjectConnectionsFilename(projectID))
+	filePath := getConnectionFilename(projectID)
+	file, err := ioutil.ReadFile(filePath)
+
 	if err != nil {
 		return nil, &ProjectError{errOpFileLoad, err, err.Error()}
 	}
 
 	// parse the file
-	projectConnectionTargets := ConnectionTargets{}
+	projectConnectionTargets := ConnectionFile{}
 	err = json.Unmarshal([]byte(file), &projectConnectionTargets)
 	if err != nil {
 		return nil, &ProjectError{errOpFileParse, err, err.Error()}

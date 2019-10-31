@@ -40,8 +40,8 @@ func (c *ClientMockServerConfig) Do(req *http.Request) (*http.Response, error) {
 // Test_SchemaUpgrade01 :  Upgrade schema tests from Version 0 to Version 1
 func Test_SchemaUpgrade0to1(t *testing.T) {
 	// create a v1 file :
-	v1File := "{\"active\": \"testlocal\",\"connections\": [{\"name\":\"testlocal\",\"label\": \"Codewind local test connection\",\"url\": \"\"}]}"
-	ioutil.WriteFile(getConnectionConfigFilename(), []byte(v1File), 0644)
+	v1File := "{\"connections\": [{\"name\":\"testlocal\",\"label\": \"Codewind local test connection\",\"url\": \"\"}]}"
+	ioutil.WriteFile(GetConnectionConfigFilename(), []byte(v1File), 0644)
 	t.Run("Asserts schema updated to v1 with a local target", func(t *testing.T) {
 		InitConfigFileIfRequired() // perform upgrade
 		result, err := GetConnectionsConfig()
@@ -49,7 +49,6 @@ func Test_SchemaUpgrade0to1(t *testing.T) {
 			t.Fail()
 		}
 		assert.Equal(t, 1, result.SchemaVersion)
-		assert.Equal(t, "testlocal", result.Active)
 		assert.Len(t, result.Connections, 1)
 		assert.Equal(t, "testlocal", result.Connections[0].ID)
 	})
@@ -62,21 +61,7 @@ func Test_GetConnectionsConfig(t *testing.T) {
 		if err != nil {
 			t.Fail()
 		}
-		assert.Equal(t, "local", result.Active)
 		assert.Len(t, result.Connections, 1)
-	})
-}
-
-func Test_GetActiveConnection(t *testing.T) {
-	t.Run("Asserts the initial connection is local", func(t *testing.T) {
-		ResetConnectionsFile()
-		result, err := FindTargetConnection()
-		if err != nil {
-			t.Fail()
-		}
-		assert.Equal(t, "local", result.ID)
-		assert.Equal(t, "Codewind local connection", result.Label)
-		assert.Equal(t, "", result.URL)
 	})
 }
 
@@ -106,33 +91,6 @@ func Test_CreateNewConnection(t *testing.T) {
 	})
 }
 
-// Test_SwitchTarget : Switches the target to the last one added
-func Test_SwitchTarget(t *testing.T) {
-
-	allConnections, err := GetAllConnections()
-	if err != nil {
-		t.Fail()
-	}
-
-	newID := allConnections[1].ID
-
-	set := flag.NewFlagSet("tests", 0)
-	set.String("conid", newID, "doc")
-	c := cli.NewContext(nil, set, nil)
-	t.Run("Assert target switches to remoteserver", func(t *testing.T) {
-		SetTargetConnection(c)
-		result, err := FindTargetConnection()
-		if err != nil {
-			t.Fail()
-		}
-		assert.Equal(t, "MyRemoteServer", result.Label)
-		assert.Equal(t, "https://codewind.server.remote", result.URL)
-		assert.Equal(t, "http://a.mock.auth.server.remote:1234", result.AuthURL)
-		assert.Equal(t, "remoteRealm", result.Realm)
-		assert.Equal(t, "remoteClient", result.ClientID)
-	})
-}
-
 // Test_RemoveConnectionFromList : Adds a new connection to the stored list
 func Test_RemoveConnectionFromList(t *testing.T) {
 	set := flag.NewFlagSet("tests", 0)
@@ -155,14 +113,6 @@ func Test_RemoveConnectionFromList(t *testing.T) {
 		assert.Len(t, result.Connections, 2)
 	})
 
-	t.Run("Check current target host url is https://codewind.server.remote", func(t *testing.T) {
-		result, err := FindTargetConnection()
-		if err != nil {
-			t.Fail()
-		}
-		assert.Equal(t, "https://codewind.server.remote", result.URL)
-	})
-
 	t.Run("Remove the https://codewind.server.remote connection", func(t *testing.T) {
 		RemoveConnectionFromList(c)
 		result, err := GetConnectionsConfig()
@@ -170,13 +120,5 @@ func Test_RemoveConnectionFromList(t *testing.T) {
 			t.Fail()
 		}
 		assert.Len(t, result.Connections, 1)
-	})
-
-	t.Run("Check target reverts back to local", func(t *testing.T) {
-		result, err := FindTargetConnection()
-		if err != nil {
-			t.Fail()
-		}
-		assert.Equal(t, "local", result.ID)
 	})
 }
