@@ -76,7 +76,6 @@ spec:
                         # now compile the code
                         cd cmd/cli
                         export HOME=$JENKINS_HOME
-                        export GOCACHE="on"
                         export GOARCH=amd64
                         GOOS=darwin go build -ldflags="-s -w" -o cwctl-macos
                         GOOS=windows go build -ldflags="-s -w" -o cwctl-win.exe
