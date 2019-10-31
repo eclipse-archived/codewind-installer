@@ -33,14 +33,6 @@ type (
 		ProjectType string `json:"projectType"`
 	}
 
-	// TemplateRepo represents a template repository.
-	TemplateRepo struct {
-		Description string `json:"description"`
-		URL         string `json:"url"`
-	  Name        string `json:"name"`
-		Enabled     bool   `json:"enabled"`
-	}
-
 	// RepoOperation represents a requested operation on a template repository.
 	RepoOperation struct {
 		Operation string `json:"op"`
@@ -212,7 +204,7 @@ func DeleteTemplateRepo(URL string) ([]utils.TemplateRepo, error) {
 
 // EnableTemplateRepos enables a template repo in PFE and
 // returns the new list of template repos
-func EnableTemplateRepos(repoURLs []string) ([]TemplateRepo, error) {
+func EnableTemplateRepos(repoURLs []string) ([]utils.TemplateRepo, error) {
 	if repoURLs == nil {
 		return nil, fmt.Errorf("Error: '%s' is not a valid URL", repoURLs)
 	}
@@ -244,7 +236,7 @@ func EnableTemplateRepos(repoURLs []string) ([]TemplateRepo, error) {
 
 // DisableTemplateRepos enables a template repo in PFE and
 // returns the new list of template repos
-func DisableTemplateRepos(repoURLs []string) ([]TemplateRepo, error) {
+func DisableTemplateRepos(repoURLs []string) ([]utils.TemplateRepo, error) {
 	if repoURLs == nil {
 		return nil, fmt.Errorf("Error: '%s' is not a valid URL", repoURLs)
 	}
