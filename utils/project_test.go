@@ -27,41 +27,45 @@ func TestDetermineProjectInfo(t *testing.T) {
 		in            string
 		wantLanguage  string
 		wantBuildType string
-		wantIsAppsody bool
 		wantedErr     error
 	}{
 		"success case: liberty project": {
 			in:            path.Join("..", "resources", "test", "liberty-project"),
 			wantLanguage:  "java",
 			wantBuildType: "liberty",
-			wantIsAppsody: false,
 		},
 		"success case: spring project": {
 			in:            path.Join("..", "resources", "test", "spring-project"),
 			wantLanguage:  "java",
 			wantBuildType: "spring",
-			wantIsAppsody: false,
 		},
 		"success case: node.js project": {
 			in:            path.Join("..", "resources", "test", "node-project"),
 			wantLanguage:  "nodejs",
 			wantBuildType: "nodejs",
-			wantIsAppsody: false,
 		},
 		"success case: swift project": {
 			in:            path.Join("..", "resources", "test", "swift-project"),
 			wantLanguage:  "swift",
 			wantBuildType: "swift",
-			wantIsAppsody: false,
+		},
+		"success case: python project": {
+			in:            path.Join("..", "resources", "test", "python-project"),
+			wantLanguage:  "python",
+			wantBuildType: "docker",
+		},
+		"success case: go project": {
+			in:            path.Join("..", "resources", "test", "go-project"),
+			wantLanguage:  "go",
+			wantBuildType: "docker",
 		},
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			gotLanguage, gotBuildType, gotIsAppsody := DetermineProjectInfo(test.in)
+			gotLanguage, gotBuildType := DetermineProjectInfo(test.in)
 
 			assert.Equal(t, test.wantLanguage, gotLanguage)
 			assert.Equal(t, test.wantBuildType, gotBuildType)
-			assert.Equal(t, test.wantIsAppsody, gotIsAppsody)
 		})
 	}
 }
@@ -116,6 +120,28 @@ func TestWriteNewCwSettings(t *testing.T) {
 		"success case: swift project": {
 			inProjectPath: "../resources/test/swift-project/.cw-settings",
 			inBuildType:   "swift",
+			wantCwSettings: CWSettings{
+				ContextRoot:  "",
+				InternalPort: "",
+				HealthCheck:  "",
+				IsHTTPS:      false,
+				IgnoredPaths: []string{""},
+			},
+		},
+		"success case: python project": {
+			inProjectPath: "../resources/test/python-project/.cw-settings",
+			inBuildType:   "docker",
+			wantCwSettings: CWSettings{
+				ContextRoot:  "",
+				InternalPort: "",
+				HealthCheck:  "",
+				IsHTTPS:      false,
+				IgnoredPaths: []string{""},
+			},
+		},
+		"success case: go project": {
+			inProjectPath: "../resources/test/go-project/.cw-settings",
+			inBuildType:   "docker",
 			wantCwSettings: CWSettings{
 				ContextRoot:  "",
 				InternalPort: "",

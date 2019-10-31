@@ -36,6 +36,7 @@ type (
 	TemplateRepo struct {
 		Description string `json:"description"`
 		URL         string `json:"url"`
+	  Name        string `json:"name"`
 		Enabled     bool   `json:"enabled"`
 	}
 
@@ -132,7 +133,7 @@ func GetTemplateRepos() ([]TemplateRepo, error) {
 
 // AddTemplateRepo adds a template repo to PFE and
 // returns the new list of existing repos
-func AddTemplateRepo(URL, description string) ([]TemplateRepo, error) {
+func AddTemplateRepo(URL, description string, name string) ([]TemplateRepo, error) {
 	if _, err := url.ParseRequestURI(URL); err != nil {
 		return nil, fmt.Errorf("Error: '%s' is not a valid URL", URL)
 	}
@@ -140,6 +141,7 @@ func AddTemplateRepo(URL, description string) ([]TemplateRepo, error) {
 	values := map[string]string{
 		"url":         URL,
 		"description": description,
+		"name":        name,
 	}
 	jsonValue, _ := json.Marshal(values)
 

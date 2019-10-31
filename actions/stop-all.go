@@ -21,11 +21,11 @@ import (
 //StopAllCommand to stop codewind and project containers
 func StopAllCommand() {
 	containerArr := []string{
-		"codewind-pfe", 
+		"codewind-pfe",
 		"codewind-performance",
 		"cw-",
 		"appsody",
-		}
+	}
 
 	containers := utils.GetContainerList()
 
@@ -39,6 +39,16 @@ func StopAllCommand() {
 					break
 				}
 			}
+		}
+	}
+
+	networkName := "codewind"
+	networks := utils.GetNetworkList()
+	fmt.Println("Removing Codewind docker networks..")
+	for _, network := range networks {
+		if strings.Contains(network.Name, networkName) {
+			fmt.Print("Removing docker network: ", network.Name, "... ")
+			utils.RemoveNetwork(network)
 		}
 	}
 }

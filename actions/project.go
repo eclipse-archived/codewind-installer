@@ -14,102 +14,106 @@ package actions
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
-	"path"
-	"regexp"
+	"strings"
 
-	"github.com/eclipse/codewind-installer/errors"
-	"github.com/eclipse/codewind-installer/utils"
+	"github.com/eclipse/codewind-installer/utils/project"
 	"github.com/urfave/cli"
 )
 
-type (
-	// ProjectType represents the information Codewind requires to build a project.
-	ProjectType struct {
-		Language  string `json:"language"`
-		BuildType string `json:"projectType"`
-	}
-
-	// ValidationResponse represents the response to validating a project on the users filesystem
-	// result is an interface as it could be ProjectType or string depending on success or failure.
-	ValidationResponse struct {
-		Status string      `json:"status"`
-		Path   string      `json:"projectPath"`
-		Result interface{} `json:"result"`
-	}
-)
-
-// DownloadTemplate using the url/link provided
-func DownloadTemplate(c *cli.Context) {
-	destination := c.Args().Get(0)
-
-	if destination == "" {
-		log.Fatal("destination not set")
-	}
-
-	projectDir := path.Base(destination)
-
-	// Remove invalid characters from the string we will use
-	// as the project name in the template.
-	r := regexp.MustCompile("[^a-zA-Z0-9._-]");
-	projectName := r.ReplaceAllString(projectDir, "");
-	if (len(projectName) == 0){
-		projectName = "PROJ_NAME_PLACEHOLDER"
-	}
-
-	url := c.String("u")
-
-	err := utils.DownloadFromURLThenExtract(url, destination)
+func ProjectValidate(c *cli.Context) {
+	err := project.ValidateProject(c)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err.Error())
 	}
-	err = utils.ReplaceInFiles(destination, "[PROJ_NAME_PLACEHOLDER]", projectName)
+	os.Exit(0)
+}
+
+func ProjectCreate(c *cli.Context) {
+	err := project.DownloadTemplate(c)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err.Error())
 	}
 }
 
-// ValidateProject returns the language and buildType for a project at given filesystem path,
-// and writes a default .cw-settings file to that project
-func ValidateProject(c *cli.Context) {
-	projectPath := c.Args().Get(0)
-	utils.CheckProjectPath(projectPath)
-	validationStatus := "success"
-	// result could be ProjectType or string, so define as an interface
-	var validationResult interface{}
-	language, buildType, isAppsody := utils.DetermineProjectInfo(projectPath)
-	validationResult = ProjectType{
-		Language: language,
-		BuildType: buildType,
-	}
-	if isAppsody {
-		validated, err := utils.SuccessfullyCallAppsodyInit(projectPath)
-		if !validated {
-			validationStatus = "failed"
-			validationResult = err.Error()
+func ProjectSync(c *cli.Context) {
+	PrintAsJSON := c.GlobalBool("json")
+	response, err := project.SyncProject(c)
+	if err != nil {
+		fmt.Println(err.Err)
+	} else {
+		if PrintAsJSON {
+			jsonResponse, _ := json.Marshal(response)
+			fmt.Println(string(jsonResponse))
+		} else {
+			fmt.Println("Status: " + response.Status)
 		}
 	}
-
-	response := ValidationResponse{
-		Status: validationStatus,
-		Path:   projectPath,
-		Result: validationResult,
-	}
-	projectInfo, err := json.Marshal(response)
-
-	errors.CheckErr(err, 203, "")
-	writeCwSettingsIfNotInProject(projectPath, buildType)
-	fmt.Println(string(projectInfo))
+	os.Exit(0)
 }
 
-func writeCwSettingsIfNotInProject(projectPath string, BuildType string) {
-	pathToCwSettings := path.Join(projectPath, ".cw-settings")
-	pathToLegacySettings := path.Join(projectPath, ".mc-settings")
-
-	if _, err := os.Stat(pathToLegacySettings); os.IsExist(err) {
-		utils.RenameLegacySettings(pathToLegacySettings, pathToCwSettings)
-	} else if _, err := os.Stat(pathToCwSettings); os.IsNotExist(err) {
-		utils.WriteNewCwSettings(pathToCwSettings, BuildType)
+func ProjectBind(c *cli.Context) {
+	PrintAsJSON := c.GlobalBool("json")
+	response, err := project.BindProject(c)
+	if err != nil {
+		fmt.Println(err.Error())
+	} else {
+		if PrintAsJSON {
+			jsonResponse, _ := json.Marshal(response)
+			fmt.Println(string(jsonResponse))
+		} else {
+			fmt.Println("Project ID: " + response.ProjectID)
+			fmt.Println("Status: " + response.Status)
+		}
 	}
+	os.Exit(0)
+}
+
+func UpgradeProjects(c *cli.Context) {
+	err := project.UpgradeProjects(c)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	os.Exit(0)
+}
+
+// ProjectAddTargetConnection : Add project to a connection
+func ProjectAddTargetConnection(c *cli.Context) {
+	projectID := strings.TrimSpace(strings.ToLower(c.String("id")))
+	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
+	err := project.AddConnectionTarget(projectID, conID)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(0)
+	}
+	response, _ := json.Marshal(project.Result{Status: "OK", StatusMessage: "Project target added successfully"})
+	fmt.Println(string(response))
+	os.Exit(0)
+}
+
+// ProjectTargetList : List connection targets for a project
+func ProjectTargetList(c *cli.Context) {
+	projectID := strings.TrimSpace(strings.ToLower(c.String("id")))
+	connectionTargets, err := project.ListTargetConnections(projectID)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(0)
+	}
+	response, _ := json.Marshal(connectionTargets)
+	fmt.Println(string(response))
+	os.Exit(0)
+}
+
+// ProjectRemoveTargetConnection : Remove a project from a connection
+func ProjectRemoveTargetConnection(c *cli.Context) {
+	projectID := strings.TrimSpace(strings.ToLower(c.String("id")))
+	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
+	err := project.RemoveConnectionTarget(projectID, conID)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(0)
+	}
+	response, _ := json.Marshal(project.Result{Status: "OK", StatusMessage: "Project target removed successfully"})
+	fmt.Println(string(response))
+	os.Exit(0)
 }

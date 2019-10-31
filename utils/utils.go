@@ -14,6 +14,7 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 )
 
 // RemoveDuplicateEntries elements
@@ -37,7 +38,13 @@ func RemoveDuplicateEntries(inputArr []string) []string {
 	return result
 }
 
+// PrettyPrintJSON : Format JSON output for display
 func PrettyPrintJSON(i interface{}) {
 	s, _ := json.MarshalIndent(i, "", "\t")
 	fmt.Println(string(s))
+}
+
+// CreateTimestamp : Create a timestamp
+func CreateTimestamp() int64 {
+	return time.Now().UnixNano() / int64(time.Millisecond)
 }

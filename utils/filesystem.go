@@ -269,6 +269,7 @@ func PathExists(path string) bool {
 	return false
 }
 
+// ReplaceInFiles the placeholder string "[PROJ_NAME_PLACEHOLDER]" with a generated name based on the project directory
 func ReplaceInFiles(projectPath string, oldStr string, newStr string) error {
 
 	oldBytes := []byte(oldStr)
@@ -282,7 +283,7 @@ func ReplaceInFiles(projectPath string, oldStr string, newStr string) error {
 		if strings.Contains(path.Base(pathName), oldStr) {
 			// Keep track of files we need to rename but don't rename
 			// them until the filepath.Walk is complete.
-			pathsToRename = append(pathsToRename, pathName);
+			pathsToRename = append(pathsToRename, pathName)
 		}
 
 		if info.IsDir() {

@@ -25,13 +25,13 @@ import (
 	"strings"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
 	"github.com/eclipse/codewind-installer/errors"
-	"github.com/moby/moby/client"
 )
 
-// docker-compose yaml data
+// codewind-docker-compose.yaml data
 var data = `
 version: 2
 services:
@@ -42,16 +42,19 @@ services:
   environment: ["HOST_WORKSPACE_DIRECTORY=${WORKSPACE_DIRECTORY}","CONTAINER_WORKSPACE_DIRECTORY=/codewind-workspace","HOST_OS=${HOST_OS}","CODEWIND_VERSION=${TAG}","PERFORMANCE_CONTAINER=codewind-performance${PLATFORM}:${TAG}","HOST_HOME=${HOST_HOME}","HOST_MAVEN_OPTS=${HOST_MAVEN_OPTS}"]
   depends_on: [codewind-performance]
   ports: ["127.0.0.1:${PFE_EXTERNAL_PORT}:9090"]
-  volumes: ["/var/run/docker.sock:/var/run/docker.sock","${WORKSPACE_DIRECTORY}:/codewind-workspace"]
+  volumes: ["/var/run/docker.sock:/var/run/docker.sock","cw-workspace:/codewind-workspace","${WORKSPACE_DIRECTORY}:/mounted-workspace"]
   networks: [network]
  codewind-performance:
   image: codewind-performance${PLATFORM}:${TAG}
   ports: ["127.0.0.1:9095:9095"]
   container_name: codewind-performance
-  volumes: ["/var/run/docker.sock:/var/run/docker.sock","${WORKSPACE_DIRECTORY}:/codewind-workspace"]
   networks: [network]
 networks:
   network:
+   driver_opts:
+    com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
+volumes:
+  cw-workspace:
 `
 
 // Compose struct for the docker compose yaml file
@@ -76,8 +79,15 @@ type Compose struct {
 			Networks      []string `yaml:"networks"`
 		} `yaml:"codewind-performance"`
 	} `yaml:"services"`
-	NETWORK struct {
-		Network map[string]string `yaml:"network"`
+	VOLUME struct {
+		CodewindWorkspace map[string]string `yaml:"cw-workspace"`
+	} `yaml:"volumes"`
+	NETWORKS struct {
+		NETWORK struct {
+			DRIVEROPTS struct {
+				HostIP string `yaml:"com.docker.network.bridge.host_binding_ipv4"`
+			} `yaml:"driver_opts"`
+		} `yaml:"network"`
 	} `yaml:"networks"`
 }
 
@@ -91,7 +101,7 @@ const (
 )
 
 // DockerCompose to set up the Codewind environment
-func DockerCompose(tag string) {
+func DockerCompose(tempFilePath string, tag string) {
 
 	// Set env variables for the docker compose file
 	home := os.Getenv("HOME")
@@ -110,13 +120,13 @@ func DockerCompose(tag string) {
 	os.Setenv("REPOSITORY", "")
 	os.Setenv("TAG", tag)
 	if GOOS == "windows" {
-		os.Setenv("WORKSPACE_DIRECTORY", "C:\\codewind-workspace")
+		os.Setenv("WORKSPACE_DIRECTORY", "C:\\codewind-data")
 		// In Windows, calling the env variable "HOME" does not return
 		// the user directory correctly
 		os.Setenv("HOST_HOME", os.Getenv("USERPROFILE"))
 
 	} else {
-		os.Setenv("WORKSPACE_DIRECTORY", home+"/codewind-workspace")
+		os.Setenv("WORKSPACE_DIRECTORY", home+"/codewind-data")
 		os.Setenv("HOST_HOME", home)
 	}
 	os.Setenv("HOST_OS", GOOS)
@@ -129,12 +139,12 @@ func DockerCompose(tag string) {
 	}
 	os.Setenv("PFE_EXTERNAL_PORT", port)
 
-	cmd := exec.Command("docker-compose", "-f", "installer-docker-compose.yaml", "up", "-d")
+	cmd := exec.Command("docker-compose", "-f", tempFilePath, "up", "-d")
 	output := new(bytes.Buffer)
 	cmd.Stdout = output
 	cmd.Stderr = output
 	if err := cmd.Start(); err != nil { // after 'Start' the program is continued and script is executing in background
-		DeleteTempFile("installer-docker-compose.yaml")
+		DeleteTempFile(tempFilePath)
 		errors.CheckErr(err, 101, "Is docker-compose installed?")
 	}
 	fmt.Printf("Please wait whilst containers initialize... %s \n", output.String())
@@ -142,12 +152,12 @@ func DockerCompose(tag string) {
 	fmt.Printf(output.String()) // Wait to finish execution, so we can read all output
 
 	if strings.Contains(output.String(), "ERROR") || strings.Contains(output.String(), "error") {
-		DeleteTempFile("installer-docker-compose.yaml")
+		DeleteTempFile(tempFilePath)
 		os.Exit(1)
 	}
 
 	if strings.Contains(output.String(), "The image for the service you're trying to recreate has been removed") {
-		DeleteTempFile("installer-docker-compose.yaml")
+		DeleteTempFile(tempFilePath)
 		os.Exit(1)
 	}
 }
@@ -163,7 +173,6 @@ func PullImage(image string, jsonOutput bool) {
 	codewindOut, err = cli.ImagePull(ctx, image, types.ImagePullOptions{})
 
 	errors.CheckErr(err, 100, "")
-
 	if jsonOutput == true {
 		defer codewindOut.Close()
 		io.Copy(os.Stdout, codewindOut)
@@ -314,7 +323,10 @@ func RemoveNetwork(network types.NetworkResource) {
 
 // GetPFEHostAndPort will return the current hostname and port that PFE is running on
 func GetPFEHostAndPort() (string, string) {
-	if CheckContainerStatus() {
+	// on Che, can assume PFE is always on localhost:9090
+	if os.Getenv("CHE_API_EXTERNAL") != "" {
+		return "localhost", "9090"
+	} else if CheckContainerStatus() {
 		containerList := GetContainerList()
 		for _, container := range containerList {
 			if strings.HasPrefix(container.Image, "codewind-pfe") {

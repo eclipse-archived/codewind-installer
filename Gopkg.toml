@@ -22,6 +22,18 @@
 #   go-tests = true
 #   unused-packages = true
 
+[[override]]
+  name = "github.com/docker/docker"
+  source = "https://github.com/docker/engine"
+  version = "19.03.3"
+
+[[constraint]]
+  name = "github.com/openshift/api"
+  branch = "release-4.4"
+
+[[constraint]]
+  name = "github.com/openshift/client-go"
+  branch = "release-4.4"
 
 [prune]
   go-tests = true

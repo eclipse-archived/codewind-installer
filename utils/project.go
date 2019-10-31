@@ -17,6 +17,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/eclipse/codewind-installer/errors"
@@ -34,28 +35,23 @@ type CWSettings struct {
 	MavenProperties   []string `json:"mavenProperties,omitempty"`
 }
 
-// DetermineProjectInfo returns the language and build-type of a project, as well as if it's an Appsody project
-func DetermineProjectInfo(projectPath string) (string, string, bool) {
-	language, buildType, isAppsody := "unknown", "docker", false
+// DetermineProjectInfo returns the language and build-type of a project
+func DetermineProjectInfo(projectPath string) (string, string) {
+	language, buildType := "unknown", "docker"
 	if PathExists(path.Join(projectPath, "pom.xml")) {
 		language = "java"
 		buildType = determineJavaBuildType(projectPath)
-	}
-	if PathExists(path.Join(projectPath, "package.json")) {
+	} else if PathExists(path.Join(projectPath, "package.json")) {
 		language = "nodejs"
 		buildType = "nodejs"
-	}
-	if PathExists(path.Join(projectPath, "Package.swift")) {
+	} else if PathExists(path.Join(projectPath, "Package.swift")) {
 		language = "swift"
 		buildType = "swift"
+	} else {
+		language = determineProjectLanguage(projectPath)
+		buildType = "docker"
 	}
-	if PathExists(path.Join(projectPath, "stack.yaml")) {
-		isAppsody = true
-	}
-	if PathExists(path.Join(projectPath, ".appsody-config.yaml")) {
-		isAppsody = true
-	}
-	return language, buildType, isAppsody
+	return language, buildType
 }
 
 // CheckProjectPath will stop the process and return an error if path does not
@@ -81,10 +77,33 @@ func determineJavaBuildType(projectPath string) string {
 	if strings.Contains(pomXMLString, "<groupId>org.springframework.boot</groupId>") {
 		return "spring"
 	}
-	if strings.Contains(pomXMLString, "<groupId>org.eclipse.microprofile</groupId>") {
+	pathToDockerfile := path.Join(projectPath, "Dockerfile")
+	dockerfileContents, err := ioutil.ReadFile(pathToDockerfile)
+	dockerfileString := string(dockerfileContents)
+	if strings.Contains(dockerfileString, "FROM websphere-liberty") {
 		return "liberty"
 	}
 	return "docker"
+}
+
+func determineProjectLanguage(projectPath string) string {
+	projectFiles, err := ioutil.ReadDir(projectPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, file := range projectFiles {
+		if !file.IsDir() {
+			switch filepath.Ext(file.Name()) {
+			case ".py":
+				return "python"
+			case ".go":
+				return "go"
+			default:
+				continue
+			}
+		}
+	}
+	return "unknown"
 }
 
 // WriteNewCwSettings writes a default .cw-settings file to the given path,
@@ -92,7 +111,7 @@ func determineJavaBuildType(projectPath string) string {
 func WriteNewCwSettings(pathToCwSettings string, BuildType string) {
 	defaultCwSettings := getDefaultCwSettings()
 	cwSettings := addNonDefaultFieldsToCwSettings(defaultCwSettings, BuildType)
-	settings, err := json.MarshalIndent(cwSettings, "", "")
+	settings, err := json.MarshalIndent(cwSettings, "", "  ")
 	errors.CheckErr(err, 203, "")
 	// File permission 0644 grants read and write access to the owner
 	err = ioutil.WriteFile(pathToCwSettings, settings, 0644)
