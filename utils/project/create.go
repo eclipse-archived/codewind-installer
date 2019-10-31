@@ -96,9 +96,9 @@ func checkIsExtension(projectPath string, c *cli.Context) (string, error) {
 	// but only if url was not given
 	if c.String("u") == "" && c.String("t") != "" {
 		parts := strings.Split(c.String("t"), ":")
-		params["type"] = parts[0]
+		params["$type"] = parts[0]
 		if len(parts) > 1 {
-			params["subtype"] = parts[1]
+			params["$subtype"] = parts[1]
 		}
 		commandName = "postProjectValidateWithType"
 	}
@@ -109,7 +109,7 @@ func checkIsExtension(projectPath string, c *cli.Context) (string, error) {
 
 		if len(params) > 0 {
 			// check if extension project type matched the hinted type
-			isMatch = extension.ProjectType == params["type"]
+			isMatch = extension.ProjectType == params["$type"]
 		} else {
 			// check if project contains the detection file an extension defines
 			isMatch = extension.Detection != "" && utils.PathExists(path.Join(projectPath, extension.Detection))

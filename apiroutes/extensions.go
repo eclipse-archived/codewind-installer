@@ -20,17 +20,8 @@ import (
 	"github.com/eclipse/codewind-installer/utils"
 )
 
-type (
-	// Extension represents a project extension defined by codewind.yaml
-	Extension struct {
-		ProjectType string                   `json:"projectType"`
-		Detection   string                   `json:"detection"`
-		Commands    []utils.ExtensionCommand `json:"commands"`
-	}
-)
-
 // GetExtensions gets project extensions from PFE's REST API.
-func GetExtensions() ([]Extension, error) {
+func GetExtensions() ([]utils.Extension, error) {
 	resp, err := http.Get(config.PFEApiRoute() + "extensions")
 	if err != nil {
 		return nil, err
@@ -43,7 +34,7 @@ func GetExtensions() ([]Extension, error) {
 		return nil, err
 	}
 
-	var extensions []Extension
+	var extensions []utils.Extension
 	json.Unmarshal(byteArray, &extensions)
 
 	return extensions, nil

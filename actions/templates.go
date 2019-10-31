@@ -17,24 +17,8 @@ import (
 	"log"
 
 	"github.com/eclipse/codewind-installer/apiroutes"
+	"github.com/eclipse/codewind-installer/utils"
 	"github.com/urfave/cli"
-)
-
-type (
-	// Template represents a project template.
-	Template struct {
-		Label       string `json:"label"`
-		Description string `json:"description"`
-		Language    string `json:"language"`
-		URL         string `json:"url"`
-		ProjectType string `json:"projectType"`
-	}
-
-	// TemplateRepo represents a template repository.
-	TemplateRepo struct {
-		Description string `json:"description"`
-		URL         string `json:"url"`
-	}
 )
 
 // ListTemplates lists project templates of which Codewind is aware.
@@ -73,8 +57,9 @@ func ListTemplateRepos() {
 
 // AddTemplateRepo adds the provided template repo to PFE.
 func AddTemplateRepo(c *cli.Context) {
+	url := c.String("url")
 	repos, err := apiroutes.AddTemplateRepo(
-		c.String("URL"),
+		url,
 		c.String("description"),
 		c.String("name"),
 	)
@@ -82,12 +67,24 @@ func AddTemplateRepo(c *cli.Context) {
 		log.Printf("Error adding template repo: %q", err)
 		return
 	}
+	extensions, err := apiroutes.GetExtensions()
+	if err == nil {
+		utils.OnAddTemplateRepo(extensions, url, repos)
+	}
 	PrettyPrintJSON(repos)
 }
 
 // DeleteTemplateRepo deletes the provided template repo from PFE.
 func DeleteTemplateRepo(c *cli.Context) {
-	repos, err := apiroutes.DeleteTemplateRepo(c.String("URL"))
+	url := c.String("url")
+	extensions, err := apiroutes.GetExtensions()
+	if err == nil {
+		repos, err2 := apiroutes.GetTemplateRepos()
+		if err2 == nil {
+			utils.OnDeleteTemplateRepo(extensions, url, repos)
+		}
+	}
+	repos, err := apiroutes.DeleteTemplateRepo(url)
 	if err != nil {
 		log.Printf("Error deleting template repo: %q", err)
 		return
