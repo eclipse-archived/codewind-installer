@@ -176,7 +176,7 @@ func TestRetrieveIgnoredPathsList(t *testing.T) {
 			shouldBeIgnored:       nil,
 			shouldBeIgnoredLength: 0,
 		},
-		"success case: calling on a path that does exist and is valid JSON but doesn't contain ignnoredPaths": {
+		"success case: calling on a path that does exist and is valid JSON but doesn't contain ignoredPaths": {
 			projectPath:           cwSettingsNoIgnoredPathsObject,
 			shouldBeIgnored:       nil,
 			shouldBeIgnoredLength: 0,
