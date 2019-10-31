@@ -30,6 +30,7 @@ import (
 
 	"github.com/eclipse/codewind-installer/errors"
 	"github.com/google/go-github/github"
+	"gopkg.in/yaml.v3"
 )
 
 // CreateTempFile in the same directory as the binary for docker compose
@@ -48,9 +49,29 @@ func CreateTempFile(filePath string) bool {
 	return false
 }
 
-func WriteToTempFile(tempFilePath string, marshalledData []byte) {
-	err := ioutil.WriteFile(tempFilePath, marshalledData, 0644)
+// WriteToComposeFile the contents of the docker compose yaml
+func WriteToComposeFile(tempFilePath string, debug bool) bool {
+	if tempFilePath == "" {
+		return false
+	}
+
+	dataStruct := Compose{}
+
+	unmarshDataErr := yaml.Unmarshal([]byte(data), &dataStruct)
+	errors.CheckErr(unmarshDataErr, 202, "")
+
+	marshalledData, err := yaml.Marshal(&dataStruct)
+	errors.CheckErr(err, 203, "")
+
+	if debug == true {
+		fmt.Printf("==> %s structure is: \n%s\n\n", tempFilePath, string(marshalledData))
+	} else {
+		fmt.Println("==> environment structure written to " + tempFilePath)
+	}
+
+	err = ioutil.WriteFile(tempFilePath, marshalledData, 0644)
 	errors.CheckErr(err, 204, "")
+	return true
 }
 
 // DeleteTempFile once the the Codewind environment has been created
