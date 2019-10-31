@@ -26,7 +26,7 @@ import (
 )
 
 // DispatchHTTPRequest : perform an HTTP request with token based authentication
-// Returns: BodyByteArray,  HTTP Status Code, HTTPSecError
+// Returns: HTTPResponse, HTTPSecError
 func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Request, username string, connectionID string) (*http.Response, *HTTPSecError) {
 
 	logr.SetLevel(logr.TraceLevel)
@@ -51,7 +51,7 @@ func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Requ
 		return nil, &HTTPSecError{errOpNoConnection, conErr.Err, conErr.Desc}
 	}
 
-	// Get the current  access token from the keychain
+	// Get the current access token from the keychain
 	logr.Debugf("Retrieving an access token from the keychain")
 	conID := strings.TrimSpace(strings.ToLower(connectionID))
 	accessToken, _ := keyring.Get(security.KeyringServiceName+"."+conID, "access_token")
@@ -110,7 +110,7 @@ func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Requ
 	tokens, secError := security.SecAuthenticate(http.DefaultClient, c, "", "")
 	if secError != nil {
 		// Bailing out, user cant authenticate
-		logr.Debugf("Bailing out, user cant authenticate")
+		logr.Debugf("Bailing out, user can not authenticate")
 		return nil, &HTTPSecError{errOpAuthFailed, secError.Err, secError.Desc}
 	}
 
@@ -143,10 +143,7 @@ func sendRequest(httpClient utils.HTTPClient, originalRequest *http.Request, acc
 	res, err := httpClient.Do(originalRequest)
 	if err != nil {
 		logr.Debugf("sendRequest: REQUEST FAILED")
-		//return nil, statusCode, &HTTPSecError{errOpNoConnection, err, err.Error()}
 		return nil, &HTTPSecError{errOpNoConnection, err, err.Error()}
 	}
-	// defer res.Body.Close()
-	// body, err := ioutil.ReadAll(res.Body)
 	return res, nil
 }
