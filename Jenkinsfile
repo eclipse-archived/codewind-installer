@@ -11,7 +11,7 @@ kind: Pod
 spec:
   containers:
   - name: go
-    image: golang:1.11-stretch
+    image: golang:1.13.3-stretch
     tty: true
     command:
     - cat
