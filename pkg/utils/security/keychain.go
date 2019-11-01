@@ -15,7 +15,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/eclipse/codewind-installer/utils/connections"
+	"github.com/eclipse/codewind-installer/pkg/utils/connections"
 	"github.com/zalando/go-keyring"
 )
 

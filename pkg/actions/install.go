@@ -20,9 +20,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/eclipse/codewind-installer/utils"
-	"github.com/eclipse/codewind-installer/utils/project"
-	"github.com/eclipse/codewind-installer/utils/remote"
+	"github.com/eclipse/codewind-installer/pkg/utils"
+	"github.com/eclipse/codewind-installer/pkg/utils/project"
+	"github.com/eclipse/codewind-installer/pkg/utils/remote"
 	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )

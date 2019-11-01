@@ -14,7 +14,7 @@ package apiroutes
 import (
 	"net/http"
 
-	"github.com/eclipse/codewind-installer/utils"
+	"github.com/eclipse/codewind-installer/pkg/utils"
 )
 
 // IsPFEReady : Get PFE Ready for connection

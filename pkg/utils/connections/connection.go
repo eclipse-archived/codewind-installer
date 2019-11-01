@@ -21,8 +21,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/eclipse/codewind-installer/apiroutes"
-	"github.com/eclipse/codewind-installer/utils"
+	"github.com/eclipse/codewind-installer/pkg/apiroutes"
+	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/urfave/cli"
 )
 
@@ -291,7 +291,6 @@ func applySchemaUpdates() *ConError {
 			if err != nil {
 				return &ConError{errOpFileParse, err, err.Error()}
 			}
-
 
 			newConnectionConfig.SchemaVersion = 1
 

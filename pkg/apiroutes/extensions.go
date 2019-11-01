@@ -17,7 +17,7 @@ import (
 	"net/http"
 
 	"github.com/eclipse/codewind-installer/config"
-	"github.com/eclipse/codewind-installer/utils"
+	"github.com/eclipse/codewind-installer/pkg/utils"
 )
 
 // GetExtensions gets project extensions from PFE's REST API.

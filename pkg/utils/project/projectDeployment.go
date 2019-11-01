@@ -22,7 +22,7 @@ import (
 
 	"github.com/eclipse/codewind-installer/config"
 
-	"github.com/eclipse/codewind-installer/utils/connections"
+	"github.com/eclipse/codewind-installer/pkg/utils/connections"
 )
 
 // ConnectionFile : Structure of the project-connections file

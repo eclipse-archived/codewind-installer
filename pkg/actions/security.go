@@ -18,8 +18,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/eclipse/codewind-installer/utils"
-	"github.com/eclipse/codewind-installer/utils/security"
+	"github.com/eclipse/codewind-installer/pkg/utils"
+	"github.com/eclipse/codewind-installer/pkg/utils/security"
 	"github.com/urfave/cli"
 )
 

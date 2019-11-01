@@ -22,9 +22,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/eclipse/codewind-installer/apiroutes"
-	"github.com/eclipse/codewind-installer/errors"
-	"github.com/eclipse/codewind-installer/utils"
+	"github.com/eclipse/codewind-installer/pkg/apiroutes"
+	"github.com/eclipse/codewind-installer/pkg/errors"
+	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/urfave/cli"
 )
 

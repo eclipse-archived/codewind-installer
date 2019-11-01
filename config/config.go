@@ -14,7 +14,7 @@ package config
 import (
 	"os"
 
-	"github.com/eclipse/codewind-installer/utils"
+	"github.com/eclipse/codewind-installer/pkg/utils"
 )
 
 // PFEHost is the host at which PFE is running, e.g. "127.0.0.1:9090"

@@ -15,7 +15,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/eclipse/codewind-installer/utils"
+	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/urfave/cli"
 )
 

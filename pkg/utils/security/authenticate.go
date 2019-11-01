@@ -18,8 +18,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/eclipse/codewind-installer/utils"
-	"github.com/eclipse/codewind-installer/utils/connections"
+	"github.com/eclipse/codewind-installer/pkg/utils"
+	"github.com/eclipse/codewind-installer/pkg/utils/connections"
 	"github.com/urfave/cli"
 )
 

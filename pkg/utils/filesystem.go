@@ -28,7 +28,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/eclipse/codewind-installer/errors"
+	"github.com/eclipse/codewind-installer/pkg/errors"
 	"github.com/google/go-github/github"
 	"gopkg.in/yaml.v3"
 )

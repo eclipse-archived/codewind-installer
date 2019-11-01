@@ -16,8 +16,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/eclipse/codewind-installer/apiroutes"
-	"github.com/eclipse/codewind-installer/utils"
+	"github.com/eclipse/codewind-installer/pkg/apiroutes"
+	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/urfave/cli"
 )
 

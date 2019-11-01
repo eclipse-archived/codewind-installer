@@ -20,7 +20,7 @@ import (
 	"net/url"
 
 	"github.com/eclipse/codewind-installer/config"
-	"github.com/eclipse/codewind-installer/utils"
+	"github.com/eclipse/codewind-installer/pkg/utils"
 )
 
 type (

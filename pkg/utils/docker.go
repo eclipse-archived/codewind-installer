@@ -28,7 +28,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
-	"github.com/eclipse/codewind-installer/errors"
+	"github.com/eclipse/codewind-installer/pkg/errors"
 )
 
 // codewind-docker-compose.yaml data

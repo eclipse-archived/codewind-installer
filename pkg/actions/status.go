@@ -18,9 +18,9 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/eclipse/codewind-installer/apiroutes"
-	"github.com/eclipse/codewind-installer/utils"
-	"github.com/eclipse/codewind-installer/utils/connections"
+	"github.com/eclipse/codewind-installer/pkg/apiroutes"
+	"github.com/eclipse/codewind-installer/pkg/utils"
+	"github.com/eclipse/codewind-installer/pkg/utils/connections"
 	"github.com/urfave/cli"
 )
 

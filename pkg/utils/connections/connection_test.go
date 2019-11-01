@@ -20,7 +20,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/eclipse/codewind-installer/apiroutes"
+	"github.com/eclipse/codewind-installer/pkg/apiroutes"
 	"github.com/stretchr/testify/assert"
 	"github.com/urfave/cli"
 )

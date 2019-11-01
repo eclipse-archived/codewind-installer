@@ -16,7 +16,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/eclipse/codewind-installer/errors"
+	"github.com/eclipse/codewind-installer/pkg/errors"
 
 	"github.com/urfave/cli"
 )

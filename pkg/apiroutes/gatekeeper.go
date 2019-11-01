@@ -16,7 +16,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/eclipse/codewind-installer/utils"
+	"github.com/eclipse/codewind-installer/pkg/utils"
 )
 
 // GatekeeperEnvironment : Codewind Gatekeeper Environment
