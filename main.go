@@ -12,11 +12,24 @@
 package main
 
 import (
+	"crypto/tls"
+	"net/http"
+	"os"
+
 	"github.com/eclipse/codewind-installer/actions"
 	"github.com/eclipse/codewind-installer/utils/connections"
 )
 
 func main() {
 	connections.InitConfigFileIfRequired()
+	cheInit()
 	actions.Commands()
+}
+
+func cheInit() {
+	val, ok := os.LookupEnv("CHE_API_EXTERNAL")
+
+	if ok && (val != "") {
+		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	}
 }
