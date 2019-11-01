@@ -16,8 +16,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/eclipse/codewind-installer/actions"
-	"github.com/eclipse/codewind-installer/utils/connections"
+	"github.com/eclipse/codewind-installer/pkg/actions"
+	"github.com/eclipse/codewind-installer/pkg/utils/connections"
 )
 
 func main() {
