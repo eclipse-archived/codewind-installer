@@ -12,6 +12,8 @@
 package config
 
 import (
+	"crypto/tls"
+	"net/http"
 	"os"
 
 	"github.com/eclipse/codewind-installer/utils"
@@ -28,6 +30,7 @@ func PFEOrigin() string {
 	val, ok := os.LookupEnv("CHE_API_EXTERNAL")
 
 	if ok && (val != "") {
+		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 		return "https://" + PFEHost()
 	}
 
