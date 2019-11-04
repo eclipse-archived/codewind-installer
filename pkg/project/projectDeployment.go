@@ -103,7 +103,7 @@ func GetConnectionURL(projectID string) (string, *ProjectError) {
 	}
 
 	if conID == "local" {
-		return config.PFEApiRoute(), nil
+		return config.PFEOrigin(), nil
 	}
 	return projectConInfo.URL, nil
 }

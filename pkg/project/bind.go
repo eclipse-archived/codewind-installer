@@ -90,11 +90,11 @@ func Bind(projectPath string, name string, language string, projectType string, 
 	json.NewEncoder(buf).Encode(bindRequest)
 
 	// use the given connectionID to call api/v1/bind/start
-	conURL := config.PFEApiRoute()
+	conURL := config.PFEOrigin()
 	if conInfo.ID != "local" {
 		conURL = conInfo.URL
 	}
-	bindURL := conURL + "projects/bind/start"
+	bindURL := conURL + "/api/v1/projects/bind/start"
 
 	client := &http.Client{}
 
@@ -153,7 +153,7 @@ func Bind(projectPath string, name string, language string, projectType string, 
 }
 
 func completeBind(projectID string, conURL string) (string, int) {
-	uploadEndURL := conURL + "projects/" + projectID + "/bind/end"
+	uploadEndURL := conURL + "/api/v1/projects/" + projectID + "/bind/end"
 
 	payload := &BindEndRequest{ProjectID: projectID}
 	jsonPayload, _ := json.Marshal(payload)

@@ -87,7 +87,7 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	if conInfo.ID != "local" {
 		conURL = conInfo.URL
 	} else {
-		conURL = config.PFEApiRoute()
+		conURL = config.PFEOrigin()
 	}
 
 	// Sync all the necessary project files
@@ -108,7 +108,7 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 	var modifiedList []string
 	var uploadedFiles []UploadedFile
 
-	projectUploadURL := conURL + "projects/" + projectID + "/upload"
+	projectUploadURL := conURL + "/api/v1/projects/" + projectID + "/upload"
 	client := &http.Client{}
 
 	cwSettingsIgnoredPathsList := retrieveIgnoredPathsList(projectPath)
@@ -194,7 +194,7 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 }
 
 func completeUpload(projectID string, files []string, modfiles []string, conURL string, timestamp int64) (string, int) {
-	uploadEndURL := conURL + "projects/" + projectID + "/upload/end"
+	uploadEndURL := conURL + "/api/v1/projects/" + projectID + "/upload/end"
 
 	payload := &CompleteRequest{FileList: files, ModifiedList: modfiles, TimeStamp: timestamp}
 	jsonPayload, _ := json.Marshal(payload)

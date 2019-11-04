@@ -55,7 +55,7 @@ type (
 // GetTemplates gets project templates from PFE's REST API.
 // Filter them using the function arguments
 func GetTemplates(projectStyle string, showEnabledOnly bool) ([]Template, error) {
-	req, err := http.NewRequest("GET", config.PFEApiRoute()+"templates", nil)
+	req, err := http.NewRequest("GET", config.PFEOrigin()+"/api/v1/templates", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func GetTemplates(projectStyle string, showEnabledOnly bool) ([]Template, error)
 
 // GetTemplateStyles gets all template styles from PFE's REST API
 func GetTemplateStyles() ([]string, error) {
-	resp, err := http.Get(config.PFEApiRoute() + "templates/styles")
+	resp, err := http.Get(config.PFEOrigin() + "/api/v1/templates/styles")
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +107,7 @@ func GetTemplateStyles() ([]string, error) {
 
 // GetTemplateRepos gets all template repos from PFE's REST API
 func GetTemplateRepos() ([]utils.TemplateRepo, error) {
-	resp, err := http.Get(config.PFEApiRoute() + "templates/repositories")
+	resp, err := http.Get(config.PFEOrigin() + "/api/v1/templates/repositories")
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +140,7 @@ func AddTemplateRepo(URL, description string, name string) ([]utils.TemplateRepo
 	jsonValue, _ := json.Marshal(values)
 
 	resp, err := http.Post(
-		config.PFEApiRoute()+"templates/repositories",
+		config.PFEOrigin()+"/api/v1/templates/repositories",
 		"application/json",
 		bytes.NewBuffer(jsonValue),
 	)
@@ -176,7 +176,7 @@ func DeleteTemplateRepo(URL string) ([]utils.TemplateRepo, error) {
 
 	req, err := http.NewRequest(
 		"DELETE",
-		config.PFEApiRoute()+"templates/repositories",
+		config.PFEOrigin()+"/api/v1/templates/repositories",
 		bytes.NewBuffer(jsonValue),
 	)
 	req.Header.Set("Content-Type", "application/json")
@@ -274,7 +274,7 @@ func BatchPatchTemplateRepos(operations []RepoOperation) ([]SubResponseFromBatch
 
 	req, err := http.NewRequest(
 		"PATCH",
-		config.PFEApiRoute()+"batch/templates/repositories",
+		config.PFEOrigin()+"/api/v1/batch/templates/repositories",
 		bytes.NewBuffer(jsonValue),
 	)
 	req.Header.Set("Content-Type", "application/json")
