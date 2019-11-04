@@ -17,9 +17,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/eclipse/codewind-installer/pkg/connections"
+	"github.com/eclipse/codewind-installer/pkg/security"
 	"github.com/eclipse/codewind-installer/pkg/utils"
-	"github.com/eclipse/codewind-installer/pkg/utils/connections"
-	"github.com/eclipse/codewind-installer/pkg/utils/security"
 	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	"github.com/zalando/go-keyring"

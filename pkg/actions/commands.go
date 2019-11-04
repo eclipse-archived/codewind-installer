@@ -81,6 +81,7 @@ func Commands() {
 						cli.StringFlag{Name: "type, t", Usage: "the type of the project", Required: true},
 						cli.StringFlag{Name: "path, p", Usage: "the path to the project", Required: true},
 						cli.StringFlag{Name: "conid", Usage: "the connection id for the project", Required: false},
+						cli.StringFlag{Name: "username,u", Usage: "Account Username", Required: false},
 					},
 					Action: func(c *cli.Context) error {
 						ProjectBind(c)

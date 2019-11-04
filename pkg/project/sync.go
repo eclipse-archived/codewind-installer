@@ -26,6 +26,7 @@ import (
 
 	"github.com/eclipse/codewind-installer/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
+	"github.com/eclipse/codewind-installer/pkg/sechttp"
 	"github.com/urfave/cli"
 )
 
@@ -61,7 +62,7 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	projectPath := strings.TrimSpace(c.String("path"))
 	projectID := strings.TrimSpace(c.String("id"))
 	synctime := int64(c.Int("time"))
-
+	cliUsername := strings.TrimSpace(strings.ToLower(c.String("username")))
 	_, err := os.Stat(projectPath)
 	if err != nil {
 		return nil, &ProjectError{errBadPath, err, err.Error()}
@@ -91,7 +92,7 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	}
 
 	// Sync all the necessary project files
-	fileList, modifiedList, uploadedFilesList := syncFiles(projectPath, projectID, conURL, synctime)
+	fileList, modifiedList, uploadedFilesList := syncFiles(projectPath, projectID, conURL, synctime, cliUsername, conInfo)
 	// Complete the upload
 	completeStatus, completeStatusCode := completeUpload(projectID, fileList, modifiedList, conURL, synctime)
 	response := SyncResponse{
@@ -103,7 +104,7 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	return &response, nil
 }
 
-func syncFiles(projectPath string, projectID string, conURL string, synctime int64) ([]string, []string, []UploadedFile) {
+func syncFiles(projectPath string, projectID string, conURL string, synctime int64, username string, connection *connections.Connection) ([]string, []string, []UploadedFile) {
 	var fileList []string
 	var modifiedList []string
 	var uploadedFiles []UploadedFile
@@ -165,13 +166,13 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 				// TODO - How do we handle partial success?
 				request, err := http.NewRequest("PUT", projectUploadURL, bytes.NewReader(buf.Bytes()))
 				request.Header.Set("Content-Type", "application/json")
-				resp, err := client.Do(request)
+				resp, httpSecError := sechttp.DispatchHTTPRequest(client, request, username, connection.ID)
 				uploadedFiles = append(uploadedFiles, UploadedFile{
 					FilePath:   relativePath,
 					Status:     resp.Status,
 					StatusCode: resp.StatusCode,
 				})
-				if err != nil {
+				if httpSecError != nil {
 					return nil
 				}
 				defer resp.Body.Close()

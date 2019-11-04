@@ -22,6 +22,7 @@ import (
 
 	"github.com/eclipse/codewind-installer/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
+	"github.com/eclipse/codewind-installer/pkg/sechttp"
 	"github.com/urfave/cli"
 )
 
@@ -54,22 +55,25 @@ type (
 	}
 )
 
+// BindProject : Bind a project
 func BindProject(c *cli.Context) (*BindResponse, *ProjectError) {
 	projectPath := strings.TrimSpace(c.String("path"))
 	Name := strings.TrimSpace(c.String("name"))
 	Language := strings.TrimSpace(c.String("language"))
 	BuildType := strings.TrimSpace(c.String("type"))
+	cliUsername := strings.TrimSpace(strings.ToLower(c.String("username")))
+
 	var conID string
 	if c.String("conid") != "" {
 		conID = strings.TrimSpace(strings.ToLower(c.String("conid")))
 	} else {
 		conID = "local"
 	}
-	return Bind(projectPath, Name, Language, BuildType, conID)
+	return Bind(projectPath, Name, Language, BuildType, cliUsername, conID)
 }
 
 // Bind is used to bind a project for building and running
-func Bind(projectPath string, name string, language string, projectType string, conID string) (*BindResponse, *ProjectError) {
+func Bind(projectPath string, name string, language string, projectType string, username string, conID string) (*BindResponse, *ProjectError) {
 	_, err := os.Stat(projectPath)
 	if err != nil {
 		return nil, &ProjectError{errBadPath, err, err.Error()}
@@ -100,10 +104,9 @@ func Bind(projectPath string, name string, language string, projectType string, 
 
 	request, err := http.NewRequest("POST", bindURL, bytes.NewReader(buf.Bytes()))
 	request.Header.Set("Content-Type", "application/json")
-	resp, err := client.Do(request)
-	if err != nil {
-		bindError := errors.New(textNoCodewind)
-		return nil, &ProjectError{errOpResponse, bindError, bindError.Error()}
+	resp, httpSecError := sechttp.DispatchHTTPRequest(client, request, username, conID)
+	if httpSecError != nil {
+		return nil, &ProjectError{errOpResponse, httpSecError.Err, httpSecError.Desc}
 	}
 
 	switch httpCode := resp.StatusCode; {
@@ -139,10 +142,10 @@ func Bind(projectPath string, name string, language string, projectType string, 
 	}
 
 	// Sync all the project files
-	_, _, uploadedFilesList := syncFiles(projectPath, projectID, conURL, 0)
+	_, _, uploadedFilesList := syncFiles(projectPath, projectID, conURL, 0, username, conInfo)
 
 	// Call bind/end to complete
-	completeStatus, completeStatusCode := completeBind(projectID, conURL)
+	completeStatus, completeStatusCode := completeBind(projectID, conURL, username, conInfo)
 	response := BindResponse{
 		ProjectID:     projectID,
 		UploadedFiles: uploadedFilesList,
@@ -152,15 +155,18 @@ func Bind(projectPath string, name string, language string, projectType string, 
 	return &response, nil
 }
 
-func completeBind(projectID string, conURL string) (string, int) {
+func completeBind(projectID string, conURL string, username string, connection *connections.Connection) (string, int) {
 	uploadEndURL := conURL + "/api/v1/projects/" + projectID + "/bind/end"
 
 	payload := &BindEndRequest{ProjectID: projectID}
 	jsonPayload, _ := json.Marshal(payload)
 
 	// Make the request to end the sync process.
-	resp, err := http.Post(uploadEndURL, "application/json", bytes.NewBuffer(jsonPayload))
-	if err != nil {
+	request, err := http.NewRequest("POST", uploadEndURL, bytes.NewBuffer(jsonPayload))
+	request.Header.Set("Content-Type", "application/json")
+	resp, httpSecError := sechttp.DispatchHTTPRequest(http.DefaultClient, request, username, connection.ID)
+
+	if httpSecError != nil {
 		panic(err)
 	}
 	return resp.Status, resp.StatusCode
