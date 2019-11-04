@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"path"
 	"path/filepath"
@@ -265,7 +266,7 @@ func renameLegacySettings(pathToLegacySettings string, pathToCwSettings string) 
 // writeNewCwSettings writes a default .cw-settings file to the given path,
 // dependant on the build type of the project
 func writeNewCwSettings(pathToCwSettings string, BuildType string) {
-	defaultCwSettings := getDefaultCwSettings()
+	defaultCwSettings := getDefaultCwSettings(BuildType)
 	cwSettings := addNonDefaultFieldsToCwSettings(defaultCwSettings, BuildType)
 	settings, err := json.MarshalIndent(cwSettings, "", "  ")
 	errors.CheckErr(err, 203, "")
@@ -273,13 +274,18 @@ func writeNewCwSettings(pathToCwSettings string, BuildType string) {
 	err = ioutil.WriteFile(pathToCwSettings, settings, 0644)
 }
 
-func getDefaultCwSettings() CWSettings {
+func getDefaultCwSettings(BuildType string) CWSettings {
+	client := &http.Client{}
+	IgnoredPaths, err := apiroutes.GetIgnoredPaths(client, BuildType)
+	if err != nil {
+		log.Fatal(err)
+	}
 	return CWSettings{
 		ContextRoot:  "",
 		InternalPort: "",
 		HealthCheck:  "",
 		IsHTTPS:      false,
-		IgnoredPaths: []string{""},
+		IgnoredPaths: IgnoredPaths,
 	}
 }
 
