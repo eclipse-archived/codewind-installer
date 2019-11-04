@@ -17,6 +17,7 @@ import (
 	"os"
 
 	"github.com/eclipse/codewind-installer/pkg/errors"
+	logr "github.com/sirupsen/logrus"
 
 	"github.com/urfave/cli"
 )
@@ -42,7 +43,11 @@ func Commands() {
 		},
 		cli.BoolFlag{
 			Name:  "json, j",
-			Usage: "ouput as JSON",
+			Usage: "output as JSON",
+		},
+		cli.StringFlag{
+			Name:  "loglevel",
+			Usage: "log level {trace,debug,info,error}",
 		},
 	}
 
@@ -96,6 +101,7 @@ func Commands() {
 						cli.StringFlag{Name: "path, p", Usage: "the path to the project", Required: true},
 						cli.StringFlag{Name: "id, i", Usage: "the project id", Required: true},
 						cli.StringFlag{Name: "time, t", Usage: "time of the last sync for the given project", Required: true},
+						cli.StringFlag{Name: "username,u", Usage: "Account Username", Required: false},
 					},
 					Action: func(c *cli.Context) error {
 						ProjectSync(c)
@@ -220,7 +226,7 @@ func Commands() {
 			Flags: []cli.Flag{
 				cli.BoolFlag{
 					Name:  "json, j",
-					Usage: "ouput as JSON",
+					Usage: "output as JSON",
 				},
 				cli.StringFlag{
 					Name:  "conid",
@@ -645,6 +651,17 @@ func Commands() {
 		// Handle Global flag to disable certificate checking
 		if c.GlobalBool("insecure") {
 			http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		}
+
+		// Handle Global log level flag
+		if c.GlobalString("loglevel") != "" {
+			switch loglevel := c.GlobalString("loglevel"); {
+			case loglevel == "trace":
+				logr.SetLevel(logr.TraceLevel)
+				break
+			}
+		} else {
+			logr.SetLevel(logr.InfoLevel)
 		}
 		return nil
 	}
