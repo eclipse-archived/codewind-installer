@@ -15,8 +15,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -78,7 +78,8 @@ func Bind(projectPath string, name string, language string, projectType string, 
 
 	conInfo, conErr := connections.GetConnectionByID(conID)
 	if conErr != nil {
-		log.Fatalf(conErr.Op)
+		fmt.Printf(conErr.Op)
+		os.Exit(1)
 	}
 
 	bindRequest := BindRequest{
