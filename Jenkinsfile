@@ -11,7 +11,7 @@ kind: Pod
 spec:
   containers:
   - name: go
-    image: golang:1.13.3-stretch
+    image: golang:1.11-stretch
     tty: true
     command:
     - cat
@@ -76,12 +76,15 @@ spec:
                         # now compile the code
                         cd cmd/cli
                         export HOME=$JENKINS_HOME
-                        export GOCACHE=$CODE_DIRECTORY_FOR_GO
+                        # export GOCACHE=$CODE_DIRECTORY_FOR_GO
+                        export GOCACHE="off"
                         export GOARCH=amd64
                         GOOS=darwin go build -ldflags="-s -w" -o cwctl-macos
                         GOOS=windows go build -ldflags="-s -w" -o cwctl-win.exe
                         CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o cwctl-linux
                         chmod -v +x cwctl-*
+                        # jump back up the directories
+                        cd ../../
 
                         # move the built binaries to the top level direcotory
                         mv cwctl-* ../../
