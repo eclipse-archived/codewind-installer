@@ -66,6 +66,7 @@ spec:
                         dep ensure -v
 
                         # now compile the code
+                        cd cmd/cli
                         export HOME=$JENKINS_HOME
                         export GOCACHE="off"
                         export GOARCH=amd64

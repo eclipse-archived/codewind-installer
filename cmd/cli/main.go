@@ -9,32 +9,27 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 
-package config
+package main
 
 import (
+	"crypto/tls"
+	"net/http"
 	"os"
 
-	"github.com/eclipse/codewind-installer/pkg/utils"
+	"github.com/eclipse/codewind-installer/pkg/actions"
+	"github.com/eclipse/codewind-installer/pkg/utils/connections"
 )
 
-// PFEHost is the host at which PFE is running, e.g. "127.0.0.1:9090"
-func PFEHost() string {
-	hostname, port := utils.GetPFEHostAndPort()
-	return hostname + ":" + port
+func main() {
+	connections.InitConfigFileIfRequired()
+	cheInit()
+	actions.Commands()
 }
 
-// PFEOrigin is the origin from which PFE is running, e.g. "http://127.0.0.1:9090"
-func PFEOrigin() string {
+func cheInit() {
 	val, ok := os.LookupEnv("CHE_API_EXTERNAL")
 
 	if ok && (val != "") {
-		return "https://" + PFEHost()
+		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	}
-
-	return "http://" + PFEHost()
-}
-
-// PFEApiRoute is the API route at which the PFE REST API can be accessed, e.g. "http://127.0.0.1:9090/api/v1/"
-func PFEApiRoute() string {
-	return PFEOrigin() + "/api/v1/"
 }
