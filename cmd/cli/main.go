@@ -17,7 +17,7 @@ import (
 	"os"
 
 	"github.com/eclipse/codewind-installer/pkg/actions"
-	"github.com/eclipse/codewind-installer/pkg/utils/connections"
+	"github.com/eclipse/codewind-installer/pkg/connections"
 )
 
 func main() {

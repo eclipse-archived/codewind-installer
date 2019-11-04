@@ -19,8 +19,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/eclipse/codewind-installer/pkg/remote/kube"
 	"github.com/eclipse/codewind-installer/pkg/utils"
-	"github.com/eclipse/codewind-installer/pkg/utils/remote/kube"
 	logr "github.com/sirupsen/logrus"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
