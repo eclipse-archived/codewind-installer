@@ -83,6 +83,7 @@ spec:
                         CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o cwctl-linux
                         chmod -v +x cwctl-*
                         # jump back up the directories
+                        mv cwctl-* ../../
                         cd ../../
 
                         # move the built binaries to the top level direcotory
