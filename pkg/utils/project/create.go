@@ -278,7 +278,8 @@ func getDefaultCwSettings(BuildType string) CWSettings {
 	client := &http.Client{}
 	IgnoredPaths, err := apiroutes.GetIgnoredPaths(client, BuildType)
 	if err != nil {
-		log.Fatal(err)
+		// If error getting the default ignoredPaths, set as empty slice
+		IgnoredPaths = []string{}
 	}
 	return CWSettings{
 		ContextRoot:  "",

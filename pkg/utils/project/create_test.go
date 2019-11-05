@@ -85,7 +85,6 @@ func TestWriteNewCwSettings(t *testing.T) {
 				InternalPort:      "",
 				HealthCheck:       "",
 				IsHTTPS:           false,
-				IgnoredPaths:      []string{""},
 				InternalDebugPort: &defaultInternalDebugPort,
 			},
 		},
@@ -97,7 +96,6 @@ func TestWriteNewCwSettings(t *testing.T) {
 				InternalPort:      "",
 				HealthCheck:       "",
 				IsHTTPS:           false,
-				IgnoredPaths:      []string{""},
 				InternalDebugPort: &defaultInternalDebugPort,
 				MavenProfiles:     []string{""},
 				MavenProperties:   []string{""},
@@ -111,7 +109,6 @@ func TestWriteNewCwSettings(t *testing.T) {
 				InternalPort:      "",
 				HealthCheck:       "",
 				IsHTTPS:           false,
-				IgnoredPaths:      []string{""},
 				InternalDebugPort: &defaultInternalDebugPort,
 				MavenProfiles:     []string{""},
 				MavenProperties:   []string{""},
@@ -125,7 +122,6 @@ func TestWriteNewCwSettings(t *testing.T) {
 				InternalPort: "",
 				HealthCheck:  "",
 				IsHTTPS:      false,
-				IgnoredPaths: []string{""},
 			},
 		},
 		"success case: python project": {
@@ -136,7 +132,6 @@ func TestWriteNewCwSettings(t *testing.T) {
 				InternalPort: "",
 				HealthCheck:  "",
 				IsHTTPS:      false,
-				IgnoredPaths: []string{""},
 			},
 		},
 		"success case: go project": {
@@ -147,7 +142,6 @@ func TestWriteNewCwSettings(t *testing.T) {
 				InternalPort: "",
 				HealthCheck:  "",
 				IsHTTPS:      false,
-				IgnoredPaths: []string{""},
 			},
 		},
 	}
@@ -156,8 +150,10 @@ func TestWriteNewCwSettings(t *testing.T) {
 			writeNewCwSettings(test.inProjectPath, test.inBuildType)
 
 			cwSettings := readCwSettings(test.inProjectPath)
-			assert.Equal(t, test.wantCwSettings, cwSettings)
-
+			assert.Equal(t, cwSettings.ContextRoot, test.wantCwSettings.ContextRoot)
+			assert.Equal(t, cwSettings.InternalPort, test.wantCwSettings.InternalPort)
+			assert.Equal(t, cwSettings.HealthCheck, test.wantCwSettings.HealthCheck)
+			assert.Equal(t, cwSettings.IsHTTPS, test.wantCwSettings.IsHTTPS)
 			os.Remove(test.inProjectPath)
 		})
 	}
