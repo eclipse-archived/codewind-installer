@@ -154,6 +154,15 @@ func TestWriteNewCwSettings(t *testing.T) {
 			assert.Equal(t, cwSettings.InternalPort, test.wantCwSettings.InternalPort)
 			assert.Equal(t, cwSettings.HealthCheck, test.wantCwSettings.HealthCheck)
 			assert.Equal(t, cwSettings.IsHTTPS, test.wantCwSettings.IsHTTPS)
+			if test.wantCwSettings.InternalDebugPort != nil {
+				assert.Equal(t, cwSettings.InternalDebugPort, test.wantCwSettings.InternalDebugPort)
+			}
+			if test.wantCwSettings.MavenProfiles != nil {
+				assert.Equal(t, cwSettings.MavenProfiles, test.wantCwSettings.MavenProfiles)
+			}
+			if test.wantCwSettings.MavenProperties != nil {
+				assert.Equal(t, cwSettings.MavenProperties, test.wantCwSettings.MavenProperties)
+			}
 			os.Remove(test.inProjectPath)
 		})
 	}

@@ -17,28 +17,26 @@ import (
 	"net/http"
 
 	"github.com/eclipse/codewind-installer/config"
-	"github.com/eclipse/codewind-installer/utils"
+	"github.com/eclipse/codewind-installer/pkg/utils"
 )
 
-type IgnoredFiles []string
+// IgnoredPaths is the list of paths to ignore, when syncing a project
+type IgnoredPaths []string
 
 // GetIgnoredPaths calls pfe to get the default ignoredPaths for that projectType
-func GetIgnoredPaths(httpClient utils.HTTPClient, projectType string) (IgnoredFiles, error) {
+func GetIgnoredPaths(httpClient utils.HTTPClient, projectType string) (IgnoredPaths, error) {
 	client := &http.Client{}
 
 	req, err := http.NewRequest("GET", config.PFEOrigin()+"/api/v1/ignoredPaths", nil)
-
 	if err != nil {
 		return nil, err
 	}
 
 	q := req.URL.Query()
 	q.Add("projectType", projectType)
-
 	req.URL.RawQuery = q.Encode()
 
 	resp, err := client.Do(req)
-
 	if err != nil {
 		return nil, err
 	}
@@ -48,10 +46,11 @@ func GetIgnoredPaths(httpClient utils.HTTPClient, projectType string) (IgnoredFi
 	if err != nil {
 		return nil, err
 	}
-	var ignoredFiles IgnoredFiles
-	err = json.Unmarshal(byteArray, &ignoredFiles)
+
+	var ignoredPaths IgnoredPaths
+	err = json.Unmarshal(byteArray, &ignoredPaths)
 	if err != nil {
 		return nil, err
 	}
-	return ignoredFiles, nil
+	return ignoredPaths, nil
 }
