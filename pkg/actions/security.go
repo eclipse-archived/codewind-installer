@@ -30,6 +30,7 @@ func SecurityTokenGet(c *cli.Context) {
 		utils.PrettyPrintJSON(auth)
 	} else {
 		fmt.Println(err.Error())
+		os.Exit(1)
 	}
 	os.Exit(0)
 }
@@ -39,6 +40,7 @@ func SecurityCreateRealm(c *cli.Context) {
 	err := security.SecRealmCreate(c)
 	if err != nil {
 		fmt.Println(err.Error())
+		os.Exit(1)
 	} else {
 		utils.PrettyPrintJSON(security.Result{Status: "OK"})
 	}
@@ -50,6 +52,7 @@ func SecurityClientCreate(c *cli.Context) {
 	err := security.SecClientCreate(c)
 	if err != nil {
 		fmt.Println(err.Error())
+		os.Exit(1)
 	} else {
 		utils.PrettyPrintJSON(security.Result{Status: "OK"})
 	}
@@ -61,14 +64,14 @@ func SecurityClientGet(c *cli.Context) {
 	registeredClient, err := security.SecClientGet(c)
 	if err != nil {
 		fmt.Println(err.Error())
-		os.Exit(0)
+		os.Exit(1)
 	}
 	if registeredClient != nil {
 		utils.PrettyPrintJSON(registeredClient)
 		os.Exit(0)
 	}
 	utils.PrettyPrintJSON(security.Result{Status: "Not found"})
-	os.Exit(0)
+	os.Exit(1)
 }
 
 // SecurityClientGetSecret : Retrieve a client secret from Keycloak
@@ -76,14 +79,14 @@ func SecurityClientGetSecret(c *cli.Context) {
 	registeredClientSecret, err := security.SecClientGetSecret(c)
 	if err != nil {
 		fmt.Println(err.Error())
-		os.Exit(0)
+		os.Exit(1)
 	}
 	if registeredClientSecret != nil {
 		utils.PrettyPrintJSON(registeredClientSecret)
 		os.Exit(0)
 	}
 	utils.PrettyPrintJSON(security.Result{Status: "Not found"})
-	os.Exit(0)
+	os.Exit(1)
 }
 
 // SecurityUserCreate : Create a user in a Keycloak realm
@@ -91,6 +94,7 @@ func SecurityUserCreate(c *cli.Context) {
 	err := security.SecUserCreate(c)
 	if err != nil {
 		fmt.Println(err.Error())
+		os.Exit(1)
 	} else {
 		utils.PrettyPrintJSON(security.Result{Status: "OK"})
 	}
@@ -102,14 +106,14 @@ func SecurityUserGet(c *cli.Context) {
 	registeredUser, err := security.SecUserGet(c)
 	if err != nil {
 		fmt.Println(err.Error())
-		os.Exit(0)
+		os.Exit(1)
 	}
 	if registeredUser != nil {
 		utils.PrettyPrintJSON(registeredUser)
 		os.Exit(0)
 	}
 	utils.PrettyPrintJSON(security.Result{Status: "Not found"})
-	os.Exit(0)
+	os.Exit(1)
 }
 
 // SecurityUserSetPassword : Set a users password in Keycloak
@@ -117,7 +121,7 @@ func SecurityUserSetPassword(c *cli.Context) {
 	err := security.SecUserSetPW(c)
 	if err != nil {
 		fmt.Println(err.Error())
-		os.Exit(0)
+		os.Exit(1)
 	}
 	utils.PrettyPrintJSON(security.Result{Status: "OK"})
 	os.Exit(0)
@@ -131,7 +135,7 @@ func SecurityKeyUpdate(c *cli.Context) {
 	err := security.SecKeyUpdate(connectionID, username, password)
 	if err != nil {
 		fmt.Println(err.Error())
-		os.Exit(0)
+		os.Exit(1)
 	}
 	response, _ := json.Marshal(security.Result{Status: "OK"})
 	fmt.Println(string(response))
@@ -145,7 +149,7 @@ func SecurityKeyValidate(c *cli.Context) {
 	_, err := security.SecKeyGetSecret(connectionID, username)
 	if err != nil {
 		fmt.Println(err.Error())
-		os.Exit(0)
+		os.Exit(1)
 	}
 	response, _ := json.Marshal(security.Result{Status: "OK"})
 	fmt.Println(string(response))
