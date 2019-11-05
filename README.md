@@ -5,6 +5,7 @@ Prebuilt binary files are available for download [on Eclipse](https://download.e
 
 [![License](https://img.shields.io/badge/License-EPL%202.0-red.svg?label=license&logo=eclipse)](https://www.eclipse.org/legal/epl-2.0/)
 [![Build Status](https://ci.eclipse.org/codewind/buildStatus/icon?job=Codewind%2Fcodewind-installer%2Fmaster)](https://ci.eclipse.org/codewind/job/Codewind/job/codewind-installer/job/master/)
+[![Chat](https://img.shields.io/static/v1.svg?label=chat&message=mattermost&color=145dbf)](https://mattermost.eclipse.org/eclipse/channels/eclipse-codewind)
 
 ## Before starting
 
@@ -82,23 +83,23 @@ $ brew upgrade dep
 
 ## CLI Commands
 
-|Command         |Alias         |Usage                                                               |
-|----------------|--------------|--------------------------------------------------------------------|
-|project         |              |'Manage Codewind projects'                                          |
-|install         |`in`          |'Pull pfe & performance images from dockerhub'          |
-|start           |              |'Start the Codewind containers'                                     |
-|status          |              |'Print the installation status of Codewind'                         |
-|stop            |              |'Stop the running Codewind containers'                              |
-|stop-all        |              |'Stop all of the Codewind and project containers'                   |
-|remove          |`rm`          |'Remove Codewind/Project docker images and the codewind network'    |
-|templates       |              |'Manage project templates'                                          |
-|sectoken        |`st`          |'Authenticate with username and password to obtain an access_token' |
-|secrealm        |`sr`          |'Manage new or existing REALM configurations'                       |
-|secclient       |`sc`          |'Manage new or existing APPLICATION access configurations'          |
-|seckeyring      |`sk`          |'Manage Codewind keys in the desktop keyring'                       |
-|secuser         |`su`          |'Manage new or existing USER access configurations'                 |
-|connections     |`con`         |'Manage connections configuration list'                             |
-|help            |`h`           |'Shows a list of commands or help for one command'                  |
+| Command     | Alias | Usage                                                               |
+| ----------- | ----- | ------------------------------------------------------------------- |
+| project     |       | 'Manage Codewind projects'                                          |
+| install     | `in`  | 'Pull pfe & performance images from dockerhub'                      |
+| start       |       | 'Start the Codewind containers'                                     |
+| status      |       | 'Print the installation status of Codewind'                         |
+| stop        |       | 'Stop the running Codewind containers'                              |
+| stop-all    |       | 'Stop all of the Codewind and project containers'                   |
+| remove      | `rm`  | 'Remove Codewind/Project docker images and the codewind network'    |
+| templates   |       | 'Manage project templates'                                          |
+| sectoken    | `st`  | 'Authenticate with username and password to obtain an access_token' |
+| secrealm    | `sr`  | 'Manage new or existing REALM configurations'                       |
+| secclient   | `sc`  | 'Manage new or existing APPLICATION access configurations'          |
+| seckeyring  | `sk`  | 'Manage Codewind keys in the desktop keyring'                       |
+| secuser     | `su`  | 'Manage new or existing USER access configurations'                 |
+| connections | `con` | 'Manage connections configuration list'                             |
+| help        | `h`   | 'Shows a list of commands or help for one command'                  |
 
 ## CLI Command Options
 
