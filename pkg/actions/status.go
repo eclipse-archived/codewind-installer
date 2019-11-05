@@ -59,10 +59,10 @@ func StatusCommandRemoteConnection(c *cli.Context) {
 			}
 			output, _ := json.Marshal(resp)
 			fmt.Println(string(output))
+			os.Exit(1)
 		} else {
 			fmt.Println("Codewind did not respond on remote connection", conID)
 			log.Println(err)
-			os.Exit(1)
 		}
 	}
 

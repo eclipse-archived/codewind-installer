@@ -36,6 +36,7 @@ func ProjectCreate(c *cli.Context) {
 	err := project.DownloadTemplate(c)
 	if err != nil {
 		fmt.Println(err.Error())
+		os.Exit(1)
 	}
 }
 
