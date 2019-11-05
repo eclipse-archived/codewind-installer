@@ -78,6 +78,7 @@ func UpgradeProjects(c *cli.Context) {
 	err := project.UpgradeProjects(c)
 	if err != nil {
 		fmt.Println(err.Error())
+		os.Exit(1)
 	}
 	os.Exit(0)
 }

@@ -13,6 +13,7 @@ package project
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -27,17 +28,25 @@ func UpgradeProjects(c *cli.Context) *ProjectError {
 
 	oldDir := strings.TrimSpace(c.String("workspace"))
 
+	// Check to see if the workspace exists
 	_, err := os.Stat(oldDir)
 	if err != nil {
 		return &ProjectError{errBadPath, err, err.Error()}
 	}
 
 	projectDir := oldDir + "/.projects/"
-	filepath.Walk(projectDir, func(path string, info os.FileInfo, err error) error {
+	// Check to see if the .projects dir exists
+	_, fileerr := os.Stat(projectDir)
+	if fileerr != nil {
+		return &ProjectError{textNoProjects, fileerr, fileerr.Error()}
+	}
 
+	filepath.Walk(projectDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			panic(err)
+			err = errors.New(textUpgradeError)
+			return &ProjectError{errOpFileParse, err, textUpgradeError}
 		}
+
 		if !info.IsDir() {
 			file, err := ioutil.ReadFile(path)
 			if err != nil {
@@ -50,13 +59,21 @@ func UpgradeProjects(c *cli.Context) *ProjectError {
 			projectType := result["projectType"]
 			name := result["name"]
 			location := result["workspace"] + name
-			projectID := result["projectID"]
+			fmt.Println("Calling bind for project " + name + "," + projectType + "," + language)
 
-			conID, err := GetConnectionURL(projectID)
-			if err != nil {
-				return err
+			response, binderr := Bind(location, name, language, projectType, "local")
+			PrintAsJSON := c.GlobalBool("json")
+			if binderr != nil {
+				fmt.Println(err)
+			} else {
+				if PrintAsJSON {
+					jsonResponse, _ := json.Marshal(response)
+					fmt.Println(string(jsonResponse))
+				} else {
+					fmt.Println("Project ID: " + response.ProjectID)
+					fmt.Println("Status: " + response.Status)
+				}
 			}
-			Bind(location, name, language, projectType, conID)
 		}
 		return nil
 	})
