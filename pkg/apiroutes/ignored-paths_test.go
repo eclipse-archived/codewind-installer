@@ -22,7 +22,7 @@ import (
 )
 
 func Test_IgnoredPaths(t *testing.T) {
-	t.Run("Asserts ignored paths from PFE are returned", func(t *testing.T) {
+	t.Run("Asserts correct ignoredPaths are returned", func(t *testing.T) {
 		testIgnoredPaths := IgnoredPaths{"*/.dockerigore", "*/.gitignore"}
 		jsonResponse, err := json.Marshal(testIgnoredPaths)
 		if err != nil {

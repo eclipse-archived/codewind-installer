@@ -42,7 +42,7 @@ func GetIgnoredPaths(httpClient utils.HTTPClient, projectType string) (IgnoredPa
 	}
 
 	if resp.StatusCode != 200 {
-		err := errors.New("IgnorePaths list not able to be retrieved")
+		err := errors.New("IgnoredPaths list not able to be retrieved")
 		return nil, err
 	}
 
