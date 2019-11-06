@@ -76,6 +76,7 @@ func TestWriteNewCwSettings(t *testing.T) {
 		inProjectPath  string
 		inBuildType    string
 		wantCwSettings CWSettings
+		wantIgnoredPath string
 	}{
 		"success case: node project": {
 			inProjectPath: "../../../resources/test/node-project/.cw-settings",
@@ -87,6 +88,7 @@ func TestWriteNewCwSettings(t *testing.T) {
 				IsHTTPS:           false,
 				InternalDebugPort: &defaultInternalDebugPort,
 			},
+			wantIgnoredPath: "*/node_modules*",
 		},
 		"success case: liberty project": {
 			inProjectPath: "../../../resources/test/liberty-project/.cw-settings",
@@ -100,6 +102,7 @@ func TestWriteNewCwSettings(t *testing.T) {
 				MavenProfiles:     []string{""},
 				MavenProperties:   []string{""},
 			},
+			wantIgnoredPath: "/libertyrepocache.zip",
 		},
 		"success case: spring project": {
 			inProjectPath: "../../../resources/test/spring-project/.cw-settings",
@@ -113,6 +116,7 @@ func TestWriteNewCwSettings(t *testing.T) {
 				MavenProfiles:     []string{""},
 				MavenProperties:   []string{""},
 			},
+			wantIgnoredPath: "/localm2cache.zip",
 		},
 		"success case: swift project": {
 			inProjectPath: "../../../resources/test/swift-project/.cw-settings",
@@ -123,6 +127,7 @@ func TestWriteNewCwSettings(t *testing.T) {
 				HealthCheck:  "",
 				IsHTTPS:      false,
 			},
+			wantIgnoredPath: ".swift-version",
 		},
 		"success case: python project": {
 			inProjectPath: "../../../resources/test/python-project/.cw-settings",
@@ -133,6 +138,7 @@ func TestWriteNewCwSettings(t *testing.T) {
 				HealthCheck:  "",
 				IsHTTPS:      false,
 			},
+			wantIgnoredPath: "*/.DS_Store",
 		},
 		"success case: go project": {
 			inProjectPath: "../../../resources/test/go-project/.cw-settings",
@@ -143,6 +149,7 @@ func TestWriteNewCwSettings(t *testing.T) {
 				HealthCheck:  "",
 				IsHTTPS:      false,
 			},
+			wantIgnoredPath: "*/.DS_Store",
 		},
 	}
 	for name, test := range tests {
@@ -154,6 +161,7 @@ func TestWriteNewCwSettings(t *testing.T) {
 			assert.Equal(t, cwSettings.InternalPort, test.wantCwSettings.InternalPort)
 			assert.Equal(t, cwSettings.HealthCheck, test.wantCwSettings.HealthCheck)
 			assert.Equal(t, cwSettings.IsHTTPS, test.wantCwSettings.IsHTTPS)
+			assert.Contains(t, cwSettings.IgnoredPaths, test.wantIgnoredPath)
 			if test.wantCwSettings.InternalDebugPort != nil {
 				assert.Equal(t, cwSettings.InternalDebugPort, test.wantCwSettings.InternalDebugPort)
 			}
