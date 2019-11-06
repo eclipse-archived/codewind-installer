@@ -58,7 +58,7 @@ func UpgradeProjects(c *cli.Context) *ProjectError {
 			language := result["language"]
 			projectType := result["projectType"]
 			name := result["name"]
-			location := result["workspace"] + name
+			location := oldDir + "/" + name
 			fmt.Println("Calling bind for project " + name + "," + projectType + "," + language + " in " + location)
 
 			if language != "" && projectType != "" && name != "" && location != "" {
