@@ -43,7 +43,13 @@ func StopAllCommand() {
 	}
 
 	networkName := "codewind"
-	networks := utils.GetNetworkList()
+	networks, err := utils.GetNetworkList()
+
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(0)
+	}
+
 	fmt.Println("Removing Codewind docker networks..")
 	for _, network := range networks {
 		if strings.Contains(network.Name, networkName) {
