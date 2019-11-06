@@ -67,7 +67,6 @@ func GetTemplates(projectStyle string, showEnabledOnly bool) ([]Template, error)
 		query.Add("showEnabledOnly", "true")
 	}
 	req.URL.RawQuery = query.Encode()
-	fmt.Println(req.URL.String())
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
