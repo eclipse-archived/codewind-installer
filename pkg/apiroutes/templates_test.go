@@ -16,51 +16,66 @@ import (
 	"log"
 	"testing"
 
+	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/stretchr/testify/assert"
 )
 
-var numCodewindTemplates int = 8
+var numCodewindTemplates = 8
 
-var numAppsodyTemplates int = 11
+var numAppsodyTemplatesEnabled = 11
 
-var numTemplates int = numCodewindTemplates + numAppsodyTemplates
+var numAppsodyTemplatesDisabled = 7
 
-var URLOfExistingRepo string = "https://raw.githubusercontent.com/kabanero-io/codewind-templates/master/devfiles/index.json"
-var URLOfNewRepo string = "https://raw.githubusercontent.com/kabanero-io/codewind-templates/aad4bafc14e1a295fb8e462c20fe8627248609a3/devfiles/index.json"
-var URLOfUnknownRepo string = "https://raw.githubusercontent.com/UNKNOWN"
-var URLOfUnknownRepo2 string = "https://raw.githubusercontent.com/UNKNOWN_2"
+var numAppsodyTemplates = numAppsodyTemplatesEnabled + numAppsodyTemplatesDisabled
+
+var numTemplatesEnabled = numCodewindTemplates + numAppsodyTemplatesEnabled
+
+var numTemplates = numTemplatesEnabled + numAppsodyTemplatesDisabled
+
+var URLOfExistingRepo = "https://raw.githubusercontent.com/kabanero-io/codewind-templates/master/devfiles/index.json"
+var URLOfNewRepo = "https://raw.githubusercontent.com/kabanero-io/codewind-templates/aad4bafc14e1a295fb8e462c20fe8627248609a3/devfiles/index.json"
+var URLOfUnknownRepo = "https://raw.githubusercontent.com/UNKNOWN"
+var URLOfUnknownRepo2 = "https://raw.githubusercontent.com/UNKNOWN_2"
 
 func TestGetTemplates(t *testing.T) {
 	tests := map[string]struct {
 		inProjectStyle    string
-		inShowEnabledOnly string
+		inShowEnabledOnly bool
 		wantedType        []Template
 		wantedLength      int
 	}{
 		"get templates of all styles": {
 			inProjectStyle:    "",
-			inShowEnabledOnly: "",
+			inShowEnabledOnly: false,
 			wantedType:        []Template{},
 			wantedLength:      numTemplates,
 		},
-		"filter templates by known style": {
-			inProjectStyle: "Codewind",
-			wantedType:     []Template{},
-			wantedLength:   numCodewindTemplates,
+		"filter templates by known style (Codewind)": {
+			inProjectStyle:    "Codewind",
+			inShowEnabledOnly: false,
+			wantedType:        []Template{},
+			wantedLength:      numCodewindTemplates,
+		},
+		"filter templates by known style (Appsody)": {
+			inProjectStyle:    "Appsody",
+			inShowEnabledOnly: false,
+			wantedType:        []Template{},
+			wantedLength:      numAppsodyTemplates,
 		},
 		"filter templates by unknown style": {
-			inProjectStyle: "unknownStyle",
-			wantedType:     []Template{},
-			wantedLength:   0,
+			inProjectStyle:    "unknownStyle",
+			inShowEnabledOnly: false,
+			wantedType:        []Template{},
+			wantedLength:      0,
 		},
 		"filter templates by enabled templates": {
-			inShowEnabledOnly: "true",
+			inShowEnabledOnly: true,
 			wantedType:        []Template{},
-			wantedLength:      numTemplates,
+			wantedLength:      numTemplatesEnabled,
 		},
 		"filter templates by enabled templates of unknown style": {
 			inProjectStyle:    "unknownStyle",
-			inShowEnabledOnly: "false",
+			inShowEnabledOnly: true,
 			wantedType:        []Template{},
 			wantedLength:      0,
 		},
@@ -96,12 +111,12 @@ func TestGetTemplateStyles(t *testing.T) {
 
 func TestGetTemplateRepos(t *testing.T) {
 	tests := map[string]struct {
-		wantedType   []TemplateRepo
+		wantedType   []utils.TemplateRepo
 		wantedLength int
 		wantedErr    error
 	}{
 		"success case": {
-			wantedType:   []TemplateRepo{},
+			wantedType:   []utils.TemplateRepo{},
 			wantedLength: 3,
 			wantedErr:    nil,
 		},
@@ -120,7 +135,7 @@ func TestFailuresAddTemplateRepo(t *testing.T) {
 	tests := map[string]struct {
 		inURL         string
 		inDescription string
-		wantedType    []TemplateRepo
+		wantedType    []utils.TemplateRepo
 		wantedErr     error
 	}{
 		"fail case: add invalid URL": {
@@ -148,7 +163,7 @@ func TestFailuresAddTemplateRepo(t *testing.T) {
 func TestFailuresDeleteTemplateRepo(t *testing.T) {
 	tests := map[string]struct {
 		inURL      string
-		wantedType []TemplateRepo
+		wantedType []utils.TemplateRepo
 		wantedErr  error
 	}{
 		"fail case: remove invalid URL": {
@@ -180,7 +195,7 @@ func TestSuccessfulAddAndDeleteTemplateRepo(t *testing.T) {
 
 		got, err := AddTemplateRepo(testRepoURL, "example description", "template-name")
 
-		assert.IsType(t, []TemplateRepo{}, got)
+		assert.IsType(t, []utils.TemplateRepo{}, got)
 		assert.Equal(t, wantedNumRepos, len(got), "got: %v", got)
 		assert.Nil(t, err)
 	})
@@ -190,7 +205,7 @@ func TestSuccessfulAddAndDeleteTemplateRepo(t *testing.T) {
 
 		got, err := DeleteTemplateRepo(testRepoURL)
 
-		assert.IsType(t, []TemplateRepo{}, got)
+		assert.IsType(t, []utils.TemplateRepo{}, got)
 		assert.Equal(t, wantedNumRepos, len(got), "got: %v", got)
 		assert.Nil(t, err)
 	})
@@ -201,7 +216,7 @@ func TestSuccessfulAddAndDeleteTemplateRepo(t *testing.T) {
 func TestFailuresEnableTemplateRepos(t *testing.T) {
 	tests := map[string]struct {
 		in         []string
-		wantedType []TemplateRepo
+		wantedType []utils.TemplateRepo
 		wantedErr  error
 	}{
 		"nil repo URL": {
@@ -216,12 +231,12 @@ func TestFailuresEnableTemplateRepos(t *testing.T) {
 		},
 		"unknown repo URL": {
 			in:         []string{URLOfUnknownRepo},
-			wantedType: []TemplateRepo{},
+			wantedType: []utils.TemplateRepo{},
 			wantedErr:  nil,
 		},
 		"multiple unknown repo URLs": {
 			in:         []string{URLOfUnknownRepo, URLOfUnknownRepo2},
-			wantedType: []TemplateRepo{},
+			wantedType: []utils.TemplateRepo{},
 			wantedErr:  nil,
 		},
 	}
@@ -237,7 +252,7 @@ func TestFailuresEnableTemplateRepos(t *testing.T) {
 func TestFailuresDisableTemplateRepos(t *testing.T) {
 	tests := map[string]struct {
 		in         []string
-		wantedType []TemplateRepo
+		wantedType []utils.TemplateRepo
 		wantedErr  error
 	}{
 		"nil repo URL": {
@@ -252,12 +267,12 @@ func TestFailuresDisableTemplateRepos(t *testing.T) {
 		},
 		"unknown repo URL": {
 			in:         []string{URLOfUnknownRepo},
-			wantedType: []TemplateRepo{},
+			wantedType: []utils.TemplateRepo{},
 			wantedErr:  nil,
 		},
 		"multiple unknown repo URLs": {
 			in:         []string{URLOfUnknownRepo, URLOfUnknownRepo2},
-			wantedType: []TemplateRepo{},
+			wantedType: []utils.TemplateRepo{},
 			wantedErr:  nil,
 		},
 	}
@@ -276,7 +291,7 @@ func TestSuccessfulEnableAndDisableTemplateRepos(t *testing.T) {
 	t.Run("Successfully disable 1 template repo", func(t *testing.T) {
 		got, err := DisableTemplateRepos([]string{testRepoURL})
 
-		assert.IsType(t, []TemplateRepo{}, got)
+		assert.IsType(t, []utils.TemplateRepo{}, got)
 		assert.Nil(t, err)
 		for _, repo := range got {
 			if repo.URL == testRepoURL {
@@ -288,7 +303,7 @@ func TestSuccessfulEnableAndDisableTemplateRepos(t *testing.T) {
 	t.Run("Successfully enable 1 template repo", func(t *testing.T) {
 		got, err := EnableTemplateRepos([]string{testRepoURL})
 
-		assert.IsType(t, []TemplateRepo{}, got)
+		assert.IsType(t, []utils.TemplateRepo{}, got)
 		assert.Nil(t, err)
 		for _, repo := range got {
 			if repo.URL == testRepoURL {
