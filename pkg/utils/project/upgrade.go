@@ -24,15 +24,14 @@ import (
 )
 
 func UpgradeProjects(c *cli.Context) *ProjectError {
-	fmt.Println("About to upgrade projects")
 
 	oldDir := strings.TrimSpace(c.String("workspace"))
-
 	// Check to see if the workspace exists
 	_, err := os.Stat(oldDir)
 	if err != nil {
 		return &ProjectError{errBadPath, err, err.Error()}
 	}
+	fmt.Println("About to upgrade projects from " + oldDir)
 
 	projectDir := oldDir + "/.projects/"
 	// Check to see if the .projects dir exists
@@ -41,6 +40,7 @@ func UpgradeProjects(c *cli.Context) *ProjectError {
 		return &ProjectError{textNoProjects, fileerr, fileerr.Error()}
 	}
 
+	fmt.Println("Looking for projects in " + projectDir)
 	filepath.Walk(projectDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			err = errors.New(textUpgradeError)
@@ -64,7 +64,7 @@ func UpgradeProjects(c *cli.Context) *ProjectError {
 			response, binderr := Bind(location, name, language, projectType, "local")
 			PrintAsJSON := c.GlobalBool("json")
 			if binderr != nil {
-				fmt.Println(err)
+				fmt.Println(binderr)
 			} else {
 				if PrintAsJSON {
 					jsonResponse, _ := json.Marshal(response)
