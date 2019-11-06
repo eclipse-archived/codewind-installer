@@ -26,13 +26,18 @@ import (
 func ListTemplates(c *cli.Context) {
 	templates, err := apiroutes.GetTemplates(
 		c.String("projectStyle"),
-		c.String("showEnabledOnly"),
+		c.Bool("showEnabledOnly"),
 	)
 	if err != nil {
 		log.Printf("Error getting templates: %q", err)
 		return
 	}
-	PrettyPrintJSON(templates)
+	if len(templates) > 0 {
+		PrettyPrintJSON(templates)
+	} else {
+		fmt.Println(templates)
+	}
+
 }
 
 // ListTemplateStyles lists all template styles of which Codewind is aware.

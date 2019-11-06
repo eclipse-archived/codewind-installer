@@ -26,11 +26,14 @@ import (
 type (
 	// Template represents a project template.
 	Template struct {
-		Label       string `json:"label"`
-		Description string `json:"description"`
-		Language    string `json:"language"`
-		URL         string `json:"url"`
-		ProjectType string `json:"projectType"`
+		Label        string `json:"label"`
+		Description  string `json:"description"`
+		Language     string `json:"language"`
+		URL          string `json:"url"`
+		ProjectType  string `json:"projectType"`
+		ProjectStyle string `json:"projectStyle,omitempty"`
+		Source       string `json:"source,omitempty"`
+		SourceID     string `json:"sourceId,omitempty"`
 	}
 
 	// RepoOperation represents a requested operation on a template repository.
@@ -51,7 +54,7 @@ type (
 
 // GetTemplates gets project templates from PFE's REST API.
 // Filter them using the function arguments
-func GetTemplates(projectStyle string, showEnabledOnly string) ([]Template, error) {
+func GetTemplates(projectStyle string, showEnabledOnly bool) ([]Template, error) {
 	req, err := http.NewRequest("GET", config.PFEApiRoute()+"templates", nil)
 	if err != nil {
 		return nil, err
@@ -60,11 +63,11 @@ func GetTemplates(projectStyle string, showEnabledOnly string) ([]Template, erro
 	if projectStyle != "" {
 		query.Add("projectStyle", projectStyle)
 	}
-	if showEnabledOnly != "" {
-		query.Add("showEnabledOnly", showEnabledOnly)
+	if showEnabledOnly {
+		query.Add("showEnabledOnly", "true")
 	}
 	req.URL.RawQuery = query.Encode()
-
+	fmt.Println(req.URL.String())
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -80,7 +83,6 @@ func GetTemplates(projectStyle string, showEnabledOnly string) ([]Template, erro
 
 	var templates []Template
 	json.Unmarshal(byteArray, &templates)
-
 	return templates, nil
 }
 

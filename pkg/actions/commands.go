@@ -276,12 +276,10 @@ func Commands() {
 					Flags: []cli.Flag{
 						cli.StringFlag{
 							Name:  "projectStyle",
-							Value: "Codewind",
 							Usage: "Filter by project style",
 						},
-						cli.StringFlag{
+						cli.BoolFlag{
 							Name:  "showEnabledOnly",
-							Value: "false",
 							Usage: "Filter by whether a template is enabled or not",
 						},
 					},
