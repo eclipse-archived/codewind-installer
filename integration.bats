@@ -160,8 +160,9 @@
   run go run main.go seckeyring validate --conid remoteNotKnown --username testuser
   echo "status = ${status}"
   echo "output trace = ${output}"
-  [ "$output" = '{"error":"sec_keyring","error_description":"secret not found in keyring"}' ]
-  [ "$status" -eq 0 ]
+  [ "${lines[0]}" = '{"error":"sec_keyring","error_description":"secret not found in keyring"}' ]
+  [ "${lines[1]}" = "exit status 1" ]
+  [ "$status" -eq 1 ]
 }
 
 @test "invoke seckeyring validate command - key not found (incorrect username)"  {
@@ -169,7 +170,8 @@
   run go run main.go seckeyring validate --conid local --username testuser_unknown
   echo "status = ${status}"
   echo "output trace = ${output}"
-  [ "$output" = '{"error":"sec_keyring","error_description":"secret not found in keyring"}' ]
-  [ "$status" -eq 0 ]
+  [ "${lines[0]}" = '{"error":"sec_keyring","error_description":"secret not found in keyring"}' ]
+  [ "${lines[1]}" = "exit status 1" ]
+  [ "$status" -eq 1 ]
 }
 
