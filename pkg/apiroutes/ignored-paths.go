@@ -13,6 +13,7 @@ package apiroutes
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"net/http"
 
@@ -25,7 +26,6 @@ type IgnoredPaths []string
 
 // GetIgnoredPaths calls pfe to get the default ignoredPaths for that projectType
 func GetIgnoredPaths(httpClient utils.HTTPClient, projectType string) (IgnoredPaths, error) {
-	client := &http.Client{}
 
 	req, err := http.NewRequest("GET", config.PFEOrigin()+"/api/v1/ignoredPaths", nil)
 	if err != nil {
@@ -36,8 +36,13 @@ func GetIgnoredPaths(httpClient utils.HTTPClient, projectType string) (IgnoredPa
 	q.Add("projectType", projectType)
 	req.URL.RawQuery = q.Encode()
 
-	resp, err := client.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != 200 {
+		err := errors.New("IgnorePaths list not able to be retrieved")
 		return nil, err
 	}
 
@@ -52,5 +57,6 @@ func GetIgnoredPaths(httpClient utils.HTTPClient, projectType string) (IgnoredPa
 	if err != nil {
 		return nil, err
 	}
+
 	return ignoredPaths, nil
 }
