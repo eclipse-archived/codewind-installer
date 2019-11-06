@@ -24,15 +24,14 @@ import (
 )
 
 func UpgradeProjects(c *cli.Context) *ProjectError {
-	fmt.Println("About to upgrade projects")
 
 	oldDir := strings.TrimSpace(c.String("workspace"))
-
 	// Check to see if the workspace exists
 	_, err := os.Stat(oldDir)
 	if err != nil {
 		return &ProjectError{errBadPath, err, err.Error()}
 	}
+	fmt.Println("About to upgrade projects from " + oldDir)
 
 	projectDir := oldDir + "/.projects/"
 	// Check to see if the .projects dir exists
@@ -41,6 +40,7 @@ func UpgradeProjects(c *cli.Context) *ProjectError {
 		return &ProjectError{textNoProjects, fileerr, fileerr.Error()}
 	}
 
+	fmt.Println("Looking for projects in " + projectDir)
 	filepath.Walk(projectDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			err = errors.New(textUpgradeError)
@@ -59,20 +59,24 @@ func UpgradeProjects(c *cli.Context) *ProjectError {
 			projectType := result["projectType"]
 			name := result["name"]
 			location := result["workspace"] + name
-			fmt.Println("Calling bind for project " + name + "," + projectType + "," + language)
+			fmt.Println("Calling bind for project " + name + "," + projectType + "," + language + " in " + location)
 
-			response, binderr := Bind(location, name, language, projectType, "local")
-			PrintAsJSON := c.GlobalBool("json")
-			if binderr != nil {
-				fmt.Println(err)
-			} else {
-				if PrintAsJSON {
-					jsonResponse, _ := json.Marshal(response)
-					fmt.Println(string(jsonResponse))
+			if language != "" && projectType != "" && name != "" && location != "" {
+				response, binderr := Bind(location, name, language, projectType, "local")
+				PrintAsJSON := c.GlobalBool("json")
+				if binderr != nil {
+					fmt.Println(binderr)
 				} else {
-					fmt.Println("Project ID: " + response.ProjectID)
-					fmt.Println("Status: " + response.Status)
+					if PrintAsJSON {
+						jsonResponse, _ := json.Marshal(response)
+						fmt.Println(string(jsonResponse))
+					} else {
+						fmt.Println("Project ID: " + response.ProjectID)
+						fmt.Println("Status: " + response.Status)
+					}
 				}
+			} else {
+				fmt.Println("Unable to upgrade project, failed to determine project details")
 			}
 		}
 		return nil
