@@ -59,20 +59,24 @@ func UpgradeProjects(c *cli.Context) *ProjectError {
 			projectType := result["projectType"]
 			name := result["name"]
 			location := result["workspace"] + name
-			fmt.Println("Calling bind for project " + name + "," + projectType + "," + language)
+			fmt.Println("Calling bind for project " + name + "," + projectType + "," + language + " in " + location)
 
-			response, binderr := Bind(location, name, language, projectType, "local")
-			PrintAsJSON := c.GlobalBool("json")
-			if binderr != nil {
-				fmt.Println(binderr)
-			} else {
-				if PrintAsJSON {
-					jsonResponse, _ := json.Marshal(response)
-					fmt.Println(string(jsonResponse))
+			if language != "" && projectType != "" && name != "" && location != "" {
+				response, binderr := Bind(location, name, language, projectType, "local")
+				PrintAsJSON := c.GlobalBool("json")
+				if binderr != nil {
+					fmt.Println(binderr)
 				} else {
-					fmt.Println("Project ID: " + response.ProjectID)
-					fmt.Println("Status: " + response.Status)
+					if PrintAsJSON {
+						jsonResponse, _ := json.Marshal(response)
+						fmt.Println(string(jsonResponse))
+					} else {
+						fmt.Println("Project ID: " + response.ProjectID)
+						fmt.Println("Status: " + response.Status)
+					}
 				}
+			} else {
+				fmt.Println("Unable to upgrade project, failed to determine project details")
 			}
 		}
 		return nil
