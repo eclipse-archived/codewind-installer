@@ -27,7 +27,7 @@ func ConnectionAddToList(c *cli.Context) {
 	connection, err := connections.AddConnectionToList(http.DefaultClient, c)
 	if err != nil {
 		fmt.Println(err.Error())
-		os.Exit(0)
+		os.Exit(1)
 	}
 
 	type Result struct {
@@ -47,7 +47,7 @@ func ConnectionGetByID(c *cli.Context) {
 	connection, err := connections.GetConnectionByID(connectionID)
 	if err != nil {
 		fmt.Println(err.Error())
-		os.Exit(0)
+		os.Exit(1)
 	}
 	response, _ := json.Marshal(connection)
 	fmt.Println(string(response))
@@ -59,7 +59,7 @@ func ConnectionRemoveFromList(c *cli.Context) {
 	err := connections.RemoveConnectionFromList(c)
 	if err != nil {
 		fmt.Println(err.Error())
-		os.Exit(0)
+		os.Exit(1)
 	}
 	response, _ := json.Marshal(connections.Result{Status: "OK", StatusMessage: "Connection removed"})
 	fmt.Println(string(response))
@@ -71,7 +71,7 @@ func ConnectionListAll() {
 	allConnections, err := connections.GetConnectionsConfig()
 	if err != nil {
 		fmt.Println(err.Error())
-		os.Exit(0)
+		os.Exit(1)
 	}
 	response, _ := json.Marshal(allConnections)
 	fmt.Println(string(response))
@@ -83,7 +83,7 @@ func ConnectionResetList() {
 	err := connections.ResetConnectionsFile()
 	if err != nil {
 		fmt.Println(err.Error())
-		os.Exit(0)
+		os.Exit(1)
 	}
 	response, _ := json.Marshal(connections.Result{Status: "OK", StatusMessage: "Connection list reset"})
 	fmt.Println(string(response))
