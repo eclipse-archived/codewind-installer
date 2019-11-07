@@ -167,29 +167,30 @@ func Commands() {
 				InstallCommand(c)
 				return nil
 			},
-			Subcommands: []cli.Command{
-				{
-					Name:    "remote",
-					Aliases: []string{"r"},
-					Usage:   "Install a remote deployment of Codewind",
-					Flags: []cli.Flag{
-						cli.StringFlag{Name: "namespace,n", Usage: "Kubernetes namespace", Required: true},
-						cli.StringFlag{Name: "session,ses", Usage: "Codewind session secret", Required: false},
-						cli.StringFlag{Name: "ingress,i", Usage: "Ingress Domain eg: 10.22.33.44.nip.io", Required: false},
-						cli.StringFlag{Name: "addkeycloak,k", Usage: "Deploy an instance of Keycloak", Required: false},
-						cli.StringFlag{Name: "kadminuser,au", Usage: "Keycloak admin user", Required: false},
-						cli.StringFlag{Name: "kadminpass,ap", Usage: "Keycloak admin password", Required: false},
-						cli.StringFlag{Name: "kdevuser,du", Usage: "Keycloak developer username to add", Required: false},
-						cli.StringFlag{Name: "kdevpass,dp", Usage: "Keycloak developer username initial password", Required: false},
-						cli.StringFlag{Name: "krealm,r", Usage: "Keycloak realm to setup", Required: false},
-						cli.StringFlag{Name: "kclient,c", Usage: "Keycloak client to setup", Required: false},
+			/*
+				Subcommands: []cli.Command{
+					{
+						Name:    "remote",
+						Aliases: []string{"r"},
+						Usage:   "Install a remote deployment of Codewind",
+						Flags: []cli.Flag{
+							cli.StringFlag{Name: "namespace,n", Usage: "Kubernetes namespace", Required: true},
+							cli.StringFlag{Name: "session,ses", Usage: "Codewind session secret", Required: false},
+							cli.StringFlag{Name: "ingress,i", Usage: "Ingress Domain eg: 10.22.33.44.nip.io", Required: false},
+							cli.StringFlag{Name: "addkeycloak,k", Usage: "Deploy an instance of Keycloak", Required: false},
+							cli.StringFlag{Name: "kadminuser,au", Usage: "Keycloak admin user", Required: false},
+							cli.StringFlag{Name: "kadminpass,ap", Usage: "Keycloak admin password", Required: false},
+							cli.StringFlag{Name: "kdevuser,du", Usage: "Keycloak developer username to add", Required: false},
+							cli.StringFlag{Name: "kdevpass,dp", Usage: "Keycloak developer username initial password", Required: false},
+							cli.StringFlag{Name: "krealm,r", Usage: "Keycloak realm to setup", Required: false},
+							cli.StringFlag{Name: "kclient,c", Usage: "Keycloak client to setup", Required: false},
+						},
+						Action: func(c *cli.Context) error {
+							DoRemoteInstall(c)
+							return nil
+						},
 					},
-					Action: func(c *cli.Context) error {
-						DoRemoteInstall(c)
-						return nil
-					},
-				},
-			},
+				},*/
 		},
 
 		{
