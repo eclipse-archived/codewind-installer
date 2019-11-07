@@ -33,10 +33,10 @@ const (
 	PerformanceImage = "eclipse/codewind-performance-amd64"
 
 	// KeycloakImage is the docker image that will be used in the Codewind-Keycloak pod
-	KeycloakImage = "marko11/codewind-keycloak-amd64"
+	KeycloakImage = "eclipse/codewind-keycloak-amd64"
 
 	// GatekeeperImage is the docker image that will be used in the Codewind-Gatekeeper pod
-	GatekeeperImage = "marko11/codewind-gatekeeper-amd64"
+	GatekeeperImage = "eclipse/codewind-gatekeeper-amd64"
 
 	// PFEImageTag is the image tag associated with the docker image that's used for Codewind-PFE
 	PFEImageTag = "latest"
