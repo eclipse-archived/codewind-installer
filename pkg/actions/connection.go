@@ -31,7 +31,7 @@ func ConnectionAddToList(c *cli.Context) {
 		if printAsJSON {
 			fmt.Println(conErr.Error())
 		} else {
-			logr.Println(conErr.Desc)
+			logr.Errorln(conErr.Desc)
 		}
 		os.Exit(1)
 	}
@@ -60,7 +60,7 @@ func ConnectionUpdate(c *cli.Context) {
 		if printAsJSON {
 			fmt.Println(conErr.Error())
 		} else {
-			logr.Println(conErr.Desc)
+			logr.Errorln(conErr.Desc)
 		}
 		os.Exit(1)
 	}
@@ -88,12 +88,12 @@ func ConnectionGetByID(c *cli.Context) {
 		if printAsJSON {
 			fmt.Println(conErr.Error())
 		} else {
-			logr.Println(conErr.Desc)
+			logr.Errorln(conErr.Desc)
 		}
 		os.Exit(1)
 	}
 	response, _ := json.Marshal(connection)
-	fmt.Println(string(response))
+	logr.Infoln(string(response))
 	os.Exit(0)
 }
 
@@ -105,7 +105,7 @@ func ConnectionRemoveFromList(c *cli.Context) {
 		if printAsJSON {
 			fmt.Println(conErr.Error())
 		} else {
-			logr.Println(conErr.Desc)
+			logr.Errorln(conErr.Desc)
 		}
 		os.Exit(1)
 	}
@@ -126,12 +126,12 @@ func ConnectionListAll(c *cli.Context) {
 		if printAsJSON {
 			fmt.Println(conErr.Error())
 		} else {
-			logr.Println(conErr.Desc)
+			logr.Errorln(conErr.Desc)
 		}
 		os.Exit(1)
 	}
 	response, _ := json.Marshal(allConnections)
-	fmt.Println(string(response))
+	logr.Infoln(string(response))
 	os.Exit(0)
 }
 
@@ -143,7 +143,7 @@ func ConnectionResetList(c *cli.Context) {
 		if printAsJSON {
 			fmt.Println(conErr.Error())
 		} else {
-			logr.Println(conErr.Desc)
+			logr.Errorln(conErr.Desc)
 		}
 		os.Exit(1)
 	}

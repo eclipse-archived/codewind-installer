@@ -12,10 +12,10 @@
 package actions
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/eclipse/codewind-installer/pkg/utils"
+	logr "github.com/sirupsen/logrus"
 )
 
 //StopCommand to stop only the codewind containers
@@ -26,12 +26,12 @@ func StopCommand() {
 
 	containers := utils.GetContainerList()
 
-	fmt.Println("Only stopping Codewind containers. To stop project containers, please use 'stop-all'")
+	logr.Infoln("Only stopping Codewind containers. To stop project containers, please use 'stop-all'")
 
 	for _, container := range containers {
 		for _, key := range containerArr {
 			if strings.HasPrefix(container.Image, key) {
-				fmt.Println("Stopping container ", container.Names, "... ")
+				logr.Infoln("Stopping container ", container.Names, "... ")
 				utils.StopContainer(container)
 			}
 		}

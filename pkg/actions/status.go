@@ -21,6 +21,11 @@ import (
 	"github.com/eclipse/codewind-installer/pkg/apiroutes"
 	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/utils"
+<<<<<<< HEAD
+=======
+	"github.com/eclipse/codewind-installer/pkg/utils/connections"
+	logr "github.com/sirupsen/logrus"
+>>>>>>> replace 'fmt.Print' with logrus #1
 	"github.com/urfave/cli"
 )
 
@@ -135,7 +140,7 @@ func StatusCommandLocalConnection(c *cli.Context) {
 			}
 
 			output, _ := json.Marshal(resp)
-			fmt.Println(string(output))
+			logr.Infoln(string(output))
 		} else {
 			fmt.Println("Codewind is installed but not running")
 		}

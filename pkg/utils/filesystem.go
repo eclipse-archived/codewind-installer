@@ -30,6 +30,7 @@ import (
 
 	"github.com/eclipse/codewind-installer/pkg/errors"
 	"github.com/google/go-github/github"
+	logr "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 )
 
@@ -44,7 +45,7 @@ func CreateTempFile(filePath string) bool {
 		defer file.Close()
 
 		dir, _ := os.Getwd()
-		fmt.Println("==> created file", path.Join(dir, filePath))
+		logr.Infoln("==> created file", path.Join(dir, filePath))
 		return true
 	}
 	return false
@@ -71,9 +72,9 @@ func WriteToComposeFile(tempFilePath string, debug bool) bool {
 	errors.CheckErr(err, 203, "")
 
 	if debug == true {
-		fmt.Printf("==> %s structure is: \n%s\n\n", tempFilePath, string(marshalledData))
+		logr.Infof("==> %s structure is: \n%s\n\n", tempFilePath, string(marshalledData))
 	} else {
-		fmt.Println("==> environment structure written to " + tempFilePath)
+		logr.Infoln("==> environment structure written to " + tempFilePath)
 	}
 
 	err = ioutil.WriteFile(tempFilePath, marshalledData, 0644)
@@ -98,10 +99,11 @@ func DeleteTempFile(filePath string) (bool, error) {
 // PingHealth - pings environment api every 15 seconds to check if containers started
 func PingHealth(healthEndpoint string) bool {
 	var started = false
-	fmt.Println("Waiting for Codewind to start")
+	logr.Infoln("Waiting for Codewind to start")
 	hostname, port := GetPFEHostAndPort()
 	for i := 0; i < 120; i++ {
 		resp, err := http.Get("http://" + hostname + ":" + port + healthEndpoint)
+		// following prints have been left in to prevent awkward terminal output
 		if err != nil {
 			fmt.Printf(".")
 		} else {
@@ -116,7 +118,7 @@ func PingHealth(healthEndpoint string) bool {
 	}
 
 	if started != true {
-		log.Fatal("Codewind containers are taking a while to start. Please check the container logs and/or restart Codewind")
+		logr.Errorln("Codewind containers are taking a while to start. Please check the container logs and/or restart Codewind")
 	}
 	return started
 }
@@ -147,14 +149,14 @@ func DownloadFile(URL, destination string) error {
 	// Create the file
 	file, err := os.Create(destination)
 	if err != nil {
-		log.Println(err)
+		logr.Errorln(err)
 		return err
 	}
 	defer file.Close()
 
 	// Write body to file
 	_, err = io.Copy(file, resp.Body)
-	log.Printf("Downloaded file from '%s' to '%s'\n", URL, destination)
+	logr.Infof("Downloaded file from '%s' to '%s'\n", URL, destination)
 
 	return err
 }
@@ -201,7 +203,7 @@ func UnZip(filePath, destination string) error {
 			errors.CheckErr(err, 404, "")
 		}
 	}
-	log.Printf("Extracted file from '%s' to '%s'\n", filePath, destination)
+	logr.Infof("Extracted file from '%s' to '%s'\n", filePath, destination)
 	return nil
 }
 
@@ -243,7 +245,7 @@ func UnTar(pathToTarFile, destination string) error {
 				log.Fatal(err)
 			}
 		default:
-			log.Printf("Can't extract to %s: unknown typeflag %c\n", target, header.Typeflag)
+			logr.Warnf("Can't extract to %s: unknown typeflag %c\n", target, header.Typeflag)
 		}
 	}
 	return nil

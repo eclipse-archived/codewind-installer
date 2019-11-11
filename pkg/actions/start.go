@@ -12,9 +12,8 @@
 package actions
 
 import (
-	"fmt"
-
 	"github.com/eclipse/codewind-installer/pkg/utils"
+	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -23,11 +22,11 @@ func StartCommand(c *cli.Context, tempFilePath string, healthEndpoint string) {
 	status := utils.CheckContainerStatus()
 
 	if status {
-		fmt.Println("Codewind is already running!")
+		logr.Infoln("Codewind is already running!")
 	} else {
 		tag := c.String("tag")
 		debug := c.Bool("debug")
-		fmt.Println("Debug:", debug)
+		logr.Infoln("Debug:", debug)
 
 		// Stop all running project containers and remove codewind networks
 		StopAllCommand()

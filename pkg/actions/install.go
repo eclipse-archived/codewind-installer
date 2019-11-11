@@ -14,7 +14,6 @@ package actions
 import (
 	"crypto/tls"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -68,7 +67,7 @@ func InstallCommand(c *cli.Context) {
 		utils.TagImage(imageArr[i]+tag, targetArr[i]+tag)
 	}
 
-	fmt.Println("Image Tagging Successful")
+	logr.Infoln("Image Tagging Successful")
 }
 
 // DoRemoteInstall : Deploy a remote PFE and support containers
@@ -102,7 +101,7 @@ func DoRemoteInstall(c *cli.Context) {
 	deploymentResult, remInstError := remote.DeployRemote(&deployOptions)
 	if remInstError != nil {
 		if printAsJSON {
-			fmt.Println(remInstError.Error())
+			logr.Errorln(remInstError.Error())
 		} else {
 			logr.Errorf("Error: %v - %v\n", remInstError.Op, remInstError.Desc)
 		}
@@ -120,7 +119,7 @@ func DoRemoteInstall(c *cli.Context) {
 	result := project.Result{Status: "OK", StatusMessage: "Install Successful: " + gatekeeperURL}
 	if printAsJSON {
 		response, _ := json.Marshal(result)
-		fmt.Println(string(response))
+		logr.Infoln(string(response))
 	} else {
 		logr.Infoln("Codewind is available at: " + gatekeeperURL)
 	}

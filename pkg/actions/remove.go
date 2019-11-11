@@ -12,10 +12,10 @@
 package actions
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/eclipse/codewind-installer/pkg/utils"
+	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -31,7 +31,7 @@ func RemoveCommand(c *cli.Context) {
 
 	images := utils.GetImageList()
 
-	fmt.Println("Removing Codewind docker images..")
+	logr.Infoln("Removing Codewind docker images..")
 
 	for _, image := range images {
 		imageRepo := strings.Join(image.RepoDigests, " ")
@@ -39,9 +39,9 @@ func RemoveCommand(c *cli.Context) {
 		for _, key := range imageArr {
 			if strings.HasPrefix(imageRepo, key) || strings.HasPrefix(imageTags, key) {
 				if len(image.RepoTags) > 0 {
-					fmt.Println("Deleting Image ", image.RepoTags[0], "... ")
+					logr.Infoln("Deleting Image ", image.RepoTags[0], "... ")
 				} else {
-					fmt.Println("Deleting Image ", image.ID, "... ")
+					logr.Infoln("Deleting Image ", image.ID, "... ")
 				}
 				utils.RemoveImage(image.ID)
 			}
@@ -52,7 +52,7 @@ func RemoveCommand(c *cli.Context) {
 
 	for _, network := range networks {
 		if strings.Contains(network.Name, networkName) {
-			fmt.Print("Removing docker network: ", network.Name, "... ")
+			logr.Infoln("Removing docker network: ", network.Name, "... ")
 			utils.RemoveNetwork(network)
 		}
 	}
