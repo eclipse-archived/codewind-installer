@@ -16,7 +16,6 @@ import (
 	"compress/zlib"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -24,9 +23,18 @@ import (
 	"path/filepath"
 	"strings"
 
+<<<<<<< HEAD
 	"github.com/eclipse/codewind-installer/pkg/config"
+=======
+	"github.com/eclipse/codewind-installer/config"
+<<<<<<< HEAD:pkg/project/sync.go
+>>>>>>> replace 'fmt.Print' with logrus #2
 	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/sechttp"
+=======
+	"github.com/eclipse/codewind-installer/pkg/utils/connections"
+	logr "github.com/sirupsen/logrus"
+>>>>>>> replace 'fmt.Print' with logrus #2:pkg/utils/project/sync.go
 	"github.com/urfave/cli"
 )
 
@@ -72,7 +80,7 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	}
 
 	if !ConnectionFileExists(projectID) {
-		fmt.Println("Project connection file does not exist, creating default local connection")
+		logr.Infoln("Project connection file does not exist, creating default local connection")
 		CreateConnectionFile(projectID)
 	}
 
@@ -189,7 +197,7 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 		return nil
 	})
 	if err != nil {
-		fmt.Printf("error walking the path %q: %v\n", projectPath, err)
+		logr.Errorf("error walking the path %q: %v\n", projectPath, err)
 		return nil, nil, nil
 	}
 	return fileList, modifiedList, uploadedFiles
@@ -286,5 +294,5 @@ func ignoreFileOrDirectory(name string, isDir bool, cwSettingsIgnoredPathsList [
 // PrettyPrintJSON : Format JSON output for display
 func PrettyPrintJSON(i interface{}) {
 	s, _ := json.MarshalIndent(i, "", "\t")
-	fmt.Println(string(s))
+	logr.Infoln(string(s))
 }

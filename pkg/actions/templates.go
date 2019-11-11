@@ -13,12 +13,11 @@ package actions
 
 import (
 	"encoding/json"
-	"fmt"
-	"log"
 	"strings"
 
 	"github.com/eclipse/codewind-installer/pkg/apiroutes"
 	"github.com/eclipse/codewind-installer/pkg/utils"
+	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -30,13 +29,13 @@ func ListTemplates(c *cli.Context) {
 	showEnabledOnly := c.Bool("showEnabledOnly")
 	templates, templatesErr := apiroutes.GetTemplates(conID, projectStyle, showEnabledOnly)
 	if templatesErr != nil {
-		log.Printf("Error getting templates: %q", templatesErr)
+		logr.Errorf("Error getting templates: %q", templatesErr)
 		return
 	}
 	if len(templates) > 0 {
 		PrettyPrintJSON(templates)
 	} else {
-		fmt.Println(templates)
+		logr.Infoln(templates)
 	}
 
 }
@@ -46,7 +45,7 @@ func ListTemplateStyles(c *cli.Context) {
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 	styles, err := apiroutes.GetTemplateStyles(conID)
 	if err != nil {
-		log.Printf("Error getting template styles: %q", err)
+		logr.Errorf("Error getting template styles: %q", err)
 		return
 	}
 	PrettyPrintJSON(styles)
@@ -57,7 +56,7 @@ func ListTemplateRepos(c *cli.Context) {
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 	repos, err := apiroutes.GetTemplateRepos(conID)
 	if err != nil {
-		log.Printf("Error getting template repos: %q", err)
+		logr.Errorf("Error getting template repos: %q", err)
 		return
 	}
 	PrettyPrintJSON(repos)
@@ -71,7 +70,7 @@ func AddTemplateRepo(c *cli.Context) {
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 	repos, err := apiroutes.AddTemplateRepo(conID, url, desc, name)
 	if err != nil {
-		log.Printf("Error adding template repo: %q", err)
+		logr.Errorf("Error adding template repo: %q", err)
 		return
 	}
 	extensions, err := apiroutes.GetExtensions(conID)
@@ -94,7 +93,7 @@ func DeleteTemplateRepo(c *cli.Context) {
 	}
 	repos, reposErr := apiroutes.DeleteTemplateRepo(conID, url)
 	if reposErr != nil {
-		log.Printf("Error deleting template repo: %q", reposErr)
+		logr.Errorf("Error deleting template repo: %q", reposErr)
 		return
 	}
 	PrettyPrintJSON(repos)
@@ -105,7 +104,7 @@ func EnableTemplateRepos(c *cli.Context) {
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 	repos, reposErr := apiroutes.EnableTemplateRepos(conID, c.Args())
 	if reposErr != nil {
-		log.Printf("Error enabling template repos: %q", reposErr)
+		logr.Errorf("Error enabling template repos: %q", reposErr)
 		return
 	}
 	PrettyPrintJSON(repos)
@@ -116,7 +115,7 @@ func DisableTemplateRepos(c *cli.Context) {
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 	repos, reposErr := apiroutes.DisableTemplateRepos(conID, c.Args())
 	if reposErr != nil {
-		log.Printf("Error enabling template repos: %q", reposErr)
+		logr.Errorf("Error enabling template repos: %q", reposErr)
 		return
 	}
 	PrettyPrintJSON(repos)
@@ -125,5 +124,5 @@ func DisableTemplateRepos(c *cli.Context) {
 // PrettyPrintJSON prints JSON prettily.
 func PrettyPrintJSON(i interface{}) {
 	s, _ := json.MarshalIndent(i, "", "\t")
-	fmt.Println(string(s))
+	logr.Infoln(string(s))
 }

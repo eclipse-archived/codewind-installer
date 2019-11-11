@@ -13,7 +13,6 @@ package project
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -26,6 +25,7 @@ import (
 	"github.com/eclipse/codewind-installer/pkg/apiroutes"
 	"github.com/eclipse/codewind-installer/pkg/errors"
 	"github.com/eclipse/codewind-installer/pkg/utils"
+	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -85,7 +85,7 @@ func DownloadTemplate(c *cli.Context) *ProjectError {
 func checkIsExtension(conID, projectPath string, c *cli.Context) (string, error) {
 	extensions, err := apiroutes.GetExtensions(conID)
 	if err != nil {
-		log.Println("There was a problem retrieving extensions data")
+		logr.Errorln("There was a problem retrieving extensions data")
 		return "unknown", err
 	}
 
@@ -173,7 +173,7 @@ func ValidateProject(c *cli.Context) *ProjectError {
 	if extensionType == "" {
 		writeCwSettingsIfNotInProject(conID, projectPath, buildType)
 	}
-	fmt.Println(string(projectInfo))
+	logr.Infoln(string(projectInfo))
 	return nil
 }
 

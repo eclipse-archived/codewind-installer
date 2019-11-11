@@ -82,12 +82,20 @@ func DeployGatekeeper(config *restclient.Config, clientset *kubernetes.Clientset
 		route := createRouteGatekeeper(codewindInstance)
 		routev1client, err := routev1.NewForConfig(config)
 		if err != nil {
+<<<<<<< HEAD
 			logr.Printf("Error retrieving route client for OpenShift: %v\n", err)
+=======
+			logr.Errorf("Error retrieving route client for OpenShift: %v\n", err)
+>>>>>>> replace 'fmt.Print' with logrus #2
 			os.Exit(1)
 		}
 		_, err = routev1client.Routes(codewindInstance.Namespace).Create(&route)
 		if err != nil {
+<<<<<<< HEAD
 			logr.Printf("Error: Unable to create route for Codewind: %v\n", err)
+=======
+			logr.Errorf("Error: Unable to create route for Codewind: %v\n", err)
+>>>>>>> replace 'fmt.Print' with logrus #2
 			os.Exit(1)
 		}
 	} else {
@@ -95,7 +103,11 @@ func DeployGatekeeper(config *restclient.Config, clientset *kubernetes.Clientset
 		ingress := createIngressGatekeeper(codewindInstance)
 		_, err = clientset.ExtensionsV1beta1().Ingresses(codewindInstance.Namespace).Create(&ingress)
 		if err != nil {
+<<<<<<< HEAD
 			logr.Printf("Error: Unable to create ingress for Codewind Gatekeeper: %v\n", err)
+=======
+			logr.Errorf("Error: Unable to create ingress for Codewind Gatekeeper: %v\n", err)
+>>>>>>> replace 'fmt.Print' with logrus #2
 			os.Exit(1)
 		}
 	}

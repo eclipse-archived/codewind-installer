@@ -13,13 +13,13 @@ package actions
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 	"strings"
 
 	"github.com/eclipse/codewind-installer/pkg/security"
 	"github.com/eclipse/codewind-installer/pkg/utils"
+	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -29,7 +29,7 @@ func SecurityTokenGet(c *cli.Context) {
 	if err == nil && auth != nil {
 		utils.PrettyPrintJSON(auth)
 	} else {
-		fmt.Println(err.Error())
+		logr.Errorln(err.Error())
 		os.Exit(1)
 	}
 	os.Exit(0)
@@ -51,7 +51,7 @@ func SecurityTokenRefresh(c *cli.Context) {
 func SecurityCreateRealm(c *cli.Context) {
 	err := security.SecRealmCreate(c)
 	if err != nil {
-		fmt.Println(err.Error())
+		logr.Errorln(err.Error())
 		os.Exit(1)
 	} else {
 		utils.PrettyPrintJSON(security.Result{Status: "OK"})
@@ -63,7 +63,7 @@ func SecurityCreateRealm(c *cli.Context) {
 func SecurityClientCreate(c *cli.Context) {
 	err := security.SecClientCreate(c)
 	if err != nil {
-		fmt.Println(err.Error())
+		logr.Errorln(err.Error())
 		os.Exit(1)
 	} else {
 		utils.PrettyPrintJSON(security.Result{Status: "OK"})
@@ -75,7 +75,7 @@ func SecurityClientCreate(c *cli.Context) {
 func SecurityClientGet(c *cli.Context) {
 	registeredClient, err := security.SecClientGet(c)
 	if err != nil {
-		fmt.Println(err.Error())
+		logr.Errorln(err.Error())
 		os.Exit(1)
 	}
 	if registeredClient != nil {
@@ -90,7 +90,7 @@ func SecurityClientGet(c *cli.Context) {
 func SecurityClientGetSecret(c *cli.Context) {
 	registeredClientSecret, err := security.SecClientGetSecret(c)
 	if err != nil {
-		fmt.Println(err.Error())
+		logr.Errorln(err.Error())
 		os.Exit(1)
 	}
 	if registeredClientSecret != nil {
@@ -105,7 +105,7 @@ func SecurityClientGetSecret(c *cli.Context) {
 func SecurityUserCreate(c *cli.Context) {
 	err := security.SecUserCreate(c)
 	if err != nil {
-		fmt.Println(err.Error())
+		logr.Errorln(err.Error())
 		os.Exit(1)
 	} else {
 		utils.PrettyPrintJSON(security.Result{Status: "OK"})
@@ -117,7 +117,7 @@ func SecurityUserCreate(c *cli.Context) {
 func SecurityUserGet(c *cli.Context) {
 	registeredUser, err := security.SecUserGet(c)
 	if err != nil {
-		fmt.Println(err.Error())
+		logr.Errorln(err.Error())
 		os.Exit(1)
 	}
 	if registeredUser != nil {
@@ -132,7 +132,7 @@ func SecurityUserGet(c *cli.Context) {
 func SecurityUserSetPassword(c *cli.Context) {
 	err := security.SecUserSetPW(c)
 	if err != nil {
-		fmt.Println(err.Error())
+		logr.Errorln(err.Error())
 		os.Exit(1)
 	}
 	utils.PrettyPrintJSON(security.Result{Status: "OK"})
@@ -146,11 +146,11 @@ func SecurityKeyUpdate(c *cli.Context) {
 	password := strings.TrimSpace(c.String("password"))
 	err := security.SecKeyUpdate(connectionID, username, password)
 	if err != nil {
-		fmt.Println(err.Error())
+		logr.Errorln(err.Error())
 		os.Exit(1)
 	}
 	response, _ := json.Marshal(security.Result{Status: "OK"})
-	fmt.Println(string(response))
+	logr.Infoln(string(response))
 	os.Exit(0)
 }
 
@@ -160,10 +160,10 @@ func SecurityKeyValidate(c *cli.Context) {
 	username := strings.TrimSpace(strings.ToLower(c.String("username")))
 	_, err := security.SecKeyGetSecret(connectionID, username)
 	if err != nil {
-		fmt.Println(err.Error())
+		logr.Errorln(err.Error())
 		os.Exit(1)
 	}
 	response, _ := json.Marshal(security.Result{Status: "OK"})
-	fmt.Println(string(response))
+	logr.Infoln(string(response))
 	os.Exit(0)
 }
