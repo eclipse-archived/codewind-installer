@@ -43,7 +43,8 @@ func CreateTempFile(filePath string) bool {
 		errors.CheckErr(err, 201, "")
 		defer file.Close()
 
-		fmt.Println("==> created file", filePath)
+		dir, _ := os.Getwd()
+		fmt.Println("==> created file", path.Join(dir, filePath))
 		return true
 	}
 	return false
@@ -59,6 +60,12 @@ func WriteToComposeFile(tempFilePath string, debug bool) bool {
 
 	unmarshDataErr := yaml.Unmarshal([]byte(data), &dataStruct)
 	errors.CheckErr(unmarshDataErr, 202, "")
+
+	if debug == true && len(dataStruct.SERVICES.PFE.Ports) > 0 {
+		debugPort := DetermineDebugPortForPFE()
+		// Add the debug port to the docker compose data
+		dataStruct.SERVICES.PFE.Ports = append(dataStruct.SERVICES.PFE.Ports, "127.0.0.1:"+debugPort+":9777")
+	}
 
 	marshalledData, err := yaml.Marshal(&dataStruct)
 	errors.CheckErr(err, 203, "")
