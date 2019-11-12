@@ -111,15 +111,11 @@ func ConnectionRemoveFromList(c *cli.Context) {
 		os.Exit(1)
 	}
 	response, _ := json.Marshal(connections.Result{Status: "OK", StatusMessage: "Connection removed"})
-<<<<<<< HEAD
 	if printAsJSON {
 		fmt.Println(string(response))
 	} else {
 		logr.Printf("Connection removed successfully")
 	}
-=======
-	fmt.Println(string(response))
->>>>>>> all json output using fmt.println, all other output using logrus
 	os.Exit(0)
 }
 
@@ -153,14 +149,10 @@ func ConnectionResetList(c *cli.Context) {
 		os.Exit(1)
 	}
 	response, _ := json.Marshal(connections.Result{Status: "OK", StatusMessage: "Connection list reset"})
-<<<<<<< HEAD
 	if printAsJSON {
 		fmt.Println(string(response))
 	} else {
 		logr.Printf("Connection list reset successfully")
 	}
-=======
-	fmt.Println(string(response))
->>>>>>> all json output using fmt.println, all other output using logrus
 	os.Exit(0)
 }

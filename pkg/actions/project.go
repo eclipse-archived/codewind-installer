@@ -30,7 +30,7 @@ import (
 func ProjectValidate(c *cli.Context) {
 	err := project.ValidateProject(c)
 	if err != nil {
-		logr.Errorln(err.Error())
+		fmt.Println(err.Error())
 		os.Exit(1)
 	}
 	os.Exit(0)
@@ -40,7 +40,7 @@ func ProjectValidate(c *cli.Context) {
 func ProjectCreate(c *cli.Context) {
 	err := project.DownloadTemplate(c)
 	if err != nil {
-		logr.Errorln(err.Error())
+		fmt.Println(err.Error())
 		os.Exit(1)
 	}
 }
@@ -68,7 +68,7 @@ func ProjectBind(c *cli.Context) {
 	PrintAsJSON := c.GlobalBool("json")
 	response, err := project.BindProject(c)
 	if err != nil {
-		logr.Errorln(err.Error())
+		fmt.Println(err.Error())
 		os.Exit(1)
 	} else {
 		if PrintAsJSON {
@@ -87,7 +87,7 @@ func UpgradeProjects(c *cli.Context) {
 	dir := strings.TrimSpace(c.String("workspace"))
 	response, err := project.UpgradeProjects(dir)
 	if err != nil {
-		logr.Errorln(err.Error())
+		fmt.Println(err.Error())
 		os.Exit(1)
 	}
 	PrettyPrintJSON(response)
@@ -100,7 +100,7 @@ func ProjectSetConnection(c *cli.Context) {
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 	err := project.SetConnection(conID, projectID)
 	if err != nil {
-		logr.Errorln(err.Error())
+		fmt.Println(err.Error())
 		os.Exit(1)
 	}
 	response, _ := json.Marshal(project.Result{Status: "OK", StatusMessage: "Project target added successfully"})
@@ -113,7 +113,7 @@ func ProjectGetConnection(c *cli.Context) {
 	projectID := strings.TrimSpace(strings.ToLower(c.String("id")))
 	connectionTargets, err := project.GetConnectionID(projectID)
 	if err != nil {
-		logr.Errorln(err.Error())
+		fmt.Println(err.Error())
 		os.Exit(1)
 	}
 	logr.Infoln(connectionTargets)
@@ -125,7 +125,7 @@ func ProjectRemoveConnection(c *cli.Context) {
 	projectID := strings.TrimSpace(strings.ToLower(c.String("id")))
 	err := project.ResetConnectionFile(projectID)
 	if err != nil {
-		logr.Errorln(err.Error())
+		fmt.Println(err.Error())
 		os.Exit(1)
 	}
 	response, _ := json.Marshal(project.Result{Status: "OK", StatusMessage: "Project target removed successfully"})
