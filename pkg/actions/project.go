@@ -13,6 +13,7 @@ package actions
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"strings"
 
@@ -54,7 +55,7 @@ func ProjectSync(c *cli.Context) {
 	} else {
 		if PrintAsJSON {
 			jsonResponse, _ := json.Marshal(response)
-			logr.Infoln(string(jsonResponse))
+			fmt.Println(string(jsonResponse))
 		} else {
 			logr.Infoln("Status: " + response.Status)
 		}
@@ -72,7 +73,7 @@ func ProjectBind(c *cli.Context) {
 	} else {
 		if PrintAsJSON {
 			jsonResponse, _ := json.Marshal(response)
-			logr.Infoln(string(jsonResponse))
+			fmt.Println(string(jsonResponse))
 		} else {
 			logr.Infoln("Project ID: " + response.ProjectID)
 			logr.Infoln("Status: " + response.Status)
@@ -103,7 +104,7 @@ func ProjectSetConnection(c *cli.Context) {
 		os.Exit(1)
 	}
 	response, _ := json.Marshal(project.Result{Status: "OK", StatusMessage: "Project target added successfully"})
-	logr.Infoln(string(response))
+	fmt.Println(string(response))
 	os.Exit(0)
 }
 
@@ -128,6 +129,6 @@ func ProjectRemoveConnection(c *cli.Context) {
 		os.Exit(1)
 	}
 	response, _ := json.Marshal(project.Result{Status: "OK", StatusMessage: "Project target removed successfully"})
-	logr.Infoln(string(response))
+	fmt.Println(string(response))
 	os.Exit(0)
 }

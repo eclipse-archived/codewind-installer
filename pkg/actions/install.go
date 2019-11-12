@@ -14,6 +14,7 @@ package actions
 import (
 	"crypto/tls"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -101,7 +102,7 @@ func DoRemoteInstall(c *cli.Context) {
 	deploymentResult, remInstError := remote.DeployRemote(&deployOptions)
 	if remInstError != nil {
 		if printAsJSON {
-			logr.Errorln(remInstError.Error())
+			fmt.Println(remInstError.Error())
 		} else {
 			logr.Errorf("Error: %v - %v\n", remInstError.Op, remInstError.Desc)
 		}
@@ -119,7 +120,7 @@ func DoRemoteInstall(c *cli.Context) {
 	result := project.Result{Status: "OK", StatusMessage: "Install Successful: " + gatekeeperURL}
 	if printAsJSON {
 		response, _ := json.Marshal(result)
-		logr.Infoln(string(response))
+		fmt.Println(string(response))
 	} else {
 		logr.Infoln("Codewind is available at: " + gatekeeperURL)
 	}

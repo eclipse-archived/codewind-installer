@@ -31,6 +31,7 @@ func DeployPFE(config *restclient.Config, clientset *kubernetes.Clientset, codew
 	codewindRoleBindings := CreateCodewindRoleBindings(codewindInstance, deployOptions, codewindRoleBindingName)
 
 	service := createPFEService(codewindInstance)
+<<<<<<< HEAD
 	deploy := createPFEDeploy(codewindInstance, deployOptions)
 
 	logr.Infof("Checking if '%v' cluster access roles are installed\n", CodewindRolesName)
@@ -61,6 +62,11 @@ func DeployPFE(config *restclient.Config, clientset *kubernetes.Clientset, codew
 
 	logr.Infoln("Deploying Codewind Service")
 	_, err = clientset.CoreV1().Services(deployOptions.Namespace).Create(&service)
+=======
+	deploy := createPFEDeploy(codewindInstance)
+	logr.Infoln("Deploying Codewind Service")
+	_, err := clientset.CoreV1().Services(deployOptions.Namespace).Create(&service)
+>>>>>>> all json output using fmt.println, all other output using logrus
 	if err != nil {
 		logr.Errorf("Unable to create Codewind service: %v\n", err)
 		return err

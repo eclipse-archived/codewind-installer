@@ -13,6 +13,7 @@ package actions
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 
@@ -61,7 +62,7 @@ func StatusCommandRemoteConnection(c *cli.Context) {
 				os.Exit(1)
 			}
 			output, _ := json.Marshal(resp)
-			logr.Errorln(string(output))
+			fmt.Println(string(output))
 			os.Exit(1)
 		} else {
 			logr.Errorln("Codewind did not respond on remote connection", conID)
@@ -81,7 +82,7 @@ func StatusCommandRemoteConnection(c *cli.Context) {
 			Status: "started",
 		}
 		output, _ := json.Marshal(resp)
-		logr.Infoln(string(output))
+		fmt.Println(string(output))
 	} else {
 		logr.Infoln("Remote Codewind is installed and running")
 	}
@@ -114,7 +115,7 @@ func StatusCommandLocalConnection(c *cli.Context) {
 			}
 
 			output, _ := json.Marshal(resp)
-			logr.Infoln(string(output))
+			fmt.Println(string(output))
 		} else {
 			logr.Infoln("Codewind is installed and running on http://" + hostname + ":" + port)
 		}
@@ -138,7 +139,7 @@ func StatusCommandLocalConnection(c *cli.Context) {
 			}
 
 			output, _ := json.Marshal(resp)
-			logr.Infoln(string(output))
+			fmt.Println(string(output))
 		} else {
 			logr.Infoln("Codewind is installed but not running")
 		}
@@ -147,7 +148,7 @@ func StatusCommandLocalConnection(c *cli.Context) {
 		// Not installed
 		if jsonOutput {
 			output, _ := json.Marshal(map[string]string{"status": "uninstalled"})
-			logr.Infoln(string(output))
+			fmt.Println(string(output))
 		} else {
 			logr.Infoln("Codewind is not installed")
 		}

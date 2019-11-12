@@ -13,9 +13,8 @@ package utils
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
-
-	logr "github.com/sirupsen/logrus"
 )
 
 // RemoveDuplicateEntries elements
@@ -42,7 +41,7 @@ func RemoveDuplicateEntries(inputArr []string) []string {
 // PrettyPrintJSON : Format JSON output for display
 func PrettyPrintJSON(i interface{}) {
 	s, _ := json.MarshalIndent(i, "", "\t")
-	logr.Infoln(string(s))
+	fmt.Println(string(s))
 }
 
 // CreateTimestamp : Create a timestamp

@@ -13,6 +13,7 @@ package actions
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -150,7 +151,7 @@ func SecurityKeyUpdate(c *cli.Context) {
 		os.Exit(1)
 	}
 	response, _ := json.Marshal(security.Result{Status: "OK"})
-	logr.Infoln(string(response))
+	fmt.Println(string(response))
 	os.Exit(0)
 }
 
@@ -164,6 +165,6 @@ func SecurityKeyValidate(c *cli.Context) {
 		os.Exit(1)
 	}
 	response, _ := json.Marshal(security.Result{Status: "OK"})
-	logr.Infoln(string(response))
+	fmt.Println(string(response))
 	os.Exit(0)
 }

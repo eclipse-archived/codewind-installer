@@ -13,6 +13,7 @@ package actions
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/eclipse/codewind-installer/pkg/apiroutes"
@@ -124,5 +125,5 @@ func DisableTemplateRepos(c *cli.Context) {
 // PrettyPrintJSON prints JSON prettily.
 func PrettyPrintJSON(i interface{}) {
 	s, _ := json.MarshalIndent(i, "", "\t")
-	logr.Infoln(string(s))
+	fmt.Println(string(s))
 }

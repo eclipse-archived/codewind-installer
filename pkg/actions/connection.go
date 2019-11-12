@@ -72,7 +72,8 @@ func ConnectionUpdate(c *cli.Context) {
 
 	response, _ := json.Marshal(Result{Status: "OK", StatusMessage: "Connection updated", ConID: strings.ToUpper(connection.ID)})
 	if conErr != nil {
-		fmt.Println(string(response))
+		logr.Errorln(string(response))
+		os.Exit(1)
 	} else {
 		logr.Printf("Connection %v updated successfully", strings.ToUpper(connection.ID))
 	}
@@ -93,7 +94,7 @@ func ConnectionGetByID(c *cli.Context) {
 		os.Exit(1)
 	}
 	response, _ := json.Marshal(connection)
-	logr.Infoln(string(response))
+	fmt.Println(string(response))
 	os.Exit(0)
 }
 
@@ -110,11 +111,15 @@ func ConnectionRemoveFromList(c *cli.Context) {
 		os.Exit(1)
 	}
 	response, _ := json.Marshal(connections.Result{Status: "OK", StatusMessage: "Connection removed"})
+<<<<<<< HEAD
 	if printAsJSON {
 		fmt.Println(string(response))
 	} else {
 		logr.Printf("Connection removed successfully")
 	}
+=======
+	fmt.Println(string(response))
+>>>>>>> all json output using fmt.println, all other output using logrus
 	os.Exit(0)
 }
 
@@ -131,7 +136,7 @@ func ConnectionListAll(c *cli.Context) {
 		os.Exit(1)
 	}
 	response, _ := json.Marshal(allConnections)
-	logr.Infoln(string(response))
+	fmt.Println(string(response))
 	os.Exit(0)
 }
 
@@ -148,10 +153,14 @@ func ConnectionResetList(c *cli.Context) {
 		os.Exit(1)
 	}
 	response, _ := json.Marshal(connections.Result{Status: "OK", StatusMessage: "Connection list reset"})
+<<<<<<< HEAD
 	if printAsJSON {
 		fmt.Println(string(response))
 	} else {
 		logr.Printf("Connection list reset successfully")
 	}
+=======
+	fmt.Println(string(response))
+>>>>>>> all json output using fmt.println, all other output using logrus
 	os.Exit(0)
 }
