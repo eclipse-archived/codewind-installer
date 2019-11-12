@@ -14,7 +14,6 @@ package project
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -23,24 +22,25 @@ import (
 	"github.com/urfave/cli"
 )
 
-func UpgradeProjects(c *cli.Context) *ProjectError {
+func UpgradeProjects(c *cli.Context) (*map[string]interface{}, *ProjectError) {
 
 	oldDir := strings.TrimSpace(c.String("workspace"))
 	// Check to see if the workspace exists
 	_, err := os.Stat(oldDir)
 	if err != nil {
-		return &ProjectError{errBadPath, err, err.Error()}
+		return nil, &ProjectError{errBadPath, err, err.Error()}
 	}
-	fmt.Println("About to upgrade projects from " + oldDir)
-
 	projectDir := oldDir + "/.projects/"
 	// Check to see if the .projects dir exists
 	_, fileerr := os.Stat(projectDir)
 	if fileerr != nil {
-		return &ProjectError{textNoProjects, fileerr, fileerr.Error()}
+		return nil, &ProjectError{textNoProjects, fileerr, fileerr.Error()}
 	}
 
-	fmt.Println("Looking for projects in " + projectDir)
+	migrationStatus := make(map[string]interface{})
+	migrationStatus["migrated"] = make([]string, 0)
+	migrationStatus["failed"] = make([]interface{}, 0)
+
 	filepath.Walk(projectDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			err = errors.New(textUpgradeError)
@@ -59,28 +59,29 @@ func UpgradeProjects(c *cli.Context) *ProjectError {
 			projectType := result["projectType"]
 			name := result["name"]
 			location := oldDir + "/" + name
-			fmt.Println("Calling bind for project " + name + "," + projectType + "," + language + " in " + location)
 
 			if language != "" && projectType != "" && name != "" && location != "" {
-				response, binderr := Bind(location, name, language, projectType, "local")
-				PrintAsJSON := c.GlobalBool("json")
-				if binderr != nil {
-					fmt.Println(binderr)
+				_, bindErr := Bind(location, name, language, projectType, "local")
+				if bindErr != nil {
+					errResponse := make(map[string]interface{})
+					errResponse["projectName"] = name
+					errResponse["error"] = bindErr.Desc
+					migrationStatus["failed"] = append(migrationStatus["failed"].([]interface{}), &errResponse)
 				} else {
-					if PrintAsJSON {
-						jsonResponse, _ := json.Marshal(response)
-						fmt.Println(string(jsonResponse))
-					} else {
-						fmt.Println("Project ID: " + response.ProjectID)
-						fmt.Println("Status: " + response.Status)
-					}
+					migrationStatus["migrated"] = append(migrationStatus["migrated"].([]string), name)
 				}
 			} else {
-				fmt.Println("Unable to upgrade project, failed to determine project details")
+				errResponse := make(map[string]string)
+				errResponse["projectName"] = name
+				errResponse["error"] = "Unable to upgrade project, failed to determine project details"
+				migrationStatus["failed"] = append(migrationStatus["failed"].([]interface{}), &errResponse)
 			}
 		}
 		return nil
 	})
-	return nil
-
+	if len(migrationStatus["failed"].([]interface{})) > 0 {
+		err := errors.New("One or more projects failed to upgrade")
+		return &migrationStatus, &ProjectError{textUpgradeError, err, err.Error()}
+	}
+	return &migrationStatus, nil
 }
