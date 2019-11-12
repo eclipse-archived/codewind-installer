@@ -45,6 +45,8 @@ const (
 	textConMissing       = "project connection not found"
 	textNoCodewind       = "unable to connect to Codewind server"
 	textAPINotFound      = "unable to find requested resource on Codewind server"
+	textNoProjects       = "unable to find any codewind projects"
+	textUpgradeError     = "error occurred upgrading projects"
 )
 
 // ProjectError : Error formatted in JSON containing an errorOp and a description from

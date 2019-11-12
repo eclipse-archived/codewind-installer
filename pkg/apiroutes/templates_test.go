@@ -22,9 +22,15 @@ import (
 
 var numCodewindTemplates = 8
 
-var numAppsodyTemplates = 11
+var numAppsodyTemplatesEnabled = 11
 
-var numTemplates = numCodewindTemplates + numAppsodyTemplates
+var numAppsodyTemplatesDisabled = 7
+
+var numAppsodyTemplates = numAppsodyTemplatesEnabled + numAppsodyTemplatesDisabled
+
+var numTemplatesEnabled = numCodewindTemplates + numAppsodyTemplatesEnabled
+
+var numTemplates = numTemplatesEnabled + numAppsodyTemplatesDisabled
 
 var URLOfExistingRepo = "https://raw.githubusercontent.com/kabanero-io/codewind-templates/master/devfiles/index.json"
 var URLOfNewRepo = "https://raw.githubusercontent.com/kabanero-io/codewind-templates/aad4bafc14e1a295fb8e462c20fe8627248609a3/devfiles/index.json"
@@ -34,34 +40,42 @@ var URLOfUnknownRepo2 = "https://raw.githubusercontent.com/UNKNOWN_2"
 func TestGetTemplates(t *testing.T) {
 	tests := map[string]struct {
 		inProjectStyle    string
-		inShowEnabledOnly string
+		inShowEnabledOnly bool
 		wantedType        []Template
 		wantedLength      int
 	}{
 		"get templates of all styles": {
 			inProjectStyle:    "",
-			inShowEnabledOnly: "",
+			inShowEnabledOnly: false,
 			wantedType:        []Template{},
 			wantedLength:      numTemplates,
 		},
-		"filter templates by known style": {
-			inProjectStyle: "Codewind",
-			wantedType:     []Template{},
-			wantedLength:   numCodewindTemplates,
+		"filter templates by known style (Codewind)": {
+			inProjectStyle:    "Codewind",
+			inShowEnabledOnly: false,
+			wantedType:        []Template{},
+			wantedLength:      numCodewindTemplates,
+		},
+		"filter templates by known style (Appsody)": {
+			inProjectStyle:    "Appsody",
+			inShowEnabledOnly: false,
+			wantedType:        []Template{},
+			wantedLength:      numAppsodyTemplates,
 		},
 		"filter templates by unknown style": {
-			inProjectStyle: "unknownStyle",
-			wantedType:     []Template{},
-			wantedLength:   0,
+			inProjectStyle:    "unknownStyle",
+			inShowEnabledOnly: false,
+			wantedType:        []Template{},
+			wantedLength:      0,
 		},
 		"filter templates by enabled templates": {
-			inShowEnabledOnly: "true",
+			inShowEnabledOnly: true,
 			wantedType:        []Template{},
-			wantedLength:      numTemplates,
+			wantedLength:      numTemplatesEnabled,
 		},
 		"filter templates by enabled templates of unknown style": {
 			inProjectStyle:    "unknownStyle",
-			inShowEnabledOnly: "false",
+			inShowEnabledOnly: true,
 			wantedType:        []Template{},
 			wantedLength:      0,
 		},

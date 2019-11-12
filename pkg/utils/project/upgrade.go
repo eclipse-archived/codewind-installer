@@ -13,6 +13,7 @@ package project
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -23,21 +24,29 @@ import (
 )
 
 func UpgradeProjects(c *cli.Context) *ProjectError {
-	fmt.Println("About to upgrade projects")
 
 	oldDir := strings.TrimSpace(c.String("workspace"))
-
+	// Check to see if the workspace exists
 	_, err := os.Stat(oldDir)
 	if err != nil {
 		return &ProjectError{errBadPath, err, err.Error()}
 	}
+	fmt.Println("About to upgrade projects from " + oldDir)
 
 	projectDir := oldDir + "/.projects/"
-	filepath.Walk(projectDir, func(path string, info os.FileInfo, err error) error {
+	// Check to see if the .projects dir exists
+	_, fileerr := os.Stat(projectDir)
+	if fileerr != nil {
+		return &ProjectError{textNoProjects, fileerr, fileerr.Error()}
+	}
 
+	fmt.Println("Looking for projects in " + projectDir)
+	filepath.Walk(projectDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			panic(err)
+			err = errors.New(textUpgradeError)
+			return &ProjectError{errOpFileParse, err, textUpgradeError}
 		}
+
 		if !info.IsDir() {
 			file, err := ioutil.ReadFile(path)
 			if err != nil {
@@ -49,14 +58,26 @@ func UpgradeProjects(c *cli.Context) *ProjectError {
 			language := result["language"]
 			projectType := result["projectType"]
 			name := result["name"]
-			location := result["workspace"] + name
-			projectID := result["projectID"]
+			location := oldDir + "/" + name
+			fmt.Println("Calling bind for project " + name + "," + projectType + "," + language + " in " + location)
 
-			conID, err := GetConnectionURL(projectID)
-			if err != nil {
-				return err
+			if language != "" && projectType != "" && name != "" && location != "" {
+				response, binderr := Bind(location, name, language, projectType, "local")
+				PrintAsJSON := c.GlobalBool("json")
+				if binderr != nil {
+					fmt.Println(binderr)
+				} else {
+					if PrintAsJSON {
+						jsonResponse, _ := json.Marshal(response)
+						fmt.Println(string(jsonResponse))
+					} else {
+						fmt.Println("Project ID: " + response.ProjectID)
+						fmt.Println("Status: " + response.Status)
+					}
+				}
+			} else {
+				fmt.Println("Unable to upgrade project, failed to determine project details")
 			}
-			Bind(location, name, language, projectType, conID)
 		}
 		return nil
 	})

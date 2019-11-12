@@ -41,7 +41,7 @@ func StatusCommandRemoteConnection(c *cli.Context) {
 	connection, conErr := connections.GetConnectionByID(conID)
 	if conErr != nil {
 		fmt.Println(conErr)
-		os.Exit(0)
+		os.Exit(1)
 	}
 
 	PFEReady, err := apiroutes.IsPFEReady(http.DefaultClient, connection.URL)
@@ -55,15 +55,15 @@ func StatusCommandRemoteConnection(c *cli.Context) {
 			}
 			if err != nil {
 				fmt.Println(err)
-				os.Exit(0)
+				os.Exit(1)
 			}
 			output, _ := json.Marshal(resp)
 			fmt.Println(string(output))
+			os.Exit(1)
 		} else {
 			fmt.Println("Codewind did not respond on remote connection", conID)
 			log.Println(err)
 		}
-		os.Exit(0)
 	}
 
 	// Codewind responded

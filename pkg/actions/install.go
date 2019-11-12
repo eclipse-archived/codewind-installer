@@ -81,7 +81,7 @@ func DoRemoteInstall(c *cli.Context) {
 		} else {
 			logr.Errorf("Error: %v - %v\n", remInstError.Op, remInstError.Desc)
 		}
-		os.Exit(0)
+		os.Exit(1)
 	}
 
 	gatekeeperURL := deploymentResult.GatekeeperURL

@@ -124,7 +124,8 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 			if shouldIgnore {
 				return nil
 			}
-			relativePath := path[(len(projectPath) + 1):]
+			// use ToSlash to try and get both Windows and *NIX paths to be *NIX for pfe
+			relativePath := filepath.ToSlash(path[(len(projectPath) + 1):])
 			// Create list of all files for a project
 			fileList = append(fileList, relativePath)
 

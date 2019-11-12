@@ -9,7 +9,6 @@
 }
 
 @test "invoke status -j command - output = '{"status":"stopped","installed-versions":["latest"]}'" {
-  skip
   cd cmd/cli/
   run go run main.go status -j
   echo "status = ${status}"
@@ -65,7 +64,7 @@
 }
 
 @test "invoke con add command - add new connection to the list" {
-  skip
+  skip "environment not available yet"
   cd cmd/cli/
   run go run main.go con add -d kube --label "kube-cluster" --url http://mykube:12345 --auth http://myauth:12345 --realm codewind-cloud --clientid codewind
   echo "status = ${status}"
@@ -75,7 +74,7 @@
 }
 
 @test "invoke con list command - ensure both connections exist " {
-  skip
+  skip "environment not available yet"
   cd cmd/cli/
   run go run main.go con list
   echo "status = ${status}"
@@ -85,7 +84,7 @@
 }
 
 @test "invoke con target command - set a target to something unknown" {
-  skip
+  skip "environment not available yet"
   cd cmd/cli/
   run go run main.go con target -d noname
   echo "status = ${status}"
@@ -95,7 +94,7 @@
 }
 
 @test "invoke con target command - set the target to kube" {
-  skip
+  skip "environment not available yet"
   cd cmd/cli/
   run go run main.go con target -d kube
   echo "status = ${status}"
@@ -105,7 +104,7 @@
 }
 
 @test "invoke con target command - check the target is now kube" {
-  skip
+  skip "environment not available yet"
   cd cmd/cli/
   run go run main.go con target
   echo "status = ${status}"
@@ -115,7 +114,7 @@
 }
 
 @test "invoke con remove command - delete target kube" {
-  skip
+  skip "environment not available yet"
   cd cmd/cli/
   run go run main.go con remove --id kube
   echo "status = ${status}"
@@ -160,8 +159,9 @@
   run go run main.go seckeyring validate --conid remoteNotKnown --username testuser
   echo "status = ${status}"
   echo "output trace = ${output}"
-  [ "$output" = '{"error":"sec_keyring","error_description":"secret not found in keyring"}' ]
-  [ "$status" -eq 0 ]
+  [ "${lines[0]}" = '{"error":"sec_keyring","error_description":"secret not found in keyring"}' ]
+  [ "${lines[1]}" = "exit status 1" ]
+  [ "$status" -eq 1 ]
 }
 
 @test "invoke seckeyring validate command - key not found (incorrect username)"  {
@@ -169,7 +169,8 @@
   run go run main.go seckeyring validate --conid local --username testuser_unknown
   echo "status = ${status}"
   echo "output trace = ${output}"
-  [ "$output" = '{"error":"sec_keyring","error_description":"secret not found in keyring"}' ]
-  [ "$status" -eq 0 ]
+  [ "${lines[0]}" = '{"error":"sec_keyring","error_description":"secret not found in keyring"}' ]
+  [ "${lines[1]}" = "exit status 1" ]
+  [ "$status" -eq 1 ]
 }
 
