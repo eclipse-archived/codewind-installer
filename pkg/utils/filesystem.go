@@ -108,8 +108,9 @@ func PingHealth(healthEndpoint string) bool {
 			fmt.Printf(".")
 		} else {
 			if resp.StatusCode == 200 {
-				fmt.Println("\nHTTP Response Status:", resp.StatusCode, http.StatusText(resp.StatusCode))
-				fmt.Println("Codewind successfully started on http://" + hostname + ":" + port)
+				fmt.Print("\n") // using fmt to ass a new line to separate from '...' in the output
+				logr.Print("HTTP Response Status:", resp.StatusCode, http.StatusText(resp.StatusCode))
+				logr.Println("Codewind successfully started on http://" + hostname + ":" + port)
 				started = true
 				break
 			}
