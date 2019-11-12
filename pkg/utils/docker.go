@@ -96,8 +96,10 @@ const internalPFEPort = 9090
 
 // constants to identify the range of external ports on which to expose PFE
 const (
-	minTCPPort = 10000
-	maxTCPPort = 11000
+	minTCPPort   = 10000
+	maxTCPPort   = 11000
+	minDebugPort = 34000
+	maxDebugPort = 35000
 )
 
 // DockerCompose to set up the Codewind environment
@@ -385,6 +387,12 @@ func IsTCPPortAvailable(minTCPPort int, maxTCPPort int) (bool, string) {
 		}
 	}
 	return false, ""
+}
+
+// DetermineDebugPortForPFE determines a debug port to use for PFE based on the external PFE port
+func DetermineDebugPortForPFE() (pfeDebugPort string) {
+	_, debugPort := IsTCPPortAvailable(minDebugPort, maxDebugPort)
+	return debugPort
 }
 
 // GetContainerTags of the Codewind version(s) currently running
