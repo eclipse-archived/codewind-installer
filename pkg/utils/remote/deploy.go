@@ -140,7 +140,7 @@ func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemIn
 		OwnerReferenceName: ownerReferenceName,
 		OwnerReferenceUID:  ownerReferenceUID,
 		Privileged:         true,
-		Ingress:            "-" + workspaceID + "-" + ingressDomain,
+		Ingress:            "-" + workspaceID + "." + ingressDomain,
 		OnOpenShift:        onOpenShift,
 	}
 
