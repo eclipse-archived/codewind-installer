@@ -131,7 +131,7 @@ func Bind(projectPath string, name string, language string, projectType string, 
 
 	var projectInfo map[string]interface{}
 	if err := json.Unmarshal(bodyBytes, &projectInfo); err != nil {
-		logr.Error(err)
+		logr.Errorln(err)
 	}
 
 	projectID := projectInfo["projectID"].(string)
