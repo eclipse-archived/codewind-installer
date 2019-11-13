@@ -15,12 +15,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
 
-	"github.com/eclipse/codewind-installer/config"
+	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/sechttp"
 	logr "github.com/sirupsen/logrus"
@@ -80,11 +81,6 @@ func Bind(projectPath string, name string, language string, projectType string, 
 		return nil, &ProjectError{errBadPath, err, err.Error()}
 	}
 
-	conInfo, conErr := connections.GetConnectionByID(conID)
-	if conErr != nil {
-		return nil, &ProjectError{errOpConNotFound, conErr.Err, conErr.Error()}
-	}
-
 	bindRequest := BindRequest{
 		Language:    language,
 		Name:        name,
@@ -94,16 +90,13 @@ func Bind(projectPath string, name string, language string, projectType string, 
 	buf := new(bytes.Buffer)
 	json.NewEncoder(buf).Encode(bindRequest)
 
-	// use the given connectionID to call api/v1/bind/start
-	conURL := config.PFEOrigin()
-	if conInfo.ID != "local" {
-		conURL = conInfo.URL
-	}
-	bindURL := conURL + "/api/v1/projects/bind/start"
+	conURL, conErr := config.PFEOrigin("local")
+	fmt.Println(conURL)
+	return nil, nil
 
 	client := &http.Client{}
 
-	request, err := http.NewRequest("POST", bindURL, bytes.NewReader(buf.Bytes()))
+	request, err := http.NewRequest("POST", conURL, bytes.NewReader(buf.Bytes()))
 	request.Header.Set("Content-Type", "application/json")
 	resp, httpSecError := sechttp.DispatchHTTPRequest(client, request, username, conID)
 	if httpSecError != nil {

@@ -19,7 +19,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/eclipse/codewind-installer/config"
+	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 )
 
@@ -55,7 +55,11 @@ type (
 // GetTemplates gets project templates from PFE's REST API.
 // Filter them using the function arguments
 func GetTemplates(projectStyle string, showEnabledOnly bool) ([]Template, error) {
-	req, err := http.NewRequest("GET", config.PFEOrigin()+"/api/v1/templates", nil)
+	conURL, conErr := config.PFEOrigin("local")
+	if conErr != nil {
+		return nil, nil
+	}
+	req, err := http.NewRequest("GET", conURL+"/api/v1/templates", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +91,11 @@ func GetTemplates(projectStyle string, showEnabledOnly bool) ([]Template, error)
 
 // GetTemplateStyles gets all template styles from PFE's REST API
 func GetTemplateStyles() ([]string, error) {
-	resp, err := http.Get(config.PFEOrigin() + "/api/v1/templates/styles")
+	conURL, conErr := config.PFEOrigin("local")
+	if conErr != nil {
+		return nil, nil
+	}
+	resp, err := http.Get(conURL + "/api/v1/templates/styles")
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +115,11 @@ func GetTemplateStyles() ([]string, error) {
 
 // GetTemplateRepos gets all template repos from PFE's REST API
 func GetTemplateRepos() ([]utils.TemplateRepo, error) {
-	resp, err := http.Get(config.PFEOrigin() + "/api/v1/templates/repositories")
+	conURL, conErr := config.PFEOrigin("local")
+	if conErr != nil {
+		return nil, nil
+	}
+	resp, err := http.Get(conURL + "/api/v1/templates/repositories")
 	if err != nil {
 		return nil, err
 	}
@@ -139,8 +151,13 @@ func AddTemplateRepo(URL, description string, name string) ([]utils.TemplateRepo
 	}
 	jsonValue, _ := json.Marshal(values)
 
+	conURL, conErr := config.PFEOrigin("local")
+	if conErr != nil {
+		return nil, nil
+	}
+
 	resp, err := http.Post(
-		config.PFEOrigin()+"/api/v1/templates/repositories",
+		conURL+"/api/v1/templates/repositories",
 		"application/json",
 		bytes.NewBuffer(jsonValue),
 	)
@@ -174,9 +191,14 @@ func DeleteTemplateRepo(URL string) ([]utils.TemplateRepo, error) {
 	values := map[string]string{"url": URL}
 	jsonValue, _ := json.Marshal(values)
 
+	conURL, conErr := config.PFEOrigin("local")
+	if conErr != nil {
+		return nil, nil
+	}
+
 	req, err := http.NewRequest(
 		"DELETE",
-		config.PFEOrigin()+"/api/v1/templates/repositories",
+		conURL+"/api/v1/templates/repositories",
 		bytes.NewBuffer(jsonValue),
 	)
 	req.Header.Set("Content-Type", "application/json")
@@ -272,9 +294,14 @@ func DisableTemplateRepos(repoURLs []string) ([]utils.TemplateRepo, error) {
 func BatchPatchTemplateRepos(operations []RepoOperation) ([]SubResponseFromBatchOperation, error) {
 	jsonValue, _ := json.Marshal(operations)
 
+	conURL, conErr := config.PFEOrigin("local")
+	if conErr != nil {
+		return nil, nil
+	}
+
 	req, err := http.NewRequest(
 		"PATCH",
-		config.PFEOrigin()+"/api/v1/batch/templates/repositories",
+		conURL+"/api/v1/batch/templates/repositories",
 		bytes.NewBuffer(jsonValue),
 	)
 	req.Header.Set("Content-Type", "application/json")

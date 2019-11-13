@@ -21,7 +21,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/eclipse/codewind-installer/pkg/apiroutes"
+	"github.com/eclipse/codewind-installer/pkg/gatekeeper"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/urfave/cli"
 )
@@ -128,7 +128,7 @@ func AddConnectionToList(httpClient utils.HTTPClient, c *cli.Context) (*Connecti
 		}
 	}
 
-	gatekeeperEnv, err := apiroutes.GetGatekeeperEnvironment(httpClient, url)
+	gatekeeperEnv, err := gatekeeper.GetGatekeeperEnvironment(httpClient, url)
 	if err != nil {
 		return nil, &ConError{errOpGetEnv, err, err.Error()}
 	}

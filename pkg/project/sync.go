@@ -24,7 +24,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/eclipse/codewind-installer/config"
+	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/sechttp"
 	"github.com/urfave/cli"

@@ -9,7 +9,7 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 
-package apiroutes
+package gatekeeper
 
 import (
 	"bytes"
