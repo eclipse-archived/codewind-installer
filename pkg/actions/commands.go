@@ -47,7 +47,8 @@ func Commands() {
 		},
 		cli.StringFlag{
 			Name:  "loglevel",
-			Usage: "log level {trace,debug,info,error}",
+			Value: "info",
+			Usage: "log level {trace,debug,info,fatal,error}",
 		},
 	}
 
@@ -654,26 +655,24 @@ func Commands() {
 		}
 
 		// Handle Global log level flag
-		if c.GlobalString("loglevel") != "" {
-			switch loglevel := c.GlobalString("loglevel"); {
-			case loglevel == "trace":
-				logr.SetLevel(logr.TraceLevel)
-				break
-			case loglevel == "debug":
-				logr.SetLevel(logr.DebugLevel)
-				break
-			case loglevel == "fatal":
-				logr.SetLevel(logr.FatalLevel)
-				break
-			case loglevel == "error":
-				logr.SetLevel(logr.ErrorLevel)
-				break
-			default:
-				logr.SetLevel(logr.InfoLevel)
-			}
-		} else {
+
+		switch loglevel := c.GlobalString("loglevel"); {
+		case loglevel == "trace":
+			logr.SetLevel(logr.TraceLevel)
+			break
+		case loglevel == "debug":
+			logr.SetLevel(logr.DebugLevel)
+			break
+		case loglevel == "fatal":
+			logr.SetLevel(logr.FatalLevel)
+			break
+		case loglevel == "error":
+			logr.SetLevel(logr.ErrorLevel)
+			break
+		default:
 			logr.SetLevel(logr.InfoLevel)
 		}
+
 		return nil
 	}
 
