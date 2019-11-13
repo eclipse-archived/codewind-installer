@@ -238,9 +238,11 @@ func ValidateImageDigest(image string) (string, *DockerError) {
 func TagImage(source, tag string) {
 	out, err := exec.Command("docker", "tag", source, tag).Output()
 	errors.CheckErr(err, 102, "Image Tagging Failed")
-
-	output := string(out[:])
-	logr.Infoln(output)
+	if len(out) > 0 {
+		// if 'out' byte array is ever > 0 then print the contents as string
+		output := string(out[:])
+		logr.Infoln(output)
+	}
 }
 
 // CheckContainerStatus of Codewind running/stopped
