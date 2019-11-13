@@ -25,7 +25,7 @@ import (
 	"github.com/zalando/go-keyring"
 )
 
-// DispatchHTTPRequest : perform an HTTP request with token based authentication
+// DispatchHTTPRequest : Perform an HTTP request against PFE with token based authentication
 // Returns: HTTPResponse, HTTPSecError
 func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Request, username string, connectionID string) (*http.Response, *HTTPSecError) {
 

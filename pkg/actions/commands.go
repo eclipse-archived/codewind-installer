@@ -81,11 +81,11 @@ func Commands() {
 					Aliases: []string{""},
 					Usage:   "bind a project to codewind for building and running",
 					Flags: []cli.Flag{
-						cli.StringFlag{Name: "name, n", Usage: "the name of the project", Required: true},
-						cli.StringFlag{Name: "language, l", Usage: "the project language", Required: true},
-						cli.StringFlag{Name: "type, t", Usage: "the type of the project", Required: true},
-						cli.StringFlag{Name: "path, p", Usage: "the path to the project", Required: true},
-						cli.StringFlag{Name: "conid", Usage: "the connection id for the project", Required: false},
+						cli.StringFlag{Name: "name, n", Usage: "The name of the project", Required: true},
+						cli.StringFlag{Name: "language, l", Usage: "The project language", Required: true},
+						cli.StringFlag{Name: "type, t", Usage: "The type of the project", Required: true},
+						cli.StringFlag{Name: "path, p", Usage: "The path to the project", Required: true},
+						cli.StringFlag{Name: "conid", Usage: "The connection id for the project", Required: false},
 						cli.StringFlag{Name: "username,u", Usage: "Account Username", Required: false},
 					},
 					Action: func(c *cli.Context) error {
@@ -659,6 +659,17 @@ func Commands() {
 			case loglevel == "trace":
 				logr.SetLevel(logr.TraceLevel)
 				break
+			case loglevel == "debug":
+				logr.SetLevel(logr.DebugLevel)
+				break
+			case loglevel == "fatal":
+				logr.SetLevel(logr.FatalLevel)
+				break
+			case loglevel == "error":
+				logr.SetLevel(logr.ErrorLevel)
+				break
+			default:
+				logr.SetLevel(logr.InfoLevel)
 			}
 		} else {
 			logr.SetLevel(logr.InfoLevel)
