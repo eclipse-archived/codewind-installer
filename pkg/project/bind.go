@@ -47,6 +47,7 @@ type (
 		ProjectID string `json:"id"`
 	}
 
+	// BindResponse represents the API response
 	BindResponse struct {
 		ProjectID     string         `json:"projectID"`
 		Status        string         `json:"status"`
