@@ -28,14 +28,14 @@ import (
 	"github.com/eclipse/codewind-installer/pkg/config"
 =======
 	"github.com/eclipse/codewind-installer/config"
+<<<<<<< HEAD
 <<<<<<< HEAD:pkg/project/sync.go
 >>>>>>> replace 'fmt.Print' with logrus #2
+=======
+>>>>>>> fix rebase problem
 	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/sechttp"
-=======
-	"github.com/eclipse/codewind-installer/pkg/utils/connections"
 	logr "github.com/sirupsen/logrus"
->>>>>>> replace 'fmt.Print' with logrus #2:pkg/utils/project/sync.go
 	"github.com/urfave/cli"
 )
 

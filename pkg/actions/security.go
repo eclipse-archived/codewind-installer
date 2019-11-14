@@ -20,7 +20,6 @@ import (
 
 	"github.com/eclipse/codewind-installer/pkg/security"
 	"github.com/eclipse/codewind-installer/pkg/utils"
-	"github.com/eclipse/codewind-installer/pkg/utils/security"
 	"github.com/urfave/cli"
 )
 

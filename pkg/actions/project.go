@@ -17,12 +17,8 @@ import (
 	"os"
 	"strings"
 
-<<<<<<< HEAD
 	"github.com/eclipse/codewind-installer/pkg/project"
-=======
-	"github.com/eclipse/codewind-installer/pkg/utils/project"
 	logr "github.com/sirupsen/logrus"
->>>>>>> replace 'fmt.Print' with logrus #1
 	"github.com/urfave/cli"
 )
 
