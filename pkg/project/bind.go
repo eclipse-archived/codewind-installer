@@ -21,13 +21,9 @@ import (
 	"strings"
 
 	"github.com/eclipse/codewind-installer/config"
-<<<<<<< HEAD:pkg/project/bind.go
 	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/sechttp"
-=======
-	"github.com/eclipse/codewind-installer/pkg/utils/connections"
 	logr "github.com/sirupsen/logrus"
->>>>>>> remove panics and change var name from uploadEndURL -> bindEndURL:pkg/utils/project/bind.go
 	"github.com/urfave/cli"
 )
 
