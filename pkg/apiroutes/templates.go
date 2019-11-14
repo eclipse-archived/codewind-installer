@@ -54,7 +54,7 @@ type (
 
 // GetTemplates gets project templates from PFE's REST API.
 // Filter them using the function arguments
-func GetTemplates(projectStyle string, showEnabledOnly bool, conID string) ([]Template, error) {
+func GetTemplates(projectStyle, conID string, showEnabledOnly bool) ([]Template, error) {
 	conURL, conErr := config.PFEOrigin(conID)
 	if conErr != nil {
 		return nil, conErr.Err
@@ -140,7 +140,7 @@ func GetTemplateRepos(conID string) ([]utils.TemplateRepo, error) {
 
 // AddTemplateRepo adds a template repo to PFE and
 // returns the new list of existing repos
-func AddTemplateRepo(URL, description string, name string, conID string) ([]utils.TemplateRepo, error) {
+func AddTemplateRepo(URL, description, name, conID string) ([]utils.TemplateRepo, error) {
 	if _, err := url.ParseRequestURI(URL); err != nil {
 		return nil, fmt.Errorf("Error: '%s' is not a valid URL", URL)
 	}
@@ -184,7 +184,7 @@ func AddTemplateRepo(URL, description string, name string, conID string) ([]util
 
 // DeleteTemplateRepo deletes a template repo from PFE and
 // returns the new list of existing repos
-func DeleteTemplateRepo(URL string, conID string) ([]utils.TemplateRepo, error) {
+func DeleteTemplateRepo(URL, conID string) ([]utils.TemplateRepo, error) {
 	if _, err := url.ParseRequestURI(URL); err != nil {
 		return nil, fmt.Errorf("Error: '%s' is not a valid URL", URL)
 	}
