@@ -16,8 +16,8 @@ import (
 	"flag"
 	"net/http"
 
+	"github.com/eclipse/codewind-installer/pkg/security"
 	"github.com/eclipse/codewind-installer/pkg/utils"
-	"github.com/eclipse/codewind-installer/pkg/utils/security"
 	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )

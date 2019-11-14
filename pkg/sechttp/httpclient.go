@@ -17,33 +17,31 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/eclipse/codewind-installer/pkg/connections"
+	"github.com/eclipse/codewind-installer/pkg/security"
 	"github.com/eclipse/codewind-installer/pkg/utils"
-	"github.com/eclipse/codewind-installer/pkg/utils/connections"
-	"github.com/eclipse/codewind-installer/pkg/utils/security"
 	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	"github.com/zalando/go-keyring"
 )
 
-// DispatchHTTPRequest : perform an HTTP request with token based authentication
+// DispatchHTTPRequest : Perform an HTTP request against PFE with token based authentication
 // Returns: HTTPResponse, HTTPSecError
 func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Request, username string, connectionID string) (*http.Response, *HTTPSecError) {
 
-	logr.SetLevel(logr.TraceLevel)
-
-	logr.Printf("Request URL: %v %v", originalRequest.Method, originalRequest.URL)
+	logr.Tracef("Request URL: %v %v\n", originalRequest.Method, originalRequest.URL)
 
 	if strings.ToLower(connectionID) == "local" {
 		response, err := sendRequest(httpClient, originalRequest, "")
 		if err == nil {
-			logr.Debugf("Received HTTP Status code: %v", response.StatusCode)
+			logr.Tracef("Received HTTP Status code: %v\n", response.StatusCode)
 			return response, nil
 		}
 	}
 
 	// Should be a 401 (bearer only) but is infact a 302 (Redirect to a login page)
 	keycloakLoginErrorStatus := http.StatusFound
-	logr.Debugf("Getting Connection: %v\n", connectionID)
+	logr.Tracef("Getting Connection: %v\n", connectionID)
 
 	// Get the remote connection details
 	con, conErr := connections.GetConnectionByID(connectionID)
@@ -52,49 +50,49 @@ func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Requ
 	}
 
 	// Get the current access token from the keychain
-	logr.Debugf("Retrieving an access token from the keychain")
+	logr.Traceln("Retrieving an access token from the keychain")
 	conID := strings.TrimSpace(strings.ToLower(connectionID))
 	accessToken, _ := keyring.Get(security.KeyringServiceName+"."+conID, "access_token")
 
 	if accessToken == "" {
-		logr.Debugf("Access token not found in keychain")
+		logr.Traceln("Access token not found in keychain")
 	} else {
-		logr.Debugf("Access token found in keychain, trying request")
+		logr.Traceln("Access token found in keychain, trying request")
 		response, err := sendRequest(httpClient, originalRequest, accessToken)
 		if err == nil && response.StatusCode != keycloakLoginErrorStatus {
-			logr.Debugf("Received HTTP Status code: %v", response.StatusCode)
+			logr.Tracef("Received HTTP Status code: %v", response.StatusCode)
 			return response, nil
 		}
-		logr.Debugf(" Request failed: %v", err.Desc)
+		logr.Tracef(" Request failed: %v", err.Desc)
 	}
 
 	// Try refreshing the access token with our cached refresh token
-	logr.Debugf("Retrieving a refresh token from the keychain")
+	logr.Tracef("Retrieving a refresh token from the keychain")
 	refreshToken, _ := keyring.Get(security.KeyringServiceName+"."+conID, "refresh_token")
 	if refreshToken == "" {
-		logr.Debugf("Refresh token not found in keychain")
+		logr.Tracef("Refresh token not found in keychain")
 	} else {
-		logr.Debugf("Try refreshing the access token with our cached refresh token")
+		logr.Tracef("Try refreshing the access token with our cached refresh token")
 		tokens, secError := security.SecRefreshAccessToken(http.DefaultClient, con, refreshToken)
 		if secError != nil {
-			logr.Debugf("Failed refreshing access token %v : %v\n", secError.Op, secError.Desc)
+			logr.Tracef("Failed refreshing access token %v : %v\n", secError.Op, secError.Desc)
 		}
 		if tokens != nil {
-			logr.Debugf("New access token received")
+			logr.Tracef("New access token received")
 			accessToken = tokens.AccessToken
-			logr.Debugf("Trying the original request again with the new access_token")
+			logr.Tracef("Trying the original request again with the new access_token")
 			response, err := sendRequest(httpClient, originalRequest, accessToken)
 			if err == nil && response.StatusCode != keycloakLoginErrorStatus {
-				logr.Debugf("Received HTTP Status code: %v", response.StatusCode)
+				logr.Tracef("Received HTTP Status code: %v", response.StatusCode)
 				return response, nil
 			}
 		}
 	}
 
-	logr.Debugf("Re-authenticate using cached credentials from the keychain")
+	logr.Tracef("Re-authenticate using cached credentials from the keychain")
 	password, keyErr := keyring.Get(security.KeyringServiceName+"."+conID, strings.ToLower(username))
 	if keyErr != nil {
-		logr.Debugf("ERROR:  %v\n", keyErr.Error())
+		logr.Tracef("ERROR:  %v\n", keyErr.Error())
 		err := errors.New(errMissingPassword)
 		return nil, &HTTPSecError{errOpNoPassword, err, err.Error()}
 	}
@@ -110,21 +108,21 @@ func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Requ
 	tokens, secError := security.SecAuthenticate(http.DefaultClient, c, "", "")
 	if secError != nil {
 		// Bailing out, user cant authenticate
-		logr.Debugf("Bailing out, user can not authenticate")
+		logr.Tracef("Bailing out, user can not authenticate")
 		return nil, &HTTPSecError{errOpAuthFailed, secError.Err, secError.Desc}
 	}
 
 	// Try to access the resource again with the new access token
-	logr.Debugf("Try to access the resource again with the new access token")
+	logr.Tracef("Try to access the resource again with the new access token")
 	response, err := sendRequest(httpClient, originalRequest, tokens.AccessToken)
 
 	if err == nil {
-		logr.Debugf("Received HTTP Status code: %v", response.StatusCode)
+		logr.Tracef("Received HTTP Status code: %v", response.StatusCode)
 		return response, nil
 	}
 
 	// No other methods of authentication left to try, tell the user and give up
-	logr.Debugf("No other methods of authentication left to try, tell the user and give up")
+	logr.Tracef("No other methods of authentication left to try, tell the user and give up")
 	failedError := errors.New("No other methods left to try")
 	return nil, &HTTPSecError{errOpFailed, failedError, failedError.Error()}
 }
@@ -142,7 +140,7 @@ func sendRequest(httpClient utils.HTTPClient, originalRequest *http.Request, acc
 	// send request
 	res, err := httpClient.Do(originalRequest)
 	if err != nil {
-		logr.Debugf("sendRequest: REQUEST FAILED")
+		logr.Tracef("sendRequest: REQUEST FAILED")
 		return nil, &HTTPSecError{errOpNoConnection, err, err.Error()}
 	}
 	return res, nil

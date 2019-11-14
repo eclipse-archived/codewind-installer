@@ -22,6 +22,7 @@ import (
 	"github.com/urfave/cli"
 )
 
+// UpgradeProjects : Upgrade projects (local connection only)
 func UpgradeProjects(c *cli.Context) (*map[string]interface{}, *ProjectError) {
 
 	oldDir := strings.TrimSpace(c.String("workspace"))
@@ -61,7 +62,7 @@ func UpgradeProjects(c *cli.Context) (*map[string]interface{}, *ProjectError) {
 			location := oldDir + "/" + name
 
 			if language != "" && projectType != "" && name != "" && location != "" {
-				_, bindErr := Bind(location, name, language, projectType, "local")
+				_, bindErr := Bind(location, name, language, projectType, "", "local")
 				if bindErr != nil {
 					errResponse := make(map[string]interface{})
 					errResponse["projectName"] = name

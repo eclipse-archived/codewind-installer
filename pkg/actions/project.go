@@ -17,7 +17,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/eclipse/codewind-installer/pkg/utils/project"
+	"github.com/eclipse/codewind-installer/pkg/project"
 	"github.com/urfave/cli"
 )
 

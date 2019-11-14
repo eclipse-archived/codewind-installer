@@ -19,8 +19,8 @@ import (
 	"os"
 
 	"github.com/eclipse/codewind-installer/pkg/apiroutes"
+	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/utils"
-	"github.com/eclipse/codewind-installer/pkg/utils/connections"
 	"github.com/urfave/cli"
 )
 

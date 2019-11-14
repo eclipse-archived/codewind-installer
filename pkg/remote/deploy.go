@@ -19,8 +19,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/eclipse/codewind-installer/pkg/remote/kube"
 	"github.com/eclipse/codewind-installer/pkg/utils"
-	"github.com/eclipse/codewind-installer/pkg/utils/remote/kube"
 	logr "github.com/sirupsen/logrus"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -99,7 +99,7 @@ func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemIn
 		logr.Infof("Attempting to discover Ingress Domain")
 		svcList := clientset.CoreV1().Services("ingress-nginx")
 		svc, err := svcList.List(v1.ListOptions{})
-		if err == nil && svc != nil && svc.Items != nil {
+		if err == nil && svc != nil && svc.Items != nil && len(svc.Items) > 0 {
 			ingressDomain = svc.Items[0].Spec.ClusterIP + ".nip.io"
 		}
 	}

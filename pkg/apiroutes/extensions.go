@@ -22,7 +22,7 @@ import (
 
 // GetExtensions gets project extensions from PFE's REST API.
 func GetExtensions() ([]utils.Extension, error) {
-	resp, err := http.Get(config.PFEApiRoute() + "extensions")
+	resp, err := http.Get(config.PFEOrigin() + "/api/v1/extensions")
 	if err != nil {
 		return nil, err
 	}

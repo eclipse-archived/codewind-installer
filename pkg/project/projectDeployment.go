@@ -22,7 +22,7 @@ import (
 
 	"github.com/eclipse/codewind-installer/config"
 
-	"github.com/eclipse/codewind-installer/pkg/utils/connections"
+	"github.com/eclipse/codewind-installer/pkg/connections"
 )
 
 // ConnectionFile : Structure of the project-connections file
@@ -103,7 +103,7 @@ func GetConnectionURL(projectID string) (string, *ProjectError) {
 	}
 
 	if conID == "local" {
-		return config.PFEApiRoute(), nil
+		return config.PFEOrigin(), nil
 	}
 	return projectConInfo.URL, nil
 }

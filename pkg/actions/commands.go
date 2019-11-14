@@ -17,6 +17,7 @@ import (
 	"os"
 
 	"github.com/eclipse/codewind-installer/pkg/errors"
+	logr "github.com/sirupsen/logrus"
 
 	"github.com/urfave/cli"
 )
@@ -42,7 +43,12 @@ func Commands() {
 		},
 		cli.BoolFlag{
 			Name:  "json, j",
-			Usage: "ouput as JSON",
+			Usage: "output as JSON",
+		},
+		cli.StringFlag{
+			Name:  "loglevel",
+			Value: "info",
+			Usage: "log level {trace,debug,info,fatal,error}",
 		},
 	}
 
@@ -76,11 +82,12 @@ func Commands() {
 					Aliases: []string{""},
 					Usage:   "bind a project to codewind for building and running",
 					Flags: []cli.Flag{
-						cli.StringFlag{Name: "name, n", Usage: "the name of the project", Required: true},
-						cli.StringFlag{Name: "language, l", Usage: "the project language", Required: true},
-						cli.StringFlag{Name: "type, t", Usage: "the type of the project", Required: true},
-						cli.StringFlag{Name: "path, p", Usage: "the path to the project", Required: true},
-						cli.StringFlag{Name: "conid", Usage: "the connection id for the project", Required: false},
+						cli.StringFlag{Name: "name, n", Usage: "The name of the project", Required: true},
+						cli.StringFlag{Name: "language, l", Usage: "The project language", Required: true},
+						cli.StringFlag{Name: "type, t", Usage: "The type of the project", Required: true},
+						cli.StringFlag{Name: "path, p", Usage: "The path to the project", Required: true},
+						cli.StringFlag{Name: "conid", Usage: "The connection id for the project", Required: false},
+						cli.StringFlag{Name: "username,u", Usage: "Account Username", Required: false},
 					},
 					Action: func(c *cli.Context) error {
 						ProjectBind(c)
@@ -95,6 +102,7 @@ func Commands() {
 						cli.StringFlag{Name: "path, p", Usage: "the path to the project", Required: true},
 						cli.StringFlag{Name: "id, i", Usage: "the project id", Required: true},
 						cli.StringFlag{Name: "time, t", Usage: "time of the last sync for the given project", Required: true},
+						cli.StringFlag{Name: "username,u", Usage: "Account Username", Required: false},
 					},
 					Action: func(c *cli.Context) error {
 						ProjectSync(c)
@@ -219,7 +227,7 @@ func Commands() {
 			Flags: []cli.Flag{
 				cli.BoolFlag{
 					Name:  "json, j",
-					Usage: "ouput as JSON",
+					Usage: "output as JSON",
 				},
 				cli.StringFlag{
 					Name:  "conid",
@@ -645,6 +653,26 @@ func Commands() {
 		if c.GlobalBool("insecure") {
 			http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 		}
+
+		// Handle Global log level flag
+
+		switch loglevel := c.GlobalString("loglevel"); {
+		case loglevel == "trace":
+			logr.SetLevel(logr.TraceLevel)
+			break
+		case loglevel == "debug":
+			logr.SetLevel(logr.DebugLevel)
+			break
+		case loglevel == "fatal":
+			logr.SetLevel(logr.FatalLevel)
+			break
+		case loglevel == "error":
+			logr.SetLevel(logr.ErrorLevel)
+			break
+		default:
+			logr.SetLevel(logr.InfoLevel)
+		}
+
 		return nil
 	}
 
