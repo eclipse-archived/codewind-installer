@@ -120,8 +120,7 @@ func Commands() {
 							Usage:   "Set connectionID for a project",
 							Flags: []cli.Flag{
 								cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
-								// TODO
-								cli.StringFlag{Name: "conid", Value: "local", Usage: "Connection ID", Required: false},
+								cli.StringFlag{Name: "conid", Usage: "Connection ID", Required: true},
 							},
 							Action: func(c *cli.Context) error {
 								ProjectSetConnection(c)
