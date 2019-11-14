@@ -12,6 +12,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/eclipse/codewind-installer/pkg/connections"
@@ -24,15 +25,14 @@ type ConfigError struct {
 	Desc string
 }
 
-const errOpConNotFound = "connection_notfound"
+const errOpConfConNotFound = "config_connection_notfound"
 
 // PFEOrigin is the origin from which PFE is running, e.g. "http://127.0.0.1:9090"
 func PFEOrigin(conID string) (string, *ConfigError) {
-
 	conInfo, conErr := connections.GetConnectionByID(conID)
 	var PFEURL string
 	if conErr != nil {
-		return PFEURL, &ConfigError{errOpConNotFound, conErr.Err, conErr.Error()}
+		return PFEURL, &ConfigError{errOpConfConNotFound, conErr.Err, conErr.Error()}
 	}
 	if conInfo.ID != "local" {
 		PFEURL = conInfo.URL
@@ -44,5 +44,6 @@ func PFEOrigin(conID string) (string, *ConfigError) {
 		}
 		PFEURL = "http://" + hostname + ":" + port
 	}
+	fmt.Print(PFEURL)
 	return PFEURL, nil
 }

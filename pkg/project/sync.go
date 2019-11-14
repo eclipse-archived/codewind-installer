@@ -88,11 +88,9 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 		return nil, &ProjectError{errOpConNotFound, conInfoErr, conInfoErr.Desc}
 	}
 
-	var conURL string
-	if conInfo.ID != "local" {
-		conURL = conInfo.URL
-	} else {
-		conURL = config.PFEOrigin()
+	conURL, conURLErr := config.PFEOrigin(conID)
+	if conURLErr != nil {
+		return nil, &ProjectError{errOpConNotFound, conURLErr.Err, conURLErr.Desc}
 	}
 
 	// Sync all the necessary project files

@@ -15,7 +15,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -90,9 +89,10 @@ func Bind(projectPath string, name string, language string, projectType string, 
 	buf := new(bytes.Buffer)
 	json.NewEncoder(buf).Encode(bindRequest)
 
-	conURL, conErr := config.PFEOrigin("local")
-	fmt.Println(conURL)
-	return nil, nil
+	conURL, conURLErr := config.PFEOrigin("local")
+	if conURLErr != nil {
+		return nil, &ProjectError{errOpConNotFound, conURLErr.Err, conURLErr.Desc}
+	}
 
 	client := &http.Client{}
 
@@ -133,6 +133,11 @@ func Bind(projectPath string, name string, language string, projectType string, 
 
 	if projErr != nil {
 		return nil, projErr
+	}
+
+	conInfo, conInfoErr := connections.GetConnectionByID(conID)
+	if conInfoErr != nil {
+		return nil, &ProjectError{errOpConNotFound, conInfoErr.Err, conInfoErr.Desc}
 	}
 
 	// Sync all the project files
