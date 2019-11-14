@@ -80,11 +80,11 @@ func ProjectBind(c *cli.Context) {
 // UpgradeProjects : Upgrades projects
 func UpgradeProjects(c *cli.Context) {
 	response, err := project.UpgradeProjects(c)
-	PrettyPrintJSON(response)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
+	PrettyPrintJSON(response)
 	os.Exit(0)
 }
 

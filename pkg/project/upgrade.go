@@ -80,9 +80,5 @@ func UpgradeProjects(c *cli.Context) (*map[string]interface{}, *ProjectError) {
 		}
 		return nil
 	})
-	if len(migrationStatus["failed"].([]interface{})) > 0 {
-		err := errors.New("One or more projects failed to upgrade")
-		return &migrationStatus, &ProjectError{textUpgradeError, err, err.Error()}
-	}
 	return &migrationStatus, nil
 }
