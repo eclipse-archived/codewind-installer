@@ -45,11 +45,15 @@ type (
 		RelativePath string `json:"path"`
 		Message      string `json:"msg"`
 	}
+
+	// UploadedFile is the file to sync
 	UploadedFile struct {
 		FilePath   string `json:"filePath"`
 		Status     string `json:"status"`
 		StatusCode int    `json:"statusCode"`
 	}
+
+	// SyncResponse is the status of the file syncing
 	SyncResponse struct {
 		Status        string         `json:"status"`
 		StatusCode    int            `json:"statusCode"`
@@ -136,7 +140,7 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 
 			fileUploadBody := FileUploadMsg{
 				IsDirectory:  info.IsDir(),
-				Mode: uint(info.Mode().Perm()),
+				Mode:         uint(info.Mode().Perm()),
 				RelativePath: relativePath,
 				Message:      "",
 			}
