@@ -167,7 +167,7 @@ func DockerCompose(tempFilePath string, tag string) {
 // PullImage - pull pfe/performance images from dockerhub
 func PullImage(image string, jsonOutput bool) {
 	ctx := context.Background()
-	cli, err := client.NewEnvClient()
+	cli, err := client.NewClientWithOpts(client.WithVersion("1.30"))
 	errors.CheckErr(err, 200, "")
 
 	var codewindOut io.ReadCloser
@@ -257,7 +257,7 @@ func RemoveImage(imageID string) {
 // GetContainerList from docker
 func GetContainerList() []types.Container {
 	ctx := context.Background()
-	cli, err := client.NewEnvClient()
+	cli, err := client.NewClientWithOpts(client.WithVersion("1.30"))
 	errors.CheckErr(err, 200, "")
 
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
@@ -269,7 +269,7 @@ func GetContainerList() []types.Container {
 // GetImageList from docker
 func GetImageList() []types.ImageSummary {
 	ctx := context.Background()
-	cli, err := client.NewEnvClient()
+	cli, err := client.NewClientWithOpts(client.WithVersion("1.30"))
 	errors.CheckErr(err, 200, "")
 
 	images, err := cli.ImageList(ctx, types.ImageListOptions{})
@@ -281,7 +281,7 @@ func GetImageList() []types.ImageSummary {
 // GetNetworkList from docker
 func GetNetworkList() []types.NetworkResource {
 	ctx := context.Background()
-	cli, err := client.NewEnvClient()
+	cli, err := client.NewClientWithOpts(client.WithVersion("1.30"))
 	errors.CheckErr(err, 200, "")
 
 	networks, err := cli.NetworkList(ctx, types.NetworkListOptions{})
@@ -293,7 +293,7 @@ func GetNetworkList() []types.NetworkResource {
 // StopContainer will stop only codewind containers
 func StopContainer(container types.Container) {
 	ctx := context.Background()
-	cli, err := client.NewEnvClient()
+	cli, err := client.NewClientWithOpts(client.WithVersion("1.30"))
 	errors.CheckErr(err, 200, "")
 
 	// Stop the running container
@@ -314,7 +314,7 @@ func StopContainer(container types.Container) {
 // RemoveNetwork will remove docker network
 func RemoveNetwork(network types.NetworkResource) {
 	ctx := context.Background()
-	cli, err := client.NewEnvClient()
+	cli, err := client.NewClientWithOpts(client.WithVersion("1.30"))
 	errors.CheckErr(err, 200, "")
 
 	if err := cli.NetworkRemove(ctx, network.ID); err != nil {
