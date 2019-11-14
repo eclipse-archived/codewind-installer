@@ -68,7 +68,7 @@ func BindProject(c *cli.Context) (*BindResponse, *ProjectError) {
 	} else {
 		conID = "local"
 	}
-	return Bind(projectPath, name, language, buildType, conID)
+	return Bind(projectPath, name, language, buildType, cliUsername, conID)
 }
 
 // Bind is used to bind a project for building and running
