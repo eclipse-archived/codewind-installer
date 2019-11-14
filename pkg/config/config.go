@@ -12,8 +12,8 @@
 package config
 
 import (
-	"fmt"
 	"os"
+	"strings"
 
 	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/utils"
@@ -26,24 +26,28 @@ type ConfigError struct {
 }
 
 const errOpConfConNotFound = "config_connection_notfound"
+const errOpConfPFEHostnamePortNotFound = "config_pfe_hostname_port_notfound"
 
 // PFEOrigin is the origin from which PFE is running, e.g. "http://127.0.0.1:9090"
-func PFEOrigin(conID string) (string, *ConfigError) {
-	conInfo, conErr := connections.GetConnectionByID(conID)
+func PFEOrigin(unFormattedConID string) (string, *ConfigError) {
+	conID := strings.TrimSpace(strings.ToLower(unFormattedConID))
 	var PFEURL string
-	if conErr != nil {
-		return PFEURL, &ConfigError{errOpConfConNotFound, conErr.Err, conErr.Error()}
-	}
-	if conInfo.ID != "local" {
+	if conID != "local" {
+		conInfo, conErr := connections.GetConnectionByID(conID)
+		if conErr != nil {
+			return "", &ConfigError{errOpConfConNotFound, conErr.Err, conErr.Desc}
+		}
 		PFEURL = conInfo.URL
 	} else {
 		hostname, port := utils.GetPFEHostAndPort()
+		if hostname == "" || port == "" {
+			return "", &ConfigError{errOpConfPFEHostnamePortNotFound, nil, "Hostname or port for PFE not found"}
+		}
 		val, ok := os.LookupEnv("CHE_API_EXTERNAL")
 		if ok && (val != "") {
 			PFEURL = "https://" + hostname + ":" + port
 		}
 		PFEURL = "http://" + hostname + ":" + port
 	}
-	fmt.Print(PFEURL)
 	return PFEURL, nil
 }

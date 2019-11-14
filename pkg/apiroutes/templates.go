@@ -59,6 +59,7 @@ func GetTemplates(projectStyle string, showEnabledOnly bool, conID string) ([]Te
 	if conErr != nil {
 		return nil, conErr.Err
 	}
+	fmt.Println("conURL:  " + conURL)
 	req, err := http.NewRequest("GET", conURL+"/api/v1/templates", nil)
 	if err != nil {
 		return nil, err

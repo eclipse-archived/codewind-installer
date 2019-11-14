@@ -30,7 +30,7 @@ func Test_IgnoredPaths(t *testing.T) {
 		}
 		body := ioutil.NopCloser(bytes.NewReader([]byte(jsonResponse)))
 		mockClientTrue := &MockResponse{StatusCode: http.StatusOK, Body: body}
-		gotIgnoredPaths, err := GetIgnoredPaths(mockClientTrue, "nodejs")
+		gotIgnoredPaths, err := GetIgnoredPaths(mockClientTrue, "nodejs", "local")
 		if err != nil {
 			t.Fail()
 		}
@@ -38,7 +38,7 @@ func Test_IgnoredPaths(t *testing.T) {
 	})
 	t.Run("Asserts 400 response from PFE returns an error", func(t *testing.T) {
 		mockClientFalse := &MockResponse{StatusCode: http.StatusNotFound, Body: nil}
-		_, err := GetIgnoredPaths(mockClientFalse, "nodejs")
+		_, err := GetIgnoredPaths(mockClientFalse, "nodejs", "local")
 		if err == nil {
 			t.Fail()
 		}
