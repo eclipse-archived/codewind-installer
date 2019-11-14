@@ -83,8 +83,8 @@ func DownloadTemplate(c *cli.Context) *ProjectError {
 
 // checkIsExtension checks if a project is an extension project and run associated commands as necessary
 func checkIsExtension(projectPath string, c *cli.Context) (string, error) {
-
-	extensions, err := apiroutes.GetExtensions()
+	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
+	extensions, err := apiroutes.GetExtensions(conID)
 	if err != nil {
 		log.Println("There was a problem retrieving extensions data")
 		return "unknown", err
@@ -171,20 +171,21 @@ func ValidateProject(c *cli.Context) *ProjectError {
 	errors.CheckErr(err, 203, "")
 	// write settings file only for non-extension projects
 	if extensionType == "" {
-		writeCwSettingsIfNotInProject(projectPath, buildType)
+		conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
+		writeCwSettingsIfNotInProject(projectPath, buildType, conID)
 	}
 	fmt.Println(string(projectInfo))
 	return nil
 }
 
-func writeCwSettingsIfNotInProject(projectPath string, BuildType string) {
+func writeCwSettingsIfNotInProject(projectPath string, BuildType string, conID string) {
 	pathToCwSettings := path.Join(projectPath, ".cw-settings")
 	pathToLegacySettings := path.Join(projectPath, ".mc-settings")
 
 	if _, err := os.Stat(pathToLegacySettings); os.IsExist(err) {
 		renameLegacySettings(pathToLegacySettings, pathToCwSettings)
 	} else if _, err := os.Stat(pathToCwSettings); os.IsNotExist(err) {
-		writeNewCwSettings(pathToCwSettings, BuildType)
+		writeNewCwSettings(pathToCwSettings, BuildType, conID)
 	}
 }
 
@@ -265,8 +266,8 @@ func renameLegacySettings(pathToLegacySettings string, pathToCwSettings string) 
 
 // writeNewCwSettings writes a default .cw-settings file to the given path,
 // dependant on the build type of the project
-func writeNewCwSettings(pathToCwSettings string, BuildType string) {
-	defaultCwSettings := getDefaultCwSettings(BuildType)
+func writeNewCwSettings(pathToCwSettings string, BuildType string, conID string) {
+	defaultCwSettings := getDefaultCwSettings(BuildType, conID)
 	cwSettings := addNonDefaultFieldsToCwSettings(defaultCwSettings, BuildType)
 	settings, err := json.MarshalIndent(cwSettings, "", "  ")
 	errors.CheckErr(err, 203, "")
@@ -274,9 +275,9 @@ func writeNewCwSettings(pathToCwSettings string, BuildType string) {
 	err = ioutil.WriteFile(pathToCwSettings, settings, 0644)
 }
 
-func getDefaultCwSettings(BuildType string) CWSettings {
+func getDefaultCwSettings(BuildType string, conID string) CWSettings {
 	client := &http.Client{}
-	IgnoredPaths, err := apiroutes.GetIgnoredPaths(client, BuildType)
+	IgnoredPaths, err := apiroutes.GetIgnoredPaths(client, BuildType, conID)
 	if err != nil {
 		// If error getting the default ignoredPaths, set as empty slice
 		IgnoredPaths = []string{}

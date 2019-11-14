@@ -64,12 +64,7 @@ func BindProject(c *cli.Context) (*BindResponse, *ProjectError) {
 	language := strings.TrimSpace(c.String("language"))
 	buildType := strings.TrimSpace(c.String("type"))
 	cliUsername := strings.TrimSpace(strings.ToLower(c.String("username")))
-	var conID string
-	if c.String("conid") != "" {
-		conID = strings.TrimSpace(strings.ToLower(c.String("conid")))
-	} else {
-		conID = "local"
-	}
+	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 	return Bind(projectPath, name, language, buildType, cliUsername, conID)
 }
 
@@ -89,14 +84,16 @@ func Bind(projectPath string, name string, language string, projectType string, 
 	buf := new(bytes.Buffer)
 	json.NewEncoder(buf).Encode(bindRequest)
 
-	conURL, conURLErr := config.PFEOrigin("local")
+	conURL, conURLErr := config.PFEOrigin(conID)
 	if conURLErr != nil {
 		return nil, &ProjectError{errOpConNotFound, conURLErr.Err, conURLErr.Desc}
 	}
 
+	bindURL := conURL + "/api/v1/projects/bind/start"
+
 	client := &http.Client{}
 
-	request, err := http.NewRequest("POST", conURL, bytes.NewReader(buf.Bytes()))
+	request, err := http.NewRequest("POST", bindURL, bytes.NewReader(buf.Bytes()))
 	request.Header.Set("Content-Type", "application/json")
 	resp, httpSecError := sechttp.DispatchHTTPRequest(client, request, username, conID)
 	if httpSecError != nil {
