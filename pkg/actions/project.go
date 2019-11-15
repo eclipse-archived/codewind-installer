@@ -79,7 +79,8 @@ func ProjectBind(c *cli.Context) {
 
 // UpgradeProjects : Upgrades projects
 func UpgradeProjects(c *cli.Context) {
-	response, err := project.UpgradeProjects(c)
+	dir := strings.TrimSpace(c.String("workspace"))
+	response, err := project.UpgradeProjects(dir)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)

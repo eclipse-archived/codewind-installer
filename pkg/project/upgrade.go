@@ -17,15 +17,9 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
-
-	"github.com/urfave/cli"
 )
 
-// UpgradeProjects : Upgrade projects (local connection only)
-func UpgradeProjects(c *cli.Context) (*map[string]interface{}, *ProjectError) {
-
-	oldDir := strings.TrimSpace(c.String("workspace"))
+func UpgradeProjects(oldDir string) (*map[string]interface{}, *ProjectError) {
 	// Check to see if the workspace exists
 	_, err := os.Stat(oldDir)
 	if err != nil {
@@ -64,7 +58,7 @@ func UpgradeProjects(c *cli.Context) (*map[string]interface{}, *ProjectError) {
 			if language != "" && projectType != "" && name != "" && location != "" {
 				_, bindErr := Bind(location, name, language, projectType, "", "local")
 				if bindErr != nil {
-					errResponse := make(map[string]interface{})
+					errResponse := make(map[string]string)
 					errResponse["projectName"] = name
 					errResponse["error"] = bindErr.Desc
 					migrationStatus["failed"] = append(migrationStatus["failed"].([]interface{}), &errResponse)
