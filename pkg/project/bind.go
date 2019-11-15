@@ -59,18 +59,17 @@ type (
 // BindProject : Bind a project
 func BindProject(c *cli.Context) (*BindResponse, *ProjectError) {
 	projectPath := strings.TrimSpace(c.String("path"))
-	Name := strings.TrimSpace(c.String("name"))
-	Language := strings.TrimSpace(c.String("language"))
-	BuildType := strings.TrimSpace(c.String("type"))
+	name := strings.TrimSpace(c.String("name"))
+	language := strings.TrimSpace(c.String("language"))
+	buildType := strings.TrimSpace(c.String("type"))
 	cliUsername := strings.TrimSpace(strings.ToLower(c.String("username")))
-
 	var conID string
 	if c.String("conid") != "" {
 		conID = strings.TrimSpace(strings.ToLower(c.String("conid")))
 	} else {
 		conID = "local"
 	}
-	return Bind(projectPath, Name, Language, BuildType, cliUsername, conID)
+	return Bind(projectPath, name, language, buildType, cliUsername, conID)
 }
 
 // Bind is used to bind a project for building and running
