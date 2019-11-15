@@ -73,9 +73,9 @@ func TestDetermineProjectInfo(t *testing.T) {
 func TestWriteNewCwSettings(t *testing.T) {
 	defaultInternalDebugPort := ""
 	tests := map[string]struct {
-		inProjectPath  string
-		inBuildType    string
-		wantCwSettings CWSettings
+		inProjectPath   string
+		inBuildType     string
+		wantCwSettings  CWSettings
 		wantIgnoredPath string
 	}{
 		"success case: node project": {
@@ -154,7 +154,7 @@ func TestWriteNewCwSettings(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			writeNewCwSettings(test.inProjectPath, test.inBuildType)
+			writeNewCwSettings("local", test.inProjectPath, test.inBuildType)
 
 			cwSettings := readCwSettings(test.inProjectPath)
 			assert.Equal(t, cwSettings.ContextRoot, test.wantCwSettings.ContextRoot)
