@@ -40,6 +40,7 @@ type (
 	// FileUploadMsg is the message sent on uploading a file
 	FileUploadMsg struct {
 		IsDirectory  bool   `json:"isDirectory"`
+		Mode         uint   `json:"mode"`
 		RelativePath string `json:"path"`
 		Message      string `json:"msg"`
 	}
@@ -134,6 +135,7 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 
 			fileUploadBody := FileUploadMsg{
 				IsDirectory:  info.IsDir(),
+				Mode: uint(info.Mode().Perm()),
 				RelativePath: relativePath,
 				Message:      "",
 			}
