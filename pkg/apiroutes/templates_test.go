@@ -82,7 +82,7 @@ func TestGetTemplates(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := GetTemplates(test.inProjectStyle, test.inShowEnabledOnly, "local")
+			got, err := GetTemplates(test.inProjectStyle, "local", test.inShowEnabledOnly)
 			assert.IsType(t, test.wantedType, got)
 			assert.Equal(t, test.wantedLength, len(got))
 			assert.Nil(t, err)
