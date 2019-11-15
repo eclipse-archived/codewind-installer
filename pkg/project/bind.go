@@ -23,6 +23,7 @@ import (
 	"github.com/eclipse/codewind-installer/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/sechttp"
+	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -126,7 +127,7 @@ func Bind(projectPath string, name string, language string, projectType string, 
 
 	var projectInfo map[string]interface{}
 	if err := json.Unmarshal(bodyBytes, &projectInfo); err != nil {
-		panic(err)
+		logr.Errorln(err)
 	}
 
 	projectID := projectInfo["projectID"].(string)
@@ -156,18 +157,18 @@ func Bind(projectPath string, name string, language string, projectType string, 
 }
 
 func completeBind(projectID string, conURL string, username string, connection *connections.Connection) (string, int) {
-	uploadEndURL := conURL + "/api/v1/projects/" + projectID + "/bind/end"
+	bindEndURL := conURL + "/api/v1/projects/" + projectID + "/bind/end"
 
 	payload := &BindEndRequest{ProjectID: projectID}
 	jsonPayload, _ := json.Marshal(payload)
 
 	// Make the request to end the sync process.
-	request, err := http.NewRequest("POST", uploadEndURL, bytes.NewBuffer(jsonPayload))
+	request, err := http.NewRequest("POST", bindEndURL, bytes.NewBuffer(jsonPayload))
 	request.Header.Set("Content-Type", "application/json")
 	resp, httpSecError := sechttp.DispatchHTTPRequest(http.DefaultClient, request, username, connection.ID)
 
 	if httpSecError != nil {
-		panic(err)
+		logr.Errorln(err)
 	}
 	return resp.Status, resp.StatusCode
 }
