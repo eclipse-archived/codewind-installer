@@ -68,6 +68,7 @@ func Commands() {
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "url, u", Usage: "URL of project to download"},
 						cli.StringFlag{Name: "type, t", Usage: "Known type and subtype of project (`type:subtype`). Ignored when URL is given"},
+						cli.StringFlag{Name: "conid", Value: "local", Usage: "The connection id for the project", Required: false},
 					},
 					Action: func(c *cli.Context) error {
 						if c.String("u") != "" {
