@@ -25,7 +25,7 @@ import (
 type IgnoredPaths []string
 
 // GetIgnoredPaths calls pfe to get the default ignoredPaths for that projectType
-func GetIgnoredPaths(httpClient utils.HTTPClient, projectType, conID string) (IgnoredPaths, error) {
+func GetIgnoredPaths(conID, projectType string, httpClient utils.HTTPClient) (IgnoredPaths, error) {
 	conURL, conErr := config.PFEOrigin(conID)
 	if conErr != nil {
 		return nil, conErr.Err

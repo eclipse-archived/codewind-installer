@@ -54,12 +54,11 @@ type (
 
 // GetTemplates gets project templates from PFE's REST API.
 // Filter them using the function arguments
-func GetTemplates(projectStyle, conID string, showEnabledOnly bool) ([]Template, error) {
+func GetTemplates(conID, projectStyle string, showEnabledOnly bool) ([]Template, error) {
 	conURL, conErr := config.PFEOrigin(conID)
 	if conErr != nil {
 		return nil, conErr.Err
 	}
-	fmt.Println("conURL:  " + conURL)
 	req, err := http.NewRequest("GET", conURL+"/api/v1/templates", nil)
 	if err != nil {
 		return nil, err
@@ -140,7 +139,7 @@ func GetTemplateRepos(conID string) ([]utils.TemplateRepo, error) {
 
 // AddTemplateRepo adds a template repo to PFE and
 // returns the new list of existing repos
-func AddTemplateRepo(URL, description, name, conID string) ([]utils.TemplateRepo, error) {
+func AddTemplateRepo(conID, URL, description, name string) ([]utils.TemplateRepo, error) {
 	if _, err := url.ParseRequestURI(URL); err != nil {
 		return nil, fmt.Errorf("Error: '%s' is not a valid URL", URL)
 	}
@@ -184,7 +183,7 @@ func AddTemplateRepo(URL, description, name, conID string) ([]utils.TemplateRepo
 
 // DeleteTemplateRepo deletes a template repo from PFE and
 // returns the new list of existing repos
-func DeleteTemplateRepo(URL, conID string) ([]utils.TemplateRepo, error) {
+func DeleteTemplateRepo(conID, URL string) ([]utils.TemplateRepo, error) {
 	if _, err := url.ParseRequestURI(URL); err != nil {
 		return nil, fmt.Errorf("Error: '%s' is not a valid URL", URL)
 	}
@@ -228,7 +227,7 @@ func DeleteTemplateRepo(URL, conID string) ([]utils.TemplateRepo, error) {
 
 // EnableTemplateRepos enables a template repo in PFE and
 // returns the new list of template repos
-func EnableTemplateRepos(repoURLs []string, conID string) ([]utils.TemplateRepo, error) {
+func EnableTemplateRepos(conID string, repoURLs []string) ([]utils.TemplateRepo, error) {
 	if repoURLs == nil {
 		return nil, fmt.Errorf("Error: '%s' is not a valid URL", repoURLs)
 	}
@@ -245,7 +244,7 @@ func EnableTemplateRepos(repoURLs []string, conID string) ([]utils.TemplateRepo,
 		}
 		operations = append(operations, operation)
 	}
-	_, err := BatchPatchTemplateRepos(operations, conID)
+	_, err := BatchPatchTemplateRepos(conID, operations)
 	if err != nil {
 		return nil, err
 	}
@@ -260,7 +259,7 @@ func EnableTemplateRepos(repoURLs []string, conID string) ([]utils.TemplateRepo,
 
 // DisableTemplateRepos enables a template repo in PFE and
 // returns the new list of template repos
-func DisableTemplateRepos(repoURLs []string, conID string) ([]utils.TemplateRepo, error) {
+func DisableTemplateRepos(conID string, repoURLs []string) ([]utils.TemplateRepo, error) {
 	if repoURLs == nil {
 		return nil, fmt.Errorf("Error: '%s' is not a valid URL", repoURLs)
 	}
@@ -277,7 +276,7 @@ func DisableTemplateRepos(repoURLs []string, conID string) ([]utils.TemplateRepo
 		}
 		operations = append(operations, operation)
 	}
-	_, err := BatchPatchTemplateRepos(operations, conID)
+	_, err := BatchPatchTemplateRepos(conID, operations)
 	if err != nil {
 		return nil, err
 	}
@@ -292,7 +291,7 @@ func DisableTemplateRepos(repoURLs []string, conID string) ([]utils.TemplateRepo
 
 // BatchPatchTemplateRepos requests that PFE perform batch operations on template repositories and
 // returns a list of sub-responses to the requested operations
-func BatchPatchTemplateRepos(operations []RepoOperation, conID string) ([]SubResponseFromBatchOperation, error) {
+func BatchPatchTemplateRepos(conID string, operations []RepoOperation) ([]SubResponseFromBatchOperation, error) {
 	jsonValue, _ := json.Marshal(operations)
 
 	conURL, conErr := config.PFEOrigin(conID)

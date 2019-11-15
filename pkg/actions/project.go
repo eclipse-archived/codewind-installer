@@ -93,7 +93,7 @@ func UpgradeProjects(c *cli.Context) {
 func ProjectSetConnection(c *cli.Context) {
 	projectID := strings.TrimSpace(strings.ToLower(c.String("id")))
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
-	err := project.SetConnection(projectID, conID)
+	err := project.SetConnection(conID, projectID)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)

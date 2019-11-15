@@ -34,7 +34,7 @@ type ConnectionFile struct {
 const connectionTargetSchemaVersion = 1
 
 // SetConnection : Add a connection target
-func SetConnection(projectID string, conID string) *ProjectError {
+func SetConnection(conID string, projectID string) *ProjectError {
 
 	connection, conErr := connections.GetConnectionByID(conID)
 	if conErr != nil || connection == nil {

@@ -276,7 +276,7 @@ func writeNewCwSettings(pathToCwSettings string, BuildType string, conID string)
 
 func getDefaultCwSettings(BuildType string, conID string) CWSettings {
 	client := &http.Client{}
-	IgnoredPaths, err := apiroutes.GetIgnoredPaths(client, BuildType, conID)
+	IgnoredPaths, err := apiroutes.GetIgnoredPaths(conID, BuildType, client)
 	if err != nil {
 		// If error getting the default ignoredPaths, set as empty slice
 		IgnoredPaths = []string{}

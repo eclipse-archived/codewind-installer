@@ -28,7 +28,7 @@ func ListTemplates(c *cli.Context) {
 	projectStyle := c.String("projectStyle")
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 	showEnabledOnly := c.Bool("showEnabledOnly")
-	templates, templatesErr := apiroutes.GetTemplates(projectStyle, conID, showEnabledOnly)
+	templates, templatesErr := apiroutes.GetTemplates(conID, projectStyle, showEnabledOnly)
 	if templatesErr != nil {
 		log.Printf("Error getting templates: %q", templatesErr)
 		return
@@ -69,7 +69,7 @@ func AddTemplateRepo(c *cli.Context) {
 	desc := c.String("description")
 	name := c.String("name")
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
-	repos, err := apiroutes.AddTemplateRepo(url, desc, name, conID)
+	repos, err := apiroutes.AddTemplateRepo(conID, url, desc, name)
 	if err != nil {
 		log.Printf("Error adding template repo: %q", err)
 		return
@@ -92,7 +92,7 @@ func DeleteTemplateRepo(c *cli.Context) {
 			utils.OnDeleteTemplateRepo(extensions, url, repos)
 		}
 	}
-	repos, reposErr := apiroutes.DeleteTemplateRepo(url, conID)
+	repos, reposErr := apiroutes.DeleteTemplateRepo(conID, url)
 	if reposErr != nil {
 		log.Printf("Error deleting template repo: %q", reposErr)
 		return
@@ -103,7 +103,7 @@ func DeleteTemplateRepo(c *cli.Context) {
 // EnableTemplateRepos enables templates repo of which Codewind is aware.
 func EnableTemplateRepos(c *cli.Context) {
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
-	repos, reposErr := apiroutes.EnableTemplateRepos(c.Args(), conID)
+	repos, reposErr := apiroutes.EnableTemplateRepos(conID, c.Args())
 	if reposErr != nil {
 		log.Printf("Error enabling template repos: %q", reposErr)
 		return
@@ -114,7 +114,7 @@ func EnableTemplateRepos(c *cli.Context) {
 // DisableTemplateRepos disables templates repo of which Codewind is aware.
 func DisableTemplateRepos(c *cli.Context) {
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
-	repos, reposErr := apiroutes.DisableTemplateRepos(c.Args(), conID)
+	repos, reposErr := apiroutes.DisableTemplateRepos(conID, c.Args())
 	if reposErr != nil {
 		log.Printf("Error enabling template repos: %q", reposErr)
 		return
