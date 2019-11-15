@@ -24,7 +24,7 @@ import (
 // DeployPFE : Deploy PFE instance
 func DeployPFE(config *restclient.Config, clientset *kubernetes.Clientset, codewindInstance Codewind, deployOptions *DeployOptions) error {
 	service := createPFEService(codewindInstance)
-	deploy := createPFEDeploy(codewindInstance)
+	deploy := createPFEDeploy(codewindInstance, deployOptions)
 	log.Infoln("Deploying Codewind Service")
 	_, err := clientset.CoreV1().Services(deployOptions.Namespace).Create(&service)
 	if err != nil {
@@ -40,13 +40,13 @@ func DeployPFE(config *restclient.Config, clientset *kubernetes.Clientset, codew
 }
 
 // createPFEDeploy : creates a Kubernetes deploy resource
-func createPFEDeploy(codewind Codewind) appsv1.Deployment {
+func createPFEDeploy(codewind Codewind, deployOptions *DeployOptions) appsv1.Deployment {
 	labels := map[string]string{
 		"app":               "codewind-pfe",
 		"codewindWorkspace": codewind.WorkspaceID,
 	}
 	volumes, volumeMounts := setPFEVolumes(codewind)
-	envVars := setPFEEnvVars(codewind)
+	envVars := setPFEEnvVars(codewind, deployOptions)
 	return generateDeployment(codewind, PFEPrefix, codewind.PFEImage, PFEContainerPort, volumes, volumeMounts, envVars, labels)
 }
 
@@ -59,7 +59,7 @@ func createPFEService(codewind Codewind) corev1.Service {
 	return generateService(codewind, PFEPrefix, PFEContainerPort, labels)
 }
 
-func setPFEEnvVars(codewind Codewind) []corev1.EnvVar {
+func setPFEEnvVars(codewind Codewind, deployOptions *DeployOptions) []corev1.EnvVar {
 	return []corev1.EnvVar{
 		{
 			Name:  "TEKTON_PIPELINE",
@@ -128,6 +128,14 @@ func setPFEEnvVars(codewind Codewind) []corev1.EnvVar {
 		{
 			Name:  "ON_OPENSHIFT",
 			Value: strconv.FormatBool(codewind.OnOpenShift),
+		},
+		{
+			Name:  "CODEWIND_AUTH_REALM",
+			Value: deployOptions.KeycloakRealm,
+		},
+		{
+			Name:  "CODEWIND_AUTH_HOST",
+			Value: KeycloakPrefix + codewind.Ingress,
 		},
 	}
 }
