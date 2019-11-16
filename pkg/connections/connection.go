@@ -45,6 +45,9 @@ type Connection struct {
 	ClientID string `json:"clientid"`
 }
 
+const actionUpdateEntry = 0x01
+const actionAddEntry = 0x02
+
 // InitConfigFileIfRequired : Check the config file exist, if it does not then create a new default configuration
 func InitConfigFileIfRequired() *ConError {
 	_, err := os.Stat(GetConnectionConfigFilename())
@@ -109,9 +112,28 @@ func GetConnectionsConfig() (*ConnectionConfig, *ConError) {
 
 // AddConnectionToList : validates then adds a new connection to the connection config
 func AddConnectionToList(httpClient utils.HTTPClient, c *cli.Context) (*Connection, *ConError) {
-	connectionID := strings.ToUpper(strconv.FormatInt(utils.CreateTimestamp(), 36))
+	conID := strings.ToUpper(strconv.FormatInt(utils.CreateTimestamp(), 36))
 	label := strings.TrimSpace(c.String("label"))
 	url := strings.TrimSpace(c.String("url"))
+	conInfo, conErr := updateConnectionList(actionAddEntry, httpClient, conID, label, url)
+	return conInfo, conErr
+}
+
+// UpdateExistingConnection : Update an existing connection
+func UpdateExistingConnection(httpClient utils.HTTPClient, c *cli.Context) (*Connection, *ConError) {
+	conID := strings.ToUpper(c.String("conid"))
+	label := strings.TrimSpace(c.String("label"))
+	url := strings.TrimSpace(c.String("url"))
+	conInfo, conErr := updateConnectionList(actionUpdateEntry, httpClient, conID, label, url)
+	return conInfo, conErr
+}
+
+// updateConnectionList : validates then adds a new connection to the connection config
+func updateConnectionList(action int, httpClient utils.HTTPClient, connectionID string, label string, url string) (*Connection, *ConError) {
+	if strings.EqualFold(connectionID, "LOCAL") {
+		err := errors.New("Local is a required connection that must not be modified")
+		return nil, &ConError{errOpProtected, err, err.Error()}
+	}
 	if url != "" && len(strings.TrimSpace(url)) > 0 {
 		url = strings.TrimSuffix(url, "/")
 	}
@@ -121,10 +143,24 @@ func AddConnectionToList(httpClient utils.HTTPClient, c *cli.Context) (*Connecti
 	}
 
 	// check the url and label are not already in use
-	for i := 0; i < len(data.Connections); i++ {
-		if strings.EqualFold(label, data.Connections[i].Label) || strings.EqualFold(url, data.Connections[i].URL) {
-			conErr := errors.New("Connection ID: " + connectionID + " already exists. To update, first remove and then re-add")
-			return nil, &ConError{errOpConflict, conErr, conErr.Error()}
+	if action == actionAddEntry {
+		for i := 0; i < len(data.Connections); i++ {
+			if strings.EqualFold(label, data.Connections[i].Label) || strings.EqualFold(url, data.Connections[i].URL) {
+				conErr := errors.New("Connection ID: " + connectionID + " already exists. Use the update command to modify")
+				return nil, &ConError{errOpConflict, conErr, conErr.Error()}
+			}
+		}
+	}
+
+	// check the connection already exists
+	if action == actionUpdateEntry {
+		connInfo, conErr := GetConnectionByID(connectionID)
+		if conErr != nil {
+			return nil, conErr
+		}
+		if connInfo == nil {
+			err := errors.New("Unable to update connection")
+			return nil, &ConError{errOpNotFound, err, err.Error()}
 		}
 	}
 
@@ -143,8 +179,26 @@ func AddConnectionToList(httpClient utils.HTTPClient, c *cli.Context) (*Connecti
 		ClientID: gatekeeperEnv.ClientID,
 	}
 
-	// append it to the list
-	data.Connections = append(data.Connections, newConnection)
+	switch action {
+	case actionAddEntry:
+		{
+			data.Connections = append(data.Connections, newConnection)
+			break
+		}
+	case actionUpdateEntry:
+		{
+			for i := 0; i < len(data.Connections); i++ {
+				connection := data.Connections[i]
+				if strings.ToUpper(connection.ID) == strings.ToUpper(connectionID) {
+					data.Connections[i] = newConnection
+					break
+				}
+			}
+			break
+		}
+	}
+
+	// Write list
 	body, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {
 		return nil, &ConError{errOpFileParse, err, err.Error()}

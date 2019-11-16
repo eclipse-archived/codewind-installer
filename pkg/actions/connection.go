@@ -19,14 +19,20 @@ import (
 	"strings"
 
 	"github.com/eclipse/codewind-installer/pkg/connections"
+	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
 // ConnectionAddToList : Add new connection to the connections config file and returns the ID of the added entry
 func ConnectionAddToList(c *cli.Context) {
-	connection, err := connections.AddConnectionToList(http.DefaultClient, c)
-	if err != nil {
-		fmt.Println(err.Error())
+	printAsJSON := c.GlobalBool("json")
+	connection, conErr := connections.AddConnectionToList(http.DefaultClient, c)
+	if conErr != nil {
+		if printAsJSON {
+			fmt.Println(conErr.Error())
+		} else {
+			logr.Println(conErr.Desc)
+		}
 		os.Exit(1)
 	}
 
@@ -37,16 +43,53 @@ func ConnectionAddToList(c *cli.Context) {
 	}
 
 	response, _ := json.Marshal(Result{Status: "OK", StatusMessage: "Connection added", ConID: strings.ToUpper(connection.ID)})
-	fmt.Println(string(response))
+	if printAsJSON {
+		fmt.Println(string(response))
+	} else {
+		logr.Printf("Connection %v added successfully", strings.ToUpper(connection.ID))
+	}
+
+	os.Exit(0)
+}
+
+// ConnectionUpdate : Update an existing connection
+func ConnectionUpdate(c *cli.Context) {
+	printAsJSON := c.GlobalBool("json")
+	connection, conErr := connections.UpdateExistingConnection(http.DefaultClient, c)
+	if conErr != nil {
+		if printAsJSON {
+			fmt.Println(conErr.Error())
+		} else {
+			logr.Println(conErr.Desc)
+		}
+		os.Exit(1)
+	}
+	type Result struct {
+		Status        string `json:"status"`
+		StatusMessage string `json:"status_message"`
+		ConID         string `json:"id"`
+	}
+
+	response, _ := json.Marshal(Result{Status: "OK", StatusMessage: "Connection updated", ConID: strings.ToUpper(connection.ID)})
+	if conErr != nil {
+		fmt.Println(string(response))
+	} else {
+		logr.Printf("Connection %v updated successfully", strings.ToUpper(connection.ID))
+	}
 	os.Exit(0)
 }
 
 // ConnectionGetByID : Get connection by its id
 func ConnectionGetByID(c *cli.Context) {
+	printAsJSON := c.GlobalBool("json")
 	connectionID := strings.TrimSpace(strings.ToLower(c.String("conid")))
-	connection, err := connections.GetConnectionByID(connectionID)
-	if err != nil {
-		fmt.Println(err.Error())
+	connection, conErr := connections.GetConnectionByID(connectionID)
+	if conErr != nil {
+		if printAsJSON {
+			fmt.Println(conErr.Error())
+		} else {
+			logr.Println(conErr.Desc)
+		}
 		os.Exit(1)
 	}
 	response, _ := json.Marshal(connection)
@@ -56,21 +99,35 @@ func ConnectionGetByID(c *cli.Context) {
 
 // ConnectionRemoveFromList : Removes a connection from the connections config file
 func ConnectionRemoveFromList(c *cli.Context) {
-	err := connections.RemoveConnectionFromList(c)
-	if err != nil {
-		fmt.Println(err.Error())
+	printAsJSON := c.GlobalBool("json")
+	conErr := connections.RemoveConnectionFromList(c)
+	if conErr != nil {
+		if printAsJSON {
+			fmt.Println(conErr.Error())
+		} else {
+			logr.Println(conErr.Desc)
+		}
 		os.Exit(1)
 	}
 	response, _ := json.Marshal(connections.Result{Status: "OK", StatusMessage: "Connection removed"})
-	fmt.Println(string(response))
+	if printAsJSON {
+		fmt.Println(string(response))
+	} else {
+		logr.Printf("Connection removed successfully")
+	}
 	os.Exit(0)
 }
 
 // ConnectionListAll : Fetch all connections
-func ConnectionListAll() {
-	allConnections, err := connections.GetConnectionsConfig()
-	if err != nil {
-		fmt.Println(err.Error())
+func ConnectionListAll(c *cli.Context) {
+	printAsJSON := c.GlobalBool("json")
+	allConnections, conErr := connections.GetConnectionsConfig()
+	if conErr != nil {
+		if printAsJSON {
+			fmt.Println(conErr.Error())
+		} else {
+			logr.Println(conErr.Desc)
+		}
 		os.Exit(1)
 	}
 	response, _ := json.Marshal(allConnections)
@@ -79,13 +136,22 @@ func ConnectionListAll() {
 }
 
 // ConnectionResetList : Reset to a single default local connection
-func ConnectionResetList() {
-	err := connections.ResetConnectionsFile()
-	if err != nil {
-		fmt.Println(err.Error())
+func ConnectionResetList(c *cli.Context) {
+	printAsJSON := c.GlobalBool("json")
+	conErr := connections.ResetConnectionsFile()
+	if conErr != nil {
+		if printAsJSON {
+			fmt.Println(conErr.Error())
+		} else {
+			logr.Println(conErr.Desc)
+		}
 		os.Exit(1)
 	}
 	response, _ := json.Marshal(connections.Result{Status: "OK", StatusMessage: "Connection list reset"})
-	fmt.Println(string(response))
+	if printAsJSON {
+		fmt.Println(string(response))
+	} else {
+		logr.Printf("Connection list reset successfully")
+	}
 	os.Exit(0)
 }

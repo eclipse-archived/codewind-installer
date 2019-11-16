@@ -592,6 +592,20 @@ func Commands() {
 					},
 				},
 				{
+					Name:    "update",
+					Aliases: []string{"u"},
+					Usage:   "Update and existing connection",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "conid", Usage: "Connection ID to update", Required: true},
+						cli.StringFlag{Name: "label", Usage: "A displayable name", Required: true},
+						cli.StringFlag{Name: "url", Usage: "The ingress URL of Codewind gatekeeper", Required: true},
+					},
+					Action: func(c *cli.Context) error {
+						ConnectionUpdate(c)
+						return nil
+					},
+				},
+				{
 					Name:    "get",
 					Aliases: []string{"g"},
 					Usage:   "Get a connection config by id",
@@ -620,7 +634,7 @@ func Commands() {
 					Aliases: []string{"ls"},
 					Usage:   "List known connections",
 					Action: func(c *cli.Context) error {
-						ConnectionListAll()
+						ConnectionListAll(c)
 						return nil
 					},
 				},
@@ -628,7 +642,7 @@ func Commands() {
 					Name:  "reset",
 					Usage: "Resets the connections list",
 					Action: func(c *cli.Context) error {
-						ConnectionResetList()
+						ConnectionResetList(c)
 						return nil
 					},
 				},

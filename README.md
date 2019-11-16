@@ -347,6 +347,13 @@ Subcommands:</br>
 > --label value  A displayable name
 > --url value    The ingress URL of the PFE instance
 
+`update/u` - Update an existing connection
+
+> **Flags:**
+> --conid  value   The Connection ID to update
+> --label value  A displayable name
+> --url value    The ingress URL of the PFE instance
+
 `get/g` - Get a connection using its ID
 
 > **Flags:**
