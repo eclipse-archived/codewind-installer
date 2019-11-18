@@ -20,7 +20,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/eclipse/codewind-installer/config"
+	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/sechttp"
 	logr "github.com/sirupsen/logrus"
@@ -64,12 +64,7 @@ func BindProject(c *cli.Context) (*BindResponse, *ProjectError) {
 	language := strings.TrimSpace(c.String("language"))
 	buildType := strings.TrimSpace(c.String("type"))
 	cliUsername := strings.TrimSpace(strings.ToLower(c.String("username")))
-	var conID string
-	if c.String("conid") != "" {
-		conID = strings.TrimSpace(strings.ToLower(c.String("conid")))
-	} else {
-		conID = "local"
-	}
+	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 	return Bind(projectPath, name, language, buildType, cliUsername, conID)
 }
 
@@ -78,11 +73,6 @@ func Bind(projectPath string, name string, language string, projectType string, 
 	_, err := os.Stat(projectPath)
 	if err != nil {
 		return nil, &ProjectError{errBadPath, err, err.Error()}
-	}
-
-	conInfo, conErr := connections.GetConnectionByID(conID)
-	if conErr != nil {
-		return nil, &ProjectError{errOpConNotFound, conErr.Err, conErr.Error()}
 	}
 
 	bindRequest := BindRequest{
@@ -94,11 +84,11 @@ func Bind(projectPath string, name string, language string, projectType string, 
 	buf := new(bytes.Buffer)
 	json.NewEncoder(buf).Encode(bindRequest)
 
-	// use the given connectionID to call api/v1/bind/start
-	conURL := config.PFEOrigin()
-	if conInfo.ID != "local" {
-		conURL = conInfo.URL
+	conURL, conURLErr := config.PFEOrigin(conID)
+	if conURLErr != nil {
+		return nil, &ProjectError{errOpConNotFound, conURLErr.Err, conURLErr.Desc}
 	}
+
 	bindURL := conURL + "/api/v1/projects/bind/start"
 
 	client := &http.Client{}
@@ -133,13 +123,18 @@ func Bind(projectPath string, name string, language string, projectType string, 
 	projectID := projectInfo["projectID"].(string)
 
 	// Generate the .codewind/connections/{projectID}.json file based on the given conID
-	SetConnection(projectID, conID)
+	SetConnection(conID, projectID)
 
 	// Read connections.json to find the URL of the connection
 	conURL, projErr := GetConnectionURL(projectID)
 
 	if projErr != nil {
 		return nil, projErr
+	}
+
+	conInfo, conInfoErr := connections.GetConnectionByID(conID)
+	if conInfoErr != nil {
+		return nil, &ProjectError{errOpConNotFound, conInfoErr.Err, conInfoErr.Desc}
 	}
 
 	// Sync all the project files

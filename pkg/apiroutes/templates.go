@@ -19,7 +19,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/eclipse/codewind-installer/config"
+	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 )
 
@@ -54,8 +54,12 @@ type (
 
 // GetTemplates gets project templates from PFE's REST API.
 // Filter them using the function arguments
-func GetTemplates(projectStyle string, showEnabledOnly bool) ([]Template, error) {
-	req, err := http.NewRequest("GET", config.PFEOrigin()+"/api/v1/templates", nil)
+func GetTemplates(conID, projectStyle string, showEnabledOnly bool) ([]Template, error) {
+	conURL, conErr := config.PFEOrigin(conID)
+	if conErr != nil {
+		return nil, conErr.Err
+	}
+	req, err := http.NewRequest("GET", conURL+"/api/v1/templates", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -86,8 +90,12 @@ func GetTemplates(projectStyle string, showEnabledOnly bool) ([]Template, error)
 }
 
 // GetTemplateStyles gets all template styles from PFE's REST API
-func GetTemplateStyles() ([]string, error) {
-	resp, err := http.Get(config.PFEOrigin() + "/api/v1/templates/styles")
+func GetTemplateStyles(conID string) ([]string, error) {
+	conURL, conErr := config.PFEOrigin(conID)
+	if conErr != nil {
+		return nil, conErr.Err
+	}
+	resp, err := http.Get(conURL + "/api/v1/templates/styles")
 	if err != nil {
 		return nil, err
 	}
@@ -106,8 +114,12 @@ func GetTemplateStyles() ([]string, error) {
 }
 
 // GetTemplateRepos gets all template repos from PFE's REST API
-func GetTemplateRepos() ([]utils.TemplateRepo, error) {
-	resp, err := http.Get(config.PFEOrigin() + "/api/v1/templates/repositories")
+func GetTemplateRepos(conID string) ([]utils.TemplateRepo, error) {
+	conURL, conErr := config.PFEOrigin(conID)
+	if conErr != nil {
+		return nil, conErr.Err
+	}
+	resp, err := http.Get(conURL + "/api/v1/templates/repositories")
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +139,7 @@ func GetTemplateRepos() ([]utils.TemplateRepo, error) {
 
 // AddTemplateRepo adds a template repo to PFE and
 // returns the new list of existing repos
-func AddTemplateRepo(URL, description string, name string) ([]utils.TemplateRepo, error) {
+func AddTemplateRepo(conID, URL, description, name string) ([]utils.TemplateRepo, error) {
 	if _, err := url.ParseRequestURI(URL); err != nil {
 		return nil, fmt.Errorf("Error: '%s' is not a valid URL", URL)
 	}
@@ -139,8 +151,13 @@ func AddTemplateRepo(URL, description string, name string) ([]utils.TemplateRepo
 	}
 	jsonValue, _ := json.Marshal(values)
 
+	conURL, conErr := config.PFEOrigin(conID)
+	if conErr != nil {
+		return nil, conErr.Err
+	}
+
 	resp, err := http.Post(
-		config.PFEOrigin()+"/api/v1/templates/repositories",
+		conURL+"/api/v1/templates/repositories",
 		"application/json",
 		bytes.NewBuffer(jsonValue),
 	)
@@ -166,7 +183,7 @@ func AddTemplateRepo(URL, description string, name string) ([]utils.TemplateRepo
 
 // DeleteTemplateRepo deletes a template repo from PFE and
 // returns the new list of existing repos
-func DeleteTemplateRepo(URL string) ([]utils.TemplateRepo, error) {
+func DeleteTemplateRepo(conID, URL string) ([]utils.TemplateRepo, error) {
 	if _, err := url.ParseRequestURI(URL); err != nil {
 		return nil, fmt.Errorf("Error: '%s' is not a valid URL", URL)
 	}
@@ -174,9 +191,14 @@ func DeleteTemplateRepo(URL string) ([]utils.TemplateRepo, error) {
 	values := map[string]string{"url": URL}
 	jsonValue, _ := json.Marshal(values)
 
+	conURL, conErr := config.PFEOrigin(conID)
+	if conErr != nil {
+		return nil, conErr.Err
+	}
+
 	req, err := http.NewRequest(
 		"DELETE",
-		config.PFEOrigin()+"/api/v1/templates/repositories",
+		conURL+"/api/v1/templates/repositories",
 		bytes.NewBuffer(jsonValue),
 	)
 	req.Header.Set("Content-Type", "application/json")
@@ -205,7 +227,7 @@ func DeleteTemplateRepo(URL string) ([]utils.TemplateRepo, error) {
 
 // EnableTemplateRepos enables a template repo in PFE and
 // returns the new list of template repos
-func EnableTemplateRepos(repoURLs []string) ([]utils.TemplateRepo, error) {
+func EnableTemplateRepos(conID string, repoURLs []string) ([]utils.TemplateRepo, error) {
 	if repoURLs == nil {
 		return nil, fmt.Errorf("Error: '%s' is not a valid URL", repoURLs)
 	}
@@ -222,12 +244,12 @@ func EnableTemplateRepos(repoURLs []string) ([]utils.TemplateRepo, error) {
 		}
 		operations = append(operations, operation)
 	}
-	_, err := BatchPatchTemplateRepos(operations)
+	_, err := BatchPatchTemplateRepos(conID, operations)
 	if err != nil {
 		return nil, err
 	}
 
-	repos, err := GetTemplateRepos()
+	repos, err := GetTemplateRepos(conID)
 	if err != nil {
 		return nil, err
 	}
@@ -237,7 +259,7 @@ func EnableTemplateRepos(repoURLs []string) ([]utils.TemplateRepo, error) {
 
 // DisableTemplateRepos enables a template repo in PFE and
 // returns the new list of template repos
-func DisableTemplateRepos(repoURLs []string) ([]utils.TemplateRepo, error) {
+func DisableTemplateRepos(conID string, repoURLs []string) ([]utils.TemplateRepo, error) {
 	if repoURLs == nil {
 		return nil, fmt.Errorf("Error: '%s' is not a valid URL", repoURLs)
 	}
@@ -254,12 +276,12 @@ func DisableTemplateRepos(repoURLs []string) ([]utils.TemplateRepo, error) {
 		}
 		operations = append(operations, operation)
 	}
-	_, err := BatchPatchTemplateRepos(operations)
+	_, err := BatchPatchTemplateRepos(conID, operations)
 	if err != nil {
 		return nil, err
 	}
 
-	repos, err := GetTemplateRepos()
+	repos, err := GetTemplateRepos(conID)
 	if err != nil {
 		return nil, err
 	}
@@ -269,12 +291,17 @@ func DisableTemplateRepos(repoURLs []string) ([]utils.TemplateRepo, error) {
 
 // BatchPatchTemplateRepos requests that PFE perform batch operations on template repositories and
 // returns a list of sub-responses to the requested operations
-func BatchPatchTemplateRepos(operations []RepoOperation) ([]SubResponseFromBatchOperation, error) {
+func BatchPatchTemplateRepos(conID string, operations []RepoOperation) ([]SubResponseFromBatchOperation, error) {
 	jsonValue, _ := json.Marshal(operations)
+
+	conURL, conErr := config.PFEOrigin(conID)
+	if conErr != nil {
+		return nil, conErr.Err
+	}
 
 	req, err := http.NewRequest(
 		"PATCH",
-		config.PFEOrigin()+"/api/v1/batch/templates/repositories",
+		conURL+"/api/v1/batch/templates/repositories",
 		bytes.NewBuffer(jsonValue),
 	)
 	req.Header.Set("Content-Type", "application/json")

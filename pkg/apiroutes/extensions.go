@@ -16,13 +16,17 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/eclipse/codewind-installer/config"
+	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 )
 
 // GetExtensions gets project extensions from PFE's REST API.
-func GetExtensions() ([]utils.Extension, error) {
-	resp, err := http.Get(config.PFEOrigin() + "/api/v1/extensions")
+func GetExtensions(conID string) ([]utils.Extension, error) {
+	conURL, conErr := config.PFEOrigin(conID)
+	if conErr != nil {
+		return nil, conErr.Err
+	}
+	resp, err := http.Get(conURL + "/api/v1/extensions")
 	if err != nil {
 		return nil, err
 	}

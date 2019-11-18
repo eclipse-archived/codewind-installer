@@ -82,7 +82,7 @@ func TestGetTemplates(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := GetTemplates(test.inProjectStyle, test.inShowEnabledOnly)
+			got, err := GetTemplates("local", test.inProjectStyle, test.inShowEnabledOnly)
 			assert.IsType(t, test.wantedType, got)
 			assert.Equal(t, test.wantedLength, len(got))
 			assert.Nil(t, err)
@@ -102,7 +102,7 @@ func TestGetTemplateStyles(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := GetTemplateStyles()
+			got, err := GetTemplateStyles("local")
 			assert.Equal(t, test.want, got)
 			assert.IsType(t, test.wantedErr, err)
 		})
@@ -123,7 +123,7 @@ func TestGetTemplateRepos(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := GetTemplateRepos()
+			got, err := GetTemplateRepos("local")
 			assert.IsType(t, test.wantedType, got)
 			assert.Equal(t, test.wantedLength, len(got))
 			assert.Equal(t, test.wantedErr, err)
@@ -153,7 +153,7 @@ func TestFailuresAddTemplateRepo(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := AddTemplateRepo(test.inURL, test.inDescription, "template-name")
+			got, err := AddTemplateRepo("local", test.inURL, test.inDescription, "template-name")
 			assert.IsType(t, test.wantedType, got, "got: %v", got)
 			assert.Equal(t, test.wantedErr, err)
 		})
@@ -174,7 +174,7 @@ func TestFailuresDeleteTemplateRepo(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := DeleteTemplateRepo(test.inURL)
+			got, err := DeleteTemplateRepo("local", test.inURL)
 			assert.IsType(t, test.wantedType, got, "got: %v", got)
 			assert.Equal(t, test.wantedErr, err)
 		})
@@ -184,7 +184,7 @@ func TestFailuresDeleteTemplateRepo(t *testing.T) {
 func TestSuccessfulAddAndDeleteTemplateRepo(t *testing.T) {
 	testRepoURL := URLOfNewRepo
 
-	originalRepos, err := GetTemplateRepos()
+	originalRepos, err := GetTemplateRepos("local")
 	if err != nil {
 		log.Fatalf("[TestSuccessfulAddAndDeleteTemplateRepo] Error getting template repos: %s", err)
 	}
@@ -193,7 +193,7 @@ func TestSuccessfulAddAndDeleteTemplateRepo(t *testing.T) {
 	t.Run("Successfully add template repo", func(t *testing.T) {
 		wantedNumRepos := originalNumRepos + 1
 
-		got, err := AddTemplateRepo(testRepoURL, "example description", "template-name")
+		got, err := AddTemplateRepo("local", testRepoURL, "example description", "template-name")
 
 		assert.IsType(t, []utils.TemplateRepo{}, got)
 		assert.Equal(t, wantedNumRepos, len(got), "got: %v", got)
@@ -203,7 +203,7 @@ func TestSuccessfulAddAndDeleteTemplateRepo(t *testing.T) {
 	t.Run("Successfully delete template repo", func(t *testing.T) {
 		wantedNumRepos := originalNumRepos
 
-		got, err := DeleteTemplateRepo(testRepoURL)
+		got, err := DeleteTemplateRepo("local", testRepoURL)
 
 		assert.IsType(t, []utils.TemplateRepo{}, got)
 		assert.Equal(t, wantedNumRepos, len(got), "got: %v", got)
@@ -242,7 +242,7 @@ func TestFailuresEnableTemplateRepos(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := EnableTemplateRepos(test.in)
+			got, err := EnableTemplateRepos("local", test.in)
 			assert.IsType(t, test.wantedType, got, "got: %v", got)
 			assert.Equal(t, test.wantedErr, err)
 		})
@@ -278,7 +278,7 @@ func TestFailuresDisableTemplateRepos(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := DisableTemplateRepos(test.in)
+			got, err := DisableTemplateRepos("local", test.in)
 			assert.IsType(t, test.wantedType, got, "got: %v", got)
 			assert.Equal(t, test.wantedErr, err)
 		})
@@ -289,7 +289,7 @@ func TestSuccessfulEnableAndDisableTemplateRepos(t *testing.T) {
 	testRepoURL := URLOfExistingRepo
 
 	t.Run("Successfully disable 1 template repo", func(t *testing.T) {
-		got, err := DisableTemplateRepos([]string{testRepoURL})
+		got, err := DisableTemplateRepos("local", []string{testRepoURL})
 
 		assert.IsType(t, []utils.TemplateRepo{}, got)
 		assert.Nil(t, err)
@@ -301,7 +301,7 @@ func TestSuccessfulEnableAndDisableTemplateRepos(t *testing.T) {
 	})
 
 	t.Run("Successfully enable 1 template repo", func(t *testing.T) {
-		got, err := EnableTemplateRepos([]string{testRepoURL})
+		got, err := EnableTemplateRepos("local", []string{testRepoURL})
 
 		assert.IsType(t, []utils.TemplateRepo{}, got)
 		assert.Nil(t, err)
@@ -440,7 +440,7 @@ func TestBatchPatchTemplateRepos(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := BatchPatchTemplateRepos(test.in)
+			got, err := BatchPatchTemplateRepos("local", test.in)
 			assert.Equal(t, test.want, got)
 			assert.Equal(t, test.wantedErr, err)
 		})

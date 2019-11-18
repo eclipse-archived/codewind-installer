@@ -30,32 +30,32 @@ func TestDetermineProjectInfo(t *testing.T) {
 		wantedErr     error
 	}{
 		"success case: liberty project": {
-			in:            path.Join("../../..", "resources", "test", "liberty-project"),
+			in:            path.Join("../..", "resources", "test", "liberty-project"),
 			wantLanguage:  "java",
 			wantBuildType: "liberty",
 		},
 		"success case: spring project": {
-			in:            path.Join("../../..", "resources", "test", "spring-project"),
+			in:            path.Join("../..", "resources", "test", "spring-project"),
 			wantLanguage:  "java",
 			wantBuildType: "spring",
 		},
 		"success case: node.js project": {
-			in:            path.Join("../../..", "resources", "test", "node-project"),
+			in:            path.Join("../..", "resources", "test", "node-project"),
 			wantLanguage:  "nodejs",
 			wantBuildType: "nodejs",
 		},
 		"success case: swift project": {
-			in:            path.Join("../../..", "resources", "test", "swift-project"),
+			in:            path.Join("../..", "resources", "test", "swift-project"),
 			wantLanguage:  "swift",
 			wantBuildType: "swift",
 		},
 		"success case: python project": {
-			in:            path.Join("../../..", "resources", "test", "python-project"),
+			in:            path.Join("../..", "resources", "test", "python-project"),
 			wantLanguage:  "python",
 			wantBuildType: "docker",
 		},
 		"success case: go project": {
-			in:            path.Join("../../..", "resources", "test", "go-project"),
+			in:            path.Join("../..", "resources", "test", "go-project"),
 			wantLanguage:  "go",
 			wantBuildType: "docker",
 		},
@@ -73,13 +73,13 @@ func TestDetermineProjectInfo(t *testing.T) {
 func TestWriteNewCwSettings(t *testing.T) {
 	defaultInternalDebugPort := ""
 	tests := map[string]struct {
-		inProjectPath  string
-		inBuildType    string
-		wantCwSettings CWSettings
+		inProjectPath   string
+		inBuildType     string
+		wantCwSettings  CWSettings
 		wantIgnoredPath string
 	}{
 		"success case: node project": {
-			inProjectPath: "../../../resources/test/node-project/.cw-settings",
+			inProjectPath: "../../resources/test/node-project/.cw-settings",
 			inBuildType:   "nodejs",
 			wantCwSettings: CWSettings{
 				ContextRoot:       "",
@@ -91,7 +91,7 @@ func TestWriteNewCwSettings(t *testing.T) {
 			wantIgnoredPath: "*/node_modules*",
 		},
 		"success case: liberty project": {
-			inProjectPath: "../../../resources/test/liberty-project/.cw-settings",
+			inProjectPath: "../../resources/test/liberty-project/.cw-settings",
 			inBuildType:   "liberty",
 			wantCwSettings: CWSettings{
 				ContextRoot:       "",
@@ -105,7 +105,7 @@ func TestWriteNewCwSettings(t *testing.T) {
 			wantIgnoredPath: "/libertyrepocache.zip",
 		},
 		"success case: spring project": {
-			inProjectPath: "../../../resources/test/spring-project/.cw-settings",
+			inProjectPath: "../../resources/test/spring-project/.cw-settings",
 			inBuildType:   "spring",
 			wantCwSettings: CWSettings{
 				ContextRoot:       "",
@@ -119,7 +119,7 @@ func TestWriteNewCwSettings(t *testing.T) {
 			wantIgnoredPath: "/localm2cache.zip",
 		},
 		"success case: swift project": {
-			inProjectPath: "../../../resources/test/swift-project/.cw-settings",
+			inProjectPath: "../../resources/test/swift-project/.cw-settings",
 			inBuildType:   "swift",
 			wantCwSettings: CWSettings{
 				ContextRoot:  "",
@@ -130,7 +130,7 @@ func TestWriteNewCwSettings(t *testing.T) {
 			wantIgnoredPath: ".swift-version",
 		},
 		"success case: python project": {
-			inProjectPath: "../../../resources/test/python-project/.cw-settings",
+			inProjectPath: "../../resources/test/python-project/.cw-settings",
 			inBuildType:   "docker",
 			wantCwSettings: CWSettings{
 				ContextRoot:  "",
@@ -141,7 +141,7 @@ func TestWriteNewCwSettings(t *testing.T) {
 			wantIgnoredPath: "*/.DS_Store",
 		},
 		"success case: go project": {
-			inProjectPath: "../../../resources/test/go-project/.cw-settings",
+			inProjectPath: "../../resources/test/go-project/.cw-settings",
 			inBuildType:   "docker",
 			wantCwSettings: CWSettings{
 				ContextRoot:  "",
@@ -154,7 +154,7 @@ func TestWriteNewCwSettings(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			writeNewCwSettings(test.inProjectPath, test.inBuildType)
+			writeNewCwSettings("local", test.inProjectPath, test.inBuildType)
 
 			cwSettings := readCwSettings(test.inProjectPath)
 			assert.Equal(t, cwSettings.ContextRoot, test.wantCwSettings.ContextRoot)

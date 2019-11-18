@@ -17,7 +17,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/eclipse/codewind-installer/config"
+	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 )
 
@@ -25,9 +25,12 @@ import (
 type IgnoredPaths []string
 
 // GetIgnoredPaths calls pfe to get the default ignoredPaths for that projectType
-func GetIgnoredPaths(httpClient utils.HTTPClient, projectType string) (IgnoredPaths, error) {
-
-	req, err := http.NewRequest("GET", config.PFEOrigin()+"/api/v1/ignoredPaths", nil)
+func GetIgnoredPaths(conID, projectType string, httpClient utils.HTTPClient) (IgnoredPaths, error) {
+	conURL, conErr := config.PFEOrigin(conID)
+	if conErr != nil {
+		return nil, conErr.Err
+	}
+	req, err := http.NewRequest("GET", conURL+"/api/v1/ignoredPaths", nil)
 	if err != nil {
 		return nil, err
 	}

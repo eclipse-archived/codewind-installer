@@ -89,7 +89,7 @@ func Test_ProjectConnection(t *testing.T) {
 	})
 
 	t.Run("Asserts a new connectionID can be set", func(t *testing.T) {
-		projError := SetConnection(testProjectID, testConnectionID)
+		projError := SetConnection(testConnectionID, testProjectID)
 		if projError != nil {
 			t.Fail()
 		}
@@ -127,7 +127,7 @@ func Test_ProjectConnection(t *testing.T) {
 	})
 
 	t.Run("Asserts attempting to set an invalid project ID fails", func(t *testing.T) {
-		projError := SetConnection("bad-project-ID", testConnectionID)
+		projError := SetConnection(testConnectionID, "bad-project-ID")
 		if projError == nil {
 			t.Fail()
 		}

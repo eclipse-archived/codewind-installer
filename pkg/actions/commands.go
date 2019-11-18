@@ -68,6 +68,7 @@ func Commands() {
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "url, u", Usage: "URL of project to download"},
 						cli.StringFlag{Name: "type, t", Usage: "Known type and subtype of project (`type:subtype`). Ignored when URL is given"},
+						cli.StringFlag{Name: "conid", Value: "local", Usage: "The connection id for the project", Required: false},
 					},
 					Action: func(c *cli.Context) error {
 						if c.String("u") != "" {
@@ -86,7 +87,7 @@ func Commands() {
 						cli.StringFlag{Name: "language, l", Usage: "The project language", Required: true},
 						cli.StringFlag{Name: "type, t", Usage: "The type of the project", Required: true},
 						cli.StringFlag{Name: "path, p", Usage: "The path to the project", Required: true},
-						cli.StringFlag{Name: "conid", Usage: "The connection id for the project", Required: false},
+						cli.StringFlag{Name: "conid", Value: "local", Usage: "The connection id for the project", Required: false},
 						cli.StringFlag{Name: "username,u", Usage: "Account Username", Required: false},
 					},
 					Action: func(c *cli.Context) error {
@@ -291,6 +292,12 @@ func Commands() {
 							Name:  "showEnabledOnly",
 							Usage: "Filter by whether a template is enabled or not",
 						},
+						cli.StringFlag{
+							Name:     "conid",
+							Value:    "local",
+							Usage:    "Connection ID",
+							Required: false,
+						},
 					},
 					Action: func(c *cli.Context) error {
 						ListTemplates(c)
@@ -300,8 +307,16 @@ func Commands() {
 				{
 					Name:  "styles",
 					Usage: "List available template styles",
+					Flags: []cli.Flag{
+						cli.StringFlag{
+							Name:     "conid",
+							Value:    "local",
+							Usage:    "Connection ID",
+							Required: false,
+						},
+					},
 					Action: func(c *cli.Context) error {
-						ListTemplateStyles()
+						ListTemplateStyles(c)
 						return nil
 					},
 				},
@@ -313,8 +328,16 @@ func Commands() {
 							Name:    "list",
 							Aliases: []string{"ls"},
 							Usage:   "List available template repos",
+							Flags: []cli.Flag{
+								cli.StringFlag{
+									Name:     "conid",
+									Value:    "local",
+									Usage:    "Connection ID",
+									Required: false,
+								},
+							},
 							Action: func(c *cli.Context) error {
-								ListTemplateRepos()
+								ListTemplateRepos(c)
 								return nil
 							},
 						},
@@ -336,6 +359,12 @@ func Commands() {
 									Value: "",
 									Usage: "Name of the template repo",
 								},
+								cli.StringFlag{
+									Name:     "conid",
+									Value:    "local",
+									Usage:    "Connection ID",
+									Required: false,
+								},
 							},
 							Action: func(c *cli.Context) error {
 								AddTemplateRepo(c)
@@ -351,6 +380,12 @@ func Commands() {
 									Name:  "url",
 									Usage: "URL of the template repo",
 								},
+								cli.StringFlag{
+									Name:     "conid",
+									Value:    "local",
+									Usage:    "Connection ID",
+									Required: false,
+								},
 							},
 							Action: func(c *cli.Context) error {
 								DeleteTemplateRepo(c)
@@ -360,6 +395,14 @@ func Commands() {
 						{
 							Name:  "enable",
 							Usage: "Enable template repos with the given URLs",
+							Flags: []cli.Flag{
+								cli.StringFlag{
+									Name:     "conid",
+									Value:    "local",
+									Usage:    "Connection ID",
+									Required: false,
+								},
+							},
 							Action: func(c *cli.Context) error {
 								EnableTemplateRepos(c)
 								return nil
@@ -368,6 +411,14 @@ func Commands() {
 						{
 							Name:  "disable",
 							Usage: "Disable template repos with the given URLs",
+							Flags: []cli.Flag{
+								cli.StringFlag{
+									Name:     "conid",
+									Value:    "local",
+									Usage:    "Connection ID",
+									Required: false,
+								},
+							},
 							Action: func(c *cli.Context) error {
 								DisableTemplateRepos(c)
 								return nil
