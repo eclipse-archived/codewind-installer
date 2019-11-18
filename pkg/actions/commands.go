@@ -644,11 +644,12 @@ func Commands() {
 				{
 					Name:    "update",
 					Aliases: []string{"u"},
-					Usage:   "Update and existing connection",
+					Usage:   "Update an existing connection",
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "conid", Usage: "Connection ID to update", Required: true},
 						cli.StringFlag{Name: "label", Usage: "A displayable name", Required: true},
 						cli.StringFlag{Name: "url", Usage: "The ingress URL of Codewind gatekeeper", Required: true},
+						cli.StringFlag{Name: "username,u", Usage: "Username", Required: true},
 					},
 					Action: func(c *cli.Context) error {
 						ConnectionUpdate(c)
