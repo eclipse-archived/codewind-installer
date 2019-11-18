@@ -91,6 +91,49 @@ func Test_CreateNewConnection(t *testing.T) {
 	})
 }
 
+// Test_UpdateConnection :  Updates an existing connection
+func Test_UpdateConnection(t *testing.T) {
+
+	// retrieve connectionID we want to update
+	result, err := GetConnectionsConfig()
+	if err != nil {
+		t.Fail()
+	}
+
+	lastAddedConnection := result.Connections[1]
+
+	// Check the correct test entry was found
+	if lastAddedConnection.Label != "MyRemoteServer" {
+		t.Fail()
+	}
+
+	set := flag.NewFlagSet("tests", 0)
+	set.String("conid", lastAddedConnection.ID, "Connection ID")
+	set.String("label", "MyRemoteServer-Updated", "just a label")
+	set.String("url", "https://codewind.server.remote", "Codewind URL")
+	c := cli.NewContext(nil, set, nil)
+
+	ResetConnectionsFile()
+
+	mockResponse := apiroutes.GatekeeperEnvironment{AuthURL: "http://a.mock.auth.server.remote:1234", Realm: "remoteRealm", ClientID: "remoteClient"}
+	jsonResponse, _ := json.Marshal(mockResponse)
+	body := ioutil.NopCloser(bytes.NewReader([]byte(jsonResponse)))
+
+	// construct a http client with our mock canned response
+	mockClient := &ClientMockServerConfig{StatusCode: http.StatusOK, Body: body}
+
+	t.Run("Updates an existing connection", func(t *testing.T) {
+		AddConnectionToList(mockClient, c)
+		result, err := GetConnectionsConfig()
+		if err != nil {
+			t.Fail()
+		}
+		assert.Len(t, result.Connections, 2)
+		assert.Equal(t, "MyRemoteServer-Updated", result.Connections[1].Label)
+		assert.Equal(t, "http://a.mock.auth.server.remote:1234", result.Connections[1].AuthURL)
+	})
+}
+
 // Test_RemoveConnectionFromList : Adds a new connection to the stored list
 func Test_RemoveConnectionFromList(t *testing.T) {
 	set := flag.NewFlagSet("tests", 0)

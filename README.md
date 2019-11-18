@@ -247,7 +247,7 @@ Subcommands:</br>
 > --username value              Account Username
 > --password value              Account Password
 > --client value                Client
-> --conid  value              Use connection details from a connection configuration
+> --conid value                 Use connection details from a connection configuration
 
 ## secrealm
 
@@ -297,13 +297,13 @@ Subcommands:</br>
 `update/u` - Add new or update existing Codewind credentials key in keyring
 
 > --conid  `<value>`              Connection ID (see the connections cmd)
-> --username `<value>`              Username
-> --password `<value>`              Password
+> --username `<value>`            Username
+> --password `<value>`            Password
 
 `validate/v` - Checks if credentials key exist in the keyring
 
 > --conid  `<value>`              Connection ID (see the connections cmd)
-> --username `<value>`              Username
+> --username `<value>`            Username
 
 ## secuser
 
@@ -344,18 +344,25 @@ Subcommands:</br>
 `add/a` - Add a new connection to the list
 
 > **Flags:**
-> --label value  A displayable name
-> --url value    The ingress URL of the PFE instance
+> --label value     A displayable name
+> --url value       The ingress URL of the PFE instance
+
+`update/u` - Update an existing connection
+
+> **Flags:**
+> --conid value     The Connection ID to update
+> --label value     A displayable name
+> --url value       The ingress URL of the PFE instance
 
 `get/g` - Get a connection using its ID
 
 > **Flags:**
-> --conid  value   The Connection ID to retrieve
+> --conid value     The Connection ID to retrieve
 
 `remove/rm` - Remove a connection from the list
 
 > **Flags:**
-> --conid  value     A connection id
+> --conid value     A Connection ID
 
 `list/ls` - List known connections
 
