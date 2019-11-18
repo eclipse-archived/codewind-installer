@@ -14,7 +14,6 @@ package connections
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -214,9 +213,6 @@ func updateConnectionList(action int, httpClient utils.HTTPClient, connectionID 
 	if err != nil {
 		return nil, &ConError{errOpFileWrite, err, err.Error()}
 	}
-
-	fmt.Println("connectionID: " + connectionID)
-	fmt.Println("username: " + username)
 
 	return &newConnection, nil
 }
