@@ -20,7 +20,6 @@ import (
 
 	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/utils"
-	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -182,8 +181,23 @@ func SecAuthenticate(httpClient utils.HTTPClient, c *cli.Context, connectionReal
 func SecRefreshTokens(httpClient utils.HTTPClient, c *cli.Context) (*AuthToken, *SecError) {
 	conID := c.String("conid")
 
-	logr.Errorln("TODO:  return correct responses")
-	return nil, nil
+	// Read connection
+	connection, conErr := connections.GetConnectionByID(conID)
+	if conErr != nil {
+		secErr := &SecError{Op: conErr.Op, Err: conErr.Err, Desc: conErr.Desc}
+		return nil, secErr
+	}
+	// Read refresh token
+	refreshToken, secErr := SecKeyGetSecret(connection.ID, "refresh_token")
+	if secErr != nil {
+		return nil, secErr
+	}
+	// Get token
+	authTokens, secErr := SecRefreshAccessToken(httpClient, connection, refreshToken)
+	if secErr != nil {
+		return nil, secErr
+	}
+	return authTokens, nil
 }
 
 // SecRefreshAccessToken : Obtain an access token using a refresh token

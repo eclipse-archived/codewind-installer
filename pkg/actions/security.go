@@ -37,11 +37,11 @@ func SecurityTokenGet(c *cli.Context) {
 
 // SecurityTokenRefresh : Refresh the access token the cached refresh token
 func SecurityTokenRefresh(c *cli.Context) {
-	auth, err := security.SecRefreshTokens(http.DefaultClient, c)
-	if err == nil && auth != nil {
-		utils.PrettyPrintJSON(auth)
+	authTokens, secErr := security.SecRefreshTokens(http.DefaultClient, c)
+	if secErr == nil && authTokens != nil {
+		utils.PrettyPrintJSON(authTokens)
 	} else {
-		fmt.Println(err.Error())
+		fmt.Println(secErr.Error())
 		os.Exit(1)
 	}
 	os.Exit(0)
