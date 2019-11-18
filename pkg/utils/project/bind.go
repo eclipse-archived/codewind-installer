@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/eclipse/codewind-installer/config"
 	"github.com/eclipse/codewind-installer/pkg/utils/connections"
@@ -39,6 +40,7 @@ type (
 		ProjectType string `json:"projectType"`
 		Name        string `json:"name"`
 		Path        string `json:"path"`
+		Time        int64  `json:"creationTime"`
 	}
 
 	// BindEndRequest represents the request body parameters required to complete a bind
@@ -79,12 +81,14 @@ func Bind(projectPath string, name string, language string, projectType string, 
 	if conErr != nil {
 		return nil, &ProjectError{errOpConNotFound, conErr.Err, conErr.Error()}
 	}
+	creationTime := time.Now().UnixNano() / 1000000
 
 	bindRequest := BindRequest{
 		Language:    language,
 		Name:        name,
 		ProjectType: projectType,
 		Path:        projectPath,
+		Time:        creationTime,
 	}
 	buf := new(bytes.Buffer)
 	json.NewEncoder(buf).Encode(bindRequest)
