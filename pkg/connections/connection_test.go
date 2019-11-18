@@ -20,7 +20,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/eclipse/codewind-installer/pkg/apiroutes"
+	"github.com/eclipse/codewind-installer/pkg/gatekeeper"
 	"github.com/stretchr/testify/assert"
 	"github.com/urfave/cli"
 )
@@ -74,7 +74,7 @@ func Test_CreateNewConnection(t *testing.T) {
 
 	ResetConnectionsFile()
 
-	mockResponse := apiroutes.GatekeeperEnvironment{AuthURL: "http://a.mock.auth.server.remote:1234", Realm: "remoteRealm", ClientID: "remoteClient"}
+	mockResponse := gatekeeper.GatekeeperEnvironment{AuthURL: "http://a.mock.auth.server.remote:1234", Realm: "remoteRealm", ClientID: "remoteClient"}
 	jsonResponse, _ := json.Marshal(mockResponse)
 	body := ioutil.NopCloser(bytes.NewReader([]byte(jsonResponse)))
 
