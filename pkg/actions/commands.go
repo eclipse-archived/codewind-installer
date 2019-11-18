@@ -88,7 +88,6 @@ func Commands() {
 						cli.StringFlag{Name: "type, t", Usage: "The type of the project", Required: true},
 						cli.StringFlag{Name: "path, p", Usage: "The path to the project", Required: true},
 						cli.StringFlag{Name: "conid", Value: "local", Usage: "The connection id for the project", Required: false},
-						cli.StringFlag{Name: "username,u", Usage: "Account Username", Required: false},
 					},
 					Action: func(c *cli.Context) error {
 						ProjectBind(c)
@@ -103,7 +102,6 @@ func Commands() {
 						cli.StringFlag{Name: "path, p", Usage: "the path to the project", Required: true},
 						cli.StringFlag{Name: "id, i", Usage: "the project id", Required: true},
 						cli.StringFlag{Name: "time, t", Usage: "time of the last sync for the given project", Required: true},
-						cli.StringFlag{Name: "username,u", Usage: "Account Username", Required: false},
 					},
 					Action: func(c *cli.Context) error {
 						ProjectSync(c)
@@ -636,6 +634,7 @@ func Commands() {
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "label", Usage: "A displayable name", Required: true},
 						cli.StringFlag{Name: "url", Usage: "The ingress URL of Codewind gatekeeper", Required: true},
+						cli.StringFlag{Name: "username,u", Usage: "Username", Required: true},
 					},
 					Action: func(c *cli.Context) error {
 						ConnectionAddToList(c)
@@ -645,11 +644,12 @@ func Commands() {
 				{
 					Name:    "update",
 					Aliases: []string{"u"},
-					Usage:   "Update and existing connection",
+					Usage:   "Update an existing connection",
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "conid", Usage: "Connection ID to update", Required: true},
 						cli.StringFlag{Name: "label", Usage: "A displayable name", Required: true},
 						cli.StringFlag{Name: "url", Usage: "The ingress URL of Codewind gatekeeper", Required: true},
+						cli.StringFlag{Name: "username,u", Usage: "Username", Required: true},
 					},
 					Action: func(c *cli.Context) error {
 						ConnectionUpdate(c)

@@ -39,15 +39,35 @@ func PFEOrigin(unFormattedConID string) (string, *ConfigError) {
 		}
 		PFEURL = conInfo.URL
 	} else {
-		hostname, port := utils.GetPFEHostAndPort()
-		if hostname == "" || port == "" {
-			return "", &ConfigError{errOpConfPFEHostnamePortNotFound, nil, "Hostname or port for PFE not found"}
+		localURL, localErr := getLocalHostnameAndPort()
+		if localErr != nil {
+			return "", &ConfigError{errOpConfConNotFound, localErr.Err, localErr.Desc}
 		}
-		val, ok := os.LookupEnv("CHE_API_EXTERNAL")
-		if ok && (val != "") {
-			PFEURL = "https://" + hostname + ":" + port
-		}
-		PFEURL = "http://" + hostname + ":" + port
+		PFEURL = localURL
 	}
 	return PFEURL, nil
+}
+
+// PFEOriginFromConnection is used when GetConnectionByID(conID) has already been called to stop it being run twice in one function
+func PFEOriginFromConnection(connection *connections.Connection) (string, *ConfigError) {
+	if connection.ID != "local" {
+		return connection.URL, nil
+	}
+	localURL, localErr := getLocalHostnameAndPort()
+	if localErr != nil {
+		return "", &ConfigError{errOpConfConNotFound, localErr.Err, localErr.Desc}
+	}
+	return localURL, nil
+}
+
+func getLocalHostnameAndPort() (string, *ConfigError) {
+	hostname, port := utils.GetPFEHostAndPort()
+	if hostname == "" || port == "" {
+		return "", &ConfigError{errOpConfPFEHostnamePortNotFound, nil, "Hostname or port for PFE not found"}
+	}
+	val, ok := os.LookupEnv("CHE_API_EXTERNAL")
+	if ok && (val != "") {
+		return "https://" + hostname + ":" + port, nil
+	}
+	return "http://" + hostname + ":" + port, nil
 }

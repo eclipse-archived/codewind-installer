@@ -56,7 +56,7 @@ func UpgradeProjects(oldDir string) (*map[string]interface{}, *ProjectError) {
 			location := oldDir + "/" + name
 
 			if language != "" && projectType != "" && name != "" && location != "" {
-				_, bindErr := Bind(location, name, language, projectType, "", "local")
+				_, bindErr := Bind(location, name, language, projectType, "local")
 				if bindErr != nil {
 					errResponse := make(map[string]string)
 					errResponse["projectName"] = name
