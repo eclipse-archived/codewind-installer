@@ -103,14 +103,6 @@ func Test_ProjectConnection(t *testing.T) {
 		assert.Equal(t, testConnectionID, connection.ID)
 	})
 
-	t.Run("Asserts the correct host URL is returned", func(t *testing.T) {
-		hostURL, projError := GetConnectionURL(testProjectID)
-		if projError != nil {
-			t.Fail()
-		}
-		assert.Equal(t, testHost, hostURL)
-	})
-
 	t.Run("Asserts resetting the connection is successful", func(t *testing.T) {
 		projError := ResetConnectionFile(testProjectID)
 		if projError != nil {

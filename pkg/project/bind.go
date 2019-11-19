@@ -129,13 +129,6 @@ func Bind(projectPath string, name string, language string, projectType string, 
 	// Generate the .codewind/connections/{projectID}.json file based on the given conID
 	SetConnection(conID, projectID)
 
-	// Read connections.json to find the URL of the connection
-	conURL, projErr := GetConnectionURL(projectID)
-
-	if projErr != nil {
-		return nil, projErr
-	}
-
 	// Sync all the project files
 	_, _, uploadedFilesList := syncFiles(projectPath, projectID, conURL, 0, conInfo)
 

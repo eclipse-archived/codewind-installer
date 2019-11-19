@@ -20,8 +20,6 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/eclipse/codewind-installer/pkg/config"
-
 	"github.com/eclipse/codewind-installer/pkg/connections"
 )
 
@@ -87,19 +85,6 @@ func GetConnection(projectID string) (*ConnectionFile, *ProjectError) {
 		return nil, projErr
 	}
 	return connectionTargets, nil
-}
-
-// GetConnectionURL : Return the connection URL for a given projectID, unique to each project connection
-func GetConnectionURL(projectID string) (string, *ProjectError) {
-	conID, err := GetConnectionID(projectID)
-	if err != nil {
-		return "", err
-	}
-	conURL, conErr := config.PFEOrigin(conID)
-	if conErr != nil {
-		return "", nil
-	}
-	return conURL, nil
 }
 
 // GetConnectionID : Gets the the connectionID for a given projectID
