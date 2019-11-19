@@ -39,6 +39,14 @@ spec:
     stages {
 
         stage ('Build') {
+            // This when clause disables Tagged build
+            when {
+                beforeAgent true
+                not {
+                    buildingTag()
+                }
+            }
+
             steps {
                 container('go') {
                     sh '''
@@ -84,13 +92,29 @@ spec:
         }
 
         stage('Test') {
+            // This when clause disables Tagged build
+            when {
+                beforeAgent true
+                not {
+                    buildingTag()
+                }
+            }
+
             steps {
                 echo 'Testing to be defined.'
             }
         }
 
         stage('Upload') {
-          steps {
+            // This when clause disables Tagged build
+            when {
+                beforeAgent true
+                not {
+                    buildingTag()
+                }
+            }
+
+            steps {
                 script {
                     sh '''
                         # switch to the code go directory
@@ -125,11 +149,16 @@ spec:
             }
         }
         stage('Deploy') {
-            // This when clause disables PR build uploads; you may comment this out if you want your build uploaded.
+            // This when clause disables PR/Tag build uploads; you may comment this out if you want your build uploaded.
             when {
                 beforeAgent true
-                not {
-                    changeRequest()
+                allOf {
+                    not {
+                        changeRequest()
+                    }
+                    not {
+                        buildingTag()
+                    }
                 }
             }
 
@@ -144,9 +173,10 @@ spec:
                     mkdir codewind-installer
                 '''
                 // get the stashed executables
-                 dir ('codewind-installer') {
-                     unstash 'EXECUTABLES'
-                 }
+                dir ('codewind-installer') {
+                    unstash 'EXECUTABLES'
+                }
+                
                 sh '''
                     export REPO_NAME="codewind-installer"
                     export OUTPUT_DIR="$WORKSPACE/dev/ant_build/artifacts"
