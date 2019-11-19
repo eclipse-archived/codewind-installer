@@ -83,7 +83,7 @@ func Test_Authenticate(t *testing.T) {
 
 		// set mock cli flags
 		set := flag.NewFlagSet("tests", 0)
-		set.String("conid", testConnection, "doc") // must be a valid connection (using local which will always exist)
+		set.String("conid", testConnection, "doc") // must be a valid connection
 		c := cli.NewContext(nil, set, nil)
 
 		// construct a http client with our mock canned response
@@ -103,7 +103,7 @@ func Test_Authenticate(t *testing.T) {
 
 		// set mock cli flags
 		set := flag.NewFlagSet("tests", 0)
-		set.String("conid", testConnection, "doc") // must be a valid connection (using local which will always exist)
+		set.String("conid", testConnection, "doc") // must be a valid connection
 		c := cli.NewContext(nil, set, nil)
 
 		// construct a http client with our mock canned response
