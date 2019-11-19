@@ -14,6 +14,7 @@ package utils
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -170,6 +171,17 @@ func PullImage(image string, jsonOutput bool) {
 	cli, err := client.NewClientWithOpts(client.WithVersion("1.30"))
 	errors.CheckErr(err, 200, "")
 
+	//******************************************************************
+	// call api for image digest and store it
+	queryDigest, err := cli.DistributionInspect(ctx, image, "")
+	if err != nil {
+		fmt.Println(err)
+	}
+	digest, _ := json.Marshal(queryDigest.Descriptor.Digest)
+	fmt.Println("Query image digest is.. ", queryDigest.Descriptor.Digest)
+
+	//******************************************************************
+
 	var codewindOut io.ReadCloser
 
 	codewindOut, err = cli.ImagePull(ctx, image, types.ImagePullOptions{})
@@ -183,6 +195,35 @@ func PullImage(image string, jsonOutput bool) {
 		termFd, isTerm := term.GetFdInfo(os.Stderr)
 		jsonmessage.DisplayJSONMessagesStream(codewindOut, os.Stderr, termFd, isTerm, nil)
 	}
+
+	// *****************************************************************
+
+	// get digest of downloaded image
+	imageList := GetImageList()
+	imageName := strings.Split(image, ":")
+	imageArr := []string{
+		strings.TrimPrefix(imageName[0], "docker.io/"),
+	}
+
+	fmt.Println("Image Array = ", imageArr)
+
+	for _, image := range imageList {
+		imageRepo := strings.Join(image.RepoDigests, " ")
+		fmt.Println("Image repo = ", imageRepo)
+		for _, index := range imageArr {
+			fmt.Println("IN RANGE ARR")
+			if strings.Contains(imageRepo, index) {
+				fmt.Println("imageRepo contains index from image array")
+				fmt.Println("Image repo trace 2 = ", imageRepo)
+				if strings.Contains(imageRepo, string(digest)) {
+					fmt.Println("Found image digest inside image")
+				} else {
+					fmt.Println("No image digest found!")
+				}
+			}
+		}
+	}
+
 }
 
 // TagImage - locally retag the downloaded images
