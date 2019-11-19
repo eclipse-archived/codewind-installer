@@ -75,6 +75,7 @@ func AddTemplateRepo(c *cli.Context) {
 		return
 	}
 	extensions, err := apiroutes.GetExtensions(conID)
+	fmt.Println(extensions)
 	if err == nil {
 		utils.OnAddTemplateRepo(extensions, url, repos)
 	}
