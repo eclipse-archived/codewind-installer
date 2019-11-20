@@ -8,10 +8,12 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
+
 package utils
 
 import "encoding/json"
 
+// DockerError struct will format the error
 type DockerError struct {
 	Op   string
 	Err  error
