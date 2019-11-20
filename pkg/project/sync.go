@@ -167,7 +167,7 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 				// TODO - How do we handle partial success?
 				request, err := http.NewRequest("PUT", projectUploadURL, bytes.NewReader(buf.Bytes()))
 				request.Header.Set("Content-Type", "application/json")
-				resp, httpSecError := sechttp.DispatchHTTPRequest(client, request, connection.Username, connection.ID)
+				resp, httpSecError := sechttp.DispatchHTTPRequest(client, request, connection)
 				uploadedFiles = append(uploadedFiles, UploadedFile{
 					FilePath:   relativePath,
 					Status:     resp.Status,

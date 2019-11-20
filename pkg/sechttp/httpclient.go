@@ -27,11 +27,11 @@ import (
 
 // DispatchHTTPRequest : Perform an HTTP request against PFE with token based authentication
 // Returns: HTTPResponse, HTTPSecError
-func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Request, username string, connectionID string) (*http.Response, *HTTPSecError) {
+func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Request, conInfo *connections.Connection) (*http.Response, *HTTPSecError) {
 
 	logr.Tracef("Request URL: %v %v\n", originalRequest.Method, originalRequest.URL)
 
-	if strings.ToLower(connectionID) == "local" {
+	if strings.ToLower(conInfo.ID) == "local" {
 		response, err := sendRequest(httpClient, originalRequest, "")
 		if err == nil {
 			logr.Tracef("Received HTTP Status code: %v\n", response.StatusCode)
@@ -41,17 +41,17 @@ func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Requ
 
 	// Should be a 401 (bearer only) but is infact a 302 (Redirect to a login page)
 	keycloakLoginErrorStatus := http.StatusFound
-	logr.Tracef("Getting Connection: %v\n", connectionID)
+	logr.Tracef("Getting Connection: %v\n", conInfo.ID)
 
 	// Get the remote connection details
-	con, conErr := connections.GetConnectionByID(connectionID)
+	con, conErr := connections.GetConnectionByID(conInfo.ID)
 	if conErr != nil {
 		return nil, &HTTPSecError{errOpNoConnection, conErr.Err, conErr.Desc}
 	}
 
 	// Get the current access token from the keychain
 	logr.Traceln("Retrieving an access token from the keychain")
-	conID := strings.TrimSpace(strings.ToLower(connectionID))
+	conID := strings.TrimSpace(strings.ToLower(conInfo.ID))
 	accessToken, _ := keyring.Get(security.KeyringServiceName+"."+conID, "access_token")
 
 	if accessToken == "" {
@@ -90,7 +90,7 @@ func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Requ
 	}
 
 	logr.Tracef("Re-authenticate using cached credentials from the keychain")
-	password, keyErr := keyring.Get(security.KeyringServiceName+"."+conID, strings.ToLower(username))
+	password, keyErr := keyring.Get(security.KeyringServiceName+"."+conID, strings.ToLower(conInfo.Username))
 	if keyErr != nil {
 		logr.Tracef("ERROR:  %v\n", keyErr.Error())
 		err := errors.New(errMissingPassword)
@@ -100,7 +100,7 @@ func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Requ
 	set := flag.NewFlagSet("Authentication", 0)
 	set.String("host", con.AuthURL, "doc")
 	set.String("realm", con.Realm, "doc")
-	set.String("username", username, "doc")
+	set.String("username", conInfo.Username, "doc")
 	set.String("password", password, "doc")
 	set.String("client", con.ClientID, "doc")
 	set.String("conid", con.ID, "doc")

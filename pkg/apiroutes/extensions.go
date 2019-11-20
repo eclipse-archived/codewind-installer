@@ -38,7 +38,7 @@ func GetExtensions(conID string) ([]utils.Extension, error) {
 		return nil, err
 	}
 	client := &http.Client{}
-	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo.Username, conID)
+	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo)
 	if httpSecError != nil {
 		return nil, httpSecError
 	}

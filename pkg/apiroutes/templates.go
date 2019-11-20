@@ -78,7 +78,7 @@ func GetTemplates(conID, projectStyle string, showEnabledOnly bool) ([]Template,
 	}
 	req.URL.RawQuery = query.Encode()
 	client := &http.Client{}
-	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo.Username, conID)
+	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo)
 	if httpSecError != nil {
 		return nil, httpSecError
 	}
@@ -110,7 +110,7 @@ func GetTemplateStyles(conID string) ([]string, error) {
 		return nil, err
 	}
 	client := &http.Client{}
-	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo.Username, conID)
+	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo)
 	if httpSecError != nil {
 		return nil, httpSecError
 	}
@@ -142,7 +142,7 @@ func GetTemplateRepos(conID string) ([]utils.TemplateRepo, error) {
 		return nil, err
 	}
 	client := &http.Client{}
-	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo.Username, conID)
+	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo)
 	if httpSecError != nil {
 		return nil, httpSecError
 	}
@@ -189,7 +189,7 @@ func AddTemplateRepo(conID, URL, description, name string) ([]utils.TemplateRepo
 		return nil, err
 	}
 	client := &http.Client{}
-	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo.Username, conID)
+	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo)
 	if httpSecError != nil {
 		return nil, httpSecError
 	}
@@ -232,7 +232,7 @@ func DeleteTemplateRepo(conID, URL string) ([]utils.TemplateRepo, error) {
 	req, err := http.NewRequest("DELETE", conURL+"/api/v1/templates/repositories", bytes.NewBuffer(jsonValue))
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}
-	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo.Username, conID)
+	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo)
 	if httpSecError != nil {
 		return nil, httpSecError
 	}
@@ -335,7 +335,7 @@ func BatchPatchTemplateRepos(conID string, operations []RepoOperation) ([]SubRes
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
-	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo.Username, conID)
+	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo)
 	if httpSecError != nil {
 		return nil, httpSecError
 	}

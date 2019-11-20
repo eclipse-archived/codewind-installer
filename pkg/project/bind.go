@@ -99,7 +99,7 @@ func Bind(projectPath string, name string, language string, projectType string, 
 
 	request, err := http.NewRequest("POST", bindURL, bytes.NewReader(buf.Bytes()))
 	request.Header.Set("Content-Type", "application/json")
-	resp, httpSecError := sechttp.DispatchHTTPRequest(client, request, conInfo.Username, conID)
+	resp, httpSecError := sechttp.DispatchHTTPRequest(client, request, conInfo)
 	if httpSecError != nil {
 		return nil, &ProjectError{errOpResponse, httpSecError.Err, httpSecError.Desc}
 	}
@@ -152,7 +152,7 @@ func completeBind(projectID string, conURL string, connection *connections.Conne
 	// Make the request to end the sync process.
 	request, err := http.NewRequest("POST", bindEndURL, bytes.NewBuffer(jsonPayload))
 	request.Header.Set("Content-Type", "application/json")
-	resp, httpSecError := sechttp.DispatchHTTPRequest(http.DefaultClient, request, connection.Username, connection.ID)
+	resp, httpSecError := sechttp.DispatchHTTPRequest(http.DefaultClient, request, connection)
 
 	if httpSecError != nil {
 		logr.Errorln(err)
