@@ -31,6 +31,7 @@ import (
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
 	"github.com/eclipse/codewind-installer/pkg/errors"
+	logr "github.com/sirupsen/logrus"
 )
 
 // codewind-docker-compose.yaml data
@@ -188,7 +189,8 @@ func PullImage(image string, jsonOutput bool) {
 }
 
 // ValidateImageDigest - will ensure the image digest matches that of the one in dockerhub
-func ValidateImageDigest(image string) (string, *DockerError) { //imageID, docker error
+// returns imageID, docker error
+func ValidateImageDigest(image string) (string, *DockerError) {
 
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.WithVersion("1.30"))
@@ -209,8 +211,6 @@ func ValidateImageDigest(image string) (string, *DockerError) { //imageID, docke
 	imageArr := []string{
 		imageName,
 	}
-	// repull image must be a string so assign it here
-	//repullImageName := image
 
 	for _, image := range imageList {
 		imageRepo := strings.Join(image.RepoDigests, " ")
@@ -218,22 +218,12 @@ func ValidateImageDigest(image string) (string, *DockerError) { //imageID, docke
 		for _, index := range imageArr {
 			if strings.Contains(imageTags, index) {
 				if strings.Contains(imageRepo, strings.Replace(string(digest), "\"", "", -1)) {
-					//if strings.Contains(imageRepo, "1234") {
 					length := len(strings.Replace(string(digest), "\"", "", -1))
 					last10 := strings.Replace(string(digest), "\"", "", -1)[length-10 : length]
-					fmt.Printf("Found image digest ..%v\n", last10)
+					fmt.Printf("Validation for image digest ..%v succeeded\n", last10)
 					return "", nil
 				} else {
-					/*
-						1) Give a good message in the output
-						2) Call remove func to blat the downloaded images
-						3) Try and pull images again
-						4) Validate the new image
-						5) If fails a second time, abort this loop!!
-					*/
-
-					// 1 - message
-					fmt.Println("No image digest found. This could be a result of a bad download.")
+					logr.Warnln("Local image digest did not match queried image digest from dockerhub - This could be a result of a bad download")
 					valError := goErr.New(textBadDigest)
 					return image.ID, &DockerError{errOpValidate, valError, valError.Error()}
 				}
@@ -241,8 +231,6 @@ func ValidateImageDigest(image string) (string, *DockerError) { //imageID, docke
 		}
 	}
 
-	// valError := goErr.New(textBadDigest)
-	// return &DockerError{errOpValidate, valError, valError.Error()}
 	return "", nil
 }
 
