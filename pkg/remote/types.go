@@ -32,6 +32,7 @@ type Codewind struct {
 	OwnerReferenceUID  types.UID
 	Privileged         bool
 	Ingress            string
+	RequestedIngress   string // resolved where possible or set by cli flag
 	OnOpenShift        bool
 }
 

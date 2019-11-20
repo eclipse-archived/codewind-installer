@@ -166,8 +166,11 @@ func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemIn
 		OwnerReferenceUID:  ownerReferenceUID,
 		Privileged:         true,
 		Ingress:            "-" + workspaceID + "." + ingressDomain,
+		RequestedIngress:   ingressDomain,
 		OnOpenShift:        onOpenShift,
 	}
+
+	codewindInstance.RequestedIngress = ingressDomain
 
 	err = DeployKeycloak(config, clientset, codewindInstance, remoteDeployOptions, onOpenShift)
 	if err != nil {
