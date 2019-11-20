@@ -17,12 +17,12 @@ const (
 )
 
 // DockerError : Error formatted in JSON containing an errorOp and a description
-func (se *DockerError) Error() string {
+func (de *DockerError) Error() string {
 	type Output struct {
 		Operation   string `json:"error"`
 		Description string `json:"error_description"`
 	}
-	tempOutput := &Output{Operation: se.Op, Description: se.Err.Error()}
+	tempOutput := &Output{Operation: de.Op, Description: de.Err.Error()}
 	jsonError, _ := json.Marshal(tempOutput)
 	return string(jsonError)
 }
