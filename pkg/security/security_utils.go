@@ -55,6 +55,7 @@ const (
 	textUserNotFound   = "Registered User not found"
 	textUnableToParse  = "Unable to parse Keycloak response"
 	textInvalidOptions = "Invalid or missing command line options"
+	textAuthIsDown     = "Authentication service unavailable"
 )
 
 // SecError : Error formatted in JSON containing an errorOp and a description from

@@ -121,6 +121,7 @@ func SecAuthenticate(httpClient utils.HTTPClient, c *cli.Context, connectionReal
 		return nil, &SecError{errOpConnection, err, err.Error()}
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Cache-Control", "no-cache")
 	req.Header.Add("cache-control", "no-cache")
 
@@ -142,6 +143,9 @@ func SecAuthenticate(httpClient utils.HTTPClient, c *cli.Context, connectionReal
 		keycloakAPIError := parseKeycloakError(string(body), res.StatusCode)
 		kcError := errors.New(string(keycloakAPIError.Error))
 		return nil, &SecError{errOpResponse, kcError, kcError.Error()}
+	case httpCode == http.StatusServiceUnavailable:
+		txtError := errors.New(textAuthIsDown)
+		return nil, &SecError{errOpResponse, txtError, txtError.Error()}
 	case httpCode != http.StatusOK:
 		err = errors.New(string(body))
 		return nil, &SecError{errOpResponse, err, err.Error()}
