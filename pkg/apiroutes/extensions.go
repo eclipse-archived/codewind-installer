@@ -17,18 +17,30 @@ import (
 	"net/http"
 
 	"github.com/eclipse/codewind-installer/pkg/config"
+	"github.com/eclipse/codewind-installer/pkg/connections"
+	"github.com/eclipse/codewind-installer/pkg/sechttp"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 )
 
 // GetExtensions gets project extensions from PFE's REST API.
 func GetExtensions(conID string) ([]utils.Extension, error) {
-	conURL, conErr := config.PFEOrigin(conID)
+	conInfo, conInfoErr := connections.GetConnectionByID(conID)
+	if conInfoErr != nil {
+		return nil, conInfoErr.Err
+	}
+	conURL, conErr := config.PFEOriginFromConnection(conInfo)
 	if conErr != nil {
 		return nil, conErr.Err
 	}
-	resp, err := http.Get(conURL + "/api/v1/extensions")
+
+	req, err := http.NewRequest("GET", conURL+"/api/v1/extensions", nil)
 	if err != nil {
 		return nil, err
+	}
+	client := &http.Client{}
+	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo)
+	if httpSecError != nil {
+		return nil, httpSecError
 	}
 
 	defer resp.Body.Close()

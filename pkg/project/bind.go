@@ -103,7 +103,7 @@ func Bind(projectPath string, name string, language string, projectType string, 
 
 	request, err := http.NewRequest("POST", bindURL, bytes.NewReader(buf.Bytes()))
 	request.Header.Set("Content-Type", "application/json")
-	resp, httpSecError := sechttp.DispatchHTTPRequest(client, request, conInfo.Username, conID)
+	resp, httpSecError := sechttp.DispatchHTTPRequest(client, request, conInfo)
 	if httpSecError != nil {
 		return nil, &ProjectError{errOpResponse, httpSecError.Err, httpSecError.Desc}
 	}
@@ -133,13 +133,6 @@ func Bind(projectPath string, name string, language string, projectType string, 
 	// Generate the .codewind/connections/{projectID}.json file based on the given conID
 	SetConnection(conID, projectID)
 
-	// Read connections.json to find the URL of the connection
-	conURL, projErr := GetConnectionURL(projectID)
-
-	if projErr != nil {
-		return nil, projErr
-	}
-
 	// Sync all the project files
 	_, _, uploadedFilesList := syncFiles(projectPath, projectID, conURL, 0, conInfo)
 
@@ -163,7 +156,7 @@ func completeBind(projectID string, conURL string, connection *connections.Conne
 	// Make the request to end the sync process.
 	request, err := http.NewRequest("POST", bindEndURL, bytes.NewBuffer(jsonPayload))
 	request.Header.Set("Content-Type", "application/json")
-	resp, httpSecError := sechttp.DispatchHTTPRequest(http.DefaultClient, request, connection.Username, connection.ID)
+	resp, httpSecError := sechttp.DispatchHTTPRequest(http.DefaultClient, request, connection)
 
 	if httpSecError != nil {
 		logr.Errorln(err)

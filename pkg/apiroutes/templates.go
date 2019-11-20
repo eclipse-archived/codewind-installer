@@ -20,6 +20,8 @@ import (
 	"net/url"
 
 	"github.com/eclipse/codewind-installer/pkg/config"
+	"github.com/eclipse/codewind-installer/pkg/connections"
+	"github.com/eclipse/codewind-installer/pkg/sechttp"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 )
 
@@ -55,7 +57,11 @@ type (
 // GetTemplates gets project templates from PFE's REST API.
 // Filter them using the function arguments
 func GetTemplates(conID, projectStyle string, showEnabledOnly bool) ([]Template, error) {
-	conURL, conErr := config.PFEOrigin(conID)
+	conInfo, conInfoErr := connections.GetConnectionByID(conID)
+	if conInfoErr != nil {
+		return nil, conInfoErr.Err
+	}
+	conURL, conErr := config.PFEOriginFromConnection(conInfo)
 	if conErr != nil {
 		return nil, conErr.Err
 	}
@@ -72,9 +78,9 @@ func GetTemplates(conID, projectStyle string, showEnabledOnly bool) ([]Template,
 	}
 	req.URL.RawQuery = query.Encode()
 	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
+	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo)
+	if httpSecError != nil {
+		return nil, httpSecError
 	}
 
 	defer resp.Body.Close()
@@ -91,15 +97,23 @@ func GetTemplates(conID, projectStyle string, showEnabledOnly bool) ([]Template,
 
 // GetTemplateStyles gets all template styles from PFE's REST API
 func GetTemplateStyles(conID string) ([]string, error) {
-	conURL, conErr := config.PFEOrigin(conID)
+	conInfo, conInfoErr := connections.GetConnectionByID(conID)
+	if conInfoErr != nil {
+		return nil, conInfoErr.Err
+	}
+	conURL, conErr := config.PFEOriginFromConnection(conInfo)
 	if conErr != nil {
 		return nil, conErr.Err
 	}
-	resp, err := http.Get(conURL + "/api/v1/templates/styles")
+	req, err := http.NewRequest("GET", conURL+"/api/v1/templates/styles", nil)
 	if err != nil {
 		return nil, err
 	}
-
+	client := &http.Client{}
+	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo)
+	if httpSecError != nil {
+		return nil, httpSecError
+	}
 	defer resp.Body.Close()
 
 	byteArray, err := ioutil.ReadAll(resp.Body)
@@ -115,13 +129,22 @@ func GetTemplateStyles(conID string) ([]string, error) {
 
 // GetTemplateRepos gets all template repos from PFE's REST API
 func GetTemplateRepos(conID string) ([]utils.TemplateRepo, error) {
-	conURL, conErr := config.PFEOrigin(conID)
+	conInfo, conInfoErr := connections.GetConnectionByID(conID)
+	if conInfoErr != nil {
+		return nil, conInfoErr.Err
+	}
+	conURL, conErr := config.PFEOriginFromConnection(conInfo)
 	if conErr != nil {
 		return nil, conErr.Err
 	}
-	resp, err := http.Get(conURL + "/api/v1/templates/repositories")
+	req, err := http.NewRequest("GET", conURL+"/api/v1/templates/repositories", nil)
 	if err != nil {
 		return nil, err
+	}
+	client := &http.Client{}
+	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo)
+	if httpSecError != nil {
+		return nil, httpSecError
 	}
 
 	defer resp.Body.Close()
@@ -151,18 +174,24 @@ func AddTemplateRepo(conID, URL, description, name string) ([]utils.TemplateRepo
 	}
 	jsonValue, _ := json.Marshal(values)
 
-	conURL, conErr := config.PFEOrigin(conID)
+	conInfo, conInfoErr := connections.GetConnectionByID(conID)
+	if conInfoErr != nil {
+		return nil, conInfoErr.Err
+	}
+	conURL, conErr := config.PFEOriginFromConnection(conInfo)
 	if conErr != nil {
 		return nil, conErr.Err
 	}
 
-	resp, err := http.Post(
-		conURL+"/api/v1/templates/repositories",
-		"application/json",
-		bytes.NewBuffer(jsonValue),
-	)
+	req, err := http.NewRequest("POST", conURL+"/api/v1/templates/repositories", bytes.NewBuffer(jsonValue))
+	req.Header.Set("Content-Type", "application/json")
 	if err != nil {
 		return nil, err
+	}
+	client := &http.Client{}
+	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo)
+	if httpSecError != nil {
+		return nil, httpSecError
 	}
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("Error: PFE responded with status code %d", resp.StatusCode)
@@ -191,22 +220,21 @@ func DeleteTemplateRepo(conID, URL string) ([]utils.TemplateRepo, error) {
 	values := map[string]string{"url": URL}
 	jsonValue, _ := json.Marshal(values)
 
-	conURL, conErr := config.PFEOrigin(conID)
+	conInfo, conInfoErr := connections.GetConnectionByID(conID)
+	if conInfoErr != nil {
+		return nil, conInfoErr.Err
+	}
+	conURL, conErr := config.PFEOriginFromConnection(conInfo)
 	if conErr != nil {
 		return nil, conErr.Err
 	}
 
-	req, err := http.NewRequest(
-		"DELETE",
-		conURL+"/api/v1/templates/repositories",
-		bytes.NewBuffer(jsonValue),
-	)
+	req, err := http.NewRequest("DELETE", conURL+"/api/v1/templates/repositories", bytes.NewBuffer(jsonValue))
 	req.Header.Set("Content-Type", "application/json")
-
 	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
+	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo)
+	if httpSecError != nil {
+		return nil, httpSecError
 	}
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("Error: PFE responded with status code %d", resp.StatusCode)
@@ -294,22 +322,22 @@ func DisableTemplateRepos(conID string, repoURLs []string) ([]utils.TemplateRepo
 func BatchPatchTemplateRepos(conID string, operations []RepoOperation) ([]SubResponseFromBatchOperation, error) {
 	jsonValue, _ := json.Marshal(operations)
 
-	conURL, conErr := config.PFEOrigin(conID)
+	conInfo, conInfoErr := connections.GetConnectionByID(conID)
+	if conInfoErr != nil {
+		return nil, conInfoErr.Err
+	}
+	conURL, conErr := config.PFEOriginFromConnection(conInfo)
 	if conErr != nil {
 		return nil, conErr.Err
 	}
 
-	req, err := http.NewRequest(
-		"PATCH",
-		conURL+"/api/v1/batch/templates/repositories",
-		bytes.NewBuffer(jsonValue),
-	)
+	req, err := http.NewRequest("PATCH", conURL+"/api/v1/batch/templates/repositories", bytes.NewBuffer(jsonValue))
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
+	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo)
+	if httpSecError != nil {
+		return nil, httpSecError
 	}
 	if resp.StatusCode != 207 {
 		return nil, fmt.Errorf("Error: PFE responded with status code %d", resp.StatusCode)

@@ -18,6 +18,8 @@ import (
 	"net/http"
 
 	"github.com/eclipse/codewind-installer/pkg/config"
+	"github.com/eclipse/codewind-installer/pkg/connections"
+	"github.com/eclipse/codewind-installer/pkg/sechttp"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 )
 
@@ -26,7 +28,11 @@ type IgnoredPaths []string
 
 // GetIgnoredPaths calls pfe to get the default ignoredPaths for that projectType
 func GetIgnoredPaths(conID, projectType string, httpClient utils.HTTPClient) (IgnoredPaths, error) {
-	conURL, conErr := config.PFEOrigin(conID)
+	conInfo, conInfoErr := connections.GetConnectionByID(conID)
+	if conInfoErr != nil {
+		return nil, conInfoErr.Err
+	}
+	conURL, conErr := config.PFEOriginFromConnection(conInfo)
 	if conErr != nil {
 		return nil, conErr.Err
 	}
@@ -38,10 +44,10 @@ func GetIgnoredPaths(conID, projectType string, httpClient utils.HTTPClient) (Ig
 	q := req.URL.Query()
 	q.Add("projectType", projectType)
 	req.URL.RawQuery = q.Encode()
-
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		return nil, err
+	client := &http.Client{}
+	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo)
+	if httpSecError != nil {
+		return nil, httpSecError
 	}
 
 	if resp.StatusCode != 200 {
