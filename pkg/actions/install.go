@@ -40,7 +40,31 @@ func InstallCommand(c *cli.Context) {
 
 	for i := 0; i < len(imageArr); i++ {
 		utils.PullImage(imageArr[i]+tag, jsonOutput)
-		utils.ValidateImageDigest(imageArr[i] + tag)
+		imageID, dockerError := utils.ValidateImageDigest(imageArr[i] + tag)
+
+		if dockerError != nil {
+			//try again
+			utils.RemoveImage(imageID)
+
+			// pull image again
+			utils.PullImage(imageArr[i]+tag, jsonOutput) // only do this once?!
+
+			// validate the new image
+			_, dockerError = utils.ValidateImageDigest(imageArr[i] + tag)
+
+			// **********************
+
+			logr.Errorf("IM BEING CALLED AGAIN %d", i)
+			if dockerError != nil {
+				if jsonOutput {
+					fmt.Println(dockerError)
+				} else {
+					logr.Errorf("Validation of image %v checksum failed again", imageArr[i]+tag)
+				}
+				os.Exit(1)
+			}
+		}
+		// ****************
 		utils.TagImage(imageArr[i]+tag, targetArr[i]+tag)
 	}
 
