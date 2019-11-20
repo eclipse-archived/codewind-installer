@@ -22,6 +22,8 @@ import (
 	"github.com/eclipse/codewind-installer/pkg/remote/kube"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 	logr "github.com/sirupsen/logrus"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/uuid"
@@ -75,8 +77,31 @@ func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemIn
 		namespace = kube.GetCurrentNamespace()
 	}
 
-	logr.Infof("Using namespace : %v\n", namespace)
+	// Check if namespace exists
+	logr.Infof("Checking namespace %v exists\n", namespace)
+	_, err = clientset.CoreV1().Namespaces().Get(namespace, v1.GetOptions{})
+	if err != nil {
+		logr.Infof("Creating %v namespace\n", namespace)
+		// create the namespace
+		deploymentNamespace := corev1.Namespace{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Namespace",
+				APIVersion: "v1",
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name: namespace,
+			},
+		}
 
+		// insert the namespace
+		requestedNamespace, err := clientset.CoreV1().Namespaces().Create(&deploymentNamespace)
+		if err != nil || requestedNamespace == nil {
+			logr.Error("Unable to create %v namespace: %v", namespace, err)
+			return nil, &RemInstError{errOpCreateNamespace, err, err.Error()}
+		}
+	}
+
+	logr.Infof("Using namespace : %v\n", namespace)
 	pfeImage, performanceImage, keycloakImage, gatekeeperImage := GetImages()
 
 	logr.Infoln("Container images : ")

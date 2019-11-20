@@ -23,8 +23,9 @@ type RemInstError struct {
 }
 
 const (
-	errOpNotFound  = "rem_not_found"
-	errOpNoIngress = "rem_no_ingress"
+	errOpNotFound        = "rem_not_found"
+	errOpNoIngress       = "rem_no_ingress"
+	errOpCreateNamespace = "rem_create_namespace"
 )
 
 const (
