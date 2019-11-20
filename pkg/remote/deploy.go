@@ -13,7 +13,6 @@ package remote
 
 import (
 	"errors"
-	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -140,12 +139,11 @@ func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemIn
 	var ownerReferenceName string
 	var ownerReferenceUID types.UID
 	ownerReferenceName = "codewind" + workspaceID
-
-	logr.Errorln("TODO : Build PVC, Acct and Secret")
 	ownerReferenceUID = uuid.NewUUID()
-	workspacePVC := "codewind"
-	serviceAccountName := "codewind"
-	secretName := "codewind"
+
+	workspacePVC := "codewind-" + workspaceID
+	dockerPullSecret := "codewind-" + workspaceID + "-docker-registries"
+	logr.Infof("Docker registry pull secret name: '%v'", dockerPullSecret)
 
 	// Create the Codewind deployment object
 	codewindInstance := Codewind{
@@ -160,8 +158,8 @@ func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemIn
 		Namespace:          namespace,
 		WorkspaceID:        workspaceID,
 		PVCName:            workspacePVC,
-		ServiceAccountName: serviceAccountName,
-		PullSecret:         secretName,
+		ServiceAccountName: "codewind-" + workspaceID, //  codewind-k39vwfk0
+		PullSecret:         dockerPullSecret,
 		OwnerReferenceName: ownerReferenceName,
 		OwnerReferenceUID:  ownerReferenceUID,
 		Privileged:         true,
@@ -170,35 +168,41 @@ func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemIn
 		OnOpenShift:        onOpenShift,
 	}
 
-	codewindInstance.RequestedIngress = ingressDomain
+	codewindServiceTemplate := CreateCodewindServiceAcct(codewindInstance, remoteDeployOptions)
+	_, err = clientset.CoreV1().ServiceAccounts(namespace).Create(&codewindServiceTemplate)
+	if err != nil {
+		logr.Errorln("Creating service account failed, exiting...")
+		logr.Errorln(err)
+		os.Exit(1)
+	}
 
 	err = DeployKeycloak(config, clientset, codewindInstance, remoteDeployOptions, onOpenShift)
 	if err != nil {
-		log.Printf("Codewind Keycloak failed, exiting...")
+		logr.Errorln("Codewind Keycloak failed, exiting...")
 		os.Exit(1)
 	}
 
 	err = SetupKeycloak(codewindInstance, remoteDeployOptions)
 	if err != nil {
-		log.Printf("Codewind Keycloak configuration failed, exiting...")
+		logr.Errorln("Codewind Keycloak configuration failed, exiting...")
 		os.Exit(1)
 	}
 
 	err = DeployPFE(config, clientset, codewindInstance, remoteDeployOptions)
 	if err != nil {
-		log.Printf("Codewind deployment failed, exiting...")
+		logr.Errorln("Codewind deployment failed, exiting...")
 		os.Exit(1)
 	}
 
 	err = DeployPerformance(clientset, codewindInstance, remoteDeployOptions)
 	if err != nil {
-		log.Printf("Codewind deployment failed, exiting...")
+		logr.Errorln("Codewind deployment failed, exiting...")
 		os.Exit(1)
 	}
 
 	err = DeployGatekeeper(config, clientset, codewindInstance, remoteDeployOptions)
 	if err != nil {
-		log.Printf("Codewind Gatekeeper deployment failed, exiting...")
+		logr.Errorln("Codewind Gatekeeper deployment failed, exiting...")
 		os.Exit(1)
 	}
 

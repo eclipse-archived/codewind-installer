@@ -11,7 +11,10 @@
 
 package remote
 
-import corev1 "k8s.io/api/core/v1"
+import (
+	"github.com/eclipse/codewind-installer/pkg/appconstants"
+	corev1 "k8s.io/api/core/v1"
+)
 
 const (
 	// PFEPrefix is the prefix all PFE-related resources: deployment, service, and ingress/route
@@ -64,4 +67,10 @@ const (
 
 	// GatekeeperContainerPort is the port at which the Gatekeeper is exposed
 	GatekeeperContainerPort = 9096
+
+	// CodewindRolesName will include the workspaceID when deployed
+	CodewindRolesName = "eclipse-codewind-" + appconstants.VersionNum
+
+	// CodewindRoleBindingNamePrefix will include the workspaceID when deployed
+	CodewindRoleBindingNamePrefix = "codewind-rolebinding"
 )

@@ -14,26 +14,60 @@ package remote
 import (
 	"strconv"
 
-	log "github.com/sirupsen/logrus"
+	logr "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
 )
 
 // DeployPFE : Deploy PFE instance
 func DeployPFE(config *restclient.Config, clientset *kubernetes.Clientset, codewindInstance Codewind, deployOptions *DeployOptions) error {
+
+	codewindRoleBindingName := CodewindRoleBindingNamePrefix + "-" + codewindInstance.WorkspaceID
+
+	codewindRoles := CreateCodewindRoles(deployOptions)
+	codewindRoleBindings := CreateCodewindRoleBindings(codewindInstance, deployOptions, codewindRoleBindingName)
+
 	service := createPFEService(codewindInstance)
 	deploy := createPFEDeploy(codewindInstance, deployOptions)
-	log.Infoln("Deploying Codewind Service")
-	_, err := clientset.CoreV1().Services(deployOptions.Namespace).Create(&service)
+
+	logr.Infof("Checking if '%v' cluster access roles are installed\n", CodewindRolesName)
+	clusterRole, err := clientset.RbacV1().ClusterRoles().Get(CodewindRolesName, metav1.GetOptions{})
+	if clusterRole != nil && err == nil {
+		logr.Infof("Cluster roles '%v' already installed\n", CodewindRolesName)
+	} else {
+		logr.Infof("Adding new '%v' cluster access roles\n", CodewindRolesName)
+		_, err = clientset.RbacV1().ClusterRoles().Create(&codewindRoles)
+		if err != nil {
+			logr.Errorf("Unable to add %v cluster access roles: %v\n", CodewindRolesName, err)
+			return err
+		}
+	}
+
+	logr.Infof("Checking if '%v' role bindings exist\n", codewindRoleBindingName)
+	rolebindings, err := clientset.RbacV1().ClusterRoleBindings().Get(codewindRoleBindingName, metav1.GetOptions{})
+	if rolebindings != nil && err == nil {
+		logr.Warnf("Cluster role binding '%v' already exist.\n", codewindRoleBindingName)
+	} else {
+		logr.Infof("Adding '%v' cluster role binding\n", codewindRoleBindingName)
+		_, err = clientset.RbacV1().ClusterRoleBindings().Create(&codewindRoleBindings)
+		if err != nil {
+			logr.Errorf("Unable to add '%v' access roles: %v\n", codewindRoleBindingName, err)
+			return err
+		}
+	}
+
+	logr.Infoln("Deploying Codewind Service")
+	_, err = clientset.CoreV1().Services(deployOptions.Namespace).Create(&service)
 	if err != nil {
-		log.Errorf("Unable to create Codewind service: %v\n", err)
+		logr.Errorf("Unable to create Codewind service: %v\n", err)
 		return err
 	}
 	_, err = clientset.AppsV1().Deployments(deployOptions.Namespace).Create(&deploy)
 	if err != nil {
-		log.Errorf("Unable to create Codewind deployment: %v\n", err)
+		logr.Errorf("Unable to create Codewind deployment: %v\n", err)
 		return err
 	}
 	return nil
