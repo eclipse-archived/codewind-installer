@@ -27,11 +27,11 @@ import (
 
 // DispatchHTTPRequest : Perform an HTTP request against PFE with token based authentication
 // Returns: HTTPResponse, HTTPSecError
-func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Request, conInfo *connections.Connection) (*http.Response, *HTTPSecError) {
+func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Request, connection *connections.Connection) (*http.Response, *HTTPSecError) {
 
 	logr.Tracef("Request URL: %v %v\n", originalRequest.Method, originalRequest.URL)
 
-	if strings.ToLower(conInfo.ID) == "local" {
+	if strings.ToLower(connection.ID) == "local" {
 		response, err := sendRequest(httpClient, originalRequest, "")
 		if err == nil {
 			logr.Tracef("Received HTTP Status code: %v\n", response.StatusCode)
@@ -41,17 +41,11 @@ func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Requ
 
 	// Should be a 401 (bearer only) but is infact a 302 (Redirect to a login page)
 	keycloakLoginErrorStatus := http.StatusFound
-	logr.Tracef("Getting Connection: %v\n", conInfo.ID)
-
-	// Get the remote connection details
-	con, conErr := connections.GetConnectionByID(conInfo.ID)
-	if conErr != nil {
-		return nil, &HTTPSecError{errOpNoConnection, conErr.Err, conErr.Desc}
-	}
+	logr.Tracef("Getting Connection: %v\n", connection.ID)
 
 	// Get the current access token from the keychain
 	logr.Traceln("Retrieving an access token from the keychain")
-	conID := strings.TrimSpace(strings.ToLower(conInfo.ID))
+	conID := strings.TrimSpace(strings.ToLower(connection.ID))
 	accessToken, _ := keyring.Get(security.KeyringServiceName+"."+conID, "access_token")
 
 	if accessToken == "" {
@@ -73,7 +67,7 @@ func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Requ
 		logr.Tracef("Refresh token not found in keychain")
 	} else {
 		logr.Tracef("Try refreshing the access token with our cached refresh token")
-		tokens, secError := security.SecRefreshAccessToken(http.DefaultClient, con, refreshToken)
+		tokens, secError := security.SecRefreshAccessToken(http.DefaultClient, connection, refreshToken)
 		if secError != nil {
 			logr.Tracef("Failed refreshing access token %v : %v\n", secError.Op, secError.Desc)
 		}
@@ -90,7 +84,7 @@ func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Requ
 	}
 
 	logr.Tracef("Re-authenticate using cached credentials from the keychain")
-	password, keyErr := keyring.Get(security.KeyringServiceName+"."+conID, strings.ToLower(conInfo.Username))
+	password, keyErr := keyring.Get(security.KeyringServiceName+"."+conID, strings.ToLower(connection.Username))
 	if keyErr != nil {
 		logr.Tracef("ERROR:  %v\n", keyErr.Error())
 		err := errors.New(errMissingPassword)
@@ -98,12 +92,12 @@ func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Requ
 	}
 
 	set := flag.NewFlagSet("Authentication", 0)
-	set.String("host", con.AuthURL, "doc")
-	set.String("realm", con.Realm, "doc")
-	set.String("username", conInfo.Username, "doc")
+	set.String("host", connection.AuthURL, "doc")
+	set.String("realm", connection.Realm, "doc")
+	set.String("username", connection.Username, "doc")
 	set.String("password", password, "doc")
-	set.String("client", con.ClientID, "doc")
-	set.String("conid", con.ID, "doc")
+	set.String("client", connection.ClientID, "doc")
+	set.String("conid", connection.ID, "doc")
 	c := cli.NewContext(nil, set, nil)
 	tokens, secError := security.SecAuthenticate(http.DefaultClient, c, "", "")
 	if secError != nil {
