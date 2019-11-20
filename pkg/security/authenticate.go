@@ -177,6 +177,29 @@ func SecAuthenticate(httpClient utils.HTTPClient, c *cli.Context, connectionReal
 	return &authToken, nil
 }
 
+// SecRefreshTokens : Retrieve new tokens using the cached refresh token
+func SecRefreshTokens(httpClient utils.HTTPClient, c *cli.Context) (*AuthToken, *SecError) {
+	conID := c.String("conid")
+
+	// Read connection
+	connection, conErr := connections.GetConnectionByID(conID)
+	if conErr != nil {
+		secErr := &SecError{Op: conErr.Op, Err: conErr.Err, Desc: conErr.Desc}
+		return nil, secErr
+	}
+	// Read refresh token
+	refreshToken, secErr := SecKeyGetSecret(connection.ID, "refresh_token")
+	if secErr != nil {
+		return nil, secErr
+	}
+	// Get token
+	authTokens, secErr := SecRefreshAccessToken(httpClient, connection, refreshToken)
+	if secErr != nil {
+		return nil, secErr
+	}
+	return authTokens, nil
+}
+
 // SecRefreshAccessToken : Obtain an access token using a refresh token
 func SecRefreshAccessToken(httpClient utils.HTTPClient, connection *connections.Connection, refreshToken string) (*AuthToken, *SecError) {
 

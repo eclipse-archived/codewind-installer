@@ -75,6 +75,46 @@ func Test_Authenticate(t *testing.T) {
 		assert.Equal(t, accessToken, retrievedSecrets.AccessToken)
 	})
 
+	t.Run("Expect authentication success - obtain access token using refresh token", func(t *testing.T) {
+		// construct mock response body and status code
+		tokens := AuthToken{AccessToken: accessToken, RefreshToken: refreshToken}
+		jsonResponse, _ := json.Marshal(tokens)
+		body := ioutil.NopCloser(bytes.NewReader([]byte(jsonResponse)))
+
+		// set mock cli flags
+		set := flag.NewFlagSet("tests", 0)
+		set.String("conid", testConnection, "doc") // must be a valid connection
+		c := cli.NewContext(nil, set, nil)
+
+		// construct a http client with our mock canned response
+		mockClient := &ClientMockAuthenticate{StatusCode: http.StatusOK, Body: body}
+		retrievedSecrets, secError := SecRefreshTokens(mockClient, c)
+		if secError != nil {
+			t.Fail()
+		}
+		assert.Equal(t, accessToken, retrievedSecrets.AccessToken)
+	})
+
+	t.Run("Expect authentication failure - unable to obtain access token using expired refresh token", func(t *testing.T) {
+		// construct mock response body and status code
+		mockKeycloakResponse := KeycloakAPIError{HTTPStatus: http.StatusUnauthorized, Error: "invalid_grant", ErrorDescription: "Refresh token expired"}
+		jsonResponse, _ := json.Marshal(mockKeycloakResponse)
+		body := ioutil.NopCloser(bytes.NewReader([]byte(jsonResponse)))
+
+		// set mock cli flags
+		set := flag.NewFlagSet("tests", 0)
+		set.String("conid", testConnection, "doc") // must be a valid connection
+		c := cli.NewContext(nil, set, nil)
+
+		// construct a http client with our mock canned response
+		mockClient := &ClientMockAuthenticate{StatusCode: http.StatusUnauthorized, Body: body}
+		_, secError := SecRefreshTokens(mockClient, c)
+		if secError == nil {
+			t.Fail()
+		}
+		assert.Equal(t, "Refresh token expired", secError.Desc)
+	})
+
 	t.Run("Cleanup stored access_token and refresh_token", func(t *testing.T) {
 		// Clean up test entries
 		keyring.Delete(strings.ToLower(KeyringServiceName+"."+testConnection), "access_token")

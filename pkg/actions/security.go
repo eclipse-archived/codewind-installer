@@ -35,6 +35,18 @@ func SecurityTokenGet(c *cli.Context) {
 	os.Exit(0)
 }
 
+// SecurityTokenRefresh : Refresh the access token the cached refresh token
+func SecurityTokenRefresh(c *cli.Context) {
+	authTokens, secErr := security.SecRefreshTokens(http.DefaultClient, c)
+	if secErr == nil && authTokens != nil {
+		utils.PrettyPrintJSON(authTokens)
+	} else {
+		fmt.Println(secErr.Error())
+		os.Exit(1)
+	}
+	os.Exit(0)
+}
+
 // SecurityCreateRealm : Create a realm in Keycloak
 func SecurityCreateRealm(c *cli.Context) {
 	err := security.SecRealmCreate(c)

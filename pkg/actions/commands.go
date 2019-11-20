@@ -449,6 +449,17 @@ func Commands() {
 						SecurityTokenGet(c)
 						return nil
 					},
+				}, {
+					Name:    "refresh",
+					Aliases: []string{"r"},
+					Usage:   "Obtain an access token using a refresh_token",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "conid", Usage: "Connection ID", Required: false},
+					},
+					Action: func(c *cli.Context) error {
+						SecurityTokenRefresh(c)
+						return nil
+					},
 				},
 			},
 		},

@@ -247,7 +247,18 @@ Subcommands:</br>
 > --username value              Account Username
 > --password value              Account Password
 > --client value                Client
-> --conid value                 Use connection details from a connection configuration
+> --conid  value                Connection ID (see the connections cmd)
+
+## sectoken
+
+Subcommands:</br>
+
+`refresh/r` - Refresh access_token using cached refresh_token
+
+Refresh tokens are automatically stored in the platform keychain. This command will use the refresh token to obtain a new access token from the authentication service. The access_token can then be used by curl or socket connections when accessing Codewind.
+
+> **Flags:**
+> --conid  value                Connection ID (see the connections cmd)
 
 ## secrealm
 
