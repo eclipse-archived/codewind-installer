@@ -172,13 +172,13 @@ func PullImage(image string, jsonOutput bool) {
 	errors.CheckErr(err, 200, "")
 
 	//******************************************************************
-	// call api for image digest and store it
-	queryDigest, err := cli.DistributionInspect(ctx, image, "")
-	if err != nil {
-		fmt.Println(err)
-	}
-	digest, _ := json.Marshal(queryDigest.Descriptor.Digest)
-	fmt.Println("Query image digest is.. ", queryDigest.Descriptor.Digest)
+	// // call api for image digest and store it
+	// queryDigest, err := cli.DistributionInspect(ctx, image, "")
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// digest, _ := json.Marshal(queryDigest.Descriptor.Digest)
+	// fmt.Println("Query image digest is.. ", queryDigest.Descriptor.Digest)
 
 	//******************************************************************
 
@@ -198,32 +198,72 @@ func PullImage(image string, jsonOutput bool) {
 
 	// *****************************************************************
 
-	// get digest of downloaded image
-	imageList := GetImageList()
-	imageName := strings.Split(image, ":")
-	imageArr := []string{
-		strings.TrimPrefix(imageName[0], "docker.io/"),
+	// // get digest of downloaded image
+	// imageList := GetImageList()
+	// imageName := strings.TrimPrefix(image, "docker.io/")
+	// imageArr := []string{
+	// 	imageName,
+	// }
+
+	// //fmt.Println("Image Array = ", imageArr)
+
+	// for _, image := range imageList {
+	// 	imageRepo := strings.Join(image.RepoDigests, " ")
+	// 	imageTags := strings.Join(image.RepoTags, " ")
+	// 	//fmt.Println("Image repo trace = ", imageRepo)
+	// 	//fmt.Println("Image tags trace = ", imageTags)
+	// 	for _, index := range imageArr {
+	// 		if strings.Contains(imageTags, index) {
+	// 			//fmt.Println("Image digest trace = ", strings.Replace(string(digest), "\"", "", -1))
+	// 			if strings.Contains(imageRepo, strings.Replace(string(digest), "\"", "", -1)) {
+	// 				fmt.Println("Found image digest inside image")
+	// 			} else {
+	// 				fmt.Println("No image digest found!")
+	// 			}
+	// 		}
+	// 	}
+	// }
+
+}
+
+// ValidateImageDigest - will ensure the image digest matches that of the one in dockerhub
+func ValidateImageDigest(image string) {
+
+	ctx := context.Background()
+	cli, err := client.NewClientWithOpts(client.WithVersion("1.30"))
+	errors.CheckErr(err, 200, "")
+	// call docker api for image digest
+	queryDigest, err := cli.DistributionInspect(ctx, image, "")
+	if err != nil {
+		fmt.Println(err)
 	}
 
-	fmt.Println("Image Array = ", imageArr)
+	// turn digest -> byte -> string
+	digest, _ := json.Marshal(queryDigest.Descriptor.Digest)
+	fmt.Println("Query image digest is.. ", queryDigest.Descriptor.Digest)
+
+	// get local image digest
+	imageList := GetImageList()
+	imageName := strings.TrimPrefix(image, "docker.io/")
+	imageArr := []string{
+		imageName,
+	}
 
 	for _, image := range imageList {
 		imageRepo := strings.Join(image.RepoDigests, " ")
-		fmt.Println("Image repo = ", imageRepo)
+		imageTags := strings.Join(image.RepoTags, " ")
 		for _, index := range imageArr {
-			fmt.Println("IN RANGE ARR")
-			if strings.Contains(imageRepo, index) {
-				fmt.Println("imageRepo contains index from image array")
-				fmt.Println("Image repo trace 2 = ", imageRepo)
-				if strings.Contains(imageRepo, string(digest)) {
-					fmt.Println("Found image digest inside image")
+			if strings.Contains(imageTags, index) {
+				if strings.Contains(imageRepo, strings.Replace(string(digest), "\"", "", -1)) {
+					length := len(strings.Replace(string(digest), "\"", "", -1))
+					last10 := strings.Replace(string(digest), "\"", "", -1)[length-10 : length]
+					fmt.Printf("Found image digest ..%v\n", last10)
 				} else {
 					fmt.Println("No image digest found!")
 				}
 			}
 		}
 	}
-
 }
 
 // TagImage - locally retag the downloaded images

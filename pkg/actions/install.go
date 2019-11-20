@@ -40,6 +40,7 @@ func InstallCommand(c *cli.Context) {
 
 	for i := 0; i < len(imageArr); i++ {
 		utils.PullImage(imageArr[i]+tag, jsonOutput)
+		utils.ValidateImageDigest(imageArr[i] + tag)
 		utils.TagImage(imageArr[i]+tag, targetArr[i]+tag)
 	}
 
