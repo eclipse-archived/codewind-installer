@@ -230,7 +230,6 @@ func ValidateImageDigest(image string) (string, *DockerError) {
 			}
 		}
 	}
-
 	return "", nil
 }
 
