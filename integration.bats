@@ -47,7 +47,7 @@
 
 @test "invoke con reset command - reset connections file" {
   cd cmd/cli/
-  run go run main.go con reset
+  run go run main.go --json con reset
   echo "status = ${status}"
   echo "output trace = ${output}"
    [ "$output" = '{"status":"OK","status_message":"Connection list reset"}' ]
@@ -56,10 +56,10 @@
 
 @test "invoke con list command - contains just 1 local connection" {
   cd cmd/cli/
-  run go run main.go con list
+  run go run main.go --json con list
   echo "status = ${status}"
   echo "output trace = ${output}"
-   [ "$output" = '{"schemaversion":1,"connections":[{"id":"local","label":"Codewind local connection","url":"","auth":"","realm":"","clientid":""}]}' ]
+   [ "$output" = '{"schemaversion":1,"connections":[{"id":"local","label":"Codewind local connection","url":"","auth":"","realm":"","clientid":"","username":""}]}' ]
    [ "$status" -eq 0 ]
 }
 
