@@ -57,7 +57,7 @@ func InstallCommand(c *cli.Context) {
 				if jsonOutput {
 					fmt.Println(dockerError)
 				} else {
-					logr.Errorf("Validation of image '%v' checksum failed. Please clear your system and try again", imageArr[i]+tag)
+					logr.Errorf("Validation of image '%v' checksum failed - Removing image", imageArr[i]+tag)
 				}
 				// Clean up the second bad image
 				utils.RemoveImage(imageID)
