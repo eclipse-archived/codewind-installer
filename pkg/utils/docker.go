@@ -221,7 +221,6 @@ func ValidateImageDigest(image string) (string, *DockerError) {
 					length := len(strings.Replace(string(digest), "\"", "", -1))
 					last10 := strings.Replace(string(digest), "\"", "", -1)[length-10 : length]
 					logr.Tracef("Validation for image digest ..%v succeeded\n", last10)
-					return "", nil
 				} else {
 					logr.Traceln("Local image digest did not match queried image digest from dockerhub - This could be a result of a bad download")
 					valError := goErr.New(textBadDigest)
