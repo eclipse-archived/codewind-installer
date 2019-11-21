@@ -289,7 +289,6 @@ func CheckImageStatus() bool {
 	if imageCount >= 2 {
 		imageStatus = true
 	}
-
 	return imageStatus
 }
 

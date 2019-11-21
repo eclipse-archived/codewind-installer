@@ -48,7 +48,7 @@ func InstallCommand(c *cli.Context) {
 			utils.RemoveImage(imageID)
 
 			// pull image again
-			utils.PullImage(imageArr[i]+tag, jsonOutput) // only do this once?!
+			utils.PullImage(imageArr[i]+tag, jsonOutput)
 
 			// validate the new image
 			_, dockerError = utils.ValidateImageDigest(imageArr[i] + tag)
