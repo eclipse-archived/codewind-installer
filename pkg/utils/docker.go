@@ -201,7 +201,7 @@ func ValidateImageDigest(image string) (string, *DockerError) {
 		fmt.Println(err)
 	}
 
-	// turn digest -> byte -> string
+	// turn digest -> []byte -> string
 	digest, _ := json.Marshal(queryDigest.Descriptor.Digest)
 	fmt.Println("Query image digest is.. ", queryDigest.Descriptor.Digest)
 
