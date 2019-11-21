@@ -43,7 +43,7 @@ func InstallCommand(c *cli.Context) {
 		imageID, dockerError := utils.ValidateImageDigest(imageArr[i] + tag)
 
 		if dockerError != nil {
-			logr.Warnf("%v checksum validaton failed. Trying to pull image again", imageArr[i]+tag)
+			logr.Warnf("%v checksum validation failed. Trying to pull image again", imageArr[i]+tag)
 			// remove bad image
 			utils.RemoveImage(imageID)
 
