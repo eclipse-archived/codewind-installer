@@ -198,12 +198,12 @@ func ValidateImageDigest(image string) (string, *DockerError) {
 	// call docker api for image digest
 	queryDigest, err := cli.DistributionInspect(ctx, image, "")
 	if err != nil {
-		fmt.Println(err)
+		logr.Error(err)
 	}
 
 	// turn digest -> []byte -> string
 	digest, _ := json.Marshal(queryDigest.Descriptor.Digest)
-	fmt.Println("Query image digest is.. ", queryDigest.Descriptor.Digest)
+	logr.Traceln("Query image digest is.. ", queryDigest.Descriptor.Digest)
 
 	// get local image digest
 	imageList := GetImageList()
@@ -220,10 +220,10 @@ func ValidateImageDigest(image string) (string, *DockerError) {
 				if strings.Contains(imageRepo, strings.Replace(string(digest), "\"", "", -1)) {
 					length := len(strings.Replace(string(digest), "\"", "", -1))
 					last10 := strings.Replace(string(digest), "\"", "", -1)[length-10 : length]
-					fmt.Printf("Validation for image digest ..%v succeeded\n", last10)
+					logr.Infof("Validation for image digest ..%v succeeded\n", last10)
 					return "", nil
 				} else {
-					logr.Warnln("Local image digest did not match queried image digest from dockerhub - This could be a result of a bad download")
+					logr.Traceln("Local image digest did not match queried image digest from dockerhub - This could be a result of a bad download")
 					valError := goErr.New(textBadDigest)
 					return image.ID, &DockerError{errOpValidate, valError, valError.Error()}
 				}
