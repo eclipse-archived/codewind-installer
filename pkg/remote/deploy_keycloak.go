@@ -16,7 +16,6 @@ import (
 
 	v1 "github.com/openshift/api/route/v1"
 	routev1 "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
-	log "github.com/sirupsen/logrus"
 	logr "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -36,27 +35,27 @@ func DeployKeycloak(config *restclient.Config, clientset *kubernetes.Clientset, 
 	serverKey, serverCert, err := createCertificate(KeycloakPrefix+codewindInstance.Ingress, "Codewind Keycloak")
 	keycloakTLSSecret := createKeycloakTLSSecret(codewindInstance, serverKey, serverCert)
 
-	log.Infoln("Deploying Codewind Keycloak Secrets")
+	logr.Infoln("Deploying Codewind Keycloak Secrets")
 	_, err = clientset.CoreV1().Secrets(deployOptions.Namespace).Create(&keycloakSecrets)
 	if err != nil {
-		log.Errorf("Error: Unable to create Codewind Keycloak secrets: %v\n", err)
+		logr.Errorf("Error: Unable to create Codewind Keycloak secrets: %v\n", err)
 		return err
 	}
 	_, err = clientset.CoreV1().Services(deployOptions.Namespace).Create(&keycloakService)
 	if err != nil {
-		log.Errorf("Error: Unable to create Codewind Keycloak service: %v\n", err)
+		logr.Errorf("Error: Unable to create Codewind Keycloak service: %v\n", err)
 		return err
 	}
 	_, err = clientset.AppsV1().Deployments(deployOptions.Namespace).Create(&keycloakDeploy)
 	if err != nil {
-		log.Errorf("Error: Unable to create Codewind Keycloak deployment: %v\n", err)
+		logr.Errorf("Error: Unable to create Codewind Keycloak deployment: %v\n", err)
 		return err
 	}
 
-	log.Infoln("Deploying Codewind Keycloak TLS Secrets")
+	logr.Infoln("Deploying Codewind Keycloak TLS Secrets")
 	_, err = clientset.CoreV1().Secrets(deployOptions.Namespace).Create(&keycloakTLSSecret)
 	if err != nil {
-		log.Errorf("Error: Unable to create Codewind Keycloak TLS secrets: %v\n", err)
+		logr.Errorf("Error: Unable to create Codewind Keycloak TLS secrets: %v\n", err)
 		return err
 	}
 
@@ -66,12 +65,12 @@ func DeployKeycloak(config *restclient.Config, clientset *kubernetes.Clientset, 
 		route := createKeycloakRoute(codewindInstance)
 		routev1client, err := routev1.NewForConfig(config)
 		if err != nil {
-			log.Printf("Error retrieving route client for OpenShift: %v\n", err)
+			logr.Printf("Error retrieving route client for OpenShift: %v\n", err)
 			os.Exit(1)
 		}
 		_, err = routev1client.Routes(deployOptions.Namespace).Create(&route)
 		if err != nil {
-			log.Printf("Error: Unable to create route for Codewind: %v\n", err)
+			logr.Printf("Error: Unable to create route for Codewind: %v\n", err)
 			os.Exit(1)
 		}
 
@@ -80,7 +79,7 @@ func DeployKeycloak(config *restclient.Config, clientset *kubernetes.Clientset, 
 		ingress := createIngressKeycloak(codewindInstance)
 		_, err = clientset.ExtensionsV1beta1().Ingresses(deployOptions.Namespace).Create(&ingress)
 		if err != nil {
-			log.Printf("Error: Unable to create ingress for Codewind Keycloak: %v\n", err)
+			logr.Printf("Error: Unable to create ingress for Codewind Keycloak: %v\n", err)
 			os.Exit(1)
 		}
 	}

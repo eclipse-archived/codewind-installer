@@ -16,7 +16,6 @@ import (
 
 	v1 "github.com/openshift/api/route/v1"
 	routev1 "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
-	log "github.com/sirupsen/logrus"
 	logr "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -30,7 +29,7 @@ import (
 // DeployGatekeeper : Deploy gatekeepers
 func DeployGatekeeper(config *restclient.Config, clientset *kubernetes.Clientset, codewindInstance Codewind, deployOptions *DeployOptions) error {
 
-	log.Infoln("Preparing Codewind Gatekeeper resources")
+	logr.Infoln("Preparing Codewind Gatekeeper resources")
 
 	gatekeeperSecrets := createGatekeeperSecrets(codewindInstance, deployOptions)
 	gatekeeperService := createGatekeeperService(codewindInstance)
@@ -40,39 +39,39 @@ func DeployGatekeeper(config *restclient.Config, clientset *kubernetes.Clientset
 	serverKey, serverCert, err := createCertificate(GatekeeperPrefix+codewindInstance.Ingress, "Codewind Gatekeeper")
 	gatekeeperTLSSecret := createGatekeeperTLSSecret(codewindInstance, serverKey, serverCert)
 
-	log.Infoln("Deploying Codewind Gatekeeper Secrets")
+	logr.Infoln("Deploying Codewind Gatekeeper Secrets")
 
 	_, err = clientset.CoreV1().Secrets(deployOptions.Namespace).Create(&gatekeeperSecrets)
 	if err != nil {
-		log.Errorf("Error: Unable to create Codewind Gatekeeper secrets: %v\n", err)
+		logr.Errorf("Error: Unable to create Codewind Gatekeeper secrets: %v\n", err)
 		return err
 	}
 
-	log.Infoln("Deploying Codewind Gatekeeper Session Secrets")
+	logr.Infoln("Deploying Codewind Gatekeeper Session Secrets")
 	_, err = clientset.CoreV1().Secrets(deployOptions.Namespace).Create(&gatekeeperSessionSecret)
 	if err != nil {
-		log.Errorf("Error: Unable to create Codewind secrets: %v\n", err)
+		logr.Errorf("Error: Unable to create Codewind secrets: %v\n", err)
 		return err
 	}
 
-	log.Infoln("Deploying Codewind Gatekeeper TLS Secrets")
+	logr.Infoln("Deploying Codewind Gatekeeper TLS Secrets")
 	_, err = clientset.CoreV1().Secrets(deployOptions.Namespace).Create(&gatekeeperTLSSecret)
 	if err != nil {
-		log.Errorf("Error: Unable to create Codewind Gatekeeper TLS secrets: %v\n", err)
+		logr.Errorf("Error: Unable to create Codewind Gatekeeper TLS secrets: %v\n", err)
 		return err
 	}
 
-	log.Infoln("Deploying Codewind Gatekeeper Deployment")
+	logr.Infoln("Deploying Codewind Gatekeeper Deployment")
 	_, err = clientset.AppsV1().Deployments(deployOptions.Namespace).Create(&gatekeeperDeploy)
 	if err != nil {
-		log.Errorf("Error: Unable to create Codewind Gatekeeper deployment: %v\n", err)
+		logr.Errorf("Error: Unable to create Codewind Gatekeeper deployment: %v\n", err)
 		return err
 	}
 
-	log.Infoln("Deploying Codewind Gatekeeper Service")
+	logr.Infoln("Deploying Codewind Gatekeeper Service")
 	_, err = clientset.CoreV1().Services(deployOptions.Namespace).Create(&gatekeeperService)
 	if err != nil {
-		log.Errorf("Error: Unable to create Codewind Gatekeeper service: %v\n", err)
+		logr.Errorf("Error: Unable to create Codewind Gatekeeper service: %v\n", err)
 		return err
 	}
 
@@ -83,12 +82,12 @@ func DeployGatekeeper(config *restclient.Config, clientset *kubernetes.Clientset
 		route := createRouteGatekeeper(codewindInstance)
 		routev1client, err := routev1.NewForConfig(config)
 		if err != nil {
-			log.Printf("Error retrieving route client for OpenShift: %v\n", err)
+			logr.Printf("Error retrieving route client for OpenShift: %v\n", err)
 			os.Exit(1)
 		}
 		_, err = routev1client.Routes(codewindInstance.Namespace).Create(&route)
 		if err != nil {
-			log.Printf("Error: Unable to create route for Codewind: %v\n", err)
+			logr.Printf("Error: Unable to create route for Codewind: %v\n", err)
 			os.Exit(1)
 		}
 	} else {
@@ -96,7 +95,7 @@ func DeployGatekeeper(config *restclient.Config, clientset *kubernetes.Clientset
 		ingress := createIngressGatekeeper(codewindInstance)
 		_, err = clientset.ExtensionsV1beta1().Ingresses(codewindInstance.Namespace).Create(&ingress)
 		if err != nil {
-			log.Printf("Error: Unable to create ingress for Codewind Gatekeeper: %v\n", err)
+			logr.Printf("Error: Unable to create ingress for Codewind Gatekeeper: %v\n", err)
 			os.Exit(1)
 		}
 	}

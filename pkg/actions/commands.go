@@ -16,15 +16,13 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/eclipse/codewind-installer/pkg/appconstants"
 	"github.com/eclipse/codewind-installer/pkg/errors"
 	logr "github.com/sirupsen/logrus"
-
 	"github.com/urfave/cli"
 )
 
 var tempFilePath = "codewind-docker-compose.yaml"
-
-const versionNum = "x.x.dev"
 
 const healthEndpoint = "/api/v1/environment"
 
@@ -32,7 +30,7 @@ const healthEndpoint = "/api/v1/environment"
 func Commands() {
 	app := cli.NewApp()
 	app.Name = "cwctl"
-	app.Version = versionNum
+	app.Version = appconstants.VersionNum
 	app.Usage = "Start, Stop and Remove Codewind"
 
 	// Global Flags
