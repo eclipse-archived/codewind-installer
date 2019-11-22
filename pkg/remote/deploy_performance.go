@@ -25,11 +25,7 @@ func DeployPerformance(clientset *kubernetes.Clientset, codewind Codewind, deplo
 	performanceService := createPerformanceService(codewind)
 	performanceDeploy := createPerformanceDeploy(codewind)
 
-<<<<<<< HEAD
-	log.Infoln("Deploying Codewind Performance Dashboard")
-=======
-	logr.Infoln("Deploying Codewind Performance Dashboard...")
->>>>>>> all json output using fmt.println, all other output using logrus
+	logr.Infoln("Deploying Codewind Performance Dashboard")
 	_, err := clientset.CoreV1().Services(deployOptions.Namespace).Create(&performanceService)
 	if err != nil {
 		logr.Errorf("Error: Unable to create Codewind Performance service: %v\n", err)

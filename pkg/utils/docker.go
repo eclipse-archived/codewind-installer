@@ -14,12 +14,8 @@ package utils
 import (
 	"bytes"
 	"context"
-<<<<<<< HEAD
 	"encoding/json"
 	goErr "errors"
-	"fmt"
-=======
->>>>>>> replace 'fmt.Print' with logrus #2
 	"io"
 	"net"
 	"os"

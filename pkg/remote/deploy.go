@@ -178,51 +178,31 @@ func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemIn
 
 	err = DeployKeycloak(config, clientset, codewindInstance, remoteDeployOptions, onOpenShift)
 	if err != nil {
-<<<<<<< HEAD
 		logr.Errorln("Codewind Keycloak failed, exiting...")
-=======
-		logr.Errorf("Codewind Keycloak failed, exiting...")
->>>>>>> replace 'fmt.Print' with logrus #2
 		os.Exit(1)
 	}
 
 	err = SetupKeycloak(codewindInstance, remoteDeployOptions)
 	if err != nil {
-<<<<<<< HEAD
 		logr.Errorln("Codewind Keycloak configuration failed, exiting...")
-=======
-		logr.Errorf("Codewind Keycloak configuration failed, exiting...")
->>>>>>> replace 'fmt.Print' with logrus #2
 		os.Exit(1)
 	}
 
 	err = DeployPFE(config, clientset, codewindInstance, remoteDeployOptions)
 	if err != nil {
-<<<<<<< HEAD
 		logr.Errorln("Codewind deployment failed, exiting...")
-=======
-		logr.Errorf("Codewind deployment failed, exiting...")
->>>>>>> replace 'fmt.Print' with logrus #2
 		os.Exit(1)
 	}
 
 	err = DeployPerformance(clientset, codewindInstance, remoteDeployOptions)
 	if err != nil {
-<<<<<<< HEAD
 		logr.Errorln("Codewind deployment failed, exiting...")
-=======
-		logr.Errorf("Codewind deployment failed, exiting...")
->>>>>>> replace 'fmt.Print' with logrus #2
 		os.Exit(1)
 	}
 
 	err = DeployGatekeeper(config, clientset, codewindInstance, remoteDeployOptions)
 	if err != nil {
-<<<<<<< HEAD
 		logr.Errorln("Codewind Gatekeeper deployment failed, exiting...")
-=======
-		logr.Errorf("Codewind Gatekeeper deployment failed, exiting...")
->>>>>>> replace 'fmt.Print' with logrus #2
 		os.Exit(1)
 	}
 
