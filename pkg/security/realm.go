@@ -38,18 +38,22 @@ func SecRealmCreate(c *cli.Context) *SecError {
 
 	// build the payload (JSON)
 	type PayloadRealm struct {
-		Realm               string `json:"realm"`
-		DisplayName         string `json:"displayName"`
-		Enabled             bool   `json:"enabled"`
-		LoginTheme          string `json:"loginTheme"`
-		AccessTokenLifespan int    `json:"accessTokenLifespan"`
+		Realm                 string `json:"realm"`
+		DisplayName           string `json:"displayName"`
+		Enabled               bool   `json:"enabled"`
+		LoginTheme            string `json:"loginTheme"`
+		AccessTokenLifespan   int    `json:"accessTokenLifespan"`
+		SSOSessionIdleTimeout int    `json:"ssoSessionIdleTimeout"`
+		SSOSessionMaxLifespan int    `json:"ssoSessionMaxLifespan"`
 	}
 	tempRealm := &PayloadRealm{
-		Realm:               newRealm,
-		DisplayName:         newRealm,
-		Enabled:             true,
-		LoginTheme:          themeToUse,
-		AccessTokenLifespan: 86400,
+		Realm:                 newRealm,
+		DisplayName:           newRealm,
+		Enabled:               true,
+		LoginTheme:            themeToUse,
+		AccessTokenLifespan:   (1 * 24 * 60 * 60), // access tokens last 1 day
+		SSOSessionIdleTimeout: (5 * 24 * 60 * 60), // refresh tokens last 5 days
+		SSOSessionMaxLifespan: (5 * 24 * 60 * 60), // refresh tokens last 5 days
 	}
 
 	jsonRealm, err := json.Marshal(tempRealm)
