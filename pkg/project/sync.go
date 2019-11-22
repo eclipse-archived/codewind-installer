@@ -24,15 +24,8 @@ import (
 	"path/filepath"
 	"strings"
 
-<<<<<<< HEAD
 	"github.com/eclipse/codewind-installer/pkg/config"
-=======
-	"github.com/eclipse/codewind-installer/config"
-<<<<<<< HEAD
-<<<<<<< HEAD:pkg/project/sync.go
->>>>>>> replace 'fmt.Print' with logrus #2
-=======
->>>>>>> fix rebase problem
+
 	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/sechttp"
 	logr "github.com/sirupsen/logrus"
