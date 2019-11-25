@@ -15,10 +15,6 @@
   echo "output trace = ${output}"
   [ "$output" = '{"status":"stopped","installed-versions":["latest"]}' ]
   [ "$status" -eq 0 ]
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> fmt.println() used for error objects to stop bad string parsing with logrus
 }
 
 @test "invoke start command - Start dockerhub images (latest)" {
@@ -51,11 +47,7 @@
 
 @test "invoke con reset command - reset connections file" {
   cd cmd/cli/
-<<<<<<< HEAD
   run go run main.go --json con reset
-=======
-  run go run main.go con reset
->>>>>>> fmt.println() used for error objects to stop bad string parsing with logrus
   echo "status = ${status}"
   echo "output trace = ${output}"
    [ "$output" = '{"status":"OK","status_message":"Connection list reset"}' ]
@@ -64,17 +56,10 @@
 
 @test "invoke con list command - contains just 1 local connection" {
   cd cmd/cli/
-<<<<<<< HEAD
   run go run main.go --json con list
   echo "status = ${status}"
   echo "output trace = ${output}"
    [ "$output" = '{"schemaversion":1,"connections":[{"id":"local","label":"Codewind local connection","url":"","auth":"","realm":"","clientid":"","username":""}]}' ]
-=======
-  run go run main.go con list
-  echo "status = ${status}"
-  echo "output trace = ${output}"
-   [ "$output" = '{"schemaversion":1,"connections":[{"id":"local","label":"Codewind local connection","url":"","auth":"","realm":"","clientid":""}]}' ]
->>>>>>> fmt.println() used for error objects to stop bad string parsing with logrus
    [ "$status" -eq 0 ]
 }
 
@@ -187,12 +172,4 @@
   [ "${lines[0]}" = '{"error":"sec_keyring","error_description":"secret not found in keyring"}' ]
   [ "${lines[1]}" = "exit status 1" ]
   [ "$status" -eq 1 ]
-<<<<<<< HEAD
 }
-
-=======
-}
->>>>>>> all json output using fmt.println, all other output using logrus
-=======
-}
->>>>>>> fmt.println() used for error objects to stop bad string parsing with logrus
