@@ -34,7 +34,6 @@ import (
 type DeployOptions struct {
 	Namespace             string
 	IngressDomain         string
-	InstallKeycloak       bool
 	KeycloakUser          string
 	KeycloakPassword      string
 	KeycloakDevUser       string

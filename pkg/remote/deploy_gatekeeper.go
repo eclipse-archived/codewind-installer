@@ -286,6 +286,14 @@ func setGatekeeperEnvVars(codewind Codewind, deployOptions *DeployOptions) []cor
 			Value: "CODEWIND_PFE_" + codewind.WorkspaceID,
 		},
 		{
+			Name:  "WORKSPACE_ID",
+			Value: codewind.WorkspaceID,
+		},
+		{
+			Name:  "ACCESS_ROLE",
+			Value: "codewind-" + codewind.WorkspaceID,
+		},
+		{
 			Name: "CLIENT_SECRET",
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret-codewind-client" + "-" + codewind.WorkspaceID}, Key: "client_secret"}},

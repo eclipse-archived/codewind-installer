@@ -182,7 +182,6 @@ func Commands() {
 						cli.StringFlag{Name: "namespace,n", Usage: "Kubernetes namespace", Required: true},
 						cli.StringFlag{Name: "session,ses", Usage: "Codewind session secret", Required: false},
 						cli.StringFlag{Name: "ingress,i", Usage: "Ingress Domain eg: 10.22.33.44.nip.io", Required: false},
-						cli.StringFlag{Name: "addkeycloak,k", Usage: "Deploy an instance of Keycloak", Required: false},
 						cli.StringFlag{Name: "kadminuser,au", Usage: "Keycloak admin user", Required: false},
 						cli.StringFlag{Name: "kadminpass,ap", Usage: "Keycloak admin password", Required: false},
 						cli.StringFlag{Name: "kdevuser,du", Usage: "Keycloak developer username to add", Required: false},
@@ -514,7 +513,30 @@ func Commands() {
 					},
 				},
 			},
-		}, {
+		},
+		{
+			Name:    "secrole",
+			Aliases: []string{"sl"},
+			Usage:   "Manage access role configuration",
+			Subcommands: []cli.Command{
+				{
+					Name:    "create",
+					Aliases: []string{"c"},
+					Usage:   "Create a new role in an existing realm (requires admin_token)",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "host", Usage: "URL or ingress to Keycloak service", Required: true},
+						cli.StringFlag{Name: "accesstoken,t", Usage: "Admin access_token", Required: true},
+						cli.StringFlag{Name: "realm,r", Usage: "Realm name", Required: true},
+						cli.StringFlag{Name: "role,l", Usage: "New Role name", Required: true},
+					},
+					Action: func(c *cli.Context) error {
+						SecurityCreateRole(c)
+						return nil
+					},
+				},
+			},
+		},
+		{
 			Name:    "secclient",
 			Aliases: []string{"sc"},
 			Usage:   "Manage client access configuration",
@@ -625,6 +647,20 @@ func Commands() {
 					},
 					Action: func(c *cli.Context) error {
 						SecurityUserSetPassword(c)
+						return nil
+					},
+				}, {
+					Name:  "addrole",
+					Usage: "Adds an existing role to an existing user (requires admin_token)",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "host", Usage: "URL or ingress to Keycloak service", Required: false},
+						cli.StringFlag{Name: "realm,r", Usage: "Realm name", Required: true},
+						cli.StringFlag{Name: "accesstoken,t", Usage: "Admin Access Token", Required: false},
+						cli.StringFlag{Name: "name,n", Usage: "Existing user account name to process", Required: true},
+						cli.StringFlag{Name: "role,rl", Usage: "Existing user role name to add to the user account", Required: true},
+					},
+					Action: func(c *cli.Context) error {
+						SecurityUserAddRole(c)
 						return nil
 					},
 				},

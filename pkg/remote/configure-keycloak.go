@@ -25,6 +25,8 @@ import (
 // SetupKeycloak : sets up keycloak with a realm, client and user
 func SetupKeycloak(codewindInstance Codewind, deployOptions *DeployOptions) error {
 
+	accessRoleName := "codewind-" + codewindInstance.WorkspaceID
+
 	authURL := KeycloakPrefix + codewindInstance.Ingress
 	if deployOptions.KeycloakTLSSecure {
 		authURL = "https://" + authURL
@@ -88,6 +90,20 @@ func SetupKeycloak(codewindInstance Codewind, deployOptions *DeployOptions) erro
 		return secErr.Err
 	}
 
+	// Create a new access role for this deployment
+	logr.Infof("Creating access role '%v' in realm '%v'", accessRoleName, deployOptions.KeycloakRealm)
+	clientFlagset = flag.NewFlagSet("setupClient", 0)
+	clientFlagset.String("host", authURL, "doc")
+	clientFlagset.String("realm", deployOptions.KeycloakRealm, "doc")
+	clientFlagset.String("role", accessRoleName, "doc")
+	clientFlagset.String("accesstoken", tokens.AccessToken, "doc")
+	c = cli.NewContext(nil, clientFlagset, nil)
+	secErr = security.SecRoleCreate(c)
+	if secErr != nil {
+		utils.PrettyPrintJSON(secErr)
+		return secErr.Err
+	}
+
 	// Create an initial user
 	logr.Infoln("Creating Keycloak initial user")
 	userCreateFlagset := flag.NewFlagSet("createUser", 0)
@@ -112,6 +128,20 @@ func SetupKeycloak(codewindInstance Codewind, deployOptions *DeployOptions) erro
 	userPassFlagset.String("accesstoken", tokens.AccessToken, "doc")
 	c = cli.NewContext(nil, userPassFlagset, nil)
 	secErr = security.SecUserSetPW(c)
+	if secErr != nil {
+		utils.PrettyPrintJSON(secErr)
+		return secErr.Err
+	}
+
+	// Grant the user access to this Deployment
+	logr.Printf("Grant '%v' access to this deployment ", deployOptions.KeycloakDevUser)
+	clientFlagset = flag.NewFlagSet("setupClient", 0)
+	clientFlagset.String("host", authURL, "doc")
+	clientFlagset.String("realm", deployOptions.KeycloakRealm, "doc")
+	clientFlagset.String("role", accessRoleName, "doc")
+	clientFlagset.String("accesstoken", tokens.AccessToken, "doc")
+	c = cli.NewContext(nil, clientFlagset, nil)
+	secErr = security.SecUserAddRole(c)
 	if secErr != nil {
 		utils.PrettyPrintJSON(secErr)
 		return secErr.Err

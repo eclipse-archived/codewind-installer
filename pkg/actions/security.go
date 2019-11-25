@@ -59,6 +59,18 @@ func SecurityCreateRealm(c *cli.Context) {
 	os.Exit(0)
 }
 
+// SecurityCreateRole : Create a role in an existing Keycloak realm
+func SecurityCreateRole(c *cli.Context) {
+	err := security.SecRoleCreate(c)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	} else {
+		utils.PrettyPrintJSON(security.Result{Status: "OK"})
+	}
+	os.Exit(0)
+}
+
 // SecurityClientCreate : Create a new client in Keycloak
 func SecurityClientCreate(c *cli.Context) {
 	err := security.SecClientCreate(c)
@@ -136,6 +148,18 @@ func SecurityUserSetPassword(c *cli.Context) {
 		os.Exit(1)
 	}
 	utils.PrettyPrintJSON(security.Result{Status: "OK"})
+	os.Exit(0)
+}
+
+// SecurityUserAddRole : Add an existing role to the specified user
+func SecurityUserAddRole(c *cli.Context) {
+	err := security.SecUserAddRole(c)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	} else {
+		utils.PrettyPrintJSON(security.Result{Status: "OK"})
+	}
 	os.Exit(0)
 }
 
