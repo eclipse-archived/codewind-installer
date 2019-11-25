@@ -14,6 +14,7 @@ package remote
 import (
 	"strconv"
 
+	"github.com/eclipse/codewind-installer/pkg/appconstants"
 	logr "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -142,6 +143,10 @@ func setPFEEnvVars(codewind Codewind, deployOptions *DeployOptions) []corev1.Env
 		{
 			Name:  "CONTAINER_WORKSPACE_DIRECTORY",
 			Value: "/codewind-workspace",
+		},
+		{
+			Name:  "CODEWIND_VERSION",
+			Value: appconstants.VersionNum,
 		},
 		{
 			Name:  "OWNER_REF_NAME",
