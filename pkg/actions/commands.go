@@ -13,6 +13,7 @@ package actions
 
 import (
 	"crypto/tls"
+	"log"
 	"net/http"
 	"os"
 
@@ -745,6 +746,7 @@ func Commands() {
 			break
 		default:
 			logr.SetLevel(logr.InfoLevel)
+			log.SetOutput(os.Stdout)
 		}
 
 		return nil
