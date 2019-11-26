@@ -125,8 +125,8 @@ func generateDeployment(codewind Codewind, name string, image string, port int, 
 					Labels: labels,
 				},
 				Spec: corev1.PodSpec{
-					//ServiceAccountName: codewind.ServiceAccountName,
-					Volumes: volumes,
+					ServiceAccountName: codewind.ServiceAccountName,
+					Volumes:            volumes,
 					Containers: []corev1.Container{
 						{
 							Name:            name,
