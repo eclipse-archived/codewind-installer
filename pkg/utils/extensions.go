@@ -13,11 +13,12 @@ package utils
 
 import (
 	"bytes"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	logr "github.com/sirupsen/logrus"
 )
 
 type (
@@ -84,7 +85,7 @@ func processArg(arg string, params map[string]string) string {
 func RunCommand(projectPath string, command ExtensionCommand, params map[string]string) error {
 	cwd, err := os.Executable()
 	if err != nil {
-		log.Println("There was a problem with locating the command directory")
+		logr.Errorln("There was a problem with locating the command directory")
 		return err
 	}
 	cwctlPath := filepath.Dir(cwd)
@@ -103,11 +104,11 @@ func RunCommand(projectPath string, command ExtensionCommand, params map[string]
 	cmd.Stdout = output
 	cmd.Stderr = output
 	if err := cmd.Start(); err != nil { // after 'Start' the program is continued and script is executing in background
-		log.Println("There was a problem running the command:", commandName)
+		logr.Errorln("There was a problem running the command:", commandName)
 		return err
 	}
-	log.Printf("Please wait while the command runs... %s", output.String())
+	logr.Infof("Please wait while the command runs... %s", output.String())
 	cmd.Wait()
-	log.Println(output.String()) // Wait to finish execution, so we can read all output
+	logr.Infoln(output.String()) // Wait to finish execution, so we can read all output
 	return nil
 }

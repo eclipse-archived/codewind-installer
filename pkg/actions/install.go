@@ -68,7 +68,7 @@ func InstallCommand(c *cli.Context) {
 		utils.TagImage(imageArr[i]+tag, targetArr[i]+tag)
 	}
 
-	fmt.Println("Image Tagging Successful")
+	logr.Infoln("Image Tagging Successful")
 }
 
 // DoRemoteInstall : Deploy a remote PFE and support containers

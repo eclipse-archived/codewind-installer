@@ -12,10 +12,10 @@
 package actions
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/eclipse/codewind-installer/pkg/utils"
+	logr "github.com/sirupsen/logrus"
 )
 
 //StopAllCommand to stop codewind and project containers
@@ -29,12 +29,12 @@ func StopAllCommand() {
 
 	containers := utils.GetContainerList()
 
-	fmt.Println("Stopping Codewind and Project containers")
+	logr.Infoln("Stopping Codewind and Project containers")
 	for _, container := range containers {
 		for _, key := range containerArr {
 			if strings.HasPrefix(container.Image, key) {
 				if key != "appsody" || strings.Contains(container.Names[0], "cw-") {
-					fmt.Println("Stopping container ", container.Names[0], "... ")
+					logr.Infoln("Stopping container ", container.Names[0], "... ")
 					utils.StopContainer(container)
 					break
 				}
@@ -44,10 +44,10 @@ func StopAllCommand() {
 
 	networkName := "codewind"
 	networks := utils.GetNetworkList()
-	fmt.Println("Removing Codewind docker networks..")
+	logr.Infoln("Removing Codewind docker networks..")
 	for _, network := range networks {
 		if strings.Contains(network.Name, networkName) {
-			fmt.Print("Removing docker network: ", network.Name, "... ")
+			logr.Infoln("Removing docker network: ", network.Name, "... ")
 			utils.RemoveNetwork(network)
 		}
 	}

@@ -25,8 +25,10 @@ import (
 	"strings"
 
 	"github.com/eclipse/codewind-installer/pkg/config"
+
 	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/sechttp"
+	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -72,7 +74,7 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	}
 
 	if !ConnectionFileExists(projectID) {
-		fmt.Println("Project connection file does not exist, creating default local connection")
+		logr.Infoln("Project connection file does not exist, creating default local connection")
 		CreateConnectionFile(projectID)
 	}
 
@@ -189,7 +191,7 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 		return nil
 	})
 	if err != nil {
-		fmt.Printf("error walking the path %q: %v\n", projectPath, err)
+		logr.Errorf("error walking the path %q: %v\n", projectPath, err)
 		return nil, nil, nil
 	}
 	return fileList, modifiedList, uploadedFiles

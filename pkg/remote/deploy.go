@@ -95,7 +95,7 @@ func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemIn
 		// insert the namespace
 		requestedNamespace, err := clientset.CoreV1().Namespaces().Create(&deploymentNamespace)
 		if err != nil || requestedNamespace == nil {
-			logr.Error("Unable to create %v namespace: %v", namespace, err)
+			logr.Errorf("Unable to create %v namespace: %v", namespace, err)
 			return nil, &RemInstError{errOpCreateNamespace, err, err.Error()}
 		}
 	}

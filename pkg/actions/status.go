@@ -14,13 +14,13 @@ package actions
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
 	"github.com/eclipse/codewind-installer/pkg/apiroutes"
 	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/utils"
+	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -40,7 +40,7 @@ func StatusCommandRemoteConnection(c *cli.Context) {
 	conID := c.String("conid")
 	connection, conErr := connections.GetConnectionByID(conID)
 	if conErr != nil {
-		fmt.Println(conErr)
+		logr.Errorln(conErr)
 		os.Exit(1)
 	}
 
@@ -54,15 +54,15 @@ func StatusCommandRemoteConnection(c *cli.Context) {
 				Status: "stopped",
 			}
 			if err != nil {
-				fmt.Println(err)
+				logr.Errorln(err)
 				os.Exit(1)
 			}
 			output, _ := json.Marshal(resp)
 			fmt.Println(string(output))
 			os.Exit(1)
 		} else {
-			fmt.Println("Codewind did not respond on remote connection", conID)
-			log.Println(err)
+			logr.Errorln("Codewind did not respond on remote connection", conID)
+			logr.Errorln(err)
 		}
 	}
 
@@ -80,7 +80,7 @@ func StatusCommandRemoteConnection(c *cli.Context) {
 		output, _ := json.Marshal(resp)
 		fmt.Println(string(output))
 	} else {
-		fmt.Println("Remote Codewind is installed and running")
+		logr.Infoln("Remote Codewind is installed and running")
 	}
 	os.Exit(0)
 }
@@ -113,7 +113,7 @@ func StatusCommandLocalConnection(c *cli.Context) {
 			output, _ := json.Marshal(resp)
 			fmt.Println(string(output))
 		} else {
-			fmt.Println("Codewind is installed and running on http://" + hostname + ":" + port)
+			logr.Infoln("Codewind is installed and running on http://" + hostname + ":" + port)
 		}
 		os.Exit(0)
 	}
@@ -137,7 +137,7 @@ func StatusCommandLocalConnection(c *cli.Context) {
 			output, _ := json.Marshal(resp)
 			fmt.Println(string(output))
 		} else {
-			fmt.Println("Codewind is installed but not running")
+			logr.Infoln("Codewind is installed but not running")
 		}
 		os.Exit(0)
 	} else {
@@ -146,7 +146,7 @@ func StatusCommandLocalConnection(c *cli.Context) {
 			output, _ := json.Marshal(map[string]string{"status": "uninstalled"})
 			fmt.Println(string(output))
 		} else {
-			fmt.Println("Codewind is not installed")
+			logr.Infoln("Codewind is not installed")
 		}
 		os.Exit(0)
 	}
