@@ -126,7 +126,7 @@ func getRoleByName(c *cli.Context, roleName string) (*Role, *SecError) {
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 
-	// Parse the result
+	// parse the result
 	var role *Role
 	err = json.Unmarshal([]byte(body), &role)
 	if err != nil {

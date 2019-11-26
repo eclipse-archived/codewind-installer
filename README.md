@@ -151,7 +151,7 @@ This is the same as `go test ./...`, but outputs test coverage scores for each f
 | remove      | `rm`  | 'Remove Codewind/Project docker images and the codewind network'    |
 | templates   |       | 'Manage project templates'                                          |
 | sectoken    | `st`  | 'Authenticate with username and password to obtain an access_token' |
-| secrole     |       | 'Manage realm based ACCESS roles'                                   |
+| secrole     | `sl`  | 'Manage realm based ACCESS roles'                                   |
 | secrealm    | `sr`  | 'Manage new or existing REALM configurations'                       |
 | secclient   | `sc`  | 'Manage new or existing APPLICATION access configurations'          |
 | seckeyring  | `sk`  | 'Manage Codewind keys in the desktop keyring'                       |
