@@ -212,8 +212,8 @@ func Commands() {
 					Usage: "add debug output",
 				},
 				cli.StringFlag{
-					Name:  "source, s",
-					Usage: "absolute source folder path for debugging",
+					Name:   "source, s",
+					Hidden: true,
 				},
 			},
 			Action: func(c *cli.Context) error {
