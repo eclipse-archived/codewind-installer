@@ -211,6 +211,10 @@ func Commands() {
 					Name:  "debug, d",
 					Usage: "add debug output",
 				},
+				cli.StringFlag{
+					Name:  "source, s",
+					Usage: "absolute source folder path for debugging",
+				},
 			},
 			Action: func(c *cli.Context) error {
 				StartCommand(c, tempFilePath, healthEndpoint)

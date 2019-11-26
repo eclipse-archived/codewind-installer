@@ -52,7 +52,7 @@ func CreateTempFile(filePath string) bool {
 }
 
 // WriteToComposeFile the contents of the docker compose yaml
-func WriteToComposeFile(tempFilePath string, debug bool) bool {
+func WriteToComposeFile(tempFilePath string, debug bool, source string) bool {
 	if tempFilePath == "" {
 		return false
 	}
@@ -66,6 +66,9 @@ func WriteToComposeFile(tempFilePath string, debug bool) bool {
 		debugPort := DetermineDebugPortForPFE()
 		// Add the debug port to the docker compose data
 		dataStruct.SERVICES.PFE.Ports = append(dataStruct.SERVICES.PFE.Ports, "127.0.0.1:"+debugPort+":9777")
+		if source != "" {
+			dataStruct.SERVICES.PFE.Volumes = append(dataStruct.SERVICES.PFE.Volumes, source+":/portal")
+		}
 	}
 
 	marshalledData, err := yaml.Marshal(&dataStruct)

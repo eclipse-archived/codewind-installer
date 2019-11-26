@@ -86,13 +86,13 @@ func TestCreateTempFile(t *testing.T) {
 
 func TestWriteToComposeFile(t *testing.T) {
 	os.Create("TestFile.yaml")
-	got := WriteToComposeFile("TestFile.yaml", false)
+	got := WriteToComposeFile("TestFile.yaml", false, "")
 	assert.Equal(t, got, true, "should return true: should write data to a temp file")
 	os.Remove("TestFile.yaml")
 }
 
 func TestWriteToComposeFileFail(t *testing.T) {
-	writeToFile := WriteToComposeFile("", false)
+	writeToFile := WriteToComposeFile("", false, "")
 	assert.Equal(t, writeToFile, false, "should return false: should fail to write data")
 }
 
