@@ -151,7 +151,7 @@ func generateDeployment(codewind Codewind, name string, image string, port int, 
 	return deployment
 }
 
-func generateSecrets(codewind Codewind, name string, secrets map[string]string) corev1.Secret {
+func generateSecrets(codewind Codewind, name string, secrets map[string]string, labels map[string]string) corev1.Secret {
 	secret := corev1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Secret",
@@ -160,6 +160,7 @@ func generateSecrets(codewind Codewind, name string, secrets map[string]string) 
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name + "-" + codewind.WorkspaceID,
 			Namespace: codewind.Namespace,
+			Labels:    labels,
 		},
 		StringData: secrets,
 	}

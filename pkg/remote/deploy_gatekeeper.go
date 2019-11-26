@@ -103,28 +103,40 @@ func DeployGatekeeper(config *restclient.Config, clientset *kubernetes.Clientset
 }
 
 func createGatekeeperTLSSecret(codewind Codewind, pemPrivateKey string, pemPublicCert string) corev1.Secret {
+	labels := map[string]string{
+		"app":               GatekeeperPrefix,
+		"codewindWorkspace": codewind.WorkspaceID,
+	}
 	secrets := map[string]string{
 		"tls.crt": pemPublicCert,
 		"tls.key": pemPrivateKey,
 	}
 	name := "secret-codewind-tls"
-	return generateSecrets(codewind, name, secrets)
+	return generateSecrets(codewind, name, secrets, labels)
 }
 
 func createGatekeeperSessionSecret(codewind Codewind, deployOptions *DeployOptions) corev1.Secret {
+	labels := map[string]string{
+		"app":               GatekeeperPrefix,
+		"codewindWorkspace": codewind.WorkspaceID,
+	}
 	secrets := map[string]string{
 		"session_secret": deployOptions.CodewindSessionSecret,
 	}
 	name := "secret-codewind-session"
-	return generateSecrets(codewind, name, secrets)
+	return generateSecrets(codewind, name, secrets, labels)
 }
 
 func createGatekeeperSecrets(codewind Codewind, deployOptions *DeployOptions) corev1.Secret {
+	labels := map[string]string{
+		"app":               GatekeeperPrefix,
+		"codewindWorkspace": codewind.WorkspaceID,
+	}
 	secrets := map[string]string{
 		"client_secret": deployOptions.ClientSecret,
 	}
 	name := "secret-codewind-client"
-	return generateSecrets(codewind, name, secrets)
+	return generateSecrets(codewind, name, secrets, labels)
 }
 
 func createGatekeeperDeploy(codewind Codewind, deployOptions *DeployOptions) appsv1.Deployment {
