@@ -76,7 +76,7 @@ func DeployPFE(config *restclient.Config, clientset *kubernetes.Clientset, codew
 // createPFEDeploy : creates a Kubernetes deploy resource
 func createPFEDeploy(codewind Codewind, deployOptions *DeployOptions) appsv1.Deployment {
 	labels := map[string]string{
-		"app":               "codewind-pfe",
+		"app":               PFEPrefix,
 		"codewindWorkspace": codewind.WorkspaceID,
 	}
 	volumes, volumeMounts := setPFEVolumes(codewind)
@@ -87,7 +87,7 @@ func createPFEDeploy(codewind Codewind, deployOptions *DeployOptions) appsv1.Dep
 // createPFEService : creates a Kubernetes service
 func createPFEService(codewind Codewind) corev1.Service {
 	labels := map[string]string{
-		"app":               "codewind-pfe",
+		"app":               PFEPrefix,
 		"codewindWorkspace": codewind.WorkspaceID,
 	}
 	return generateService(codewind, PFEPrefix, PFEContainerPort, labels)

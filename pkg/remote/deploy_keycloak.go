@@ -20,6 +20,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	extensionsv1 "k8s.io/api/extensions/v1beta1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
@@ -34,6 +35,23 @@ func DeployKeycloak(config *restclient.Config, clientset *kubernetes.Clientset, 
 	keycloakDeploy := createKeycloakDeploy(codewindInstance)
 	serverKey, serverCert, err := createCertificate(KeycloakPrefix+codewindInstance.Ingress, "Codewind Keycloak")
 	keycloakTLSSecret := createKeycloakTLSSecret(codewindInstance, serverKey, serverCert)
+
+	// Determine if we're running on OpenShift on IKS (and thus need to use the ibm-file-bronze storage class)
+	storageClass := ""
+	sc, err := clientset.StorageV1().StorageClasses().Get(ROKSStorageClass, metav1.GetOptions{})
+	if err == nil && sc != nil {
+		storageClass = sc.Name
+		logr.Infof("Setting storage class to %s\n", storageClass)
+	}
+
+	keycloakPVC := createKeycloakPVC(codewindInstance, deployOptions, storageClass)
+
+	logr.Infoln("Creating Codewind Keycloak PVC")
+	_, err = clientset.CoreV1().PersistentVolumeClaims(deployOptions.Namespace).Create(&keycloakPVC)
+	if err != nil {
+		logr.Errorf("Error: Unable to create Codewind Keycloak PVC: %v\n", err)
+		return err
+	}
 
 	logr.Infoln("Deploying Codewind Keycloak Secrets")
 	_, err = clientset.CoreV1().Secrets(deployOptions.Namespace).Create(&keycloakSecrets)
@@ -91,8 +109,12 @@ func createKeycloakTLSSecret(codewind Codewind, pemPrivateKey string, pemPublicC
 		"tls.crt": pemPublicCert,
 		"tls.key": pemPrivateKey,
 	}
+	labels := map[string]string{
+		"app":               KeycloakPrefix,
+		"codewindWorkspace": codewind.WorkspaceID,
+	}
 	name := "secret-keycloak-tls"
-	return generateSecrets(codewind, name, secrets)
+	return generateSecrets(codewind, name, secrets, labels)
 }
 
 func createKeycloakSecrets(codewind Codewind, deployOptions *DeployOptions) corev1.Secret {
@@ -100,8 +122,12 @@ func createKeycloakSecrets(codewind Codewind, deployOptions *DeployOptions) core
 		"keycloak-admin-user":     deployOptions.KeycloakUser,
 		"keycloak-admin-password": deployOptions.KeycloakPassword,
 	}
+	labels := map[string]string{
+		"app":               KeycloakPrefix,
+		"codewindWorkspace": codewind.WorkspaceID,
+	}
 	name := "secret-keycloak-user"
-	return generateSecrets(codewind, name, secrets)
+	return generateSecrets(codewind, name, secrets, labels)
 }
 
 func createKeycloakDeploy(codewind Codewind) appsv1.Deployment {
@@ -110,7 +136,7 @@ func createKeycloakDeploy(codewind Codewind) appsv1.Deployment {
 		"codewindWorkspace": codewind.WorkspaceID,
 	}
 	volumes := []corev1.Volume{}
-	volumeMounts := []corev1.VolumeMount{}
+	volumes, volumeMounts := setKeycloakVolumes(codewind)
 	envVars := setKeycloakEnvVars(codewind)
 	return generateDeployment(codewind, KeycloakPrefix, codewind.KeycloakImage, KeycloakContainerPort, volumes, volumeMounts, envVars, labels)
 }
@@ -244,4 +270,61 @@ func setKeycloakEnvVars(codewind Codewind) []corev1.EnvVar {
 			Value: "true",
 		},
 	}
+}
+
+func createKeycloakPVC(codewind Codewind, deployOptions *DeployOptions, storageClass string) corev1.PersistentVolumeClaim {
+
+	labels := map[string]string{
+		"app":               KeycloakPrefix,
+		"codewindWorkspace": codewind.WorkspaceID,
+	}
+
+	pvc := corev1.PersistentVolumeClaim{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PersistentVolumeClaim",
+			APIVersion: "route.openshift.io/v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   KeycloakPrefix + "-pvc-" + codewind.WorkspaceID,
+			Labels: labels,
+		},
+		Spec: corev1.PersistentVolumeClaimSpec{
+			AccessModes: []corev1.PersistentVolumeAccessMode{
+				"ReadWriteOnce",
+			},
+			Resources: corev1.ResourceRequirements{
+				Requests: corev1.ResourceList{
+					corev1.ResourceStorage: resource.MustParse("1Gi"),
+				},
+			},
+		},
+	}
+
+	// If a storage class was passed in, set it in the PVC
+	if storageClass != "" {
+		pvc.Spec.StorageClassName = &storageClass
+	}
+
+	return pvc
+}
+
+// setKeycloakVolumes returns a volumes & corresponding volume mount required by the Keycloak container:
+func setKeycloakVolumes(codewind Codewind) ([]corev1.Volume, []corev1.VolumeMount) {
+	volumes := []corev1.Volume{
+		{
+			Name: "keycloak-data",
+			VolumeSource: corev1.VolumeSource{
+				PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+					ClaimName: KeycloakPrefix + "-pvc-" + codewind.WorkspaceID,
+				},
+			},
+		},
+	}
+	volumeMounts := []corev1.VolumeMount{
+		{
+			Name:      "keycloak-data",
+			MountPath: "/opt/jboss/keycloak/standalone/data",
+		},
+	}
+	return volumes, volumeMounts
 }
