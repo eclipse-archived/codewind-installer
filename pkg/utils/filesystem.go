@@ -157,7 +157,7 @@ func DownloadFile(URL, destination string) error {
 
 	// Write body to file
 	_, err = io.Copy(file, resp.Body)
-	logr.Infof("Downloaded file from '%s' to '%s'\n", URL, destination)
+	logr.Tracef("Downloaded file from '%s' to '%s'\n", URL, destination)
 
 	return err
 }
@@ -204,7 +204,7 @@ func UnZip(filePath, destination string) error {
 			errors.CheckErr(err, 404, "")
 		}
 	}
-	logr.Infof("Extracted file from '%s' to '%s'\n", filePath, destination)
+	logr.Tracef("Extracted file from '%s' to '%s'\n", filePath, destination)
 	return nil
 }
 
