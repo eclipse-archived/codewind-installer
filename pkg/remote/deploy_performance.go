@@ -12,7 +12,7 @@
 package remote
 
 import (
-	logr "github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
@@ -25,15 +25,15 @@ func DeployPerformance(clientset *kubernetes.Clientset, codewind Codewind, deplo
 	performanceService := createPerformanceService(codewind)
 	performanceDeploy := createPerformanceDeploy(codewind)
 
-	logr.Infoln("Deploying Codewind Performance Dashboard")
+	log.Infoln("Deploying Codewind Performance Dashboard")
 	_, err := clientset.CoreV1().Services(deployOptions.Namespace).Create(&performanceService)
 	if err != nil {
-		logr.Errorf("Error: Unable to create Codewind Performance service: %v\n", err)
+		log.Errorf("Error: Unable to create Codewind Performance service: %v\n", err)
 		return err
 	}
 	_, err = clientset.AppsV1().Deployments(deployOptions.Namespace).Create(&performanceDeploy)
 	if err != nil {
-		logr.Errorf("Error: Unable to create Codewind Performance deployment: %v\n", err)
+		log.Errorf("Error: Unable to create Codewind Performance deployment: %v\n", err)
 		return err
 	}
 	return nil

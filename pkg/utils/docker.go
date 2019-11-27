@@ -16,7 +16,9 @@ import (
 	"context"
 	"encoding/json"
 	goErr "errors"
+	"fmt"
 	"io"
+	"log"
 	"net"
 	"os"
 	"os/exec"
@@ -111,8 +113,8 @@ func DockerCompose(tempFilePath string, tag string) {
 
 	const GOARCH string = runtime.GOARCH
 	const GOOS string = runtime.GOOS
-	logr.Infoln("System architecture is: ", GOARCH)
-	logr.Infoln("Host operating system is: ", GOOS)
+	fmt.Println("System architecture is: ", GOARCH)
+	fmt.Println("Host operating system is: ", GOOS)
 
 	if GOARCH == "x86_64" || GOARCH == "amd64" {
 		os.Setenv("PLATFORM", "-amd64")
@@ -135,10 +137,10 @@ func DockerCompose(tempFilePath string, tag string) {
 	os.Setenv("HOST_OS", GOOS)
 	os.Setenv("COMPOSE_PROJECT_NAME", "codewind")
 	os.Setenv("HOST_MAVEN_OPTS", os.Getenv("MAVEN_OPTS"))
-	logr.Infof("Attempting to find available port\n")
+	fmt.Printf("Attempting to find available port\n")
 	portAvailable, port := IsTCPPortAvailable(minTCPPort, maxTCPPort)
 	if !portAvailable {
-		logr.Infof("No available external ports in range, will default to Docker-assigned port")
+		fmt.Printf("No available external ports in range, will default to Docker-assigned port")
 	}
 	os.Setenv("PFE_EXTERNAL_PORT", port)
 
@@ -150,9 +152,9 @@ func DockerCompose(tempFilePath string, tag string) {
 		DeleteTempFile(tempFilePath)
 		errors.CheckErr(err, 101, "Is docker-compose installed?")
 	}
-	logr.Infof("Please wait whilst containers initialize... %s \n", output.String())
+	fmt.Printf("Please wait whilst containers initialize... %s \n", output.String())
 	cmd.Wait()
-	logr.Infof(output.String()) // Wait to finish execution, so we can read all output
+	fmt.Printf(output.String()) // Wait to finish execution, so we can read all output
 
 	if strings.Contains(output.String(), "ERROR") || strings.Contains(output.String(), "error") {
 		DeleteTempFile(tempFilePath)
@@ -234,11 +236,9 @@ func ValidateImageDigest(image string) (string, *DockerError) {
 func TagImage(source, tag string) {
 	out, err := exec.Command("docker", "tag", source, tag).Output()
 	errors.CheckErr(err, 102, "Image Tagging Failed")
-	if len(out) > 0 {
-		// if 'out' byte array is ever > 0 then print the contents as string
-		output := string(out[:])
-		logr.Infoln(output)
-	}
+
+	output := string(out[:])
+	fmt.Println(output)
 }
 
 // CheckContainerStatus of Codewind running/stopped
@@ -407,7 +407,7 @@ func GetImageTags() []string {
 					tag = strings.Split(tag, ":")[1]
 					tagArr = append(tagArr, tag)
 				} else {
-					logr.Warnln("No tag available. Defaulting to ''")
+					log.Println("No tag available. Defaulting to ''")
 					tagArr = append(tagArr, "")
 				}
 			}
@@ -424,10 +424,10 @@ func IsTCPPortAvailable(minTCPPort int, maxTCPPort int) (bool, string) {
 	for port := minTCPPort; port < maxTCPPort; port++ {
 		conn, err := net.Listen("tcp", "127.0.0.1:"+strconv.Itoa(port))
 		if err != nil {
-			logr.Errorln("Unable to connect to port", port, ":", err)
+			log.Println("Unable to connect to port", port, ":", err)
 		} else {
 			status = "Port " + strconv.Itoa(port) + " Available"
-			logr.Infoln(status)
+			fmt.Println(status)
 			conn.Close()
 			return true, strconv.Itoa(port)
 		}

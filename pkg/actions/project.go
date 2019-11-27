@@ -18,7 +18,6 @@ import (
 	"strings"
 
 	"github.com/eclipse/codewind-installer/pkg/project"
-	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -46,14 +45,14 @@ func ProjectSync(c *cli.Context) {
 	PrintAsJSON := c.GlobalBool("json")
 	response, err := project.SyncProject(c)
 	if err != nil {
-		logr.Errorln(err.Err)
+		fmt.Println(err.Err)
 		os.Exit(1)
 	} else {
 		if PrintAsJSON {
 			jsonResponse, _ := json.Marshal(response)
 			fmt.Println(string(jsonResponse))
 		} else {
-			logr.Infoln("Status: " + response.Status)
+			fmt.Println("Status: " + response.Status)
 		}
 	}
 	os.Exit(0)
@@ -71,8 +70,8 @@ func ProjectBind(c *cli.Context) {
 			jsonResponse, _ := json.Marshal(response)
 			fmt.Println(string(jsonResponse))
 		} else {
-			logr.Infoln("Project ID: " + response.ProjectID)
-			logr.Infoln("Status: " + response.Status)
+			fmt.Println("Project ID: " + response.ProjectID)
+			fmt.Println("Status: " + response.Status)
 		}
 	}
 	os.Exit(0)
@@ -112,7 +111,7 @@ func ProjectGetConnection(c *cli.Context) {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
-	logr.Infoln(connectionTargets)
+	fmt.Println(connectionTargets)
 	os.Exit(0)
 }
 

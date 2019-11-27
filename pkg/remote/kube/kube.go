@@ -14,7 +14,7 @@ package kube
 import (
 	"os"
 
-	logr "github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 
 	"k8s.io/client-go/discovery"
 	"k8s.io/client-go/rest"
@@ -47,12 +47,12 @@ func GetCurrentNamespace() string {
 func DetectOpenShift(config *rest.Config) bool {
 	discoveryClient, err := discovery.NewDiscoveryClientForConfig(config)
 	if err != nil {
-		logr.Errorf("Unable to detect if running on OpenShift: %v\n", err)
+		log.Errorf("Unable to detect if running on OpenShift: %v\n", err)
 		os.Exit(1)
 	}
 	apiList, err := discoveryClient.ServerGroups()
 	if err != nil {
-		logr.Errorf("Error attempting to retrieve list of API Groups: %v\n", err)
+		log.Errorf("Error attempting to retrieve list of API Groups: %v\n", err)
 		os.Exit(1)
 	}
 	apiGroups := apiList.Groups
