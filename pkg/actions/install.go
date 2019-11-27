@@ -87,7 +87,6 @@ func DoRemoteInstall(c *cli.Context) {
 	deployOptions := remote.DeployOptions{
 		Namespace:             c.String("namespace"),
 		IngressDomain:         c.String("ingress"),
-		InstallKeycloak:       c.Bool("addkeycloak"),
 		KeycloakUser:          c.String("kadminuser"),
 		KeycloakPassword:      c.String("kadminpass"),
 		KeycloakDevUser:       c.String("kdevuser"),

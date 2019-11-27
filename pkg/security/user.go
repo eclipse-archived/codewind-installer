@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"strings"
 
+	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -205,6 +206,63 @@ func SecUserSetPW(c *cli.Context) *SecError {
 	defer res.Body.Close()
 
 	// handle HTTP status codes
+	if res.StatusCode != http.StatusNoContent {
+		errNotFound := errors.New(res.Status)
+		return &SecError{errOpNotFound, errNotFound, errNotFound.Error()}
+	}
+
+	return nil
+}
+
+// SecUserAddRole : Adds a role to a specified user
+func SecUserAddRole(c *cli.Context) *SecError {
+	hostname := strings.TrimSpace(strings.ToLower(c.String("host")))
+	realm := strings.TrimSpace(c.String("realm"))
+	accesstoken := strings.TrimSpace(c.String("accesstoken"))
+	targetUser := strings.TrimSpace(c.String("name"))
+	roleName := strings.TrimSpace(c.String("role"))
+
+	// lookup an existing user
+	logr.Tracef("Looking up user : %v", targetUser)
+	registeredUser, secErr := SecUserGet(c)
+	if secErr != nil {
+		return secErr
+	}
+
+	// get the existing role
+	existingRole, secErr := getRoleByName(c, roleName)
+	if secErr != nil {
+		return secErr
+	}
+
+	// build REST request
+	logr.Printf("Adding role '%v' to user : '%v'", existingRole.Name, registeredUser.ID)
+	url := hostname + "/auth/admin/realms/" + realm + "/users/" + registeredUser.ID + "/role-mappings/realm"
+
+	type PayloadRole struct {
+		ID   string `json:"id"`
+		Name string `json:"name"`
+	}
+
+	listOfRoles := []PayloadRole{{ID: existingRole.ID, Name: existingRole.Name}}
+	jsonRolesToAdd, err := json.Marshal(listOfRoles)
+	payload := strings.NewReader(string(jsonRolesToAdd))
+
+	req, err := http.NewRequest("POST", url, payload)
+	if err != nil {
+		return &SecError{errOpConnection, err, err.Error()}
+	}
+
+	req.Header.Add("Authorization", "Bearer "+accesstoken)
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("cache-control", "no-cache")
+	req.Header.Add("Cache-Control", "no-cache")
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return &SecError{errOpConnection, err, err.Error()}
+	}
+
+	// handle HTTP status codes (success returns status code StatusNoContent)
 	if res.StatusCode != http.StatusNoContent {
 		errNotFound := errors.New(res.Status)
 		return &SecError{errOpNotFound, errNotFound, errNotFound.Error()}
