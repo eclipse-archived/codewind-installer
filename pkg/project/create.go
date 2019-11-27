@@ -13,7 +13,6 @@ package project
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -174,7 +173,7 @@ func ValidateProject(c *cli.Context) *ProjectError {
 	if extensionType == "" {
 		writeCwSettingsIfNotInProject(conID, projectPath, buildType)
 	}
-	fmt.Println(string(projectInfo))
+	logr.Infoln(string(projectInfo))
 	return nil
 }
 
