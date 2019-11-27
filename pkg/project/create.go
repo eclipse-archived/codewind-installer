@@ -26,7 +26,6 @@ import (
 	"github.com/eclipse/codewind-installer/pkg/apiroutes"
 	"github.com/eclipse/codewind-installer/pkg/errors"
 	"github.com/eclipse/codewind-installer/pkg/utils"
-	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -86,7 +85,7 @@ func DownloadTemplate(c *cli.Context) *ProjectError {
 func checkIsExtension(conID, projectPath string, c *cli.Context) (string, error) {
 	extensions, err := apiroutes.GetExtensions(conID)
 	if err != nil {
-		logr.Errorln("There was a problem retrieving extensions data")
+		log.Println("There was a problem retrieving extensions data")
 		return "unknown", err
 	}
 

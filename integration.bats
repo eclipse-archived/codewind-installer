@@ -173,3 +173,4 @@
   [ "${lines[1]}" = "exit status 1" ]
   [ "$status" -eq 1 ]
 }
+
