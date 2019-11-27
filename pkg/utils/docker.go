@@ -14,6 +14,8 @@ package utils
 import (
 	"bytes"
 	"context"
+	"encoding/json"
+	goErr "errors"
 	"fmt"
 	"io"
 	"log"
@@ -29,6 +31,7 @@ import (
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
 	"github.com/eclipse/codewind-installer/pkg/errors"
+	logr "github.com/sirupsen/logrus"
 )
 
 // codewind-docker-compose.yaml data
@@ -183,6 +186,50 @@ func PullImage(image string, jsonOutput bool) {
 	}
 }
 
+// ValidateImageDigest - will ensure the image digest matches that of the one in dockerhub
+// returns imageID, docker error
+func ValidateImageDigest(image string) (string, *DockerError) {
+
+	ctx := context.Background()
+	cli, err := client.NewClientWithOpts(client.WithVersion("1.30"))
+	errors.CheckErr(err, 200, "")
+	// call docker api for image digest
+	queryDigest, err := cli.DistributionInspect(ctx, image, "")
+	if err != nil {
+		logr.Error(err)
+	}
+
+	// turn digest -> []byte -> string
+	digest, _ := json.Marshal(queryDigest.Descriptor.Digest)
+	logr.Traceln("Query image digest is.. ", queryDigest.Descriptor.Digest)
+
+	// get local image digest
+	imageList := GetImageList()
+	imageName := strings.TrimPrefix(image, "docker.io/")
+	imageArr := []string{
+		imageName,
+	}
+
+	for _, image := range imageList {
+		imageRepo := strings.Join(image.RepoDigests, " ")
+		imageTags := strings.Join(image.RepoTags, " ")
+		for _, index := range imageArr {
+			if strings.Contains(imageTags, index) {
+				if strings.Contains(imageRepo, strings.Replace(string(digest), "\"", "", -1)) {
+					length := len(strings.Replace(string(digest), "\"", "", -1))
+					last10 := strings.Replace(string(digest), "\"", "", -1)[length-10 : length]
+					logr.Tracef("Validation for image digest ..%v succeeded\n", last10)
+				} else {
+					logr.Traceln("Local image digest did not match queried image digest from dockerhub - This could be a result of a bad download")
+					valError := goErr.New(textBadDigest)
+					return image.ID, &DockerError{errOpValidate, valError, valError.Error()}
+				}
+			}
+		}
+	}
+	return "", nil
+}
+
 // TagImage - locally retag the downloaded images
 func TagImage(source, tag string) {
 	out, err := exec.Command("docker", "tag", source, tag).Output()
@@ -238,7 +285,6 @@ func CheckImageStatus() bool {
 	if imageCount >= 2 {
 		imageStatus = true
 	}
-
 	return imageStatus
 }
 

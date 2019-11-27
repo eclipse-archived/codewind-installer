@@ -23,7 +23,7 @@ import (
 
 var tempFilePath = "codewind-docker-compose.yaml"
 
-const versionNum = "x.x.dev"
+const versionNum = "0.6.1"
 
 const healthEndpoint = "/api/v1/environment"
 
