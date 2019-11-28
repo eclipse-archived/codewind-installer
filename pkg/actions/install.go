@@ -84,14 +84,14 @@ func DoRemoteInstall(c *cli.Context) {
 		session = strings.ToUpper(strconv.FormatInt(utils.CreateTimestamp(), 36))
 	}
 
-	if c.Int("wssize") < 0 || c.Int("wssize") > 999 {
-		logr.Error("shared-workspace size should be between 1 and 999 GB")
+	if c.Int("pvcsize") < 0 || c.Int("pvcsize") > 999 {
+		logr.Error("Codewind PVC size should be between 1 and 999 GB")
 		os.Exit(1)
 	}
 
-	sharedWorkspaceSize := c.Int("wssize")
-	if sharedWorkspaceSize < 1 {
-		sharedWorkspaceSize = 1
+	codewindPVCSize := c.Int("pvcsize")
+	if codewindPVCSize < 1 {
+		codewindPVCSize = 1
 	}
 
 	deployOptions := remote.DeployOptions{
@@ -106,7 +106,7 @@ func DoRemoteInstall(c *cli.Context) {
 		GateKeeperTLSSecure:   true,
 		KeycloakTLSSecure:     true,
 		CodewindSessionSecret: session,
-		SharedWorkspaceSize:   strconv.Itoa(sharedWorkspaceSize) + "Gi",
+		CodewindPVCSize:       strconv.Itoa(codewindPVCSize) + "Gi",
 	}
 
 	deploymentResult, remInstError := remote.DeployRemote(&deployOptions)

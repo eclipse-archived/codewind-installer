@@ -188,7 +188,7 @@ func Commands() {
 						cli.StringFlag{Name: "kdevpass,dp", Usage: "Keycloak developer username initial password", Required: false},
 						cli.StringFlag{Name: "krealm,r", Usage: "Keycloak realm to setup", Required: false},
 						cli.StringFlag{Name: "kclient,c", Usage: "Keycloak client to setup", Required: false},
-						cli.IntFlag{Name: "wssize,g", Usage: "Workspace size (integer between 1 and 999 Gigabytes)", Required: false, Value: 1},
+						cli.IntFlag{Name: "pvcsize,p", Usage: "Codewind PVC size (integer between 1 and 999 Gigabytes)", Required: false, Value: 1},
 					},
 					Action: func(c *cli.Context) error {
 						DoRemoteInstall(c)

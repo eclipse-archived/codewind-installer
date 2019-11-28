@@ -45,7 +45,7 @@ type DeployOptions struct {
 	GateKeeperTLSSecure   bool
 	CodewindSessionSecret string
 	ClientSecret          string
-	SharedWorkspaceSize   string
+	CodewindPVCSize       string
 }
 
 // DeploymentResult : Ingress root URLs

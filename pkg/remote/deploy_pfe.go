@@ -68,7 +68,7 @@ func DeployPFE(config *restclient.Config, clientset *kubernetes.Clientset, codew
 		logr.Infof("Setting storage class to %s\n", storageClass)
 	}
 
-	logr.Infof("Creating and setting Codewind PVC %v to %v ", codewindInstance.PVCName, deployOptions.SharedWorkspaceSize)
+	logr.Infof("Creating and setting Codewind PVC %v to %v ", codewindInstance.PVCName, deployOptions.CodewindPVCSize)
 	codewindWorkspacePVC := createCodewindPVC(codewindInstance, deployOptions, storageClass)
 	_, err = clientset.CoreV1().PersistentVolumeClaims(deployOptions.Namespace).Create(&codewindWorkspacePVC)
 	if err != nil {
@@ -217,7 +217,7 @@ func createCodewindPVC(codewind Codewind, deployOptions *DeployOptions, storageC
 			},
 			Resources: corev1.ResourceRequirements{
 				Requests: corev1.ResourceList{
-					corev1.ResourceStorage: resource.MustParse(deployOptions.SharedWorkspaceSize),
+					corev1.ResourceStorage: resource.MustParse(deployOptions.CodewindPVCSize),
 				},
 			},
 		},
