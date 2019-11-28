@@ -92,12 +92,12 @@ spec:
                         cd ../../
 
                         echo pwd is:
-                        echo ($pwd)
+                        echo $PWD
 
-                        echo DEFAULT_CODE_DIRECTORY is
+                        echo DEFAULT CODE DIRECTORY is:
                         echo $DEFAULT_CODE_DIRECTORY
 
-                        echo DEFAULT_WORKSPACE_DIR_FILE is
+                        echo DEFAULT WORKSPACE_DIR FILE is:
                         echo $DEFAULT_WORKSPACE_DIR_FILE
 
                     '''
