@@ -208,7 +208,7 @@ func createCodewindPVC(codewind Codewind, deployOptions *DeployOptions, storageC
 			Kind:       "PersistentVolumeClaim",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   PFEPrefix + "-pvc-" + codewind.WorkspaceID,
+			Name:   codewind.PVCName,
 			Labels: labels,
 		},
 		Spec: corev1.PersistentVolumeClaimSpec{
@@ -242,7 +242,7 @@ func setPFEVolumes(codewind Codewind) ([]corev1.Volume, []corev1.VolumeMount) {
 			Name: "shared-workspace",
 			VolumeSource: corev1.VolumeSource{
 				PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
-					ClaimName: PFEPrefix + "-pvc-" + codewind.WorkspaceID,
+					ClaimName: codewind.PVCName,
 				},
 			},
 		},
