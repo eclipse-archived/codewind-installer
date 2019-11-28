@@ -82,14 +82,13 @@ spec:
                         GOOS=windows go build -ldflags="-s -w" -o cwctl-win.exe
                         CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o cwctl-linux
                         chmod -v +x cwctl-*
-
+                        # move the built binaries to the top level direcotory
+                        mv cwctl-* ../../
+                        cd ../../
+                        
                         echo run single test before building binary
                         cd pkg/config
                         go test config_test.go config.go -v
-                        cd ../../
-                       
-                        # move the built binaries to the top level direcotory
-                        mv cwctl-* ../../
                         cd ../../
                     '''
                 }
