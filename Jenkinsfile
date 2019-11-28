@@ -91,7 +91,7 @@ spec:
             }
         }
 
-        stage('Test') {
+       stage('Test') {
             // This when clause disables Tagged build
             when {
                 beforeAgent true
