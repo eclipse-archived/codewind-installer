@@ -779,6 +779,9 @@ func Commands() {
 		case loglevel == "error":
 			logr.SetLevel(logr.ErrorLevel)
 			break
+		case loglevel == "warn":
+			logr.SetLevel(logr.WarnLevel)
+			break
 		default:
 			logr.SetLevel(logr.InfoLevel)
 		}
