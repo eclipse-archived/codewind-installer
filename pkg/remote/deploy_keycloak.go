@@ -281,8 +281,8 @@ func createKeycloakPVC(codewind Codewind, deployOptions *DeployOptions, storageC
 
 	pvc := corev1.PersistentVolumeClaim{
 		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
 			Kind:       "PersistentVolumeClaim",
-			APIVersion: "route.openshift.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   KeycloakPrefix + "-pvc-" + codewind.WorkspaceID,
