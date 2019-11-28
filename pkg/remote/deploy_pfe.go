@@ -68,7 +68,7 @@ func DeployPFE(config *restclient.Config, clientset *kubernetes.Clientset, codew
 		logr.Infof("Setting storage class to %s\n", storageClass)
 	}
 
-	logr.Infof("Creating Codewind PVC %v to %v ", codewindInstance.PVCName, deployOptions.SharedWorkspaceSize)
+	logr.Infof("Creating and setting Codewind PVC %v to %v ", codewindInstance.PVCName, deployOptions.SharedWorkspaceSize)
 	codewindWorkspacePVC := createCodewindPVC(codewindInstance, deployOptions, storageClass)
 	_, err = clientset.CoreV1().PersistentVolumeClaims(deployOptions.Namespace).Create(&codewindWorkspacePVC)
 	if err != nil {
@@ -198,7 +198,7 @@ func setPFEEnvVars(codewind Codewind, deployOptions *DeployOptions) []corev1.Env
 func createCodewindPVC(codewind Codewind, deployOptions *DeployOptions, storageClass string) corev1.PersistentVolumeClaim {
 
 	labels := map[string]string{
-		"app":               KeycloakPrefix,
+		"app":               PFEPrefix,
 		"codewindWorkspace": codewind.WorkspaceID,
 	}
 
