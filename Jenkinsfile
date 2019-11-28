@@ -85,11 +85,21 @@ spec:
                         # move the built binaries to the top level direcotory
                         mv cwctl-* ../../
                         cd ../../
-                        
+
                         echo run single test before building binary
                         cd pkg/config
                         go test config_test.go config.go -v
                         cd ../../
+
+                        echo pwd is:
+                        echo ($pwd)
+
+                        echo DEFAULT_CODE_DIRECTORY is
+                        echo $DEFAULT_CODE_DIRECTORY
+
+                        echo DEFAULT_WORKSPACE_DIR_FILE is
+                        echo $DEFAULT_WORKSPACE_DIR_FILE
+
                     '''
                 }
             }
