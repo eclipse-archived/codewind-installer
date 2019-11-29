@@ -12,7 +12,6 @@
 package remote
 
 import (
-	"github.com/eclipse/codewind-installer/pkg/appconstants"
 	log "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -73,10 +72,6 @@ func setPerformanceEnvVars(codewind Codewind) []corev1.EnvVar {
 		{
 			Name:  "CODEWIND_INGRESS",
 			Value: codewind.Ingress,
-		},
-		{
-			Name:  "CODWIND_VERSION",
-			Value: appconstants.VersionNum,
 		},
 	}
 }

@@ -14,7 +14,6 @@ package remote
 import (
 	"os"
 
-	"github.com/eclipse/codewind-installer/pkg/appconstants"
 	v1 "github.com/openshift/api/route/v1"
 	routev1 "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
 	logr "github.com/sirupsen/logrus"
@@ -290,10 +289,6 @@ func setGatekeeperEnvVars(codewind Codewind, deployOptions *DeployOptions) []cor
 			Name: "CLIENT_SECRET",
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{LocalObjectReference: corev1.LocalObjectReference{Name: "secret-codewind-client" + "-" + codewind.WorkspaceID}, Key: "client_secret"}},
-		},
-		{
-			Name:  "CODEWIND_VERSION",
-			Value: appconstants.VersionNum,
 		},
 		{
 			Name: "SESSION_SECRET",
