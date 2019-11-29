@@ -86,10 +86,6 @@ spec:
                         mv cwctl-* ../../
                         cd ../../
 
-                        echo run single test before building binary
-                        cd pkg/config
-                        go test config_test.go config.go -v
-                        cd ../../
 
                         echo pwd is:
                         echo $PWD
