@@ -261,3 +261,44 @@ func pemBlockForKey(privateKey interface{}) *pem.Block {
 		return nil
 	}
 }
+
+// WaitForPodReady : Wait for pod to enter the running phase
+func WaitForPodReady(clientset *kubernetes.Clientset, codewindInstance Codewind, labelSelector string, podName string) {
+
+	logr.Infof("Waiting for pod: %v", podName)
+
+	watcher, err := clientset.CoreV1().Pods(codewindInstance.Namespace).Watch(metav1.ListOptions{
+		LabelSelector: labelSelector,
+	})
+	if err != nil {
+		logr.Errorln("Unable to attach watcher")
+		os.Exit(1)
+	}
+	lastPhase := ""
+	lastReason := ""
+	changeEvent := watcher.ResultChan()
+	for {
+		select {
+		case event := <-changeEvent:
+			foundPod, err := event.Object.(*corev1.Pod)
+			if !err {
+				logr.Errorf("Expected a Pod but found: %T\n", event.Object)
+				os.Exit(1)
+			}
+			status := foundPod.Status
+			for _, condition := range foundPod.Status.Conditions {
+				currentReason := string(condition.Reason)
+				if lastPhase != string(status.Phase) || (lastReason != currentReason && currentReason != "") {
+					logr.Printf("%v, phase: %v %v \n", podName, status.Phase, currentReason)
+				}
+				lastPhase = string(status.Phase)
+				lastReason = currentReason
+				if status.Phase == corev1.PodRunning {
+					watcher.Stop()
+					return
+				}
+			}
+		}
+	}
+	watcher.Stop()
+}

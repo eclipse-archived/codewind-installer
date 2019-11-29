@@ -95,7 +95,7 @@ func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemIn
 		// insert the namespace
 		requestedNamespace, err := clientset.CoreV1().Namespaces().Create(&deploymentNamespace)
 		if err != nil || requestedNamespace == nil {
-			logr.Error("Unable to create %v namespace: %v", namespace, err)
+			logr.Errorf("Unable to create %v namespace: %v", namespace, err)
 			return nil, &RemInstError{errOpCreateNamespace, err, err.Error()}
 		}
 	}
@@ -182,6 +182,9 @@ func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemIn
 		os.Exit(1)
 	}
 
+	podSearch := "codewindWorkspace=" + codewindInstance.WorkspaceID + ",app=" + KeycloakPrefix
+	WaitForPodReady(clientset, codewindInstance, podSearch, KeycloakPrefix+"-"+codewindInstance.WorkspaceID)
+
 	err = SetupKeycloak(codewindInstance, remoteDeployOptions)
 	if err != nil {
 		logr.Errorln("Codewind Keycloak configuration failed, exiting...")
@@ -194,17 +197,26 @@ func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemIn
 		os.Exit(1)
 	}
 
+	podSearch = "codewindWorkspace=" + codewindInstance.WorkspaceID + ",app=" + PFEPrefix
+	WaitForPodReady(clientset, codewindInstance, podSearch, PFEPrefix+"-"+codewindInstance.WorkspaceID)
+
 	err = DeployPerformance(clientset, codewindInstance, remoteDeployOptions)
 	if err != nil {
 		logr.Errorln("Codewind deployment failed, exiting...")
 		os.Exit(1)
 	}
 
+	podSearch = "codewindWorkspace=" + codewindInstance.WorkspaceID + ",app=" + PerformancePrefix
+	WaitForPodReady(clientset, codewindInstance, podSearch, PerformancePrefix+"-"+codewindInstance.WorkspaceID)
+
 	err = DeployGatekeeper(config, clientset, codewindInstance, remoteDeployOptions)
 	if err != nil {
 		logr.Errorln("Codewind Gatekeeper deployment failed, exiting...")
 		os.Exit(1)
 	}
+
+	podSearch = "codewindWorkspace=" + codewindInstance.WorkspaceID + ",app=" + GatekeeperPrefix
+	WaitForPodReady(clientset, codewindInstance, podSearch, GatekeeperPrefix+"-"+codewindInstance.WorkspaceID)
 
 	gatekeeperURL := GatekeeperPrefix + codewindInstance.Ingress
 	keycloakURL := KeycloakPrefix + codewindInstance.Ingress

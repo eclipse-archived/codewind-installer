@@ -36,15 +36,7 @@ func DeployKeycloak(config *restclient.Config, clientset *kubernetes.Clientset, 
 	serverKey, serverCert, err := createCertificate(KeycloakPrefix+codewindInstance.Ingress, "Codewind Keycloak")
 	keycloakTLSSecret := createKeycloakTLSSecret(codewindInstance, serverKey, serverCert)
 
-	// Determine if we're running on OpenShift on IKS (and thus need to use the ibm-file-bronze storage class)
-	storageClass := ""
-	sc, err := clientset.StorageV1().StorageClasses().Get(ROKSStorageClass, metav1.GetOptions{})
-	if err == nil && sc != nil {
-		storageClass = sc.Name
-		logr.Infof("Setting storage class to %s\n", storageClass)
-	}
-
-	keycloakPVC := createKeycloakPVC(codewindInstance, deployOptions, storageClass)
+	keycloakPVC := createKeycloakPVC(codewindInstance, deployOptions, "")
 
 	logr.Infoln("Creating Codewind Keycloak PVC")
 	_, err = clientset.CoreV1().PersistentVolumeClaims(deployOptions.Namespace).Create(&keycloakPVC)
