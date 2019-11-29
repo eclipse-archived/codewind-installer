@@ -129,11 +129,11 @@ func CreateCodewindRoles(deployOptions *DeployOptions) rbacv1.ClusterRole {
 }
 
 //CreateCodewindRoleBindings : create Codewind role bindings in the deployment namespace
-func CreateCodewindRoleBindings(codewindInstance Codewind, deployOptions *DeployOptions, codewindRoleBindingName string) rbacv1.ClusterRoleBinding {
+func CreateCodewindRoleBindings(codewindInstance Codewind, deployOptions *DeployOptions, codewindRoleBindingName string) rbacv1.RoleBinding {
 	labels := map[string]string{
 		"codewindWorkspace": codewindInstance.WorkspaceID,
 	}
-	return rbacv1.ClusterRoleBinding{
+	return rbacv1.RoleBinding{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "rbac.authorization.k8s.io/v1beta1",
 			Kind:       "RoleBinding",

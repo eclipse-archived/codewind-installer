@@ -48,12 +48,12 @@ func DeployPFE(config *restclient.Config, clientset *kubernetes.Clientset, codew
 	}
 
 	logr.Infof("Checking if '%v' role bindings exist\n", codewindRoleBindingName)
-	rolebindings, err := clientset.RbacV1().ClusterRoleBindings().Get(codewindRoleBindingName, metav1.GetOptions{})
+	rolebindings, err := clientset.RbacV1().RoleBindings(codewindInstance.Namespace).Get(codewindRoleBindingName, metav1.GetOptions{})
 	if rolebindings != nil && err == nil {
-		logr.Warnf("Cluster role binding '%v' already exist.\n", codewindRoleBindingName)
+		logr.Warnf("Role binding '%v' already exist.\n", codewindRoleBindingName)
 	} else {
-		logr.Infof("Adding '%v' cluster role binding\n", codewindRoleBindingName)
-		_, err = clientset.RbacV1().ClusterRoleBindings().Create(&codewindRoleBindings)
+		logr.Infof("Adding '%v' role binding\n", codewindRoleBindingName)
+		_, err = clientset.RbacV1().RoleBindings(codewindInstance.Namespace).Create(&codewindRoleBindings)
 		if err != nil {
 			logr.Errorf("Unable to add '%v' access roles: %v\n", codewindRoleBindingName, err)
 			return err
