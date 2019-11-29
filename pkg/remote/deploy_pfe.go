@@ -161,7 +161,7 @@ func setPFEEnvVars(codewind Codewind, deployOptions *DeployOptions) []corev1.Env
 		},
 		{
 			Name:  "INGRESS_PREFIX",
-			Value: codewind.RequestedIngress, // provides access to project containers
+			Value: codewind.Namespace + "." + codewind.RequestedIngress, // provides access to project containers
 		},
 		{
 			Name:  "ON_OPENSHIFT",
