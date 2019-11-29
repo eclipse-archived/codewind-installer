@@ -101,7 +101,20 @@ spec:
             }
 
             steps {
-                echo 'Testing to be defined.'
+                echo 'Starting tests'
+
+                container('go') {
+                    sh '''
+                        export GOPATH=/go:/home/jenkins/agent
+                        export GOCACHE="off"
+
+                        cd ../../$CODE_DIRECTORY_FOR_GO
+                        cd pkg/config
+                        go test -v
+                        cd ../../
+                    '''
+                }
+                echo 'End of test stage'
             }
         }
 
