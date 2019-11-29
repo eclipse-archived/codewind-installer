@@ -84,6 +84,16 @@ func DoRemoteInstall(c *cli.Context) {
 		session = strings.ToUpper(strconv.FormatInt(utils.CreateTimestamp(), 36))
 	}
 
+	if c.Int("pvcsize") < 0 || c.Int("pvcsize") > 999 {
+		logr.Error("Codewind PVC size should be between 1 and 999 GB")
+		os.Exit(1)
+	}
+
+	codewindPVCSize := c.Int("pvcsize")
+	if codewindPVCSize < 1 {
+		codewindPVCSize = 1
+	}
+
 	deployOptions := remote.DeployOptions{
 		Namespace:             c.String("namespace"),
 		IngressDomain:         c.String("ingress"),
@@ -96,6 +106,7 @@ func DoRemoteInstall(c *cli.Context) {
 		GateKeeperTLSSecure:   true,
 		KeycloakTLSSecure:     true,
 		CodewindSessionSecret: session,
+		CodewindPVCSize:       strconv.Itoa(codewindPVCSize) + "Gi",
 	}
 
 	deploymentResult, remInstError := remote.DeployRemote(&deployOptions)

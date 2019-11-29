@@ -45,6 +45,7 @@ type DeployOptions struct {
 	GateKeeperTLSSecure   bool
 	CodewindSessionSecret string
 	ClientSecret          string
+	CodewindPVCSize       string
 }
 
 // DeploymentResult : Ingress root URLs
@@ -140,7 +141,7 @@ func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemIn
 	ownerReferenceName = "codewind" + workspaceID
 	ownerReferenceUID = uuid.NewUUID()
 
-	workspacePVC := "codewind-" + workspaceID
+	workspacePVC := PFEPrefix + "-pvc-" + workspaceID
 	dockerPullSecret := "codewind-" + workspaceID + "-docker-registries"
 	logr.Infof("Docker registry pull secret name: '%v'", dockerPullSecret)
 

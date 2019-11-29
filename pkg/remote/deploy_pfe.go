@@ -18,6 +18,7 @@ import (
 	logr "github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
@@ -58,6 +59,22 @@ func DeployPFE(config *restclient.Config, clientset *kubernetes.Clientset, codew
 			logr.Errorf("Unable to add '%v' access roles: %v\n", codewindRoleBindingName, err)
 			return err
 		}
+	}
+
+	// Determine if we're running on OpenShift on IKS (and thus need to use the ibm-file-bronze storage class)
+	storageClass := ""
+	sc, err := clientset.StorageV1().StorageClasses().Get(ROKSStorageClass, metav1.GetOptions{})
+	if err == nil && sc != nil {
+		storageClass = sc.Name
+		logr.Infof("Setting storage class to %s\n", storageClass)
+	}
+
+	logr.Infof("Creating and setting Codewind PVC %v to %v ", codewindInstance.PVCName, deployOptions.CodewindPVCSize)
+	codewindWorkspacePVC := createCodewindPVC(codewindInstance, deployOptions, storageClass)
+	_, err = clientset.CoreV1().PersistentVolumeClaims(deployOptions.Namespace).Create(&codewindWorkspacePVC)
+	if err != nil {
+		logr.Errorf("Error: Unable to create Codewind PVC: %v\n", err)
+		return err
 	}
 
 	logr.Infoln("Deploying Codewind Service")
@@ -183,21 +200,57 @@ func setPFEEnvVars(codewind Codewind, deployOptions *DeployOptions) []corev1.Env
 	}
 }
 
-// setPFEVolumes returns the 3 volumes & corresponding volume mounts required by the PFE container:
+func createCodewindPVC(codewind Codewind, deployOptions *DeployOptions, storageClass string) corev1.PersistentVolumeClaim {
+
+	labels := map[string]string{
+		"app":               PFEPrefix,
+		"codewindWorkspace": codewind.WorkspaceID,
+	}
+
+	pvc := corev1.PersistentVolumeClaim{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "v1",
+			Kind:       "PersistentVolumeClaim",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   codewind.PVCName,
+			Labels: labels,
+		},
+		Spec: corev1.PersistentVolumeClaimSpec{
+			AccessModes: []corev1.PersistentVolumeAccessMode{
+				"ReadWriteMany",
+			},
+			Resources: corev1.ResourceRequirements{
+				Requests: corev1.ResourceList{
+					corev1.ResourceStorage: resource.MustParse(deployOptions.CodewindPVCSize),
+				},
+			},
+		},
+	}
+
+	// If a storage class was passed in, set it in the PVC
+	if storageClass != "" {
+		pvc.Spec.StorageClassName = &storageClass
+	}
+
+	return pvc
+}
+
+// setPFEVolumes returns the 2 volumes & corresponding volume mounts required by the PFE container:
 // project workspace, buildah volume, and the docker registry secret (the latter of which is optional)
 func setPFEVolumes(codewind Codewind) ([]corev1.Volume, []corev1.VolumeMount) {
 	secretMode := int32(511)
 	isOptional := true
 
 	volumes := []corev1.Volume{
-		// {
-		// 	Name: "shared-workspace",
-		// 	VolumeSource: corev1.VolumeSource{
-		// 		PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
-		// 			ClaimName: codewind.PVCName,
-		// 		},
-		// 	},
-		// },
+		{
+			Name: "shared-workspace",
+			VolumeSource: corev1.VolumeSource{
+				PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+					ClaimName: codewind.PVCName,
+				},
+			},
+		},
 		{
 			Name: "buildah-volume",
 		},
@@ -214,11 +267,11 @@ func setPFEVolumes(codewind Codewind) ([]corev1.Volume, []corev1.VolumeMount) {
 	}
 
 	volumeMounts := []corev1.VolumeMount{
-		// {
-		// 	Name:      "shared-workspace",
-		// 	MountPath: "/codewind-workspace",
-		// 	SubPath:   codewind.WorkspaceID + "/projects",
-		// },
+		{
+			Name:      "shared-workspace",
+			MountPath: "/codewind-workspace",
+			SubPath:   codewind.WorkspaceID + "/projects",
+		},
 		{
 			Name:      "buildah-volume",
 			MountPath: "/var/lib/containers",
