@@ -121,6 +121,8 @@ spec:
                         cd ../../$CODE_DIRECTORY_FOR_GO
                         cd pkg/config
                         go test -v
+                        cd ../connections/
+                        go test -v
                         cd ../../
                     '''
                 }
