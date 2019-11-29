@@ -157,7 +157,7 @@ func setPFEEnvVars(codewind Codewind, deployOptions *DeployOptions) []corev1.Env
 		},
 		{
 			Name:  "CHE_INGRESS_HOST",
-			Value: codewind.Ingress,
+			Value: GatekeeperPrefix + codewind.Ingress,
 		},
 		{
 			Name:  "INGRESS_PREFIX",
