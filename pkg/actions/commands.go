@@ -756,6 +756,18 @@ func Commands() {
 				return nil
 			},
 		},
+		{
+			Name:    "version",
+			Aliases: []string{"v"},
+			Usage:   "Get versions of remotely deployed Codewind containers",
+			Flags: []cli.Flag{
+				cli.StringFlag{Name: "conid", Usage: "The connection ID", Required: true},
+			},
+			Action: func(c *cli.Context) error {
+				GetVersions(c)
+				return nil
+			},
+		},
 	}
 
 	app.Before = func(c *cli.Context) error {
