@@ -17,13 +17,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// CreateCodewindServiceAcct : Create service account
-func CreateCodewindServiceAcct(codewind Codewind, deployOptions *DeployOptions) coreV1.ServiceAccount {
-	logr.Infof("Creating service account definition '%v'", codewind.ServiceAccountName)
+// CreateKeycloakServiceAcct : Create service account
+func CreateKeycloakServiceAcct(codewind Codewind, deployOptions *DeployOptions) coreV1.ServiceAccount {
+	logr.Infof("Creating service account definition '%v'", codewind.ServiceAccountKC)
 
 	labels := map[string]string{
 		"codewindWorkspace": codewind.WorkspaceID,
-		"app":               codewind.ServiceAccountName,
+		"app":               codewind.ServiceAccountKC,
 	}
 	svc := coreV1.ServiceAccount{
 		TypeMeta: metav1.TypeMeta{
@@ -31,7 +31,7 @@ func CreateCodewindServiceAcct(codewind Codewind, deployOptions *DeployOptions) 
 			Kind:       "ServiceAccount",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   codewind.ServiceAccountName,
+			Name:   codewind.ServiceAccountKC,
 			Labels: labels,
 		},
 		Secrets: nil,

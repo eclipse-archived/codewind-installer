@@ -13,9 +13,12 @@ package actions
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
+	"github.com/eclipse/codewind-installer/pkg/remote"
 	"github.com/eclipse/codewind-installer/pkg/utils"
+	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -56,4 +59,45 @@ func RemoveCommand(c *cli.Context) {
 			utils.RemoveNetwork(network)
 		}
 	}
+}
+
+// DoRemoteRemove : Delete a remote Codewind deployment
+func DoRemoteRemove(c *cli.Context) {
+	printAsJSON := c.GlobalBool("json")
+	removeOptions := remote.RemoveDeploymentOptions{
+		Namespace:   c.String("namespace"),
+		WorkspaceID: c.String("workspace"),
+	}
+
+	_, remInstError := remote.RemoveRemote(&removeOptions)
+	if remInstError != nil {
+		if printAsJSON {
+			fmt.Println(remInstError.Error())
+		} else {
+			logr.Errorf("Error: %v - %v\n", remInstError.Op, remInstError.Desc)
+		}
+		os.Exit(1)
+	}
+
+	os.Exit(0)
+}
+
+// DoRemoteKeycloakRemove : Delete a remote Keycloak deployment
+func DoRemoteKeycloakRemove(c *cli.Context) {
+	printAsJSON := c.GlobalBool("json")
+	removeOptions := remote.RemoveDeploymentOptions{
+		Namespace:   c.String("namespace"),
+		WorkspaceID: c.String("workspace"),
+	}
+
+	_, remInstError := remote.RemoveRemoteKeycloak(&removeOptions)
+	if remInstError != nil {
+		if printAsJSON {
+			fmt.Println(remInstError.Error())
+		} else {
+			logr.Errorf("Error: %v - %v\n", remInstError.Op, remInstError.Desc)
+		}
+		os.Exit(1)
+	}
+	os.Exit(0)
 }

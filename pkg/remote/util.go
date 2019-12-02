@@ -20,6 +20,7 @@ import (
 	"encoding/pem"
 	"math/big"
 	"os"
+	"runtime"
 	"time"
 
 	logr "github.com/sirupsen/logrus"
@@ -64,9 +65,21 @@ func GetImages() (string, string, string, string) {
 	return pfeImage + ":" + pfeTag, performanceImage + ":" + performanceTag, keycloakImage + ":" + keycloakTag, gatekeeperImage + ":" + gatekeeperTag
 }
 
+// Get home directory
+func getHomeDir() string {
+	homeDir := ""
+	const GOOS string = runtime.GOOS
+	if GOOS == "windows" {
+		homeDir = os.Getenv("USERPROFILE")
+	} else {
+		homeDir = os.Getenv("HOME")
+	}
+	return homeDir
+}
+
 // generateDeployment returns a Kubernetes deployment object with the given name for the given image.
 // Additionally, volume/volumemounts and env vars can be specified.
-func generateDeployment(codewind Codewind, name string, image string, port int, volumes []corev1.Volume, volumeMounts []corev1.VolumeMount, envVars []corev1.EnvVar, labels map[string]string) appsv1.Deployment {
+func generateDeployment(codewind Codewind, name string, image string, port int, volumes []corev1.Volume, volumeMounts []corev1.VolumeMount, envVars []corev1.EnvVar, labels map[string]string, serviceAccountName string) appsv1.Deployment {
 
 	//blockOwnerDeletion := true
 	//controller := true
@@ -101,7 +114,7 @@ func generateDeployment(codewind Codewind, name string, image string, port int, 
 					Labels: labels,
 				},
 				Spec: corev1.PodSpec{
-					ServiceAccountName: codewind.ServiceAccountName,
+					ServiceAccountName: serviceAccountName,
 					Volumes:            volumes,
 					Containers: []corev1.Container{
 						{
@@ -276,5 +289,4 @@ func WaitForPodReady(clientset *kubernetes.Clientset, codewindInstance Codewind,
 			}
 		}
 	}
-	watcher.Stop()
 }

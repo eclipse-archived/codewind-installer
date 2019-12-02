@@ -271,6 +271,34 @@ func Commands() {
 				RemoveCommand(c)
 				return nil
 			},
+			Subcommands: []cli.Command{
+				{
+					Name:    "remote",
+					Aliases: []string{"r"},
+					Usage:   "Removes and deletes a Codewind remote deployment from Kubernetes",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "namespace,n", Usage: "Kubernetes namespace", Required: true},
+						cli.StringFlag{Name: "workspace,w", Usage: "Codewind workspace ID", Required: true},
+					},
+					Action: func(c *cli.Context) error {
+						DoRemoteRemove(c)
+						return nil
+					},
+				},
+				{
+					Name:    "keycloak",
+					Aliases: []string{"k"},
+					Usage:   "Removes and deletes a Keycloak deployment from Kubernetes",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "namespace,n", Usage: "Kubernetes namespace", Required: true},
+						cli.StringFlag{Name: "workspace,w", Usage: "Keycloak workspace ID", Required: true},
+					},
+					Action: func(c *cli.Context) error {
+						DoRemoteKeycloakRemove(c)
+						return nil
+					},
+				},
+			},
 		},
 
 		{
