@@ -215,8 +215,8 @@ Subcommands:</br>
 > --krealm,-r value             Keycloak realm to setup
 > --kclient,-c value            Keycloak client to setup
 > --pvcsize,-p value            Codewind PVC size (integer between 1 and 999 Gigabytes)
-> --keycloakurl,--kurl value     Don't deploy a new Keycloak pod, use an existing one at this URL
-> --keycloakonly,-ko            Install a deployment of Keycloak only
+> --kurl value                  Don't deploy a new Keycloak pod, use an existing one at this URL
+> --konly                       Install a deployment of Keycloak only
 
 ### start
 
