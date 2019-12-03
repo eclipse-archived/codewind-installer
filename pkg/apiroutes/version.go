@@ -31,9 +31,10 @@ type (
 		PFEVersion         string
 	}
 
-	// CodewindVersion : The version of the Codewind container that is running
-	CodewindVersion struct {
-		Version string `json:"codewind_version"`
+	// EnvResponse : The response from the remote environment API
+	EnvResponse struct {
+		Version        string `json:"codewind_version"`
+		ImageBuildTime string `json:"image_build_time"`
 	}
 )
 
@@ -70,7 +71,7 @@ func GetContainerVersions(conID string, httpClient utils.HTTPClient) (ContainerV
 
 // GetPFEVersionFromConnection : Get the version of the PFE container, deployed to the connection with the given ID
 func GetPFEVersionFromConnection(connection *connections.Connection, HTTPClient utils.HTTPClient) (string, error) {
-	req, err := http.NewRequest("GET", connection.URL+"/api/v1/environment", nil)
+	req, err := http.NewRequest("GET", connection.URL+"/api/v1/environmen", nil)
 	if err != nil {
 		return "", err
 	}
@@ -126,11 +127,16 @@ func getVersionFromEnvAPI(req *http.Request, connection *connections.Connection,
 		return "", err
 	}
 
-	var codewindVersion CodewindVersion
-	err = json.Unmarshal(byteArray, &codewindVersion)
+	var env EnvResponse
+	err = json.Unmarshal(byteArray, &env)
 	if err != nil {
 		return "", err
 	}
+	codewindVersion := env.Version
 
-	return codewindVersion.Version, nil
+	if env.ImageBuildTime != "nil" {
+		codewindVersion = codewindVersion + "-" + env.ImageBuildTime
+	}
+
+	return codewindVersion, nil
 }
