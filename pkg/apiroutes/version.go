@@ -37,7 +37,7 @@ type (
 	}
 )
 
-// GetContainerVersions  :  Gets the versions of each Codewind container, for a given connection ID
+// GetContainerVersions : Get the versions of each Codewind container, for a given connection ID
 func GetContainerVersions(conID string, httpClient utils.HTTPClient) (ContainerVersions, error) {
 	conInfo, conInfoErr := connections.GetConnectionByID(conID)
 	if conInfoErr != nil {
@@ -68,9 +68,9 @@ func GetContainerVersions(conID string, httpClient utils.HTTPClient) (ContainerV
 	return containerVersions, nil
 }
 
-// GetPFEVersionFromConnection : Gets the version of the PFE container, deployed to the connection with the given ID
+// GetPFEVersionFromConnection : Get the version of the PFE container, deployed to the connection with the given ID
 func GetPFEVersionFromConnection(connection *connections.Connection, HTTPClient utils.HTTPClient) (string, error) {
-	req, err := http.NewRequest("GET", connection.URL+"/api/v1/environmen", nil)
+	req, err := http.NewRequest("GET", connection.URL+"/api/v1/environment", nil)
 	if err != nil {
 		return "", err
 	}
@@ -82,7 +82,7 @@ func GetPFEVersionFromConnection(connection *connections.Connection, HTTPClient 
 	return version, err
 }
 
-// GetGatekeeperVersionFromConnection : Gets the version of the Gatekeeper container, deployed to the connection with the given ID
+// GetGatekeeperVersionFromConnection : Get the version of the Gatekeeper container, deployed to the connection with the given ID
 func GetGatekeeperVersionFromConnection(connection *connections.Connection, HTTPClient utils.HTTPClient) (string, error) {
 	req, err := http.NewRequest("GET", connection.URL+"/api/v1/gatekeeper/environment", nil)
 	if err != nil {
@@ -96,7 +96,7 @@ func GetGatekeeperVersionFromConnection(connection *connections.Connection, HTTP
 	return version, err
 }
 
-// GetPerformanceVersionFromConnection : Gets the version of the Performance container, deployed to the connection with the given ID
+// GetPerformanceVersionFromConnection : Get the version of the Performance container, deployed to the connection with the given ID
 func GetPerformanceVersionFromConnection(connection *connections.Connection, HTTPClient utils.HTTPClient) (string, error) {
 	req, err := http.NewRequest("GET", connection.URL+"/performance/api/v1/environment", nil)
 	if err != nil {
