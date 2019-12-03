@@ -142,8 +142,6 @@ func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemIn
 	ownerReferenceUID = uuid.NewUUID()
 
 	workspacePVC := PFEPrefix + "-pvc-" + workspaceID
-	dockerPullSecret := "codewind-" + workspaceID + "-docker-registries"
-	logr.Infof("Docker registry pull secret name: '%v'", dockerPullSecret)
 
 	// Create the Codewind deployment object
 	codewindInstance := Codewind{
@@ -159,7 +157,6 @@ func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemIn
 		WorkspaceID:        workspaceID,
 		PVCName:            workspacePVC,
 		ServiceAccountName: "codewind-" + workspaceID, //  codewind-k39vwfk0
-		PullSecret:         dockerPullSecret,
 		OwnerReferenceName: ownerReferenceName,
 		OwnerReferenceUID:  ownerReferenceUID,
 		Privileged:         true,

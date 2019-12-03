@@ -237,10 +237,8 @@ func createCodewindPVC(codewind Codewind, deployOptions *DeployOptions, storageC
 }
 
 // setPFEVolumes returns the 2 volumes & corresponding volume mounts required by the PFE container:
-// project workspace, buildah volume, and the docker registry secret (the latter of which is optional)
+// project workspace, buildah volume
 func setPFEVolumes(codewind Codewind) ([]corev1.Volume, []corev1.VolumeMount) {
-	secretMode := int32(511)
-	isOptional := true
 
 	volumes := []corev1.Volume{
 		{
@@ -254,16 +252,6 @@ func setPFEVolumes(codewind Codewind) ([]corev1.Volume, []corev1.VolumeMount) {
 		{
 			Name: "buildah-volume",
 		},
-		{
-			Name: "registry-secret",
-			VolumeSource: corev1.VolumeSource{
-				Secret: &corev1.SecretVolumeSource{
-					DefaultMode: &secretMode,
-					SecretName:  codewind.PullSecret,
-					Optional:    &isOptional,
-				},
-			},
-		},
 	}
 
 	volumeMounts := []corev1.VolumeMount{
@@ -275,10 +263,6 @@ func setPFEVolumes(codewind Codewind) ([]corev1.Volume, []corev1.VolumeMount) {
 		{
 			Name:      "buildah-volume",
 			MountPath: "/var/lib/containers",
-		},
-		{
-			Name:      "registry-secret",
-			MountPath: "/tmp/secret",
 		},
 	}
 

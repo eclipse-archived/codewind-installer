@@ -27,7 +27,6 @@ type Codewind struct {
 	WorkspaceID        string
 	PVCName            string
 	ServiceAccountName string
-	PullSecret         string
 	OwnerReferenceName string
 	OwnerReferenceUID  types.UID
 	Privileged         bool
