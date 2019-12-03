@@ -15,7 +15,6 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 
@@ -60,14 +59,7 @@ type DeploymentResult struct {
 // DeployRemote : InstallRemote
 func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemInstError) {
 
-	homeDir := ""
-	const GOOS string = runtime.GOOS
-	if GOOS == "windows" {
-		homeDir = os.Getenv("USERPROFILE")
-	} else {
-		homeDir = os.Getenv("HOME")
-	}
-	kubeconfig := filepath.Join(homeDir, ".kube", "config")
+	kubeconfig := filepath.Join(os.Getenv("HOME"), ".kube", "config")
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		logr.Infof("Unable to retrieve Kubernetes Config %v\n", err)
