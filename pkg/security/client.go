@@ -28,9 +28,11 @@ type RegisteredClients struct {
 
 // RegisteredClient : Registered client
 type RegisteredClient struct {
-	ID       string `json:"id"`
-	ClientID string `json:"clientId"`
-	Name     string `json:"name"`
+	ID           string   `json:"id"`
+	ClientID     string   `json:"clientId"`
+	Name         string   `json:"name"`
+	RedirectUris []string `json:"redirectUris"`
+	WebOrigins   []string `json:"webOrigins"`
 }
 
 // RegisteredClientSecret : Client secret
@@ -206,4 +208,48 @@ func SecClientGetSecret(c *cli.Context) (*RegisteredClientSecret, *SecError) {
 	}
 
 	return &registeredClientSecret, nil
+}
+
+// SecClientAppendURL : Append an additional url to the whitelist
+func SecClientAppendURL(c *cli.Context, gatekeeperURL string) *SecError {
+
+	hostname := strings.TrimSpace(strings.ToLower(c.String("host")))
+	realm := strings.TrimSpace(c.String("realm"))
+	accesstoken := strings.TrimSpace(c.String("accesstoken"))
+
+	registeredClient, secErr := SecClientGet(c)
+	if secErr != nil {
+		return secErr
+	}
+
+	redirectURIs := registeredClient.RedirectUris
+	webOrigins := registeredClient.WebOrigins
+
+	redirectURIs = append(redirectURIs, (gatekeeperURL + "/*"))
+	webOrigins = append(webOrigins, gatekeeperURL)
+
+	registeredClient.RedirectUris = redirectURIs
+	registeredClient.WebOrigins = webOrigins
+
+	// save the updated client
+	jsonClient, err := json.Marshal(registeredClient)
+	payload := strings.NewReader(string(jsonClient))
+	url := hostname + "/auth/admin/realms/" + realm + "/clients/" + registeredClient.ID
+	req, err := http.NewRequest("PUT", url, payload)
+
+	if err != nil {
+		return &SecError{errOpConnection, err, err.Error()}
+	}
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Cache-Control", "no-cache")
+	req.Header.Add("cache-control", "no-cache")
+	req.Header.Add("Authorization", "Bearer "+accesstoken)
+
+	// send request
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return &SecError{errOpConnection, err, err.Error()}
+	}
+	defer res.Body.Close()
+	return nil
 }

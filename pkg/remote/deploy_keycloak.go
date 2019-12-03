@@ -30,13 +30,12 @@ import (
 // DeployKeycloak : Deploy Keycloak instance
 func DeployKeycloak(config *restclient.Config, clientset *kubernetes.Clientset, codewindInstance Codewind, deployOptions *DeployOptions, onOpenShift bool) error {
 	// Deploy Keycloak
-	keycloakSecrets := createKeycloakSecrets(codewindInstance, deployOptions)
-	keycloakService := createKeycloakService(codewindInstance)
-	keycloakDeploy := createKeycloakDeploy(codewindInstance)
-	serverKey, serverCert, err := createCertificate(KeycloakPrefix+codewindInstance.Ingress, "Codewind Keycloak")
-	keycloakTLSSecret := createKeycloakTLSSecret(codewindInstance, serverKey, serverCert)
-
-	keycloakPVC := createKeycloakPVC(codewindInstance, deployOptions, "")
+	keycloakSecrets := generateKeycloakSecrets(codewindInstance, deployOptions)
+	keycloakService := generateKeycloakService(codewindInstance)
+	keycloakDeploy := generateKeycloakDeploy(codewindInstance)
+	serverKey, serverCert, err := generateCertificate(KeycloakPrefix+codewindInstance.Ingress, "Codewind Keycloak")
+	keycloakTLSSecret := generateKeycloakTLSSecret(codewindInstance, serverKey, serverCert)
+	keycloakPVC := generateKeycloakPVC(codewindInstance, deployOptions, "")
 
 	logr.Infoln("Creating Codewind Keycloak PVC")
 	_, err = clientset.CoreV1().PersistentVolumeClaims(deployOptions.Namespace).Create(&keycloakPVC)
@@ -72,7 +71,7 @@ func DeployKeycloak(config *restclient.Config, clientset *kubernetes.Clientset, 
 	// Expose Codewind over an ingress or route
 	if onOpenShift {
 		// Deploy a route on OpenShift
-		route := createKeycloakRoute(codewindInstance)
+		route := generateKeycloakRoute(codewindInstance)
 		routev1client, err := routev1.NewForConfig(config)
 		if err != nil {
 			logr.Printf("Error retrieving route client for OpenShift: %v\n", err)
@@ -86,7 +85,7 @@ func DeployKeycloak(config *restclient.Config, clientset *kubernetes.Clientset, 
 
 	} else {
 		logr.Infof("Deploying Codewind Keycloak Ingress")
-		ingress := createIngressKeycloak(codewindInstance)
+		ingress := generateIngressKeycloak(codewindInstance)
 		_, err = clientset.ExtensionsV1beta1().Ingresses(deployOptions.Namespace).Create(&ingress)
 		if err != nil {
 			logr.Printf("Error: Unable to create ingress for Codewind Keycloak: %v\n", err)
@@ -96,7 +95,7 @@ func DeployKeycloak(config *restclient.Config, clientset *kubernetes.Clientset, 
 	return nil
 }
 
-func createKeycloakTLSSecret(codewind Codewind, pemPrivateKey string, pemPublicCert string) corev1.Secret {
+func generateKeycloakTLSSecret(codewind Codewind, pemPrivateKey string, pemPublicCert string) corev1.Secret {
 	secrets := map[string]string{
 		"tls.crt": pemPublicCert,
 		"tls.key": pemPrivateKey,
@@ -109,7 +108,7 @@ func createKeycloakTLSSecret(codewind Codewind, pemPrivateKey string, pemPublicC
 	return generateSecrets(codewind, name, secrets, labels)
 }
 
-func createKeycloakSecrets(codewind Codewind, deployOptions *DeployOptions) corev1.Secret {
+func generateKeycloakSecrets(codewind Codewind, deployOptions *DeployOptions) corev1.Secret {
 	secrets := map[string]string{
 		"keycloak-admin-user":     deployOptions.KeycloakUser,
 		"keycloak-admin-password": deployOptions.KeycloakPassword,
@@ -122,7 +121,7 @@ func createKeycloakSecrets(codewind Codewind, deployOptions *DeployOptions) core
 	return generateSecrets(codewind, name, secrets, labels)
 }
 
-func createKeycloakDeploy(codewind Codewind) appsv1.Deployment {
+func generateKeycloakDeploy(codewind Codewind) appsv1.Deployment {
 	labels := map[string]string{
 		"app":               KeycloakPrefix,
 		"codewindWorkspace": codewind.WorkspaceID,
@@ -133,7 +132,7 @@ func createKeycloakDeploy(codewind Codewind) appsv1.Deployment {
 	return generateDeployment(codewind, KeycloakPrefix, codewind.KeycloakImage, KeycloakContainerPort, volumes, volumeMounts, envVars, labels)
 }
 
-func createKeycloakService(codewind Codewind) corev1.Service {
+func generateKeycloakService(codewind Codewind) corev1.Service {
 	labels := map[string]string{
 		"app":               KeycloakPrefix,
 		"codewindWorkspace": codewind.WorkspaceID,
@@ -141,8 +140,8 @@ func createKeycloakService(codewind Codewind) corev1.Service {
 	return generateService(codewind, KeycloakPrefix, KeycloakContainerPort, labels)
 }
 
-// CreateIngressKeycloak returns a Kubernetes ingress for the Codewind Keycloak service
-func createIngressKeycloak(codewind Codewind) extensionsv1.Ingress {
+// generateIngressKeycloak returns a Kubernetes ingress for the Codewind Keycloak service
+func generateIngressKeycloak(codewind Codewind) extensionsv1.Ingress {
 	labels := map[string]string{
 		"app":               KeycloakPrefix,
 		"codewindWorkspace": codewind.WorkspaceID,
@@ -197,8 +196,8 @@ func createIngressKeycloak(codewind Codewind) extensionsv1.Ingress {
 	}
 }
 
-// createKeycloakRoute returns an OpenShift route for the Keycloak service
-func createKeycloakRoute(codewind Codewind) v1.Route {
+// generateKeycloakRoute returns an OpenShift route for the Keycloak service
+func generateKeycloakRoute(codewind Codewind) v1.Route {
 	labels := map[string]string{
 		"app":               KeycloakPrefix,
 		"codewindWorkspace": codewind.WorkspaceID,
@@ -264,7 +263,7 @@ func setKeycloakEnvVars(codewind Codewind) []corev1.EnvVar {
 	}
 }
 
-func createKeycloakPVC(codewind Codewind, deployOptions *DeployOptions, storageClass string) corev1.PersistentVolumeClaim {
+func generateKeycloakPVC(codewind Codewind, deployOptions *DeployOptions, storageClass string) corev1.PersistentVolumeClaim {
 
 	labels := map[string]string{
 		"app":               KeycloakPrefix,

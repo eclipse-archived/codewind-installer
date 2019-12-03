@@ -201,6 +201,23 @@ Subcommands:</br>
 `--tag/-t <value>` - Dockerhub image tag (default: "latest")</br>
 `--json/-j` - Specify terminal output
 
+Subcommands:</br>
+
+`remote` - Install a remote deployment of Codewind
+> **Flags:**
+> --namespace,-n value          Kubernetes namespace to install into
+> --session,-ses value          Codewind session secret to encrypt session store
+> --ingress,-i value            Ingress Domain eg: 10.22.33.44.nip.io
+> --kadminuser,-au value        Keycloak admin user
+> --kadminpass,-ap value        Keycloak admin password
+> --kdevuser,-du value          Keycloak developer username
+> --kdevpass,-dp value          Keycloak developer username initial password
+> --krealm,-r value             Keycloak realm to setup
+> --kclient,-c value            Keycloak client to setup
+> --pvcsize,-p value            Codewind PVC size (integer between 1 and 999 Gigabytes)
+> --keycloakurl,--kurl value     Don't deploy a new Keycloak pod, use an existing one at this URL
+> --keycloakonly,-ko            Install a deployment of Keycloak only
+
 ### start
 
 `--tag/-t <value>` - Dockerhub image tag (default: "latest")</br>

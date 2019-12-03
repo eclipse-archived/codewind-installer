@@ -22,8 +22,8 @@ import (
 func DeployPerformance(clientset *kubernetes.Clientset, codewind Codewind, deployOptions *DeployOptions) error {
 
 	// Deploy the Performance dashboard
-	performanceService := createPerformanceService(codewind)
-	performanceDeploy := createPerformanceDeploy(codewind)
+	performanceService := generatePerformanceService(codewind)
+	performanceDeploy := generatePerformanceDeploy(codewind)
 
 	log.Infoln("Deploying Codewind Performance Dashboard")
 	_, err := clientset.CoreV1().Services(deployOptions.Namespace).Create(&performanceService)
@@ -39,7 +39,7 @@ func DeployPerformance(clientset *kubernetes.Clientset, codewind Codewind, deplo
 	return nil
 }
 
-func createPerformanceDeploy(codewind Codewind) appsv1.Deployment {
+func generatePerformanceDeploy(codewind Codewind) appsv1.Deployment {
 	labels := map[string]string{
 		"app":               PerformancePrefix,
 		"codewindWorkspace": codewind.WorkspaceID,
@@ -51,7 +51,7 @@ func createPerformanceDeploy(codewind Codewind) appsv1.Deployment {
 	return generateDeployment(codewind, PerformancePrefix, codewind.PerformanceImage, PerformanceContainerPort, volumes, volumeMounts, envVars, labels)
 }
 
-func createPerformanceService(codewind Codewind) corev1.Service {
+func generatePerformanceService(codewind Codewind) corev1.Service {
 	labels := map[string]string{
 		"app":               PerformancePrefix,
 		"codewindWorkspace": codewind.WorkspaceID,

@@ -205,7 +205,7 @@ func generateService(codewind Codewind, name string, port int, labels map[string
 	return service
 }
 
-func createCertificate(dnsName string, certTitle string) (string, string, error) {
+func generateCertificate(dnsName string, certTitle string) (string, string, error) {
 	template := x509.Certificate{
 		SerialNumber: big.NewInt(1),
 		Subject: pkix.Name{
