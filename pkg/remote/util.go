@@ -17,7 +17,6 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	"encoding/json"
 	"encoding/pem"
 	"math/big"
 	"os"
@@ -29,7 +28,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	types "k8s.io/apimachinery/pkg/types"
 )
 
 // GetImages returns the images that are to be used for PFE and the Performance dashboard in Codewind
@@ -64,28 +62,6 @@ func GetImages() (string, string, string, string) {
 		gatekeeperTag = GatekeeperImageTag
 	}
 	return pfeImage + ":" + pfeTag, performanceImage + ":" + performanceTag, keycloakImage + ":" + keycloakTag, gatekeeperImage + ":" + gatekeeperTag
-}
-
-// PatchServiceAccount takes in a list of secret names, and patches it to the specified service account
-func PatchServiceAccount(clientset *kubernetes.Clientset, codewind Codewind) error {
-	patch := ServiceAccountPatch{
-		ImagePullSecrets: &[]ImagePullSecret{
-			{
-				Name: codewind.PullSecret,
-			},
-		},
-	}
-
-	b, err := json.Marshal(patch)
-	if err != nil {
-		return err
-	}
-
-	_, err = clientset.CoreV1().ServiceAccounts(codewind.Namespace).Patch(codewind.ServiceAccountName, types.StrategicMergePatchType, b)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 // generateDeployment returns a Kubernetes deployment object with the given name for the given image.
