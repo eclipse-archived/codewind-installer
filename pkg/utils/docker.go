@@ -142,7 +142,7 @@ func DockerCompose(tempFilePath string, tag string) {
 	}
 	os.Setenv("PFE_EXTERNAL_PORT", port)
 
-	cmd := exec.Command("docker-compose", "-f", tempFilePath, "up", "-d")
+	cmd := exec.Command("docker-compose", "-f", tempFilePath, "up", "-d", "--force-recreate")
 	output := new(bytes.Buffer)
 	cmd.Stdout = output
 	cmd.Stderr = output
