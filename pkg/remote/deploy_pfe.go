@@ -28,12 +28,10 @@ import (
 func DeployPFE(config *restclient.Config, clientset *kubernetes.Clientset, codewindInstance Codewind, deployOptions *DeployOptions) error {
 
 	codewindRoleBindingName := CodewindRoleBindingNamePrefix + "-" + codewindInstance.WorkspaceID
-
 	codewindRoles := CreateCodewindRoles(deployOptions)
 	codewindRoleBindings := CreateCodewindRoleBindings(codewindInstance, deployOptions, codewindRoleBindingName)
-
-	service := createPFEService(codewindInstance)
-	deploy := createPFEDeploy(codewindInstance, deployOptions)
+	service := generatePFEService(codewindInstance)
+	deploy := generatePFEDeploy(codewindInstance, deployOptions)
 
 	logr.Infof("Checking if '%v' cluster access roles are installed\n", CodewindRolesName)
 	clusterRole, err := clientset.RbacV1().ClusterRoles().Get(CodewindRolesName, metav1.GetOptions{})
@@ -70,7 +68,7 @@ func DeployPFE(config *restclient.Config, clientset *kubernetes.Clientset, codew
 	}
 
 	logr.Infof("Creating and setting Codewind PVC %v to %v ", codewindInstance.PVCName, deployOptions.CodewindPVCSize)
-	codewindWorkspacePVC := createCodewindPVC(codewindInstance, deployOptions, storageClass)
+	codewindWorkspacePVC := generateCodewindPVC(codewindInstance, deployOptions, storageClass)
 	_, err = clientset.CoreV1().PersistentVolumeClaims(deployOptions.Namespace).Create(&codewindWorkspacePVC)
 	if err != nil {
 		logr.Errorf("Error: Unable to create Codewind PVC: %v\n", err)
@@ -91,8 +89,8 @@ func DeployPFE(config *restclient.Config, clientset *kubernetes.Clientset, codew
 	return nil
 }
 
-// createPFEDeploy : creates a Kubernetes deploy resource
-func createPFEDeploy(codewind Codewind, deployOptions *DeployOptions) appsv1.Deployment {
+// generatePFEDeploy : creates a Kubernetes deploy resource
+func generatePFEDeploy(codewind Codewind, deployOptions *DeployOptions) appsv1.Deployment {
 	labels := map[string]string{
 		"app":               PFEPrefix,
 		"codewindWorkspace": codewind.WorkspaceID,
@@ -102,8 +100,8 @@ func createPFEDeploy(codewind Codewind, deployOptions *DeployOptions) appsv1.Dep
 	return generateDeployment(codewind, PFEPrefix, codewind.PFEImage, PFEContainerPort, volumes, volumeMounts, envVars, labels)
 }
 
-// createPFEService : creates a Kubernetes service
-func createPFEService(codewind Codewind) corev1.Service {
+// generatePFEService : creates a Kubernetes service
+func generatePFEService(codewind Codewind) corev1.Service {
 	labels := map[string]string{
 		"app":               PFEPrefix,
 		"codewindWorkspace": codewind.WorkspaceID,
@@ -200,7 +198,7 @@ func setPFEEnvVars(codewind Codewind, deployOptions *DeployOptions) []corev1.Env
 	}
 }
 
-func createCodewindPVC(codewind Codewind, deployOptions *DeployOptions, storageClass string) corev1.PersistentVolumeClaim {
+func generateCodewindPVC(codewind Codewind, deployOptions *DeployOptions, storageClass string) corev1.PersistentVolumeClaim {
 
 	labels := map[string]string{
 		"app":               PFEPrefix,

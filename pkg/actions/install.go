@@ -103,6 +103,8 @@ func DoRemoteInstall(c *cli.Context) {
 		KeycloakDevPassword:   c.String("kdevpass"),
 		KeycloakRealm:         c.String("krealm"),
 		KeycloakClient:        c.String("kclient"),
+		KeycloakURL:           c.String("kurl"),
+		KeycloakOnly:          c.Bool("konly"),
 		GateKeeperTLSSecure:   true,
 		KeycloakTLSSecure:     true,
 		CodewindSessionSecret: session,
@@ -118,6 +120,26 @@ func DoRemoteInstall(c *cli.Context) {
 		}
 		os.Exit(1)
 	}
+
+	// If performing a Keycloak only install,  display just the keycloak URL
+	if deployOptions.KeycloakOnly {
+		keycloakURL := deploymentResult.KeycloakURL
+		if deployOptions.KeycloakTLSSecure {
+			keycloakURL = "https://" + keycloakURL
+		} else {
+			keycloakURL = "http://" + keycloakURL
+		}
+		if printAsJSON {
+			result := project.Result{Status: "OK", StatusMessage: "Keycloak Install Successful: " + keycloakURL}
+			response, _ := json.Marshal(result)
+			fmt.Println(string(response))
+		} else {
+			logr.Infoln("Keycloak is available at: " + keycloakURL)
+		}
+		os.Exit(0)
+	}
+
+	// We're doing a full install. Wait Gatekeeper to startup and for PFE to respond
 
 	gatekeeperURL := deploymentResult.GatekeeperURL
 

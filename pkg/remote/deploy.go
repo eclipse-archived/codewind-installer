@@ -43,6 +43,8 @@ type DeployOptions struct {
 	KeycloakClient        string
 	KeycloakSecure        bool
 	KeycloakTLSSecure     bool
+	KeycloakURL           string
+	KeycloakOnly          bool
 	GateKeeperTLSSecure   bool
 	CodewindSessionSecret string
 	ClientSecret          string
@@ -123,6 +125,9 @@ func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemIn
 
 	workspaceID := strings.ToLower(strconv.FormatInt(utils.CreateTimestamp(), 36))
 
+	// append workspaceID to the client name
+	remoteDeployOptions.KeycloakClient = remoteDeployOptions.KeycloakClient + "-" + workspaceID
+
 	// Get the ingress host
 	ingressDomain := remoteDeployOptions.IngressDomain
 
@@ -176,6 +181,9 @@ func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemIn
 		OnOpenShift:        onOpenShift,
 	}
 
+	gatekeeperURL := GatekeeperPrefix + codewindInstance.Ingress
+	keycloakURL := KeycloakPrefix + codewindInstance.Ingress
+
 	codewindServiceTemplate := CreateCodewindServiceAcct(codewindInstance, remoteDeployOptions)
 	_, err = clientset.CoreV1().ServiceAccounts(namespace).Create(&codewindServiceTemplate)
 	if err != nil {
@@ -184,19 +192,28 @@ func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemIn
 		os.Exit(1)
 	}
 
-	err = DeployKeycloak(config, clientset, codewindInstance, remoteDeployOptions, onOpenShift)
-	if err != nil {
-		logr.Errorln("Codewind Keycloak failed, exiting...")
-		os.Exit(1)
-	}
+	if remoteDeployOptions.KeycloakURL == "" {
+		err = DeployKeycloak(config, clientset, codewindInstance, remoteDeployOptions, onOpenShift)
+		if err != nil {
+			logr.Errorln("Codewind Keycloak failed, exiting...")
+			os.Exit(1)
+		}
 
-	podSearch := "codewindWorkspace=" + codewindInstance.WorkspaceID + ",app=" + KeycloakPrefix
-	WaitForPodReady(clientset, codewindInstance, podSearch, KeycloakPrefix+"-"+codewindInstance.WorkspaceID)
+		podSearch := "codewindWorkspace=" + codewindInstance.WorkspaceID + ",app=" + KeycloakPrefix
+		WaitForPodReady(clientset, codewindInstance, podSearch, KeycloakPrefix+"-"+codewindInstance.WorkspaceID)
+	}
 
 	err = SetupKeycloak(codewindInstance, remoteDeployOptions)
 	if err != nil {
 		logr.Errorln("Codewind Keycloak configuration failed, exiting...")
 		os.Exit(1)
+	}
+
+	if remoteDeployOptions.KeycloakOnly {
+		deploymentResult := DeploymentResult{
+			KeycloakURL: keycloakURL,
+		}
+		return &deploymentResult, nil
 	}
 
 	err = DeployPFE(config, clientset, codewindInstance, remoteDeployOptions)
@@ -205,7 +222,7 @@ func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemIn
 		os.Exit(1)
 	}
 
-	podSearch = "codewindWorkspace=" + codewindInstance.WorkspaceID + ",app=" + PFEPrefix
+	podSearch := "codewindWorkspace=" + codewindInstance.WorkspaceID + ",app=" + PFEPrefix
 	WaitForPodReady(clientset, codewindInstance, podSearch, PFEPrefix+"-"+codewindInstance.WorkspaceID)
 
 	err = DeployPerformance(clientset, codewindInstance, remoteDeployOptions)
@@ -225,9 +242,6 @@ func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemIn
 
 	podSearch = "codewindWorkspace=" + codewindInstance.WorkspaceID + ",app=" + GatekeeperPrefix
 	WaitForPodReady(clientset, codewindInstance, podSearch, GatekeeperPrefix+"-"+codewindInstance.WorkspaceID)
-
-	gatekeeperURL := GatekeeperPrefix + codewindInstance.Ingress
-	keycloakURL := KeycloakPrefix + codewindInstance.Ingress
 
 	if remoteDeployOptions.GateKeeperTLSSecure {
 		gatekeeperURL = "https://" + gatekeeperURL

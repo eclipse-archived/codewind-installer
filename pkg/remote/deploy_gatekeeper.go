@@ -31,13 +31,13 @@ func DeployGatekeeper(config *restclient.Config, clientset *kubernetes.Clientset
 
 	logr.Infoln("Preparing Codewind Gatekeeper resources")
 
-	gatekeeperSecrets := createGatekeeperSecrets(codewindInstance, deployOptions)
-	gatekeeperService := createGatekeeperService(codewindInstance)
-	gatekeeperDeploy := createGatekeeperDeploy(codewindInstance, deployOptions)
-	gatekeeperSessionSecret := createGatekeeperSessionSecret(codewindInstance, deployOptions)
+	gatekeeperSecrets := generateGatekeeperSecrets(codewindInstance, deployOptions)
+	gatekeeperService := generateGatekeeperService(codewindInstance)
+	gatekeeperDeploy := generateGatekeeperDeploy(codewindInstance, deployOptions)
+	gatekeeperSessionSecret := generateGatekeeperSessionSecret(codewindInstance, deployOptions)
 
-	serverKey, serverCert, err := createCertificate(GatekeeperPrefix+codewindInstance.Ingress, "Codewind Gatekeeper")
-	gatekeeperTLSSecret := createGatekeeperTLSSecret(codewindInstance, serverKey, serverCert)
+	serverKey, serverCert, err := generateCertificate(GatekeeperPrefix+codewindInstance.Ingress, "Codewind Gatekeeper")
+	gatekeeperTLSSecret := generateGatekeeperTLSSecret(codewindInstance, serverKey, serverCert)
 
 	logr.Infoln("Deploying Codewind Gatekeeper Secrets")
 
@@ -79,7 +79,7 @@ func DeployGatekeeper(config *restclient.Config, clientset *kubernetes.Clientset
 	if codewindInstance.OnOpenShift {
 		logr.Infof("Deploying Codewind Gatekeeper Route")
 		// Deploy a route on OpenShift
-		route := createRouteGatekeeper(codewindInstance)
+		route := generateRouteGatekeeper(codewindInstance)
 		routev1client, err := routev1.NewForConfig(config)
 		if err != nil {
 			logr.Printf("Error retrieving route client for OpenShift: %v\n", err)
@@ -92,7 +92,7 @@ func DeployGatekeeper(config *restclient.Config, clientset *kubernetes.Clientset
 		}
 	} else {
 		logr.Infof("Deploying Codewind Gatekeeper Ingress")
-		ingress := createIngressGatekeeper(codewindInstance)
+		ingress := generateIngressGatekeeper(codewindInstance)
 		_, err = clientset.ExtensionsV1beta1().Ingresses(codewindInstance.Namespace).Create(&ingress)
 		if err != nil {
 			logr.Printf("Error: Unable to create ingress for Codewind Gatekeeper: %v\n", err)
@@ -102,7 +102,7 @@ func DeployGatekeeper(config *restclient.Config, clientset *kubernetes.Clientset
 	return nil
 }
 
-func createGatekeeperTLSSecret(codewind Codewind, pemPrivateKey string, pemPublicCert string) corev1.Secret {
+func generateGatekeeperTLSSecret(codewind Codewind, pemPrivateKey string, pemPublicCert string) corev1.Secret {
 	labels := map[string]string{
 		"app":               GatekeeperPrefix,
 		"codewindWorkspace": codewind.WorkspaceID,
@@ -115,7 +115,7 @@ func createGatekeeperTLSSecret(codewind Codewind, pemPrivateKey string, pemPubli
 	return generateSecrets(codewind, name, secrets, labels)
 }
 
-func createGatekeeperSessionSecret(codewind Codewind, deployOptions *DeployOptions) corev1.Secret {
+func generateGatekeeperSessionSecret(codewind Codewind, deployOptions *DeployOptions) corev1.Secret {
 	labels := map[string]string{
 		"app":               GatekeeperPrefix,
 		"codewindWorkspace": codewind.WorkspaceID,
@@ -127,7 +127,7 @@ func createGatekeeperSessionSecret(codewind Codewind, deployOptions *DeployOptio
 	return generateSecrets(codewind, name, secrets, labels)
 }
 
-func createGatekeeperSecrets(codewind Codewind, deployOptions *DeployOptions) corev1.Secret {
+func generateGatekeeperSecrets(codewind Codewind, deployOptions *DeployOptions) corev1.Secret {
 	labels := map[string]string{
 		"app":               GatekeeperPrefix,
 		"codewindWorkspace": codewind.WorkspaceID,
@@ -139,7 +139,7 @@ func createGatekeeperSecrets(codewind Codewind, deployOptions *DeployOptions) co
 	return generateSecrets(codewind, name, secrets, labels)
 }
 
-func createGatekeeperDeploy(codewind Codewind, deployOptions *DeployOptions) appsv1.Deployment {
+func generateGatekeeperDeploy(codewind Codewind, deployOptions *DeployOptions) appsv1.Deployment {
 	labels := map[string]string{
 		"app":               GatekeeperPrefix,
 		"codewindWorkspace": codewind.WorkspaceID,
@@ -151,7 +151,7 @@ func createGatekeeperDeploy(codewind Codewind, deployOptions *DeployOptions) app
 	return generateDeployment(codewind, GatekeeperPrefix, codewind.GatekeeperImage, GatekeeperContainerPort, volumes, volumeMounts, envVars, labels)
 }
 
-func createGatekeeperService(codewind Codewind) corev1.Service {
+func generateGatekeeperService(codewind Codewind) corev1.Service {
 	labels := map[string]string{
 		"app":               GatekeeperPrefix,
 		"codewindWorkspace": codewind.WorkspaceID,
@@ -159,8 +159,8 @@ func createGatekeeperService(codewind Codewind) corev1.Service {
 	return generateService(codewind, GatekeeperPrefix, GatekeeperContainerPort, labels)
 }
 
-// createIngressGatekeeper returns a Kubernetes ingress for the Codewind Gatekeeper service
-func createIngressGatekeeper(codewind Codewind) extensionsv1.Ingress {
+// generateIngressGatekeeper returns a Kubernetes ingress for the Codewind Gatekeeper service
+func generateIngressGatekeeper(codewind Codewind) extensionsv1.Ingress {
 	labels := map[string]string{
 		"app":               GatekeeperPrefix,
 		"codewindWorkspace": codewind.WorkspaceID,
@@ -214,8 +214,8 @@ func createIngressGatekeeper(codewind Codewind) extensionsv1.Ingress {
 	}
 }
 
-// createRouteGatekeeper returns an OpenShift route for the gatekeeper service
-func createRouteGatekeeper(codewind Codewind) v1.Route {
+// generateRouteGatekeeper returns an OpenShift route for the gatekeeper service
+func generateRouteGatekeeper(codewind Codewind) v1.Route {
 	labels := map[string]string{
 		"app":               PFEPrefix,
 		"codewindWorkspace": codewind.WorkspaceID,
@@ -270,6 +270,10 @@ func setGatekeeperEnvVars(codewind Codewind, deployOptions *DeployOptions) []cor
 		keycloakURL = "https://" + keycloakURL
 	} else {
 		keycloakURL = "http://" + keycloakURL
+	}
+
+	if deployOptions.KeycloakURL != "" {
+		keycloakURL = deployOptions.KeycloakURL
 	}
 
 	return []corev1.EnvVar{
