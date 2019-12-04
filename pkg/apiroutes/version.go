@@ -113,8 +113,7 @@ func GetPerformanceVersionFromConnection(connection *connections.Connection, HTT
 }
 
 func getVersionFromEnvAPI(req *http.Request, connection *connections.Connection, HTTPClient utils.HTTPClient) (string, error) {
-	client := &http.Client{}
-	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, connection)
+	resp, httpSecError := sechttp.DispatchHTTPRequest(HTTPClient, req, connection)
 	if httpSecError != nil {
 		return "", httpSecError
 	}
