@@ -37,7 +37,7 @@ func CreateCodewindRoles(deployOptions *DeployOptions) rbacv1.ClusterRole {
 		rbacv1.PolicyRule{
 			APIGroups: []string{""},
 			Resources: []string{"secrets"},
-			Verbs:     []string{"get", "list", "create", "watch", "delete"},
+			Verbs:     []string{"get", "list", "create", "watch", "delete", "patch", "update"},
 		},
 		rbacv1.PolicyRule{
 			APIGroups: []string{""},
@@ -48,11 +48,6 @@ func CreateCodewindRoles(deployOptions *DeployOptions) rbacv1.ClusterRole {
 			APIGroups: []string{""},
 			Resources: []string{"services"},
 			Verbs:     []string{"get", "list", "create", "delete", "patch"},
-		},
-		rbacv1.PolicyRule{
-			APIGroups: []string{""},
-			Resources: []string{"nodes"},
-			Verbs:     []string{"get", "list"},
 		},
 		rbacv1.PolicyRule{
 			APIGroups: []string{""},
@@ -78,26 +73,6 @@ func CreateCodewindRoles(deployOptions *DeployOptions) rbacv1.ClusterRole {
 			APIGroups: []string{"extensions", "apps"},
 			Resources: []string{"replicasets", "replicasets/finalizers"},
 			Verbs:     []string{"get", "list", "update", "delete"},
-		},
-		rbacv1.PolicyRule{
-			APIGroups: []string{"apiextensions.k8s.io"},
-			Resources: []string{"customresourcedefinitions"},
-			Verbs:     []string{"get", "list", "update", "delete"},
-		},
-		rbacv1.PolicyRule{
-			APIGroups: []string{"certificates.k8s.io"},
-			Resources: []string{"certificatesigningrequests"},
-			Verbs:     []string{"delete", "get", "list", "watch", "create"},
-		},
-		rbacv1.PolicyRule{
-			APIGroups: []string{"certificates.k8s.io"},
-			Resources: []string{"certificatesigningrequests/approval", "certificatesigningrequests/status"},
-			Verbs:     []string{"update"},
-		},
-		rbacv1.PolicyRule{
-			APIGroups: []string{"authorization.k8s.io"},
-			Resources: []string{"subjectaccessreviews"},
-			Verbs:     []string{"create"},
 		},
 		rbacv1.PolicyRule{
 			APIGroups: []string{"rbac.authorization.k8s.io"},
