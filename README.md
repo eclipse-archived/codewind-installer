@@ -150,7 +150,7 @@ This is the same as `go test ./...`, but outputs test coverage scores for each f
 | stop-all    |       | 'Stop all of the Codewind and project containers'                   |
 | remove      | `rm`  | 'Remove Codewind/Project docker images and the codewind network'    |
 | templates   |       | 'Manage project templates'                                          |
-| version     |       | 'Print the versions of Codewind containers, for a given container'  |                                       |
+| version     |       | 'Print the versions of Codewind containers, for a given container'  |
 | sectoken    | `st`  | 'Authenticate with username and password to obtain an access_token' |
 | secrole     | `sl`  | 'Manage realm based ACCESS roles'                                   |
 | secrealm    | `sr`  | 'Manage new or existing REALM configurations'                       |
@@ -235,13 +235,13 @@ Subcommands:</br>
 ### version
 
 > **Flags:**
-> --conid  value                Connection ID (see the connections cmd)
+> --conid value                 Connection ID (see the connections cmd)
 
 ## sectoken
 
 Subcommands:</br>
 
-`get/g` - Authenticate and obtain åan access_token.
+`get/g` - Authenticate and obtain an access_token.
 
 >**Note 1:**: The preferred way to authenticate is by supplying just the connection ID (conid) and username. In this mode the command will use the stored password from the platform keyring
 >**Note 2:**: If you dont have a connection ID (conid) you must supply use the host, realm and client flags
