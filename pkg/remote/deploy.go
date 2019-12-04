@@ -27,8 +27,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/client-go/kubernetes"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"  // Required for Kube clusters on GCP
-	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc" // Required for Kube Clusters which use the oidc Kube plugin
+	_ "k8s.io/client-go/plugin/pkg/client/auth" // Required for Kube clusters which use auth plugins
 	"k8s.io/client-go/tools/clientcmd"
 )
 
