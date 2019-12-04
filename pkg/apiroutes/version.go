@@ -31,7 +31,7 @@ type (
 		PFEVersion         string
 	}
 
-	// EnvResponse : The response from the remote environment API
+	// EnvResponse : The relevent response fields from the remote environment API
 	EnvResponse struct {
 		Version        string `json:"codewind_version"`
 		ImageBuildTime string `json:"image_build_time"`
@@ -61,6 +61,7 @@ func GetContainerVersions(conID string, httpClient utils.HTTPClient) (ContainerV
 		return ContainerVersions{}, err
 	}
 
+	// Get cwctl version from inside the code
 	containerVersions.CwctlVersion = appconstants.VersionNum
 	containerVersions.PFEVersion = PFEVersion
 	containerVersions.GatekeeperVersion = GatekeeperVersion
@@ -71,7 +72,7 @@ func GetContainerVersions(conID string, httpClient utils.HTTPClient) (ContainerV
 
 // GetPFEVersionFromConnection : Get the version of the PFE container, deployed to the connection with the given ID
 func GetPFEVersionFromConnection(connection *connections.Connection, HTTPClient utils.HTTPClient) (string, error) {
-	req, err := http.NewRequest("GET", connection.URL+"/api/v1/environmen", nil)
+	req, err := http.NewRequest("GET", connection.URL+"/api/v1/environment", nil)
 	if err != nil {
 		return "", err
 	}
@@ -117,6 +118,7 @@ func getVersionFromEnvAPI(req *http.Request, connection *connections.Connection,
 	if httpSecError != nil {
 		return "", httpSecError
 	}
+	// Set version field to empty string, if API call not successful
 	if resp.StatusCode != http.StatusOK {
 		return "", nil
 	}
@@ -134,7 +136,7 @@ func getVersionFromEnvAPI(req *http.Request, connection *connections.Connection,
 	}
 	codewindVersion := env.Version
 
-	if env.ImageBuildTime != "nil" {
+	if env.ImageBuildTime != "" {
 		codewindVersion = codewindVersion + "-" + env.ImageBuildTime
 	}
 
