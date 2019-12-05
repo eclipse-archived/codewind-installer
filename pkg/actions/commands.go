@@ -93,6 +93,19 @@ func Commands() {
 					},
 				},
 				{
+					Name:    "remove",
+					Aliases: []string{""},
+					Usage:   "remove a project from codewind",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "id, i", Usage: "the project id", Required: true},
+						cli.BoolFlag{Name: "delete, d", Usage: "delete local project files"},
+					},
+					Action: func(c *cli.Context) error {
+						ProjectRemove(c)
+						return nil
+					},
+				},
+				{
 					Name:    "sync",
 					Aliases: []string{""},
 					Usage:   "synchronize a project to codewind for building and running",

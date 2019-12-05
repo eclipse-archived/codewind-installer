@@ -77,6 +77,16 @@ func ProjectBind(c *cli.Context) {
 	os.Exit(0)
 }
 
+// ProjectUnbind : Does a project remove
+func ProjectRemove(c *cli.Context) {
+	err := project.RemoveProject(c)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+	os.Exit(0)
+}
+
 // UpgradeProjects : Upgrades projects
 func UpgradeProjects(c *cli.Context) {
 	dir := strings.TrimSpace(c.String("workspace"))

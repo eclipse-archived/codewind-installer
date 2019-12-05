@@ -17,11 +17,13 @@ import (
 )
 
 // ProjectError : A Project error
-type ProjectError struct {
-	Op   string
-	Err  error
-	Desc string
-}
+type (
+	ProjectError struct {
+		Op   string
+		Err  error
+		Desc string
+	}
+)
 
 const (
 	errBadPath       = "proj_path"     // Invalid path provided
@@ -31,6 +33,7 @@ const (
 	errOpFileLoad    = "proj_load"
 	errOpFileWrite   = "proj_write"
 	errOpFileDelete  = "proj_delete"
+	errOpGetProject  = "proj_get"
 	errOpConflict    = "proj_conflict"
 	errOpNotFound    = "proj_notfound"
 	errOpConNotFound = "connection_notfound"
