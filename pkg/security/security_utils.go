@@ -48,6 +48,7 @@ const (
 	errOpKeyring        = "sec_keyring"         // Keyring operations
 	errOpConConfig      = "sec_con_config"      // Connection configuration errors
 	errOpCLICommand     = "sec_cli_options"     // Invalid command line options
+	errOpPasswordRead   = "sec_password_read"   // Unable to fetch password
 )
 
 const (

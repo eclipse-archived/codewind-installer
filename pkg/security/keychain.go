@@ -43,6 +43,17 @@ func SecKeyUpdate(connectionID string, username string, password string) *SecErr
 	if err != nil {
 		return &SecError{errOpKeyring, err, err.Error()}
 	}
+
+	/// check password can be retrieved
+	secret, secErr := SecKeyGetSecret(conID, uName)
+	if err != nil {
+		return secErr
+	}
+	if secret != pass {
+		secErr := errors.New("Saved password does not match retrieved password")
+		return &SecError{errOpPasswordRead, secErr, secErr.Error()}
+	}
+
 	return nil
 }
 
