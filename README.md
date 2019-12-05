@@ -150,6 +150,7 @@ This is the same as `go test ./...`, but outputs test coverage scores for each f
 | stop-all    |       | 'Stop all of the Codewind and project containers'                   |
 | remove      | `rm`  | 'Remove Codewind/Project docker images and the codewind network'    |
 | templates   |       | 'Manage project templates'                                          |
+| version     |       | 'Print the versions of Codewind containers, for a given container'  |
 | sectoken    | `st`  | 'Authenticate with username and password to obtain an access_token' |
 | secrole     | `sl`  | 'Manage realm based ACCESS roles'                                   |
 | secrealm    | `sr`  | 'Manage new or existing REALM configurations'                       |
@@ -247,6 +248,11 @@ Subcommands:</br>
 Subcommands:</br>
 
 `list/ls` - List available templates
+
+### version
+
+> **Flags:**
+> --conid value                 Connection ID (see the connections cmd)
 
 ## sectoken
 
