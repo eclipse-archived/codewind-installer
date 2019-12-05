@@ -148,7 +148,7 @@ func generateGatekeeperDeploy(codewind Codewind, deployOptions *DeployOptions) a
 	volumes := []corev1.Volume{}
 	volumeMounts := []corev1.VolumeMount{}
 	envVars := setGatekeeperEnvVars(codewind, deployOptions)
-	return generateDeployment(codewind, GatekeeperPrefix, codewind.GatekeeperImage, GatekeeperContainerPort, volumes, volumeMounts, envVars, labels)
+	return generateDeployment(codewind, GatekeeperPrefix, codewind.GatekeeperImage, GatekeeperContainerPort, volumes, volumeMounts, envVars, labels, codewind.ServiceAccountName)
 }
 
 func generateGatekeeperService(codewind Codewind) corev1.Service {
@@ -217,7 +217,7 @@ func generateIngressGatekeeper(codewind Codewind) extensionsv1.Ingress {
 // generateRouteGatekeeper returns an OpenShift route for the gatekeeper service
 func generateRouteGatekeeper(codewind Codewind) v1.Route {
 	labels := map[string]string{
-		"app":               PFEPrefix,
+		"app":               GatekeeperPrefix,
 		"codewindWorkspace": codewind.WorkspaceID,
 	}
 

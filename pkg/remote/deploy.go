@@ -170,6 +170,7 @@ func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemIn
 		WorkspaceID:        workspaceID,
 		PVCName:            workspacePVC,
 		ServiceAccountName: "codewind-" + workspaceID, //  codewind-k39vwfk0
+		ServiceAccountKC:   "keycloak-" + workspaceID, //  keycloak-k39vwfk0
 		OwnerReferenceName: ownerReferenceName,
 		OwnerReferenceUID:  ownerReferenceUID,
 		Privileged:         true,
@@ -181,21 +182,31 @@ func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemIn
 	gatekeeperURL := GatekeeperPrefix + codewindInstance.Ingress
 	keycloakURL := KeycloakPrefix + codewindInstance.Ingress
 
-	codewindServiceTemplate := CreateCodewindServiceAcct(codewindInstance, remoteDeployOptions)
-	_, err = clientset.CoreV1().ServiceAccounts(namespace).Create(&codewindServiceTemplate)
-	if err != nil {
-		logr.Errorln("Creating service account failed, exiting...")
-		logr.Errorln(err)
-		os.Exit(1)
+	// Create the Codewind service account
+	if !remoteDeployOptions.KeycloakOnly {
+		codewindServiceTemplate := CreateCodewindServiceAcct(codewindInstance, remoteDeployOptions)
+		_, err = clientset.CoreV1().ServiceAccounts(namespace).Create(&codewindServiceTemplate)
+		if err != nil {
+			logr.Errorln("Creating service account failed, exiting...")
+			logr.Errorln(err)
+			os.Exit(1)
+		}
 	}
 
+	// If we are not using an existing Keycloak, deploy one now
 	if remoteDeployOptions.KeycloakURL == "" {
+		keycloakServiceAccountTemplate := CreateKeycloakServiceAcct(codewindInstance, remoteDeployOptions)
+		_, err = clientset.CoreV1().ServiceAccounts(namespace).Create(&keycloakServiceAccountTemplate)
+		if err != nil {
+			logr.Errorln("Creating Keycloak service account failed, exiting...")
+			logr.Errorln(err)
+			os.Exit(1)
+		}
 		err = DeployKeycloak(config, clientset, codewindInstance, remoteDeployOptions, onOpenShift)
 		if err != nil {
 			logr.Errorln("Codewind Keycloak failed, exiting...")
 			os.Exit(1)
 		}
-
 		podSearch := "codewindWorkspace=" + codewindInstance.WorkspaceID + ",app=" + KeycloakPrefix
 		WaitForPodReady(clientset, codewindInstance, podSearch, KeycloakPrefix+"-"+codewindInstance.WorkspaceID)
 	}
