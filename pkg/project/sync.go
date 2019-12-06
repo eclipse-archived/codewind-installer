@@ -14,6 +14,7 @@ package project
 import (
 	"bytes"
 	"compress/zlib"
+	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -70,6 +71,8 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	if err != nil {
 		return nil, &ProjectError{errBadPath, err, err.Error()}
 	}
+
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	if !ConnectionFileExists(projectID) {
 		fmt.Println("Project connection file does not exist, creating default local connection")
