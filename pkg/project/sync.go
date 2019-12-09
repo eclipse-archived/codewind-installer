@@ -95,7 +95,7 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	// Sync all the necessary project files
 	fileList, modifiedList, uploadedFilesList := syncFiles(projectPath, projectID, conURL, synctime, conInfo)
 	// Complete the upload
-	completeStatus, completeStatusCode := completeUpload(projectID, fileList, modifiedList, conURL, synctime)
+	completeStatus, completeStatusCode := completeUpload(projectID, fileList, modifiedList, conID, synctime)
 	response := SyncResponse{
 		UploadedFiles: uploadedFilesList,
 		Status:        completeStatus,
@@ -195,18 +195,36 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 	return fileList, modifiedList, uploadedFiles
 }
 
-func completeUpload(projectID string, files []string, modfiles []string, conURL string, timestamp int64) (string, int) {
-	uploadEndURL := conURL + "/api/v1/projects/" + projectID + "/upload/end"
+func completeUpload(projectID string, files []string, modfiles []string, conID string, timestamp int64) (string, int) {
+	
+	conInfo, conInfoErr := connections.GetConnectionByID(conID)
+	if conInfoErr != nil {
+		return conInfoErr.Desc, 1
+	}
+
+	uploadEndURL := conInfo.URL + "/api/v1/projects/" + projectID + "/upload/end"
 
 	payload := &CompleteRequest{FileList: files, ModifiedList: modfiles, TimeStamp: timestamp}
 	jsonPayload, _ := json.Marshal(payload)
-
-	// Make the request to end the sync process.
-	resp, err := http.Post(uploadEndURL, "application/json", bytes.NewBuffer(jsonPayload))
+	
+	req, err := http.NewRequest("POST", uploadEndURL, bytes.NewBuffer(jsonPayload))
+	req.Header.Set("Content-Type", "application/json")
 	if err != nil {
-		panic(err)
-		// TODO - Need to handle this gracefully.
+		fmt.Printf("error setting the header  %v\n", err)
+		return err.Error(), 0
 	}
+	client := &http.Client{}
+	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo)
+	if httpSecError != nil {
+		fmt.Printf("error dispatching request  %v\n", httpSecError)
+		return httpSecError.Desc,0
+	}
+	if resp.StatusCode != 200 {
+		return resp.Status,resp.StatusCode
+	}
+
+	defer resp.Body.Close()
+
 	return resp.Status, resp.StatusCode
 }
 
