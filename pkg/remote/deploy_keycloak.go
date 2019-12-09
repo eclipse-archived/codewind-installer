@@ -260,6 +260,10 @@ func setKeycloakEnvVars(codewind Codewind) []corev1.EnvVar {
 			Name:  "PROXY_ADDRESS_FORWARDING",
 			Value: "true",
 		},
+		{
+			Name:  "DB_VENDOR",
+			Value: "h2",
+		},
 	}
 }
 
