@@ -48,7 +48,7 @@ func generatePerformanceDeploy(codewind Codewind) appsv1.Deployment {
 	volumes := []corev1.Volume{}
 	volumeMounts := []corev1.VolumeMount{}
 	envVars := setPerformanceEnvVars(codewind)
-	return generateDeployment(codewind, PerformancePrefix, codewind.PerformanceImage, PerformanceContainerPort, volumes, volumeMounts, envVars, labels, codewind.ServiceAccountName)
+	return generateDeployment(codewind, PerformancePrefix, codewind.PerformanceImage, PerformanceContainerPort, volumes, volumeMounts, envVars, labels, codewind.ServiceAccountName, false)
 }
 
 func generatePerformanceService(codewind Codewind) corev1.Service {

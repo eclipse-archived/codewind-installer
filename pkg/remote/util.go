@@ -79,7 +79,7 @@ func getHomeDir() string {
 
 // generateDeployment returns a Kubernetes deployment object with the given name for the given image.
 // Additionally, volume/volumemounts and env vars can be specified.
-func generateDeployment(codewind Codewind, name string, image string, port int, volumes []corev1.Volume, volumeMounts []corev1.VolumeMount, envVars []corev1.EnvVar, labels map[string]string, serviceAccountName string) appsv1.Deployment {
+func generateDeployment(codewind Codewind, name string, image string, port int, volumes []corev1.Volume, volumeMounts []corev1.VolumeMount, envVars []corev1.EnvVar, labels map[string]string, serviceAccountName string, privileged bool) appsv1.Deployment {
 
 	//blockOwnerDeletion := true
 	//controller := true
@@ -122,7 +122,7 @@ func generateDeployment(codewind Codewind, name string, image string, port int, 
 							Image:           image,
 							ImagePullPolicy: ImagePullPolicy,
 							SecurityContext: &corev1.SecurityContext{
-								Privileged: &codewind.Privileged,
+								Privileged: &privileged,
 							},
 							VolumeMounts: volumeMounts,
 							Env:          envVars,

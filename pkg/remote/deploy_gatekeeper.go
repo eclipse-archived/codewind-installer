@@ -148,7 +148,7 @@ func generateGatekeeperDeploy(codewind Codewind, deployOptions *DeployOptions) a
 	volumes := []corev1.Volume{}
 	volumeMounts := []corev1.VolumeMount{}
 	envVars := setGatekeeperEnvVars(codewind, deployOptions)
-	return generateDeployment(codewind, GatekeeperPrefix, codewind.GatekeeperImage, GatekeeperContainerPort, volumes, volumeMounts, envVars, labels, codewind.ServiceAccountName)
+	return generateDeployment(codewind, GatekeeperPrefix, codewind.GatekeeperImage, GatekeeperContainerPort, volumes, volumeMounts, envVars, labels, codewind.ServiceAccountName, false)
 }
 
 func generateGatekeeperService(codewind Codewind) corev1.Service {

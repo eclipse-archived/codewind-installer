@@ -103,7 +103,7 @@ func generatePFEDeploy(codewind Codewind, deployOptions *DeployOptions) appsv1.D
 	}
 	volumes, volumeMounts := setPFEVolumes(codewind)
 	envVars := setPFEEnvVars(codewind, deployOptions)
-	return generateDeployment(codewind, PFEPrefix, codewind.PFEImage, PFEContainerPort, volumes, volumeMounts, envVars, labels, codewind.ServiceAccountName)
+	return generateDeployment(codewind, PFEPrefix, codewind.PFEImage, PFEContainerPort, volumes, volumeMounts, envVars, labels, codewind.ServiceAccountName, true)
 }
 
 // generatePFEService : creates a Kubernetes service
