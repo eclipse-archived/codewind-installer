@@ -36,7 +36,13 @@ func DeployPFE(config *restclient.Config, clientset *kubernetes.Clientset, codew
 	logr.Infof("Checking if '%v' cluster access roles are installed\n", CodewindRolesName)
 	clusterRole, err := clientset.RbacV1().ClusterRoles().Get(CodewindRolesName, metav1.GetOptions{})
 	if clusterRole != nil && err == nil {
-		logr.Infof("Cluster roles '%v' already installed\n", CodewindRolesName)
+		logr.Infof("Cluster roles '%v' already installed - updating\n", CodewindRolesName)
+		_, err = clientset.RbacV1().ClusterRoles().Update(&codewindRoles)
+		if err != nil {
+			logr.Errorf("Unable to update `%v` cluster access roles: %v\n", CodewindRolesName, err)
+			return err
+		}
+		logr.Infof("Cluster roles '%v' updated complete\n", CodewindRolesName)
 	} else {
 		logr.Infof("Adding new '%v' cluster access roles\n", CodewindRolesName)
 		_, err = clientset.RbacV1().ClusterRoles().Create(&codewindRoles)
