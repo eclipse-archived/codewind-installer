@@ -127,7 +127,7 @@ func GetZipURL(owner, repo, branch string) (string, error) {
 
 	opt := &github.RepositoryContentGetOptions{Ref: branch}
 
-	URL, _, err := client.Repositories.GetArchiveLink(context.Background(), owner, repo, "zipball", opt)
+	URL, _, err := client.Repositories.GetArchiveLink(context.Background(), owner, repo, "zipball", opt, true)
 	if err != nil {
 		return "", err
 	}
