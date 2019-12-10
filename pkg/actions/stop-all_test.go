@@ -26,15 +26,15 @@ func Test_getContainersToRemove(t *testing.T) {
 		"Returns the pfe and performance containers": {
 			containerList: []types.Container{
 				types.Container{
-					Names: []string{"codewind-pfe"},
+					Names: []string{"/codewind-pfe-amd"},
 				},
 				types.Container{
-					Names: []string{"codewind-performance"},
+					Names: []string{"/codewind-performance-amd"},
 				},
 			},
 			expectedContainers: []string{
-				"codewind-pfe",
-				"codewind-performance",
+				"/codewind-pfe-amd",
+				"/codewind-performance-amd",
 			},
 		},
 		"Returns project containers (cw-)": {

@@ -42,18 +42,16 @@ func StopAllCommand() {
 }
 
 func getContainersToRemove(containerList []types.Container) []types.Container {
-	codewindContainerNames := []string{
-		"codewind-pfe",
-		"codewind-performance",
+	codewindContainerPrefixes := []string{
+		"/codewind-pfe",
+		"/codewind-performance",
+		"/cw-",
 	}
-
-	// Docker returns all the names with a "/" on the front
-	projectContainerPrefix := "/cw-"
 
 	containersToRemove := []types.Container{}
 	for _, container := range containerList {
-		for _, key := range codewindContainerNames {
-			if strings.Contains(container.Names[0], key) || strings.HasPrefix(container.Names[0], projectContainerPrefix) {
+		for _, prefix := range codewindContainerPrefixes {
+			if strings.HasPrefix(container.Names[0], prefix) {
 				containersToRemove = append(containersToRemove, container)
 				break
 			}
