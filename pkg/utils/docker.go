@@ -343,7 +343,10 @@ func StopContainer(container types.Container) {
 	errors.CheckErr(err, 200, "")
 
 	// Check if the container will remove after it is stopped
-	isAutoRemoved, err := getContainerAutoRemovePolicy(container.ID)
+	isAutoRemoved, isAutoRemovedErr := getContainerAutoRemovePolicy(container.ID)
+	if isAutoRemovedErr != nil {
+		errors.CheckErr(err, 108, "")
+	}
 
 	// Stop the running container
 	if err := cli.ContainerStop(ctx, container.ID, nil); err != nil {
