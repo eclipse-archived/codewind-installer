@@ -129,7 +129,7 @@ func generateKeycloakDeploy(codewind Codewind) appsv1.Deployment {
 	volumes := []corev1.Volume{}
 	volumes, volumeMounts := setKeycloakVolumes(codewind)
 	envVars := setKeycloakEnvVars(codewind)
-	return generateDeployment(codewind, KeycloakPrefix, codewind.KeycloakImage, KeycloakContainerPort, volumes, volumeMounts, envVars, labels, codewind.ServiceAccountKC)
+	return generateDeployment(codewind, KeycloakPrefix, codewind.KeycloakImage, KeycloakContainerPort, volumes, volumeMounts, envVars, labels, codewind.ServiceAccountKC, false)
 }
 
 func generateKeycloakService(codewind Codewind) corev1.Service {
