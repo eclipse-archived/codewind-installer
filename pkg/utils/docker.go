@@ -342,19 +342,37 @@ func StopContainer(container types.Container) {
 	cli, err := client.NewClientWithOpts(client.WithVersion("1.30"))
 	errors.CheckErr(err, 200, "")
 
+	// Check if the container will remove after it is stopped
+	isAutoRemoved, err := getContainerAutoRemovePolicy(container.ID)
+
 	// Stop the running container
 	if err := cli.ContainerStop(ctx, container.ID, nil); err != nil {
 		errors.CheckErr(err, 108, "")
 	}
 
-	// Do not attempt to remove appsody images as that happens automatically
-	// when an appsody container stops
-	if !strings.HasPrefix(container.Image, "appsody") {
+	if !isAutoRemoved {
 		// Remove the container so it isnt lingering in the background
 		if err := cli.ContainerRemove(ctx, container.ID, types.ContainerRemoveOptions{}); err != nil {
 			errors.CheckErr(err, 108, "")
 		}
 	}
+}
+
+// getContainerAutoRemovePolicy will get the auto remove policy of a given container
+func getContainerAutoRemovePolicy(containerID string) (bool, *DockerError) {
+	ctx := context.Background()
+
+	cli, err := client.NewClientWithOpts(client.WithVersion("1.30"))
+	if err != nil {
+		return false, &DockerError{errOpClientCreate, err, err.Error()}
+	}
+
+	containerInfo, err := cli.ContainerInspect(ctx, containerID)
+	if err != nil {
+		return false, &DockerError{errOpContainerInspect, err, err.Error()}
+	}
+
+	return containerInfo.HostConfig.AutoRemove, nil
 }
 
 // RemoveNetwork will remove docker network
