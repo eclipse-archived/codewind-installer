@@ -116,7 +116,6 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 	cwSettingsIgnoredPathsList := retrieveIgnoredPathsList(projectPath)
 
 	err := filepath.Walk(projectPath, func(path string, info os.FileInfo, err error) error {
-		fmt.Println("file: " + path)
 		if err != nil {
 			panic(err)
 			// TODO - How to handle *some* files being unreadable
