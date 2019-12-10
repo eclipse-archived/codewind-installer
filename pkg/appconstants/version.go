@@ -12,4 +12,4 @@
 package appconstants
 
 // VersionNum : CLI Version number
-const VersionNum = "x.x.dev"
+const VersionNum = "0.7.0"
