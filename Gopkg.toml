@@ -28,6 +28,10 @@
   version = "19.03.3"
 
 [[constraint]]
+  name = "github.com/google/go-github"
+  branch = "master"
+
+[[constraint]]
   name = "github.com/openshift/api"
   branch = "release-4.4"
 
