@@ -36,6 +36,9 @@ func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Requ
 		if err == nil {
 			logr.Tracef("Received HTTP Status code: %v\n", response.StatusCode)
 			return response, nil
+		} else {
+			logr.Tracef("Unable to contact server : %v\n", err)
+			return nil, err
 		}
 	}
 
