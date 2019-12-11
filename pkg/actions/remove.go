@@ -32,9 +32,14 @@ func RemoveCommand(c *cli.Context) {
 	}
 	networkName := "codewind"
 
-	images := utils.GetImageList()
+	images, err := utils.GetImageList()
 
-	fmt.Println("Removing Codewind docker images..")
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(0)
+	}
+
+	fmt.Println("Removing Codewind docker images...")
 
 	for _, image := range images {
 		imageRepo := strings.Join(image.RepoDigests, " ")
@@ -51,7 +56,12 @@ func RemoveCommand(c *cli.Context) {
 		}
 	}
 
-	networks := utils.GetNetworkList()
+	networks, err := utils.GetNetworkList()
+
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(0)
+	}
 
 	for _, network := range networks {
 		if strings.Contains(network.Name, networkName) {

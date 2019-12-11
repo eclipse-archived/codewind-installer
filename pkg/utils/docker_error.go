@@ -21,9 +21,20 @@ type DockerError struct {
 }
 
 const (
-	errOpValidate         = "docker_validate" // validate docker images
-	errOpClientCreate     = "CLIENT_CREATE_ERROR"
-	errOpContainerInspect = "CONTAINER_INSPECT_ERROR"
+	errOpValidate          = "DOCKER_VALIDATE"
+	errOpClientCreate      = "CLIENT_CREATE_ERROR"
+	errOpImageNotFound     = "IMAGE_NOT_FOUND"
+	errOpImagePull         = "IMAGE_PULL_ERROR"
+	errOpContainerInspect  = "CONTAINER_INSPECT_ERROR"
+	errOpContainersStopped = "CONTAINERS_STOPPED"
+	errOpContainerError    = "CONTAINER_ERROR"
+	errOpDockerCompose     = "DOCKER_COMPOSE_ERROR"
+	errOpImageTag          = "IMAGE_TAG_ERROR"
+	errOpImageRemove       = "IMAGE_REMOVE_ERROR"
+	errOpContainerList     = "CONTAINER_LIST_ERROR"
+	errOpImageList         = "IMAGE_LIST_ERROR"
+	errOpNetworkList       = "NETWORK_LIST_ERROR"
+	errOpNetworkError      = "DOCKER_NETWORK_ERROR"
 )
 
 const (
