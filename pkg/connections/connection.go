@@ -37,8 +37,9 @@ type ConnectionConfig struct {
 
 // Connection entry
 type Connection struct {
-	ID       string `json:"id"`
-	Label    string `json:"label"`
+	ID    string `json:"id"`
+	Label string `json:"label"`
+	// Deprecated: Do not use URL when calling PFE APIs. Use config.PFEOriginFromConnection() which is cloud aware
 	URL      string `json:"url"`
 	AuthURL  string `json:"auth"`
 	Realm    string `json:"realm"`
