@@ -25,6 +25,7 @@ const (
 	errOpClientCreate      = "CLIENT_CREATE_ERROR"
 	errOpImageNotFound     = "IMAGE_NOT_FOUND"
 	errOpImagePull         = "IMAGE_PULL_ERROR"
+	errOpContainerInspect  = "CONTAINER_INSPECT_ERROR"
 	errOpContainersStopped = "CONTAINERS_STOPPED"
 	errOpContainerError    = "CONTAINER_ERROR"
 	errOpDockerCompose     = "DOCKER_COMPOSE_ERROR"
