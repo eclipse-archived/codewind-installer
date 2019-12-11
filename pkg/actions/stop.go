@@ -13,7 +13,6 @@ package actions
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/eclipse/codewind-installer/pkg/utils"
@@ -25,12 +24,7 @@ func StopCommand() {
 	containerArr[0] = "codewind-pfe"
 	containerArr[1] = "codewind-performance"
 
-	containers, err := utils.GetContainerList()
-
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(0)
-	}
+	containers := utils.GetContainerList()
 
 	fmt.Println("Only stopping Codewind containers. To stop project containers, please use 'stop-all'")
 

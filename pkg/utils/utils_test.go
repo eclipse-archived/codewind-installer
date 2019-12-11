@@ -40,14 +40,14 @@ func TestRemoveImage(t *testing.T) {
 func TestCheckImageStatusFalse(t *testing.T) {
 	// Test checks that image list can be searched
 	// False return as no images have been installed for this test
-	result, _ := CheckImageStatus()
+	result := CheckImageStatus()
 	assert.Equal(t, result, false, "should return false: no images are installed")
 }
 
 func TestCheckContainerStatusFalse(t *testing.T) {
 	// Test checks that container list can be searched
 	// False return as no containers have been started for this test
-	result, _ := CheckContainerStatus()
+	result := CheckContainerStatus()
 	assert.Equal(t, result, false, "should return false: no containers are started")
 }
 
@@ -127,11 +127,4 @@ func TestRemoveDuplicateEntries(t *testing.T) {
 	if len(result) != 0 {
 		log.Fatal("Test 3: Failed to identify empty array values")
 	}
-}
-
-func TestStringInSlice(t *testing.T) {
-	testSlice := []string{"a", "b"}
-	assert.True(t, StringInSlice("a", testSlice))
-	assert.True(t, StringInSlice("b", testSlice))
-	assert.False(t, StringInSlice("c", testSlice))
 }

@@ -13,7 +13,6 @@ package actions
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/docker/docker/api/types"
@@ -22,12 +21,7 @@ import (
 
 //StopAllCommand to stop codewind and project containers
 func StopAllCommand() {
-	containers, err := utils.GetContainerList()
-
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(0)
-	}
+	containers := utils.GetContainerList()
 
 	fmt.Println("Stopping Codewind and Project containers")
 	containersToRemove := getContainersToRemove(containers)
@@ -37,13 +31,7 @@ func StopAllCommand() {
 	}
 
 	networkName := "codewind"
-	networks, err := utils.GetNetworkList()
-
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(0)
-	}
-
+	networks := utils.GetNetworkList()
 	fmt.Println("Removing Codewind docker networks..")
 	for _, network := range networks {
 		if strings.Contains(network.Name, networkName) {

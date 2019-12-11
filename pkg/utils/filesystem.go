@@ -96,14 +96,10 @@ func DeleteTempFile(filePath string) (bool, error) {
 }
 
 // PingHealth - pings environment api every 15 seconds to check if containers started
-func PingHealth(healthEndpoint string) (bool, error) {
+func PingHealth(healthEndpoint string) bool {
 	var started = false
 	fmt.Println("Waiting for Codewind to start")
-	hostname, port, err := GetPFEHostAndPort()
-	if err != nil {
-		return false, err
-	}
-
+	hostname, port := GetPFEHostAndPort()
 	for i := 0; i < 120; i++ {
 		resp, err := http.Get("http://" + hostname + ":" + port + healthEndpoint)
 		if err != nil {
@@ -122,7 +118,7 @@ func PingHealth(healthEndpoint string) (bool, error) {
 	if started != true {
 		log.Fatal("Codewind containers are taking a while to start. Please check the container logs and/or restart Codewind")
 	}
-	return false, nil
+	return started
 }
 
 // GetZipURL from github api /repos/:owner/:repo/:archive_format/:ref
