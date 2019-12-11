@@ -196,17 +196,22 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 }
 
 func completeUpload(projectID string, files []string, modfiles []string, conID string, timestamp int64) (string, int) {
-	
+
 	conInfo, conInfoErr := connections.GetConnectionByID(conID)
 	if conInfoErr != nil {
 		return conInfoErr.Desc, 1
 	}
 
-	uploadEndURL := conInfo.URL + "/api/v1/projects/" + projectID + "/upload/end"
+	conURL, conErr := config.PFEOriginFromConnection(conInfo)
+	if conErr != nil {
+		return conErr.Desc, 1
+	}
+
+	uploadEndURL := conURL + "/api/v1/projects/" + projectID + "/upload/end"
 
 	payload := &CompleteRequest{FileList: files, ModifiedList: modfiles, TimeStamp: timestamp}
 	jsonPayload, _ := json.Marshal(payload)
-	
+
 	req, err := http.NewRequest("POST", uploadEndURL, bytes.NewBuffer(jsonPayload))
 	req.Header.Set("Content-Type", "application/json")
 	if err != nil {
@@ -217,10 +222,10 @@ func completeUpload(projectID string, files []string, modfiles []string, conID s
 	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo)
 	if httpSecError != nil {
 		fmt.Printf("error dispatching request  %v\n", httpSecError)
-		return httpSecError.Desc,0
+		return httpSecError.Desc, 0
 	}
 	if resp.StatusCode != 200 {
-		return resp.Status,resp.StatusCode
+		return resp.Status, resp.StatusCode
 	}
 
 	defer resp.Body.Close()
