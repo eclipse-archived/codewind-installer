@@ -48,13 +48,3 @@ func PrettyPrintJSON(i interface{}) {
 func CreateTimestamp() int64 {
 	return time.Now().UnixNano() / int64(time.Millisecond)
 }
-
-// StringInSlice returns true if the string is in the slice
-func StringInSlice(a string, slice []string) bool {
-	for _, b := range slice {
-		if b == a {
-			return true
-		}
-	}
-	return false
-}
