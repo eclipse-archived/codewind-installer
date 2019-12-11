@@ -21,7 +21,9 @@ type DockerError struct {
 }
 
 const (
-	errOpValidate = "docker_validate" // validate docker images
+	errOpValidate         = "docker_validate" // validate docker images
+	errOpClientCreate     = "CLIENT_CREATE_ERROR"
+	errOpContainerInspect = "CONTAINER_INSPECT_ERROR"
 )
 
 const (
