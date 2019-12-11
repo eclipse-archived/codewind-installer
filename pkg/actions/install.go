@@ -32,11 +32,10 @@ func InstallCommand(c *cli.Context) {
 	tag := c.String("tag")
 	jsonOutput := c.Bool("json") || c.GlobalBool("json")
 
-	imageArr := [2]string{"docker.io/eclipse/codewind-pfe-amd64:",
-		"docker.io/eclipse/codewind-performance-amd64:"}
-
-	targetArr := [2]string{"codewind-pfe-amd64:",
-		"codewind-performance-amd64:"}
+	imageArr := [2]string{
+		"docker.io/eclipse/codewind-pfe-amd64:",
+		"docker.io/eclipse/codewind-performance-amd64:",
+	}
 
 	for i := 0; i < len(imageArr); i++ {
 		utils.PullImage(imageArr[i]+tag, jsonOutput)
@@ -64,11 +63,9 @@ func InstallCommand(c *cli.Context) {
 				os.Exit(1)
 			}
 		}
-
-		utils.TagImage(imageArr[i]+tag, targetArr[i]+tag)
 	}
 
-	fmt.Println("Image Tagging Successful")
+	fmt.Println("Image Install Successful")
 }
 
 // DoRemoteInstall : Deploy a remote PFE and support containers

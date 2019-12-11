@@ -17,11 +17,13 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/eclipse/codewind-installer/pkg/utils"
+	"github.com/urfave/cli"
 )
 
 //StopAllCommand to stop codewind and project containers
-func StopAllCommand() {
-	containers := utils.GetContainerList()
+func StopAllCommand(c *cli.Context, dockerComposeFile string) {
+	tag := c.String("tag")
+	containers, err := utils.GetContainerList()
 
 	fmt.Println("Stopping Codewind and Project containers")
 	containersToRemove := getContainersToRemove(containers)
@@ -30,21 +32,14 @@ func StopAllCommand() {
 		utils.StopContainer(container)
 	}
 
-	networkName := "codewind"
-	networks := utils.GetNetworkList()
-	fmt.Println("Removing Codewind docker networks..")
-	for _, network := range networks {
-		if strings.Contains(network.Name, networkName) {
-			fmt.Print("Removing docker network: ", network.Name, "... ")
-			utils.RemoveNetwork(network)
-		}
-	}
+	utils.DockerComposeStop(tag, dockerComposeFile)
+
 }
 
 func getContainersToRemove(containerList []types.Container) []types.Container {
 	codewindContainerPrefixes := []string{
-		"/codewind-pfe",
-		"/codewind-performance",
+		// "/codewind-pfe",
+		// "/codewind-performance",
 		"/cw-",
 	}
 
