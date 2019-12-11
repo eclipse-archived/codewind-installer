@@ -168,7 +168,7 @@ func DockerCompose(tempFilePath string, tag string) *DockerError {
 	return nil
 }
 
-// PullImage - pull pfe/performance/initialize images from dockerhub
+// PullImage - pull pfe/performance images from dockerhub
 func PullImage(image string, jsonOutput bool) *DockerError {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.WithVersion("1.30"))
@@ -276,8 +276,7 @@ func CheckContainerStatus() (bool, *DockerError) {
 	if containerCount >= 2 {
 		return true, nil
 	}
-	containerError := goErr.New("Codewind containers are not running")
-	return false, &DockerError{errOpImageNotFound, containerError, containerError.Error()}
+	return false, nil
 }
 
 // CheckImageStatus of Codewind installed/uninstalled
@@ -301,8 +300,7 @@ func CheckImageStatus() (bool, *DockerError) {
 		}
 	}
 	if imageCount < 2 {
-		imageError := goErr.New("Cannot find Codewind images, try running install to pull them")
-		return false, &DockerError{errOpImageNotFound, imageError, imageError.Error()}
+		return false, nil
 	}
 	return true, nil
 }
@@ -314,8 +312,7 @@ func CheckImageTag(tag string) (bool, *DockerError) {
 		return false, err
 	}
 	if !StringInSlice(tag, tags) {
-		imageTagError := goErr.New("Cannot find Codewind with given tag, try running install to pull them")
-		return false, &DockerError{errOpImageTag, imageTagError, imageTagError.Error()}
+		return false, nil
 	}
 	return true, nil
 }
