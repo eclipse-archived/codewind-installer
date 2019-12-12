@@ -23,6 +23,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
@@ -95,7 +96,8 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	// Sync all the necessary project files
 	fileList, modifiedList, uploadedFilesList := syncFiles(projectPath, projectID, conURL, synctime, conInfo)
 	// Complete the upload
-	completeStatus, completeStatusCode := completeUpload(projectID, fileList, modifiedList, conID, synctime)
+	var currentSyncTime = time.Now().UnixNano() / 1000000;
+	completeStatus, completeStatusCode := completeUpload(projectID, fileList, modifiedList, conID, currentSyncTime)
 	response := SyncResponse{
 		UploadedFiles: uploadedFilesList,
 		Status:        completeStatus,
@@ -194,7 +196,7 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 	return fileList, modifiedList, uploadedFiles
 }
 
-func completeUpload(projectID string, files []string, modfiles []string, conID string, timestamp int64) (string, int) {
+func completeUpload(projectID string, files []string, modfiles []string, conID string, currentSyncTime int64) (string, int) {
 
 	conInfo, conInfoErr := connections.GetConnectionByID(conID)
 	if conInfoErr != nil {
@@ -208,7 +210,7 @@ func completeUpload(projectID string, files []string, modfiles []string, conID s
 
 	uploadEndURL := conURL + "/api/v1/projects/" + projectID + "/upload/end"
 
-	payload := &CompleteRequest{FileList: files, ModifiedList: modfiles, TimeStamp: timestamp}
+	payload := &CompleteRequest{FileList: files, ModifiedList: modfiles, TimeStamp: currentSyncTime}
 	jsonPayload, _ := json.Marshal(payload)
 
 	req, err := http.NewRequest("POST", uploadEndURL, bytes.NewBuffer(jsonPayload))
