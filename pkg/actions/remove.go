@@ -25,6 +25,9 @@ import (
 //RemoveCommand to remove all codewind and project images
 func RemoveCommand(c *cli.Context, dockerComposeFile string) {
 	tag := c.String("tag")
+	if tag == "" {
+		tag = "latest"
+	}
 	imageArr := []string{
 		"cw-",
 	}
