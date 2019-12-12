@@ -108,7 +108,6 @@ const (
 // DockerCompose to set up the Codewind environment
 func DockerCompose(dockerComposeFile string, tag string) {
 	setupDockerComposeEnvs(tag)
-
 	cmd := exec.Command("docker-compose", "-f", dockerComposeFile, "up", "-d", "--force-recreate")
 	output := new(bytes.Buffer)
 	cmd.Stdout = output
@@ -135,7 +134,6 @@ func DockerCompose(dockerComposeFile string, tag string) {
 // DockerComposeStop to stop Codewind containers
 func DockerComposeStop(tag, dockerComposeFile string) {
 	setupDockerComposeEnvs(tag)
-
 	cmd := exec.Command("docker-compose", "-f", dockerComposeFile, "rm", "--stop", "-f")
 	output := new(bytes.Buffer)
 	cmd.Stdout = output
