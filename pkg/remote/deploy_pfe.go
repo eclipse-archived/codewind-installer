@@ -154,10 +154,6 @@ func setPFEEnvVars(codewind Codewind, deployOptions *DeployOptions) []corev1.Env
 			Value: codewind.ServiceAccountName,
 		},
 		{
-			Name:  "MICROCLIMATE_RELEASE_NAME",
-			Value: "RELEASE-NAME",
-		},
-		{
 			Name:  "HOST_WORKSPACE_DIRECTORY",
 			Value: "/projects",
 		},
