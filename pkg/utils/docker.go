@@ -106,7 +106,7 @@ const (
 )
 
 // DockerCompose to set up the Codewind environment
-func DockerCompose(dockerComposeFile string, tag string) *DockerError {
+func DockerCompose(dockerComposeFile string, tag string) {
 	setupDockerComposeEnvs(tag)
 
 	cmd := exec.Command("docker-compose", "-f", dockerComposeFile, "up", "-d", "--force-recreate")
@@ -130,13 +130,10 @@ func DockerCompose(dockerComposeFile string, tag string) *DockerError {
 		DeleteTempFile(dockerComposeFile)
 		os.Exit(1)
 	}
-	return nil
 }
 
-//*************************************************************************************************************************************************************************************************
-// DockerCompose to set up the Codewind environment
-func DockerComposeStop(tag, dockerComposeFile string) *DockerError {
-
+// DockerComposeStop to stop Codewind containers
+func DockerComposeStop(tag, dockerComposeFile string) {
 	setupDockerComposeEnvs(tag)
 
 	cmd := exec.Command("docker-compose", "-f", dockerComposeFile, "rm", "--stop", "-f")
@@ -152,14 +149,12 @@ func DockerComposeStop(tag, dockerComposeFile string) *DockerError {
 	fmt.Printf(output.String()) // Wait to finish execution, so we can read all output
 
 	if strings.Contains(output.String(), "ERROR") || strings.Contains(output.String(), "error") {
-		//DeleteTempFile(dockerComposeFile)
 		os.Exit(1)
 	}
-	return nil
 }
 
-func DockerComposeRemove(dockerComposeFile, tag string) *DockerError {
-
+// DockerComposeRemove to remove Codewind images
+func DockerComposeRemove(dockerComposeFile, tag string) {
 	setupDockerComposeEnvs(tag)
 	cmd := exec.Command("docker-compose", "-f", dockerComposeFile, "down", "--rmi", "all")
 	output := new(bytes.Buffer)
@@ -174,14 +169,12 @@ func DockerComposeRemove(dockerComposeFile, tag string) *DockerError {
 	fmt.Printf(output.String()) // Wait to finish execution, so we can read all output
 
 	if strings.Contains(output.String(), "ERROR") || strings.Contains(output.String(), "error") {
-		//DeleteTempFile(dockerComposeFile)
 		os.Exit(1)
 	}
-	return nil
 }
 
+// setupDockerComposeEnvs for docker-compose to use
 func setupDockerComposeEnvs(tag string) {
-	// Set env variables for the docker compose file
 	home := os.Getenv("HOME")
 
 	const GOARCH string = runtime.GOARCH
@@ -214,8 +207,6 @@ func setupDockerComposeEnvs(tag string) {
 	}
 	os.Setenv("PFE_EXTERNAL_PORT", port)
 }
-
-//*************************************************************************************************************************************************************************************************
 
 // PullImage - pull pfe/performance images from dockerhub
 func PullImage(image string, jsonOutput bool) {

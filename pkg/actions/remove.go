@@ -49,7 +49,6 @@ func RemoveCommand(c *cli.Context, dockerComposeFile string) {
 	}
 
 	utils.DockerComposeRemove(dockerComposeFile, tag)
-	utils.DeleteTempFile(dockerComposeFile) // Remove docker-compose.yaml from /.codewind
 }
 
 // DoRemoteRemove : Delete a remote Codewind deployment
