@@ -38,8 +38,6 @@ func StopAllCommand(c *cli.Context, dockerComposeFile string) {
 
 func getContainersToRemove(containerList []types.Container) []types.Container {
 	codewindContainerPrefixes := []string{
-		// "/codewind-pfe",
-		// "/codewind-performance",
 		"/cw-",
 	}
 
