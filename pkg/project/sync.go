@@ -64,6 +64,7 @@ type (
 
 // SyncProject syncs a project with its remote connection
 func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
+	var currentSyncTime = time.Now().UnixNano() / 1000000;
 	projectPath := strings.TrimSpace(c.String("path"))
 	projectID := strings.TrimSpace(c.String("id"))
 	synctime := int64(c.Int("time"))
@@ -96,7 +97,6 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	// Sync all the necessary project files
 	fileList, modifiedList, uploadedFilesList := syncFiles(projectPath, projectID, conURL, synctime, conInfo)
 	// Complete the upload
-	var currentSyncTime = time.Now().UnixNano() / 1000000;
 	completeStatus, completeStatusCode := completeUpload(projectID, fileList, modifiedList, conID, currentSyncTime)
 	response := SyncResponse{
 		UploadedFiles: uploadedFilesList,
