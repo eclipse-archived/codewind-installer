@@ -20,7 +20,6 @@ import (
 
 // StartCommand : start the codewind containers
 func StartCommand(c *cli.Context, dockerComposeFile string, healthEndpoint string) {
-	tag := c.String("tag")
 	status := utils.CheckContainerStatus()
 
 	if status {

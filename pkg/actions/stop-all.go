@@ -23,7 +23,7 @@ import (
 //StopAllCommand to stop codewind and project containers
 func StopAllCommand(c *cli.Context, dockerComposeFile string) {
 	tag := c.String("tag")
-	containers, err := utils.GetContainerList()
+	containers := utils.GetContainerList()
 
 	fmt.Println("Stopping Codewind and Project containers")
 	containersToRemove := getContainersToRemove(containers)
