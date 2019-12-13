@@ -139,7 +139,6 @@ func DockerComposeStop(tag, dockerComposeFile string) {
 	cmd.Stdout = output
 	cmd.Stderr = output
 	if err := cmd.Start(); err != nil { // after 'Start' the program is continued and script is executing in background
-		DeleteTempFile(dockerComposeFile)
 		errors.CheckErr(err, 101, "")
 	}
 	fmt.Printf("Please wait whilst containers shutdown... %s \n", output.String())
@@ -159,7 +158,6 @@ func DockerComposeRemove(dockerComposeFile, tag string) {
 	cmd.Stdout = output
 	cmd.Stderr = output
 	if err := cmd.Start(); err != nil { // after 'Start' the program is continued and script is executing in background
-		DeleteTempFile(dockerComposeFile)
 		errors.CheckErr(err, 101, "")
 	}
 	fmt.Printf("Please wait whilst images are removed... %s \n", output.String())
