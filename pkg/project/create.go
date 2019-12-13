@@ -54,9 +54,7 @@ type (
 func DownloadTemplate(c *cli.Context) *ProjectError {
 	destination := c.Args().Get(0)
 
-	if destination == "" {
-		log.Fatal("destination not set")
-	}
+	checkProjectPathDoesNotExist(destination)
 
 	projectDir := path.Base(destination)
 
@@ -139,7 +137,7 @@ func checkIsExtension(conID, projectPath string, c *cli.Context) (string, error)
 func ValidateProject(c *cli.Context) *ProjectError {
 	projectPath := c.Args().Get(0)
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
-	checkProjectPath(projectPath)
+	checkProjectPathExists(projectPath)
 	validationStatus := "success"
 	// result could be ProjectType or string, so define as an interface
 	var validationResult interface{}
@@ -188,8 +186,19 @@ func writeCwSettingsIfNotInProject(conID string, projectPath string, BuildType s
 	}
 }
 
-// checkProjectPath will stop the process and return an error if path does not exist or is invalid
-func checkProjectPath(projectPath string) {
+// CheckProjectPathDoesNotExist stops the process if the given path is empty, or already exists
+func checkProjectPathDoesNotExist(projectPath string) {
+	if projectPath == "" {
+		log.Fatal("destination not set")
+	}
+	if utils.PathExists(projectPath) {
+		log.Fatal("Project is already at given path")
+	}
+
+}
+
+// CheckProjectPathExists will stop the process and return an error if path does not exist or is invalid
+func checkProjectPathExists(projectPath string) {
 	if projectPath == "" {
 		log.Fatal("Project path not given")
 	}
