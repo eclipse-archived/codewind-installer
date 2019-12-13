@@ -87,6 +87,7 @@ func TestWriteNewCwSettings(t *testing.T) {
 				HealthCheck:       "",
 				IsHTTPS:           false,
 				InternalDebugPort: &defaultInternalDebugPort,
+				PingTimeout:       "",
 			},
 			wantIgnoredPath: "*/node_modules*",
 		},
@@ -101,6 +102,7 @@ func TestWriteNewCwSettings(t *testing.T) {
 				InternalDebugPort: &defaultInternalDebugPort,
 				MavenProfiles:     []string{""},
 				MavenProperties:   []string{""},
+				PingTimeout:       "",
 			},
 			wantIgnoredPath: "/libertyrepocache.zip",
 		},
@@ -115,6 +117,7 @@ func TestWriteNewCwSettings(t *testing.T) {
 				InternalDebugPort: &defaultInternalDebugPort,
 				MavenProfiles:     []string{""},
 				MavenProperties:   []string{""},
+				PingTimeout:       "",
 			},
 			wantIgnoredPath: "/localm2cache.zip",
 		},
@@ -126,6 +129,7 @@ func TestWriteNewCwSettings(t *testing.T) {
 				InternalPort: "",
 				HealthCheck:  "",
 				IsHTTPS:      false,
+				PingTimeout:  "",
 			},
 			wantIgnoredPath: ".swift-version",
 		},
@@ -137,6 +141,7 @@ func TestWriteNewCwSettings(t *testing.T) {
 				InternalPort: "",
 				HealthCheck:  "",
 				IsHTTPS:      false,
+				PingTimeout:  "",
 			},
 			wantIgnoredPath: "*/.DS_Store",
 		},
@@ -148,6 +153,7 @@ func TestWriteNewCwSettings(t *testing.T) {
 				InternalPort: "",
 				HealthCheck:  "",
 				IsHTTPS:      false,
+				PingTimeout:  "",
 			},
 			wantIgnoredPath: "*/.DS_Store",
 		},
@@ -161,6 +167,7 @@ func TestWriteNewCwSettings(t *testing.T) {
 			assert.Equal(t, cwSettings.InternalPort, test.wantCwSettings.InternalPort)
 			assert.Equal(t, cwSettings.HealthCheck, test.wantCwSettings.HealthCheck)
 			assert.Equal(t, cwSettings.IsHTTPS, test.wantCwSettings.IsHTTPS)
+			assert.Equal(t, cwSettings.PingTimeout, test.wantCwSettings.PingTimeout)
 			assert.Contains(t, cwSettings.IgnoredPaths, test.wantIgnoredPath)
 			if test.wantCwSettings.InternalDebugPort != nil {
 				assert.Equal(t, cwSettings.InternalDebugPort, test.wantCwSettings.InternalDebugPort)

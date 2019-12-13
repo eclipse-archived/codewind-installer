@@ -47,6 +47,7 @@ type (
 		IgnoredPaths      []string `json:"ignoredPaths"`
 		MavenProfiles     []string `json:"mavenProfiles,omitempty"`
 		MavenProperties   []string `json:"mavenProperties,omitempty"`
+		PingTimeout       string   `json:"pingTimeout"`
 	}
 )
 
@@ -287,6 +288,7 @@ func getDefaultCwSettings(conID string, BuildType string) CWSettings {
 		HealthCheck:  "",
 		IsHTTPS:      false,
 		IgnoredPaths: IgnoredPaths,
+		PingTimeout:  "",
 	}
 }
 
