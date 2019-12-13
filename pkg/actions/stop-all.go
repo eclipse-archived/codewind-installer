@@ -24,15 +24,14 @@ import (
 func StopAllCommand(c *cli.Context, dockerComposeFile string) {
 	tag := c.String("tag")
 	containers := utils.GetContainerList()
+	utils.DockerComposeStop(tag, dockerComposeFile)
 
-	fmt.Println("Stopping Codewind and Project containers")
+	fmt.Println("Stopping Project containers")
 	containersToRemove := getContainersToRemove(containers)
 	for _, container := range containersToRemove {
 		fmt.Println("Stopping container ", container.Names[0], "... ")
 		utils.StopContainer(container)
 	}
-
-	utils.DockerComposeStop(tag, dockerComposeFile)
 
 }
 
