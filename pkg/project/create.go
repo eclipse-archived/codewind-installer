@@ -186,7 +186,7 @@ func writeCwSettingsIfNotInProject(conID string, projectPath string, BuildType s
 	}
 }
 
-// CheckProjectPathDoesNotExist stops the process if the given path is empty, or already exists
+// checkProjectPathDoesNotExist stops the process if the given local filepath already exists, or is an empty string
 func checkProjectPathDoesNotExist(projectPath string) {
 	if projectPath == "" {
 		log.Fatal("destination not set")
@@ -194,10 +194,9 @@ func checkProjectPathDoesNotExist(projectPath string) {
 	if utils.PathExists(projectPath) {
 		log.Fatal("Project is already at given path")
 	}
-
 }
 
-// CheckProjectPathExists will stop the process and return an error if path does not exist or is invalid
+// checkProjectPathExists stops the process if the given local filepath does not exist, or is an empty string
 func checkProjectPathExists(projectPath string) {
 	if projectPath == "" {
 		log.Fatal("Project path not given")
