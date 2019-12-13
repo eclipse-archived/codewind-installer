@@ -21,6 +21,6 @@ import (
 //StopCommand to stop only the codewind containers
 func StopCommand(c *cli.Context, dockerComposeFile string) {
 	tag := c.String("tag")
-	utils.DockerComposeStop(tag, dockerComposeFile)
 	fmt.Println("Only stopping Codewind containers. To stop project containers, please use 'stop-all'")
+	utils.DockerComposeStop(tag, dockerComposeFile)
 }
