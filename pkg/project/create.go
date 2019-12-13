@@ -54,7 +54,7 @@ type (
 func DownloadTemplate(c *cli.Context) *ProjectError {
 	destination := c.Args().Get(0)
 
-	checkProjectPathDoesNotExist(destination)
+	checkProjectDirIsEmpty(destination)
 
 	projectDir := path.Base(destination)
 
@@ -186,13 +186,21 @@ func writeCwSettingsIfNotInProject(conID string, projectPath string, BuildType s
 	}
 }
 
-// checkProjectPathDoesNotExist stops the process if the given local filepath already exists, or is an empty string
-func checkProjectPathDoesNotExist(projectPath string) {
+// checkProjectDirIsEmpty stops the process if the given local filepath already exists, or is an empty string
+func checkProjectDirIsEmpty(projectPath string) {
 	if projectPath == "" {
 		log.Fatal("destination not set")
 	}
+
+	// if the project dir already exists, continue if empty and exit if not
 	if utils.PathExists(projectPath) {
-		log.Fatal("Project is already at given path")
+		dirIsEmpty, err := utils.DirIsEmpty(projectPath)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if !dirIsEmpty {
+			log.Fatal("Non empty project at given path")
+		}
 	}
 }
 
