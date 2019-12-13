@@ -107,7 +107,7 @@ const (
 
 // DockerCompose to set up the Codewind environment
 func DockerCompose(dockerComposeFile string, tag string) {
-	setupDockerComposeEnvs(tag)
+	setupDockerComposeEnvs(tag, "")
 	cmd := exec.Command("docker-compose", "-f", dockerComposeFile, "up", "-d", "--force-recreate")
 	output := new(bytes.Buffer)
 	cmd.Stdout = output
@@ -133,7 +133,7 @@ func DockerCompose(dockerComposeFile string, tag string) {
 
 // DockerComposeStop to stop Codewind containers
 func DockerComposeStop(tag, dockerComposeFile string) {
-	setupDockerComposeEnvs(tag)
+	setupDockerComposeEnvs(tag, "stop")
 	cmd := exec.Command("docker-compose", "-f", dockerComposeFile, "rm", "--stop", "-f")
 	output := new(bytes.Buffer)
 	cmd.Stdout = output
@@ -153,7 +153,7 @@ func DockerComposeStop(tag, dockerComposeFile string) {
 
 // DockerComposeRemove to remove Codewind images
 func DockerComposeRemove(dockerComposeFile, tag string) {
-	setupDockerComposeEnvs(tag)
+	setupDockerComposeEnvs(tag, "remove")
 	cmd := exec.Command("docker-compose", "-f", dockerComposeFile, "down", "--rmi", "all")
 	output := new(bytes.Buffer)
 	cmd.Stdout = output
@@ -172,7 +172,7 @@ func DockerComposeRemove(dockerComposeFile, tag string) {
 }
 
 // setupDockerComposeEnvs for docker-compose to use
-func setupDockerComposeEnvs(tag string) {
+func setupDockerComposeEnvs(tag, command string) {
 	home := os.Getenv("HOME")
 
 	const GOARCH string = runtime.GOARCH
@@ -198,12 +198,17 @@ func setupDockerComposeEnvs(tag string) {
 	os.Setenv("HOST_OS", GOOS)
 	os.Setenv("COMPOSE_PROJECT_NAME", "codewind")
 	os.Setenv("HOST_MAVEN_OPTS", os.Getenv("MAVEN_OPTS"))
-	fmt.Printf("Attempting to find available port\n")
-	portAvailable, port := IsTCPPortAvailable(minTCPPort, maxTCPPort)
-	if !portAvailable {
-		fmt.Printf("No available external ports in range, will default to Docker-assigned port")
+
+	if command == "remove" || command == "stop" {
+		os.Setenv("PFE_EXTERNAL_PORT", "")
+	} else {
+		fmt.Printf("Attempting to find available port\n")
+		portAvailable, port := IsTCPPortAvailable(minTCPPort, maxTCPPort)
+		if !portAvailable {
+			fmt.Printf("No available external ports in range, will default to Docker-assigned port")
+		}
+		os.Setenv("PFE_EXTERNAL_PORT", port)
 	}
-	os.Setenv("PFE_EXTERNAL_PORT", port)
 }
 
 // PullImage - pull pfe/performance images from dockerhub
