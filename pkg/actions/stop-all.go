@@ -32,7 +32,6 @@ func StopAllCommand(c *cli.Context, dockerComposeFile string) {
 		fmt.Println("Stopping container ", container.Names[0], "... ")
 		utils.StopContainer(container)
 	}
-
 }
 
 func getContainersToRemove(containerList []types.Container) []types.Container {
