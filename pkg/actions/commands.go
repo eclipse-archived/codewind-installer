@@ -15,27 +15,15 @@ import (
 	"crypto/tls"
 	"net/http"
 	"os"
-	"runtime"
 
 	"github.com/eclipse/codewind-installer/pkg/appconstants"
+	desktoputils "github.com/eclipse/codewind-installer/pkg/desktop_utils"
 	"github.com/eclipse/codewind-installer/pkg/errors"
 	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
-// Get home directory
-func getHomeDir() string {
-	homeDir := ""
-	const GOOS string = runtime.GOOS
-	if GOOS == "windows" {
-		homeDir = os.Getenv("USERPROFILE")
-	} else {
-		homeDir = os.Getenv("HOME")
-	}
-	return homeDir
-}
-
-var homeDir = getHomeDir()
+var homeDir = desktoputils.GetHomeDir()
 var dockerComposeFile = homeDir + "/.codewind/docker-compose.yaml"
 
 const healthEndpoint = "/api/v1/environment"
