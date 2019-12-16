@@ -9,18 +9,16 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 
-package actions
+package desktoputils
 
 import (
-	"fmt"
+	"testing"
 
-	"github.com/eclipse/codewind-installer/pkg/utils"
-	"github.com/urfave/cli"
+	"github.com/stretchr/testify/assert"
 )
 
-//StopCommand to stop only the codewind containers
-func StopCommand(c *cli.Context, dockerComposeFile string) {
-	tag := c.String("tag")
-	fmt.Println("Only stopping Codewind containers. To stop project containers, please use 'stop-all'")
-	utils.DockerComposeStop(tag, dockerComposeFile)
+// Test to make sure GetHomeDir() does not return a nil value
+func Test_GetHomeDir(t *testing.T) {
+	result := GetHomeDir()
+	assert.NotNil(t, result, "should return home dir of system or blank string")
 }

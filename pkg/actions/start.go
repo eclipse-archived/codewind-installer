@@ -18,8 +18,8 @@ import (
 	"github.com/urfave/cli"
 )
 
-//StartCommand to start the codewind conainers
-func StartCommand(c *cli.Context, tempFilePath string, healthEndpoint string) {
+// StartCommand : start the codewind containers
+func StartCommand(c *cli.Context, dockerComposeFile string, healthEndpoint string) {
 	status := utils.CheckContainerStatus()
 
 	if status {
@@ -29,13 +29,9 @@ func StartCommand(c *cli.Context, tempFilePath string, healthEndpoint string) {
 		debug := c.Bool("debug")
 		fmt.Println("Debug:", debug)
 
-		// Stop all running project containers and remove codewind networks
-		StopAllCommand()
-
-		utils.CreateTempFile(tempFilePath)
-		utils.WriteToComposeFile(tempFilePath, debug)
-		utils.DockerCompose(tempFilePath, tag)
-		utils.DeleteTempFile(tempFilePath) // Remove installer-docker-compose.yaml
+		utils.CreateTempFile(dockerComposeFile)
+		utils.WriteToComposeFile(dockerComposeFile, debug)
+		utils.DockerCompose(dockerComposeFile, tag)
 		utils.PingHealth(healthEndpoint)
 	}
 }

@@ -17,12 +17,14 @@ import (
 	"os"
 
 	"github.com/eclipse/codewind-installer/pkg/appconstants"
+	desktoputils "github.com/eclipse/codewind-installer/pkg/desktop_utils"
 	"github.com/eclipse/codewind-installer/pkg/errors"
 	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
-var tempFilePath = "codewind-docker-compose.yaml"
+var homeDir = desktoputils.GetHomeDir()
+var dockerComposeFile = homeDir + "/.codewind/docker-compose.yaml"
 
 const healthEndpoint = "/api/v1/environment"
 
@@ -228,7 +230,7 @@ func Commands() {
 				},
 			},
 			Action: func(c *cli.Context) error {
-				StartCommand(c, tempFilePath, healthEndpoint)
+				StartCommand(c, dockerComposeFile, healthEndpoint)
 				return nil
 			},
 		},
@@ -256,7 +258,7 @@ func Commands() {
 			Name:  "stop",
 			Usage: "Stop the running Codewind containers",
 			Action: func(c *cli.Context) error {
-				StopCommand()
+				StopCommand(c, dockerComposeFile)
 				return nil
 			},
 		},
@@ -265,7 +267,7 @@ func Commands() {
 			Name:  "stop-all",
 			Usage: "Stop all of the Codewind and project containers",
 			Action: func(c *cli.Context) error {
-				StopAllCommand()
+				StopAllCommand(c, dockerComposeFile)
 				return nil
 			},
 		},
@@ -281,7 +283,7 @@ func Commands() {
 			},
 			Usage: "Remove Codewind/Project docker images and the codewind network",
 			Action: func(c *cli.Context) error {
-				RemoveCommand(c)
+				RemoveCommand(c, dockerComposeFile)
 				return nil
 			},
 			Subcommands: []cli.Command{

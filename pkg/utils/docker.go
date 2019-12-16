@@ -34,12 +34,20 @@ import (
 	logr "github.com/sirupsen/logrus"
 )
 
+const pfeImageName = "eclipse/codewind-pfe"
+const performanceImageName = "eclipse/codewind-performance"
+
+var baseImageNameArr = [2]string{
+	pfeImageName,
+	performanceImageName,
+}
+
 // codewind-docker-compose.yaml data
 var data = `
 version: 2
 services:
  codewind-pfe:
-  image: ${REPOSITORY}codewind-pfe${PLATFORM}:${TAG}
+  image: ${PFE_IMAGE_NAME}${PLATFORM}:${TAG}
   container_name: codewind-pfe
   user: root
   environment: ["HOST_WORKSPACE_DIRECTORY=${WORKSPACE_DIRECTORY}","CONTAINER_WORKSPACE_DIRECTORY=/codewind-workspace","HOST_OS=${HOST_OS}","CODEWIND_VERSION=${TAG}","PERFORMANCE_CONTAINER=codewind-performance${PLATFORM}:${TAG}","HOST_HOME=${HOST_HOME}","HOST_MAVEN_OPTS=${HOST_MAVEN_OPTS}"]
@@ -48,7 +56,7 @@ services:
   volumes: ["/var/run/docker.sock:/var/run/docker.sock","cw-workspace:/codewind-workspace","${WORKSPACE_DIRECTORY}:/mounted-workspace"]
   networks: [network]
  codewind-performance:
-  image: codewind-performance${PLATFORM}:${TAG}
+  image: ${PERFORMANCE_IMAGE_NAME}${PLATFORM}:${TAG}
   ports: ["127.0.0.1:9095:9095"]
   container_name: codewind-performance
   networks: [network]
@@ -106,30 +114,98 @@ const (
 )
 
 // DockerCompose to set up the Codewind environment
-func DockerCompose(tempFilePath string, tag string) {
+func DockerCompose(dockerComposeFile string, tag string) {
+	setupDockerComposeEnvs(tag, "")
+	cmd := exec.Command("docker-compose", "-f", dockerComposeFile, "up", "-d", "--force-recreate")
+	output := new(bytes.Buffer)
+	cmd.Stdout = output
+	cmd.Stderr = output
+	if err := cmd.Start(); err != nil { // after 'Start' the program is continued and script is executing in background
+		DeleteTempFile(dockerComposeFile)
+		errors.CheckErr(err, 101, "Is docker-compose installed?")
+	}
+	fmt.Printf("Please wait whilst containers initialize... %s \n", output.String())
+	if err := cmd.Wait(); err != nil {
+		DeleteTempFile(dockerComposeFile)
+		errors.CheckErr(err, 101, "docker-compose command failed to execute correctly") // TODO - replace with new docker error
+	}
+	fmt.Printf(output.String()) // Wait to finish execution, so we can read all output
 
-	// Set env variables for the docker compose file
+	if strings.Contains(output.String(), "ERROR") || strings.Contains(output.String(), "error") {
+		DeleteTempFile(dockerComposeFile)
+		os.Exit(1)
+	}
+
+	if strings.Contains(output.String(), "The image for the service you're trying to recreate has been removed") {
+		DeleteTempFile(dockerComposeFile)
+		os.Exit(1)
+	}
+}
+
+// DockerComposeStop to stop Codewind containers
+func DockerComposeStop(tag, dockerComposeFile string) {
+	setupDockerComposeEnvs(tag, "stop")
+	cmd := exec.Command("docker-compose", "-f", dockerComposeFile, "rm", "--stop", "-f")
+	output := new(bytes.Buffer)
+	cmd.Stdout = output
+	cmd.Stderr = output
+	if err := cmd.Start(); err != nil { // after 'Start' the program is continued and script is executing in background
+		errors.CheckErr(err, 101, "")
+	}
+	fmt.Printf("Please wait whilst containers shutdown... %s \n", output.String())
+	if err := cmd.Wait(); err != nil {
+		errors.CheckErr(err, 101, "docker-compose stop command failed to execute correctly") //TODO - replace with new docker error
+	}
+	fmt.Printf(output.String()) // Wait to finish execution, so we can read all output
+
+	if strings.Contains(output.String(), "ERROR") || strings.Contains(output.String(), "error") {
+		os.Exit(1)
+	}
+}
+
+// DockerComposeRemove to remove Codewind images
+func DockerComposeRemove(dockerComposeFile, tag string) {
+	setupDockerComposeEnvs(tag, "remove")
+	cmd := exec.Command("docker-compose", "-f", dockerComposeFile, "down", "--rmi", "all")
+	output := new(bytes.Buffer)
+	cmd.Stdout = output
+	cmd.Stderr = output
+	if err := cmd.Start(); err != nil { // after 'Start' the program is continued and script is executing in background
+		errors.CheckErr(err, 101, "")
+	}
+	fmt.Printf("Please wait whilst images are removed... %s \n", output.String())
+	if err := cmd.Wait(); err != nil {
+		errors.CheckErr(err, 101, "docker-compose remove command failed to execute correctly") //TODO - replace with new docker error
+	}
+	fmt.Printf(output.String()) // Wait to finish execution, so we can read all output
+
+	if strings.Contains(output.String(), "ERROR") || strings.Contains(output.String(), "error") {
+		os.Exit(1)
+	}
+}
+
+// setupDockerComposeEnvs for docker-compose to use
+func setupDockerComposeEnvs(tag, command string) {
 	home := os.Getenv("HOME")
+	os.Setenv("PFE_IMAGE_NAME", pfeImageName)
+	os.Setenv("PERFORMANCE_IMAGE_NAME", performanceImageName)
 
 	const GOARCH string = runtime.GOARCH
 	const GOOS string = runtime.GOOS
 	fmt.Println("System architecture is: ", GOARCH)
 	fmt.Println("Host operating system is: ", GOOS)
-
 	if GOARCH == "x86_64" || GOARCH == "amd64" {
 		os.Setenv("PLATFORM", "-amd64")
 	} else {
 		os.Setenv("PLATFORM", "-"+GOARCH)
 	}
 
-	os.Setenv("REPOSITORY", "")
 	os.Setenv("TAG", tag)
 	if GOOS == "windows" {
 		os.Setenv("WORKSPACE_DIRECTORY", "C:\\codewind-data")
 		// In Windows, calling the env variable "HOME" does not return
 		// the user directory correctly
 		os.Setenv("HOST_HOME", os.Getenv("USERPROFILE"))
-
 	} else {
 		os.Setenv("WORKSPACE_DIRECTORY", home+"/codewind-data")
 		os.Setenv("HOST_HOME", home)
@@ -137,33 +213,16 @@ func DockerCompose(tempFilePath string, tag string) {
 	os.Setenv("HOST_OS", GOOS)
 	os.Setenv("COMPOSE_PROJECT_NAME", "codewind")
 	os.Setenv("HOST_MAVEN_OPTS", os.Getenv("MAVEN_OPTS"))
-	fmt.Printf("Attempting to find available port\n")
-	portAvailable, port := IsTCPPortAvailable(minTCPPort, maxTCPPort)
-	if !portAvailable {
-		fmt.Printf("No available external ports in range, will default to Docker-assigned port")
-	}
-	os.Setenv("PFE_EXTERNAL_PORT", port)
 
-	cmd := exec.Command("docker-compose", "-f", tempFilePath, "up", "-d", "--force-recreate")
-	output := new(bytes.Buffer)
-	cmd.Stdout = output
-	cmd.Stderr = output
-	if err := cmd.Start(); err != nil { // after 'Start' the program is continued and script is executing in background
-		DeleteTempFile(tempFilePath)
-		errors.CheckErr(err, 101, "Is docker-compose installed?")
-	}
-	fmt.Printf("Please wait whilst containers initialize... %s \n", output.String())
-	cmd.Wait()
-	fmt.Printf(output.String()) // Wait to finish execution, so we can read all output
-
-	if strings.Contains(output.String(), "ERROR") || strings.Contains(output.String(), "error") {
-		DeleteTempFile(tempFilePath)
-		os.Exit(1)
-	}
-
-	if strings.Contains(output.String(), "The image for the service you're trying to recreate has been removed") {
-		DeleteTempFile(tempFilePath)
-		os.Exit(1)
+	if command == "remove" || command == "stop" {
+		os.Setenv("PFE_EXTERNAL_PORT", "")
+	} else {
+		fmt.Printf("Attempting to find available port\n")
+		portAvailable, port := IsTCPPortAvailable(minTCPPort, maxTCPPort)
+		if !portAvailable {
+			fmt.Printf("No available external ports in range, will default to Docker-assigned port")
+		}
+		os.Setenv("PFE_EXTERNAL_PORT", port)
 	}
 }
 
@@ -244,10 +303,7 @@ func TagImage(source, tag string) {
 // CheckContainerStatus of Codewind running/stopped
 func CheckContainerStatus() bool {
 	var containerStatus = false
-	containerArr := [2]string{}
-	containerArr[0] = "codewind-pfe"
-	containerArr[1] = "codewind-performance"
-
+	containerArr := baseImageNameArr
 	containers := GetContainerList()
 
 	containerCount := 0
@@ -269,10 +325,7 @@ func CheckContainerStatus() bool {
 // CheckImageStatus of Codewind installed/uninstalled
 func CheckImageStatus() bool {
 	var imageStatus = false
-	imageArr := [2]string{}
-	imageArr[0] = "eclipse/codewind-pfe"
-	imageArr[1] = "eclipse/codewind-performance"
-
+	imageArr := baseImageNameArr
 	images := GetImageList()
 
 	imageCount := 0
@@ -397,7 +450,7 @@ func GetPFEHostAndPort() (string, string) {
 	} else if CheckContainerStatus() {
 		containerList := GetContainerList()
 		for _, container := range containerList {
-			if strings.HasPrefix(container.Image, "codewind-pfe") {
+			if strings.HasPrefix(container.Image, pfeImageName) {
 				for _, port := range container.Ports {
 					if port.PrivatePort == internalPFEPort {
 						return port.IP, strconv.Itoa(int(port.PublicPort))
@@ -411,9 +464,7 @@ func GetPFEHostAndPort() (string, string) {
 
 // GetImageTags of Codewind images
 func GetImageTags() []string {
-	imageArr := [2]string{}
-	imageArr[0] = "eclipse/codewind-pfe"
-	imageArr[1] = "eclipse/codewind-performance"
+	imageArr := baseImageNameArr
 	tagArr := []string{}
 
 	images := GetImageList()
@@ -464,9 +515,7 @@ func DetermineDebugPortForPFE() (pfeDebugPort string) {
 
 // GetContainerTags of the Codewind version(s) currently running
 func GetContainerTags() []string {
-	containerArr := [2]string{}
-	containerArr[0] = "codewind-pfe"
-	containerArr[1] = "codewind-performance"
+	containerArr := baseImageNameArr
 	tagArr := []string{}
 
 	containers := GetContainerList()

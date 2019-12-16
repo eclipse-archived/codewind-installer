@@ -20,6 +20,7 @@
 @test "invoke start command - Start dockerhub images (latest)" {
   cd cmd/cli/
   run go run main.go start -t latest
+  sleep 10
   echo "status = ${status}"
   echo "output trace = ${output}"
   [ "$status" -eq 0 ]

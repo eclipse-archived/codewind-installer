@@ -32,43 +32,40 @@ func InstallCommand(c *cli.Context) {
 	tag := c.String("tag")
 	jsonOutput := c.Bool("json") || c.GlobalBool("json")
 
-	imageArr := [2]string{"docker.io/eclipse/codewind-pfe-amd64:",
-		"docker.io/eclipse/codewind-performance-amd64:"}
-
-	targetArr := [2]string{"codewind-pfe-amd64:",
-		"codewind-performance-amd64:"}
+	imageArr := [2]string{
+		"docker.io/eclipse/codewind-pfe-amd64:" + tag,
+		"docker.io/eclipse/codewind-performance-amd64:" + tag,
+	}
 
 	for i := 0; i < len(imageArr); i++ {
-		utils.PullImage(imageArr[i]+tag, jsonOutput)
-		imageID, dockerError := utils.ValidateImageDigest(imageArr[i] + tag)
+		utils.PullImage(imageArr[i], jsonOutput)
+		imageID, dockerError := utils.ValidateImageDigest(imageArr[i])
 
 		if dockerError != nil {
-			logr.Tracef("%v checksum validation failed. Trying to pull image again", imageArr[i]+tag)
+			logr.Tracef("%v checksum validation failed. Trying to pull image again", imageArr[i])
 			// remove bad image
 			utils.RemoveImage(imageID)
 
 			// pull image again
-			utils.PullImage(imageArr[i]+tag, jsonOutput)
+			utils.PullImage(imageArr[i], jsonOutput)
 
 			// validate the new image
-			_, dockerError = utils.ValidateImageDigest(imageArr[i] + tag)
+			_, dockerError = utils.ValidateImageDigest(imageArr[i])
 
 			if dockerError != nil {
 				if jsonOutput {
 					fmt.Println(dockerError)
 				} else {
-					logr.Errorf("Validation of image '%v' checksum failed - Removing image", imageArr[i]+tag)
+					logr.Errorf("Validation of image '%v' checksum failed - Removing image", imageArr[i])
 				}
 				// Clean up the second bad image
 				utils.RemoveImage(imageID)
 				os.Exit(1)
 			}
 		}
-
-		utils.TagImage(imageArr[i]+tag, targetArr[i]+tag)
 	}
 
-	fmt.Println("Image Tagging Successful")
+	fmt.Println("Image Install Successful")
 }
 
 // DoRemoteInstall : Deploy a remote PFE and support containers
