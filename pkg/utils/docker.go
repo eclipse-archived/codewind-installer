@@ -117,7 +117,10 @@ func DockerCompose(dockerComposeFile string, tag string) {
 		errors.CheckErr(err, 101, "Is docker-compose installed?")
 	}
 	fmt.Printf("Please wait whilst containers initialize... %s \n", output.String())
-	cmd.Wait()
+	if err := cmd.Wait(); err != nil {
+		DeleteTempFile(dockerComposeFile)
+		errors.CheckErr(err, 101, "docker-compose command failed to execute correctly") // TODO - replace with new docker error
+	}
 	fmt.Printf(output.String()) // Wait to finish execution, so we can read all output
 
 	if strings.Contains(output.String(), "ERROR") || strings.Contains(output.String(), "error") {
@@ -142,7 +145,9 @@ func DockerComposeStop(tag, dockerComposeFile string) {
 		errors.CheckErr(err, 101, "")
 	}
 	fmt.Printf("Please wait whilst containers shutdown... %s \n", output.String())
-	cmd.Wait()
+	if err := cmd.Wait(); err != nil {
+		errors.CheckErr(err, 101, "docker-compose stop command failed to execute correctly") //TODO - replace with new docker error
+	}
 	fmt.Printf(output.String()) // Wait to finish execution, so we can read all output
 
 	if strings.Contains(output.String(), "ERROR") || strings.Contains(output.String(), "error") {
@@ -161,7 +166,9 @@ func DockerComposeRemove(dockerComposeFile, tag string) {
 		errors.CheckErr(err, 101, "")
 	}
 	fmt.Printf("Please wait whilst images are removed... %s \n", output.String())
-	cmd.Wait()
+	if err := cmd.Wait(); err != nil {
+		errors.CheckErr(err, 101, "docker-compose remove command failed to execute correctly") //TODO - replace with new docker error
+	}
 	fmt.Printf(output.String()) // Wait to finish execution, so we can read all output
 
 	if strings.Contains(output.String(), "ERROR") || strings.Contains(output.String(), "error") {
