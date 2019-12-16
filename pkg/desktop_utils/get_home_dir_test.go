@@ -12,20 +12,13 @@
 package desktoputils
 
 import (
-	"os"
-	"runtime"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-// *** When moving to go 12 we should use func UserHomeDir() instead of this function ***
-
-// GetHomeDir of current system
-func GetHomeDir() string {
-	homeDir := ""
-	const GOOS string = runtime.GOOS
-	if GOOS == "windows" {
-		homeDir = os.Getenv("USERPROFILE")
-	} else {
-		homeDir = os.Getenv("HOME")
-	}
-	return homeDir
+// Test to make sure GetHomeDir() does not return a nil value
+func Test_GetHomeDir(t *testing.T) {
+	result := GetHomeDir()
+	assert.NotNil(t, result, "should return home dir of system or blank string")
 }
