@@ -34,12 +34,17 @@ import (
 	logr "github.com/sirupsen/logrus"
 )
 
+var baseImageNameArr = [2]string{
+	"eclipse/codewind-pfe",
+	"eclipse/codewind-performance",
+}
+
 // codewind-docker-compose.yaml data
 var data = `
 version: 2
 services:
  codewind-pfe:
-  image: eclipse/codewind-pfe${PLATFORM}:${TAG}
+  image: ${PFE_IMAGE_NAME}${PLATFORM}:${TAG}
   container_name: codewind-pfe
   user: root
   environment: ["HOST_WORKSPACE_DIRECTORY=${WORKSPACE_DIRECTORY}","CONTAINER_WORKSPACE_DIRECTORY=/codewind-workspace","HOST_OS=${HOST_OS}","CODEWIND_VERSION=${TAG}","PERFORMANCE_CONTAINER=codewind-performance${PLATFORM}:${TAG}","HOST_HOME=${HOST_HOME}","HOST_MAVEN_OPTS=${HOST_MAVEN_OPTS}"]
@@ -48,7 +53,7 @@ services:
   volumes: ["/var/run/docker.sock:/var/run/docker.sock","cw-workspace:/codewind-workspace","${WORKSPACE_DIRECTORY}:/mounted-workspace"]
   networks: [network]
  codewind-performance:
-  image: eclipse/codewind-performance${PLATFORM}:${TAG}
+  image: ${PERFORMANCE_IMAGE_NAME}${PLATFORM}:${TAG}
   ports: ["127.0.0.1:9095:9095"]
   container_name: codewind-performance
   networks: [network]
@@ -179,6 +184,8 @@ func DockerComposeRemove(dockerComposeFile, tag string) {
 // setupDockerComposeEnvs for docker-compose to use
 func setupDockerComposeEnvs(tag, command string) {
 	home := os.Getenv("HOME")
+	os.Setenv("PFE_IMAGE_NAME", baseImageNameArr[0])
+	os.Setenv("PERFORMANCE_IMAGE_NAME", baseImageNameArr[1])
 
 	const GOARCH string = runtime.GOARCH
 	const GOOS string = runtime.GOOS
@@ -293,10 +300,7 @@ func TagImage(source, tag string) {
 // CheckContainerStatus of Codewind running/stopped
 func CheckContainerStatus() bool {
 	var containerStatus = false
-	containerArr := [2]string{}
-	containerArr[0] = "eclipse/codewind-pfe"
-	containerArr[1] = "eclipse/codewind-performance"
-
+	containerArr := baseImageNameArr
 	containers := GetContainerList()
 
 	containerCount := 0
@@ -318,10 +322,7 @@ func CheckContainerStatus() bool {
 // CheckImageStatus of Codewind installed/uninstalled
 func CheckImageStatus() bool {
 	var imageStatus = false
-	imageArr := [2]string{}
-	imageArr[0] = "eclipse/codewind-pfe"
-	imageArr[1] = "eclipse/codewind-performance"
-
+	imageArr := baseImageNameArr
 	images := GetImageList()
 
 	imageCount := 0
@@ -446,7 +447,7 @@ func GetPFEHostAndPort() (string, string) {
 	} else if CheckContainerStatus() {
 		containerList := GetContainerList()
 		for _, container := range containerList {
-			if strings.HasPrefix(container.Image, "eclipse/codewind-pfe") {
+			if strings.HasPrefix(container.Image, baseImageNameArr[0]) { //checks pfe
 				for _, port := range container.Ports {
 					if port.PrivatePort == internalPFEPort {
 						return port.IP, strconv.Itoa(int(port.PublicPort))
@@ -460,9 +461,7 @@ func GetPFEHostAndPort() (string, string) {
 
 // GetImageTags of Codewind images
 func GetImageTags() []string {
-	imageArr := [2]string{}
-	imageArr[0] = "eclipse/codewind-pfe"
-	imageArr[1] = "eclipse/codewind-performance"
+	imageArr := baseImageNameArr
 	tagArr := []string{}
 
 	images := GetImageList()
@@ -513,9 +512,7 @@ func DetermineDebugPortForPFE() (pfeDebugPort string) {
 
 // GetContainerTags of the Codewind version(s) currently running
 func GetContainerTags() []string {
-	containerArr := [2]string{}
-	containerArr[0] = "eclipse/codewind-pfe"
-	containerArr[1] = "eclipse/codewind-performance"
+	containerArr := baseImageNameArr
 	tagArr := []string{}
 
 	containers := GetContainerList()
