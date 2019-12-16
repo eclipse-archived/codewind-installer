@@ -34,9 +34,12 @@ import (
 	logr "github.com/sirupsen/logrus"
 )
 
+const pfeImageName = "eclipse/codewind-pfe"
+const performanceImageName = "eclipse/codewind-performance"
+
 var baseImageNameArr = [2]string{
-	"eclipse/codewind-pfe",
-	"eclipse/codewind-performance",
+	pfeImageName,
+	performanceImageName,
 }
 
 // codewind-docker-compose.yaml data
@@ -184,8 +187,8 @@ func DockerComposeRemove(dockerComposeFile, tag string) {
 // setupDockerComposeEnvs for docker-compose to use
 func setupDockerComposeEnvs(tag, command string) {
 	home := os.Getenv("HOME")
-	os.Setenv("PFE_IMAGE_NAME", baseImageNameArr[0])
-	os.Setenv("PERFORMANCE_IMAGE_NAME", baseImageNameArr[1])
+	os.Setenv("PFE_IMAGE_NAME", pfeImageName)
+	os.Setenv("PERFORMANCE_IMAGE_NAME", performanceImageName)
 
 	const GOARCH string = runtime.GOARCH
 	const GOOS string = runtime.GOOS
@@ -447,7 +450,7 @@ func GetPFEHostAndPort() (string, string) {
 	} else if CheckContainerStatus() {
 		containerList := GetContainerList()
 		for _, container := range containerList {
-			if strings.HasPrefix(container.Image, baseImageNameArr[0]) { //checks pfe
+			if strings.HasPrefix(container.Image, pfeImageName) {
 				for _, port := range container.Ports {
 					if port.PrivatePort == internalPFEPort {
 						return port.IP, strconv.Itoa(int(port.PublicPort))
