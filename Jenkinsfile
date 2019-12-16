@@ -113,6 +113,8 @@ spec:
                         go test -v
                         cd ../gatekeeper
                         go test -v
+                        cd ../desktop_utils
+                        go test -v
                         cd ../../
                     '''
                 }
