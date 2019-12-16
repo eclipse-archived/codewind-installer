@@ -9,18 +9,23 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 
-package actions
+package desktoputils
 
 import (
-	"fmt"
-
-	"github.com/eclipse/codewind-installer/pkg/utils"
-	"github.com/urfave/cli"
+	"os"
+	"runtime"
 )
 
-//StopCommand to stop only the codewind containers
-func StopCommand(c *cli.Context, dockerComposeFile string) {
-	tag := c.String("tag")
-	fmt.Println("Only stopping Codewind containers. To stop project containers, please use 'stop-all'")
-	utils.DockerComposeStop(tag, dockerComposeFile)
+// *** When moving to go 12 we should use func UserHomeDir() instead of this function ***
+
+// GetHomeDir of current system
+func GetHomeDir() string {
+	homeDir := ""
+	const GOOS string = runtime.GOOS
+	if GOOS == "windows" {
+		homeDir = os.Getenv("USERPROFILE")
+	} else {
+		homeDir = os.Getenv("HOME")
+	}
+	return homeDir
 }

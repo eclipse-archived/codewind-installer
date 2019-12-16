@@ -23,14 +23,14 @@ import (
 )
 
 //RemoveCommand to remove all codewind and project images
-func RemoveCommand(c *cli.Context) {
+func RemoveCommand(c *cli.Context, dockerComposeFile string) {
 	tag := c.String("tag")
+	if tag == "" {
+		tag = "latest"
+	}
 	imageArr := []string{
-		"eclipse/codewind-pfe-amd64:" + tag,
-		"eclipse/codewind-performance-amd64:" + tag,
 		"cw-",
 	}
-	networkName := "codewind"
 
 	images := utils.GetImageList()
 
@@ -51,14 +51,7 @@ func RemoveCommand(c *cli.Context) {
 		}
 	}
 
-	networks := utils.GetNetworkList()
-
-	for _, network := range networks {
-		if strings.Contains(network.Name, networkName) {
-			fmt.Print("Removing docker network: ", network.Name, "... ")
-			utils.RemoveNetwork(network)
-		}
-	}
+	utils.DockerComposeRemove(dockerComposeFile, tag)
 }
 
 // DoRemoteRemove : Delete a remote Codewind deployment

@@ -51,8 +51,8 @@ func CreateTempFile(filePath string) bool {
 }
 
 // WriteToComposeFile the contents of the docker compose yaml
-func WriteToComposeFile(tempFilePath string, debug bool) bool {
-	if tempFilePath == "" {
+func WriteToComposeFile(dockerComposeFile string, debug bool) bool {
+	if dockerComposeFile == "" {
 		return false
 	}
 
@@ -71,12 +71,12 @@ func WriteToComposeFile(tempFilePath string, debug bool) bool {
 	errors.CheckErr(err, 203, "")
 
 	if debug == true {
-		fmt.Printf("==> %s structure is: \n%s\n\n", tempFilePath, string(marshalledData))
+		fmt.Printf("==> %s structure is: \n%s\n\n", dockerComposeFile, string(marshalledData))
 	} else {
-		fmt.Println("==> environment structure written to " + tempFilePath)
+		fmt.Println("==> environment structure written to " + dockerComposeFile)
 	}
 
-	err = ioutil.WriteFile(tempFilePath, marshalledData, 0644)
+	err = ioutil.WriteFile(dockerComposeFile, marshalledData, 0644)
 	errors.CheckErr(err, 204, "")
 	return true
 }
