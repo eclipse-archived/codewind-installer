@@ -121,7 +121,7 @@ func SetupKeycloak(codewindInstance Codewind, deployOptions *DeployOptions) erro
 
 func configureKeycloakRealm(deployOptions *DeployOptions, authURL string, tokens *security.AuthToken) *security.SecError {
 	// Check if realm is already registered
-	realm, secErr := security.SecRealmGet(authURL, tokens.AccessToken, deployOptions.KeycloakRealm)
+	realm, _ := security.SecRealmGet(authURL, tokens.AccessToken, deployOptions.KeycloakRealm)
 	if realm != nil && realm.ID != "" {
 		logr.Infof("Updating existing Keycloak realm '%v'", realm.DisplayName)
 	} else {
@@ -132,7 +132,7 @@ func configureKeycloakRealm(deployOptions *DeployOptions, authURL string, tokens
 		realmFlagset.String("newrealm", deployOptions.KeycloakRealm, "doc")
 		realmFlagset.String("accesstoken", tokens.AccessToken, "doc")
 		c := cli.NewContext(nil, realmFlagset, nil)
-		secErr = security.SecRealmCreate(c)
+		secErr := security.SecRealmCreate(c)
 		if secErr != nil {
 			return secErr
 		}
@@ -150,7 +150,7 @@ func configureKeycloakClient(deployOptions *DeployOptions, authURL string, token
 	clientFlagset.String("clientid", deployOptions.KeycloakClient, "doc")
 	clientFlagset.String("accesstoken", tokens.AccessToken, "doc")
 	c := cli.NewContext(nil, clientFlagset, nil)
-	registeredClient, secErr := security.SecClientGet(c)
+	registeredClient, _ := security.SecClientGet(c)
 	if registeredClient != nil && registeredClient.ID != "" {
 		logr.Infof("Updating existing Keycloak client '%v'", registeredClient.Name)
 		secErr := security.SecClientAppendURL(c, gatekeeperPublicURL)
@@ -167,7 +167,7 @@ func configureKeycloakClient(deployOptions *DeployOptions, authURL string, token
 		clientFlagset.String("newclient", deployOptions.KeycloakClient, "doc")
 		clientFlagset.String("accesstoken", tokens.AccessToken, "doc")
 		c := cli.NewContext(nil, clientFlagset, nil)
-		secErr = security.SecClientCreate(c)
+		secErr := security.SecClientCreate(c)
 		if secErr != nil {
 			return secErr
 		}

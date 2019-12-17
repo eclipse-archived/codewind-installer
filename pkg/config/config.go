@@ -18,6 +18,7 @@ import (
 	"github.com/eclipse/codewind-installer/pkg/utils"
 )
 
+// ConfigError : config package errors
 type ConfigError struct {
 	Op   string
 	Err  error

@@ -54,7 +54,7 @@ func SetConnection(conID string, projectID string) *ProjectError {
 		}
 	}
 
-	connectionTargets, projError = loadConnectionFile(projectID)
+	connectionTargets, _ = loadConnectionFile(projectID)
 	connectionTargets.ID = conID
 
 	// Save the project-connections file

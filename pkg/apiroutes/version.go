@@ -31,7 +31,7 @@ type (
 		PFEVersion         string
 	}
 
-	// EnvResponse : The relevent response fields from the remote environment API
+	// EnvResponse : The relevant response fields from the remote environment API
 	EnvResponse struct {
 		Version        string `json:"codewind_version"`
 		ImageBuildTime string `json:"image_build_time"`

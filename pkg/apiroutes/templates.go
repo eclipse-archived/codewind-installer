@@ -229,7 +229,7 @@ func DeleteTemplateRepo(conID, URL string) ([]utils.TemplateRepo, error) {
 		return nil, conErr.Err
 	}
 
-	req, err := http.NewRequest("DELETE", conURL+"/api/v1/templates/repositories", bytes.NewBuffer(jsonValue))
+	req, _ := http.NewRequest("DELETE", conURL+"/api/v1/templates/repositories", bytes.NewBuffer(jsonValue))
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}
 	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo)
@@ -331,7 +331,7 @@ func BatchPatchTemplateRepos(conID string, operations []RepoOperation) ([]SubRes
 		return nil, conErr.Err
 	}
 
-	req, err := http.NewRequest("PATCH", conURL+"/api/v1/batch/templates/repositories", bytes.NewBuffer(jsonValue))
+	req, _ := http.NewRequest("PATCH", conURL+"/api/v1/batch/templates/repositories", bytes.NewBuffer(jsonValue))
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}

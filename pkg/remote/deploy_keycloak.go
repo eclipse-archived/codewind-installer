@@ -33,12 +33,12 @@ func DeployKeycloak(config *restclient.Config, clientset *kubernetes.Clientset, 
 	keycloakSecrets := generateKeycloakSecrets(codewindInstance, deployOptions)
 	keycloakService := generateKeycloakService(codewindInstance)
 	keycloakDeploy := generateKeycloakDeploy(codewindInstance)
-	serverKey, serverCert, err := generateCertificate(KeycloakPrefix+codewindInstance.Ingress, "Codewind Keycloak")
+	serverKey, serverCert, _ := generateCertificate(KeycloakPrefix+codewindInstance.Ingress, "Codewind Keycloak")
 	keycloakTLSSecret := generateKeycloakTLSSecret(codewindInstance, serverKey, serverCert)
 	keycloakPVC := generateKeycloakPVC(codewindInstance, deployOptions, "")
 
 	logr.Infoln("Creating Codewind Keycloak PVC")
-	_, err = clientset.CoreV1().PersistentVolumeClaims(deployOptions.Namespace).Create(&keycloakPVC)
+	_, err := clientset.CoreV1().PersistentVolumeClaims(deployOptions.Namespace).Create(&keycloakPVC)
 	if err != nil {
 		logr.Errorf("Error: Unable to create Codewind Keycloak PVC: %v\n", err)
 		return err
@@ -126,7 +126,6 @@ func generateKeycloakDeploy(codewind Codewind) appsv1.Deployment {
 		"app":               KeycloakPrefix,
 		"codewindWorkspace": codewind.WorkspaceID,
 	}
-	volumes := []corev1.Volume{}
 	volumes, volumeMounts := setKeycloakVolumes(codewind)
 	envVars := setKeycloakEnvVars(codewind)
 	return generateDeployment(codewind, KeycloakPrefix, codewind.KeycloakImage, KeycloakContainerPort, volumes, volumeMounts, envVars, labels, codewind.ServiceAccountKC, false)

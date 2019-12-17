@@ -36,12 +36,12 @@ func DeployGatekeeper(config *restclient.Config, clientset *kubernetes.Clientset
 	gatekeeperDeploy := generateGatekeeperDeploy(codewindInstance, deployOptions)
 	gatekeeperSessionSecret := generateGatekeeperSessionSecret(codewindInstance, deployOptions)
 
-	serverKey, serverCert, err := generateCertificate(GatekeeperPrefix+codewindInstance.Ingress, "Codewind Gatekeeper")
+	serverKey, serverCert, _ := generateCertificate(GatekeeperPrefix+codewindInstance.Ingress, "Codewind Gatekeeper")
 	gatekeeperTLSSecret := generateGatekeeperTLSSecret(codewindInstance, serverKey, serverCert)
 
 	logr.Infoln("Deploying Codewind Gatekeeper Secrets")
 
-	_, err = clientset.CoreV1().Secrets(deployOptions.Namespace).Create(&gatekeeperSecrets)
+	_, err := clientset.CoreV1().Secrets(deployOptions.Namespace).Create(&gatekeeperSecrets)
 	if err != nil {
 		logr.Errorf("Error: Unable to create Codewind Gatekeeper secrets: %v\n", err)
 		return err
