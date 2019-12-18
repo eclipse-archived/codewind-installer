@@ -74,6 +74,7 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	projectPath := strings.TrimSpace(c.String("path"))
 	projectID := strings.TrimSpace(c.String("id"))
 	synctime := int64(c.Int("time"))
+	processRefPaths := c.Bool("refPaths")
 	_, err := os.Stat(projectPath)
 	if err != nil {
 		return nil, &ProjectError{errBadPath, err, err.Error()}
@@ -101,7 +102,7 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	}
 
 	// Sync all the necessary project files
-	fileList, directoryList, modifiedList, uploadedFilesList := syncFiles(projectPath, projectID, conURL, synctime, conInfo)
+	fileList, directoryList, modifiedList, uploadedFilesList := syncFiles(projectPath, projectID, conURL, synctime, conInfo, processRefPaths)
 	// Complete the upload
 	completeStatus, completeStatusCode := completeUpload(projectID, fileList, directoryList, modifiedList, conID, currentSyncTime)
 	response := SyncResponse{
@@ -113,7 +114,7 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	return &response, nil
 }
 
-func syncFiles(projectPath string, projectID string, conURL string, synctime int64, connection *connections.Connection) ([]string, []string, []string, []UploadedFile) {
+func syncFiles(projectPath string, projectID string, conURL string, synctime int64, connection *connections.Connection, processRefPaths bool) ([]string, []string, []string, []UploadedFile) {
 	var fileList []string
 	var directoryList []string
 	var modifiedList []string

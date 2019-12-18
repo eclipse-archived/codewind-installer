@@ -134,7 +134,7 @@ func Bind(projectPath string, name string, language string, projectType string, 
 	SetConnection(conID, projectID)
 
 	// Sync all the project files
-	_, _, _, uploadedFilesList := syncFiles(projectPath, projectID, conURL, 0, conInfo)
+	_, _, _, uploadedFilesList := syncFiles(projectPath, projectID, conURL, 0, conInfo, true)
 
 	// Call bind/end to complete
 	completeStatus, completeStatusCode := completeBind(projectID, conURL, conInfo)
