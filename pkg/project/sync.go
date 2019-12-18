@@ -74,16 +74,6 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	projectPath := strings.TrimSpace(c.String("path"))
 	projectID := strings.TrimSpace(c.String("id"))
 	synctime := int64(c.Int("time"))
-
-	var refPaths []refPath
-	refPathsParam := c.String("refPaths")
-	if refPathsParam != "" {
-		json.Unmarshal([]byte(refPathsParam), &refPaths)
-		if refPaths == nil {
-			fmt.Println("refPaths parameter is malformed and will be ignored")
-		}
-	}
-
 	_, err := os.Stat(projectPath)
 	if err != nil {
 		return nil, &ProjectError{errBadPath, err, err.Error()}
