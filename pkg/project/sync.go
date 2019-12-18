@@ -61,6 +61,11 @@ type (
 		StatusCode    int            `json:"statusCode"`
 		UploadedFiles []UploadedFile `json:"uploadedFiles"`
 	}
+
+	refPath struct {
+		From string `json:"from"`
+		To   string `json:"to"`
+	}
 )
 
 // SyncProject syncs a project with its remote connection
@@ -69,6 +74,16 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	projectPath := strings.TrimSpace(c.String("path"))
 	projectID := strings.TrimSpace(c.String("id"))
 	synctime := int64(c.Int("time"))
+
+	var refPaths []refPath
+	refPathsParam := c.String("refPaths")
+	if refPathsParam != "" {
+		json.Unmarshal([]byte(refPathsParam), &refPaths)
+		if refPaths == nil {
+			fmt.Println("refPaths parameter is malformed and will be ignored")
+		}
+	}
+
 	_, err := os.Stat(projectPath)
 	if err != nil {
 		return nil, &ProjectError{errBadPath, err, err.Error()}
@@ -119,7 +134,7 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 
 	cwSettingsIgnoredPathsList := retrieveIgnoredPathsList(projectPath)
 
-	err := filepath.Walk(projectPath, func(path string, info os.FileInfo, err error) error {
+	walker := func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			panic(err)
 			// TODO - How to handle *some* files being unreadable
@@ -195,7 +210,9 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 			directoryList = append(directoryList, relativePath)
 		}
 		return nil
-	})
+	}
+
+	err := filepath.Walk(projectPath, walker)
 	if err != nil {
 		fmt.Printf("error walking the path %q: %v\n", projectPath, err)
 		return nil, nil, nil, nil
