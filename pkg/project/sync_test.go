@@ -184,7 +184,8 @@ func TestRetrieveIgnoredPathsList(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			ignoredPathsList := retrieveIgnoredPathsList(test.projectPath)
+			cwSettings := retrieveCWSettings(test.projectPath)
+			ignoredPathsList := cwSettings.IgnoredPaths
 
 			assert.Equal(t, test.shouldBeIgnoredLength, len(ignoredPathsList), "Length of ignoredPathsList was %b but should have been %b", len(ignoredPathsList), test.shouldBeIgnoredLength)
 

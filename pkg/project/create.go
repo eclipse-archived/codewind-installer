@@ -39,15 +39,16 @@ type (
 
 	// CWSettings represents the .cw-settings file which is written to a project
 	CWSettings struct {
-		ContextRoot       string   `json:"contextRoot"`
-		InternalPort      string   `json:"internalPort"`
-		HealthCheck       string   `json:"healthCheck"`
-		InternalDebugPort *string  `json:"internalDebugPort,omitempty"`
-		IsHTTPS           bool     `json:"isHttps"`
-		IgnoredPaths      []string `json:"ignoredPaths"`
-		MavenProfiles     []string `json:"mavenProfiles,omitempty"`
-		MavenProperties   []string `json:"mavenProperties,omitempty"`
-		StatusPingTimeout string   `json:"statusPingTimeout"`
+		ContextRoot       string    `json:"contextRoot"`
+		InternalPort      string    `json:"internalPort"`
+		HealthCheck       string    `json:"healthCheck"`
+		InternalDebugPort *string   `json:"internalDebugPort,omitempty"`
+		IsHTTPS           bool      `json:"isHttps"`
+		IgnoredPaths      []string  `json:"ignoredPaths"`
+		RefPaths          []refPath `json:"refPaths"`
+		MavenProfiles     []string  `json:"mavenProfiles,omitempty"`
+		MavenProperties   []string  `json:"mavenProperties,omitempty"`
+		StatusPingTimeout string    `json:"statusPingTimeout"`
 	}
 )
 
