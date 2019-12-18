@@ -87,6 +87,7 @@ func TestWriteNewCwSettings(t *testing.T) {
 				HealthCheck:       "",
 				IsHTTPS:           false,
 				InternalDebugPort: &defaultInternalDebugPort,
+				StatusPingTimeout: "",
 			},
 			wantIgnoredPath: "*/node_modules*",
 		},
@@ -101,6 +102,7 @@ func TestWriteNewCwSettings(t *testing.T) {
 				InternalDebugPort: &defaultInternalDebugPort,
 				MavenProfiles:     []string{""},
 				MavenProperties:   []string{""},
+				StatusPingTimeout: "",
 			},
 			wantIgnoredPath: "/libertyrepocache.zip",
 		},
@@ -115,6 +117,7 @@ func TestWriteNewCwSettings(t *testing.T) {
 				InternalDebugPort: &defaultInternalDebugPort,
 				MavenProfiles:     []string{""},
 				MavenProperties:   []string{""},
+				StatusPingTimeout: "",
 			},
 			wantIgnoredPath: "/localm2cache.zip",
 		},
@@ -122,10 +125,11 @@ func TestWriteNewCwSettings(t *testing.T) {
 			inProjectPath: "../../resources/test/swift-project/.cw-settings",
 			inBuildType:   "swift",
 			wantCwSettings: CWSettings{
-				ContextRoot:  "",
-				InternalPort: "",
-				HealthCheck:  "",
-				IsHTTPS:      false,
+				ContextRoot:       "",
+				InternalPort:      "",
+				HealthCheck:       "",
+				IsHTTPS:           false,
+				StatusPingTimeout: "",
 			},
 			wantIgnoredPath: ".swift-version",
 		},
@@ -133,10 +137,11 @@ func TestWriteNewCwSettings(t *testing.T) {
 			inProjectPath: "../../resources/test/python-project/.cw-settings",
 			inBuildType:   "docker",
 			wantCwSettings: CWSettings{
-				ContextRoot:  "",
-				InternalPort: "",
-				HealthCheck:  "",
-				IsHTTPS:      false,
+				ContextRoot:       "",
+				InternalPort:      "",
+				HealthCheck:       "",
+				IsHTTPS:           false,
+				StatusPingTimeout: "",
 			},
 			wantIgnoredPath: "*/.DS_Store",
 		},
@@ -144,10 +149,11 @@ func TestWriteNewCwSettings(t *testing.T) {
 			inProjectPath: "../../resources/test/go-project/.cw-settings",
 			inBuildType:   "docker",
 			wantCwSettings: CWSettings{
-				ContextRoot:  "",
-				InternalPort: "",
-				HealthCheck:  "",
-				IsHTTPS:      false,
+				ContextRoot:       "",
+				InternalPort:      "",
+				HealthCheck:       "",
+				IsHTTPS:           false,
+				StatusPingTimeout: "",
 			},
 			wantIgnoredPath: "*/.DS_Store",
 		},
@@ -161,6 +167,7 @@ func TestWriteNewCwSettings(t *testing.T) {
 			assert.Equal(t, cwSettings.InternalPort, test.wantCwSettings.InternalPort)
 			assert.Equal(t, cwSettings.HealthCheck, test.wantCwSettings.HealthCheck)
 			assert.Equal(t, cwSettings.IsHTTPS, test.wantCwSettings.IsHTTPS)
+			assert.Equal(t, cwSettings.StatusPingTimeout, test.wantCwSettings.StatusPingTimeout)
 			assert.Contains(t, cwSettings.IgnoredPaths, test.wantIgnoredPath)
 			if test.wantCwSettings.InternalDebugPort != nil {
 				assert.Equal(t, cwSettings.InternalDebugPort, test.wantCwSettings.InternalDebugPort)
