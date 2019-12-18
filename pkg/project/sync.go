@@ -228,6 +228,30 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 		fmt.Printf("error walking the path %q: %v\n", projectPath, err)
 		return nil, nil, nil, nil
 	}
+
+	// sync referenced file paths
+	if processRefPaths {
+		for _, refPath := range cwSettingsRefPathsList {
+
+			// get info on the referenced file
+			from := refPath.From
+			info, err := os.Stat(from)
+			// skip invalid paths
+			if err != nil || info.IsDir() {
+				fmt.Printf("Skipping invalid file reference %q: %v\n", from, err)
+				continue
+			}
+
+			// now pass it to the walk function
+			extendedInfo := extendedFileInfo{
+				info,
+				from,
+			}
+			// to path is relative to the project
+			walker(filepath.Join(projectPath, refPath.To), extendedInfo, nil)
+		}
+	}
+
 	return fileList, directoryList, modifiedList, uploadedFiles
 }
 
