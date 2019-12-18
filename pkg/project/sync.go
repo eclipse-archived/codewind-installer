@@ -34,9 +34,10 @@ import (
 type (
 	// CompleteRequest is the request body format for calling the upload complete API
 	CompleteRequest struct {
-		FileList     []string `json:"fileList"`
-		ModifiedList []string `json:"modifiedList"`
-		TimeStamp    int64    `json:"timeStamp"`
+		FileList      []string `json:"fileList"`
+		DirectoryList []string `json:"directoryList"`
+		ModifiedList  []string `json:"modifiedList"`
+		TimeStamp     int64    `json:"timeStamp"`
 	}
 
 	// FileUploadMsg is the message sent on uploading a file
@@ -64,7 +65,7 @@ type (
 
 // SyncProject syncs a project with its remote connection
 func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
-	var currentSyncTime = time.Now().UnixNano() / 1000000;
+	var currentSyncTime = time.Now().UnixNano() / 1000000
 	projectPath := strings.TrimSpace(c.String("path"))
 	projectID := strings.TrimSpace(c.String("id"))
 	synctime := int64(c.Int("time"))
@@ -95,9 +96,9 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	}
 
 	// Sync all the necessary project files
-	fileList, modifiedList, uploadedFilesList := syncFiles(projectPath, projectID, conURL, synctime, conInfo)
+	fileList, directoryList, modifiedList, uploadedFilesList := syncFiles(projectPath, projectID, conURL, synctime, conInfo)
 	// Complete the upload
-	completeStatus, completeStatusCode := completeUpload(projectID, fileList, modifiedList, conID, currentSyncTime)
+	completeStatus, completeStatusCode := completeUpload(projectID, fileList, directoryList, modifiedList, conID, currentSyncTime)
 	response := SyncResponse{
 		UploadedFiles: uploadedFilesList,
 		Status:        completeStatus,
@@ -107,8 +108,9 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	return &response, nil
 }
 
-func syncFiles(projectPath string, projectID string, conURL string, synctime int64, connection *connections.Connection) ([]string, []string, []UploadedFile) {
+func syncFiles(projectPath string, projectID string, conURL string, synctime int64, connection *connections.Connection) ([]string, []string, []string, []UploadedFile) {
 	var fileList []string
+	var directoryList []string
 	var modifiedList []string
 	var uploadedFiles []UploadedFile
 
@@ -123,13 +125,19 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 			// TODO - How to handle *some* files being unreadable
 		}
 
+		// If it is the top level directory ignore it
+		if path == projectPath {
+			return nil
+		}
+
+		// use ToSlash to try and get both Windows and *NIX paths to be *NIX for pfe
+		relativePath := filepath.ToSlash(path[(len(projectPath) + 1):])
+
 		if !info.IsDir() {
 			shouldIgnore := ignoreFileOrDirectory(info.Name(), false, cwSettingsIgnoredPathsList)
 			if shouldIgnore {
 				return nil
 			}
-			// use ToSlash to try and get both Windows and *NIX paths to be *NIX for pfe
-			relativePath := filepath.ToSlash(path[(len(projectPath) + 1):])
 			// Create list of all files for a project
 			fileList = append(fileList, relativePath)
 
@@ -184,19 +192,18 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 			if shouldIgnore {
 				return filepath.SkipDir
 			}
-
+			directoryList = append(directoryList, relativePath)
 		}
-
 		return nil
 	})
 	if err != nil {
 		fmt.Printf("error walking the path %q: %v\n", projectPath, err)
-		return nil, nil, nil
+		return nil, nil, nil, nil
 	}
-	return fileList, modifiedList, uploadedFiles
+	return fileList, directoryList, modifiedList, uploadedFiles
 }
 
-func completeUpload(projectID string, files []string, modfiles []string, conID string, currentSyncTime int64) (string, int) {
+func completeUpload(projectID string, files []string, directories []string, modfiles []string, conID string, currentSyncTime int64) (string, int) {
 
 	conInfo, conInfoErr := connections.GetConnectionByID(conID)
 	if conInfoErr != nil {
@@ -209,10 +216,8 @@ func completeUpload(projectID string, files []string, modfiles []string, conID s
 	}
 
 	uploadEndURL := conURL + "/api/v1/projects/" + projectID + "/upload/end"
-
-	payload := &CompleteRequest{FileList: files, ModifiedList: modfiles, TimeStamp: currentSyncTime}
+	payload := &CompleteRequest{FileList: files, DirectoryList: directories, ModifiedList: modfiles, TimeStamp: currentSyncTime}
 	jsonPayload, _ := json.Marshal(payload)
-
 	req, err := http.NewRequest("POST", uploadEndURL, bytes.NewBuffer(jsonPayload))
 	req.Header.Set("Content-Type", "application/json")
 	if err != nil {
