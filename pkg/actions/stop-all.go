@@ -13,15 +13,26 @@ package actions
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/eclipse/codewind-installer/pkg/utils"
+	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
-//StopAllCommand to stop codewind and project containers
+// StopAllCommand to stop codewind and project containers
 func StopAllCommand(c *cli.Context, dockerComposeFile string) {
+	printAsJSON := c.GlobalBool("json")
 	tag := c.String("tag")
-	containers := utils.GetContainerList()
+	containers, err := utils.GetContainerList()
+	if err != nil {
+		if printAsJSON {
+			fmt.Println(err.Error())
+		} else {
+			logr.Println(err.Desc)
+		}
+		os.Exit(1)
+	}
 	utils.DockerComposeStop(tag, dockerComposeFile)
 
 	fmt.Println("Stopping Project containers")

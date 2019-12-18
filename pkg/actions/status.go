@@ -21,6 +21,7 @@ import (
 	"github.com/eclipse/codewind-installer/pkg/apiroutes"
 	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/utils"
+	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -88,13 +89,39 @@ func StatusCommandRemoteConnection(c *cli.Context) {
 // StatusCommandLocalConnection : Output local connection details
 func StatusCommandLocalConnection(c *cli.Context) {
 	jsonOutput := c.Bool("json") || c.GlobalBool("json")
-	if utils.CheckContainerStatus() {
-		// Started
-		hostname, port := utils.GetPFEHostAndPort()
+	containersAreRunning, err := utils.CheckContainerStatus()
+	if err != nil {
 		if jsonOutput {
+			fmt.Println(err.Error())
+		} else {
+			logr.Println(err.Desc)
+		}
+		os.Exit(1)
+	}
 
-			imageTagArr := utils.GetImageTags()
-			containerTagArr := utils.GetContainerTags()
+	if containersAreRunning {
+		// Started
+		hostname, port, err := utils.GetPFEHostAndPort()
+		if err != nil {
+			if jsonOutput {
+				fmt.Println(err.Error())
+			} else {
+				logr.Println(err.Desc)
+			}
+			os.Exit(1)
+		}
+		if jsonOutput {
+			imageTagArr, err := utils.GetImageTags()
+			if err != nil {
+				fmt.Println(err.Error())
+				os.Exit(1)
+			}
+
+			containerTagArr, err := utils.GetContainerTags()
+			if err != nil {
+				fmt.Println(err.Error())
+				os.Exit(1)
+			}
 
 			type status struct {
 				Status   string   `json:"status"`
@@ -118,11 +145,25 @@ func StatusCommandLocalConnection(c *cli.Context) {
 		os.Exit(0)
 	}
 
-	if utils.CheckImageStatus() {
+	imagesAreInstalled, err := utils.CheckImageStatus()
+	if err != nil {
+		if jsonOutput {
+			fmt.Println(err.Error())
+		} else {
+			logr.Println(err.Desc)
+		}
+		os.Exit(1)
+	}
+
+	if imagesAreInstalled {
 		// Installed but not started
 		if jsonOutput {
 
-			imageTagArr := utils.GetImageTags()
+			imageTagArr, err := utils.GetImageTags()
+			if err != nil {
+				fmt.Println(err.Error())
+				os.Exit(1)
+			}
 
 			type status struct {
 				Status   string   `json:"status"`

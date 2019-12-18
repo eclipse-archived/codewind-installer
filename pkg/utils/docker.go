@@ -30,7 +30,6 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
-	"github.com/eclipse/codewind-installer/pkg/errors"
 	logr "github.com/sirupsen/logrus"
 )
 
@@ -114,7 +113,7 @@ const (
 )
 
 // DockerCompose to set up the Codewind environment
-func DockerCompose(dockerComposeFile string, tag string) {
+func DockerCompose(dockerComposeFile string, tag string) *DockerError {
 	setupDockerComposeEnvs(tag, "")
 	cmd := exec.Command("docker-compose", "-f", dockerComposeFile, "up", "-d", "--force-recreate")
 	output := new(bytes.Buffer)
@@ -122,12 +121,12 @@ func DockerCompose(dockerComposeFile string, tag string) {
 	cmd.Stderr = output
 	if err := cmd.Start(); err != nil { // after 'Start' the program is continued and script is executing in background
 		DeleteTempFile(dockerComposeFile)
-		errors.CheckErr(err, 101, "Is docker-compose installed?")
+		return &DockerError{errOpDockerComposeStart, err, err.Error()}
 	}
 	fmt.Printf("Please wait while containers initialize... %s \n", output.String())
 	if err := cmd.Wait(); err != nil {
 		DeleteTempFile(dockerComposeFile)
-		errors.CheckErr(err, 101, "docker-compose command failed to execute correctly") // TODO - replace with new docker error
+		return &DockerError{errOpDockerComposeStart, err, err.Error()}
 	}
 	fmt.Printf(output.String()) // Wait to finish execution, so we can read all output
 
@@ -140,48 +139,54 @@ func DockerCompose(dockerComposeFile string, tag string) {
 		DeleteTempFile(dockerComposeFile)
 		os.Exit(1)
 	}
+	return nil
 }
 
 // DockerComposeStop to stop Codewind containers
-func DockerComposeStop(tag, dockerComposeFile string) {
+func DockerComposeStop(tag, dockerComposeFile string) *DockerError {
 	setupDockerComposeEnvs(tag, "stop")
 	cmd := exec.Command("docker-compose", "-f", dockerComposeFile, "rm", "--stop", "-f")
 	output := new(bytes.Buffer)
 	cmd.Stdout = output
 	cmd.Stderr = output
 	if err := cmd.Start(); err != nil { // after 'Start' the program is continued and script is executing in background
-		errors.CheckErr(err, 101, "")
+		return &DockerError{errOpDockerComposeStop, err, err.Error()}
 	}
 	fmt.Printf("Please wait while containers shutdown... %s \n", output.String())
 	if err := cmd.Wait(); err != nil {
-		errors.CheckErr(err, 101, "docker-compose stop command failed to execute correctly") //TODO - replace with new docker error
+		return &DockerError{errOpDockerComposeStop, err, err.Error()}
 	}
 	fmt.Printf(output.String()) // Wait to finish execution, so we can read all output
 
 	if strings.Contains(output.String(), "ERROR") || strings.Contains(output.String(), "error") {
 		os.Exit(1)
 	}
+	return nil
 }
 
 // DockerComposeRemove to remove Codewind images
-func DockerComposeRemove(dockerComposeFile, tag string) {
+func DockerComposeRemove(dockerComposeFile, tag string) *DockerError {
 	setupDockerComposeEnvs(tag, "remove")
 	cmd := exec.Command("docker-compose", "-f", dockerComposeFile, "down", "--rmi", "all")
 	output := new(bytes.Buffer)
 	cmd.Stdout = output
 	cmd.Stderr = output
-	if err := cmd.Start(); err != nil { // after 'Start' the program is continued and script is executing in background
-		errors.CheckErr(err, 101, "")
+	// after 'Start' the program is continued and script is executing in background
+	err := cmd.Start()
+	if err != nil {
+		return &DockerError{errOpDockerComposeRemove, err, err.Error()}
 	}
-	fmt.Printf("Please wait while images are removed... %s \n", output.String())
-	if err := cmd.Wait(); err != nil {
-		errors.CheckErr(err, 101, "docker-compose remove command failed to execute correctly") //TODO - replace with new docker error
+	fmt.Printf("Please wait whilst images are removed... %s \n", output.String())
+	err = cmd.Wait()
+	if err != nil {
+		return &DockerError{errOpImageRemove, err, err.Error()}
 	}
 	fmt.Printf(output.String()) // Wait to finish execution, so we can read all output
 
 	if strings.Contains(output.String(), "ERROR") || strings.Contains(output.String(), "error") {
 		os.Exit(1)
 	}
+	return nil
 }
 
 // setupDockerComposeEnvs for docker-compose to use
@@ -227,16 +232,21 @@ func setupDockerComposeEnvs(tag, command string) {
 }
 
 // PullImage - pull pfe/performance images from dockerhub
-func PullImage(image string, jsonOutput bool) {
+func PullImage(image string, jsonOutput bool) *DockerError {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.WithVersion("1.30"))
-	errors.CheckErr(err, 200, "")
+	if err != nil {
+		return &DockerError{errOpImageNotFound, err, err.Error()}
+	}
 
 	var codewindOut io.ReadCloser
 
 	codewindOut, err = cli.ImagePull(ctx, image, types.ImagePullOptions{})
 
-	errors.CheckErr(err, 100, "")
+	if err != nil {
+		return &DockerError{errOpImagePull, err, err.Error()}
+	}
+
 	if jsonOutput == true {
 		defer codewindOut.Close()
 		io.Copy(os.Stdout, codewindOut)
@@ -245,6 +255,7 @@ func PullImage(image string, jsonOutput bool) {
 		termFd, isTerm := term.GetFdInfo(os.Stderr)
 		jsonmessage.DisplayJSONMessagesStream(codewindOut, os.Stderr, termFd, isTerm, nil)
 	}
+	return nil
 }
 
 // ValidateImageDigest - will ensure the image digest matches that of the one in dockerhub
@@ -253,7 +264,9 @@ func ValidateImageDigest(image string) (string, *DockerError) {
 
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.WithVersion("1.30"))
-	errors.CheckErr(err, 200, "")
+	if err != nil {
+		return "", &DockerError{errOpImageDigest, err, err.Error()}
+	}
 	// call docker api for image digest
 	queryDigest, err := cli.DistributionInspect(ctx, image, "")
 	if err != nil {
@@ -265,7 +278,11 @@ func ValidateImageDigest(image string) (string, *DockerError) {
 	logr.Traceln("Query image digest is.. ", queryDigest.Descriptor.Digest)
 
 	// get local image digest
-	imageList := GetImageList()
+	imageList, dockerError := GetImageList()
+	if err != nil {
+		return "", dockerError
+	}
+
 	imageName := strings.TrimPrefix(image, "docker.io/")
 	imageArr := []string{
 		imageName,
@@ -292,12 +309,15 @@ func ValidateImageDigest(image string) (string, *DockerError) {
 }
 
 // TagImage - locally retag the downloaded images
-func TagImage(source, tag string) {
+func TagImage(source, tag string) *DockerError {
 	out, err := exec.Command("docker", "tag", source, tag).Output()
-	errors.CheckErr(err, 102, "Image Tagging Failed")
+	if err != nil {
+		return &DockerError{errOpImageTag, err, err.Error()}
+	}
 
 	output := string(out[:])
 	fmt.Println(output)
+	return nil
 }
 
 // GetContainersToRemove returns a list of containers ([]types.Container) matching "/cw"
@@ -319,10 +339,13 @@ func GetContainersToRemove(containerList []types.Container) []types.Container {
 }
 
 // CheckContainerStatus of Codewind running/stopped
-func CheckContainerStatus() bool {
+func CheckContainerStatus() (bool, *DockerError) {
 	var containerStatus = false
 	containerArr := baseImageNameArr
-	containers := GetContainerList()
+	containers, err := GetContainerList()
+	if err != nil {
+		return false, err
+	}
 
 	containerCount := 0
 	for _, container := range containers {
@@ -337,14 +360,17 @@ func CheckContainerStatus() bool {
 	} else {
 		containerStatus = false
 	}
-	return containerStatus
+	return containerStatus, nil
 }
 
 // CheckImageStatus of Codewind installed/uninstalled
-func CheckImageStatus() bool {
+func CheckImageStatus() (bool, *DockerError) {
 	var imageStatus = false
 	imageArr := baseImageNameArr
-	images := GetImageList()
+	images, err := GetImageList()
+	if err != nil {
+		return false, err
+	}
 
 	imageCount := 0
 	for _, image := range images {
@@ -358,66 +384,80 @@ func CheckImageStatus() bool {
 	if imageCount >= 2 {
 		imageStatus = true
 	}
-	return imageStatus
+	return imageStatus, nil
 }
 
 // RemoveImage of Codewind and project
-func RemoveImage(imageID string) {
+func RemoveImage(imageID string) *DockerError {
 	cmd := exec.Command("docker", "rmi", imageID, "-f")
 	cmd.Stdin = strings.NewReader("some input")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
-	errors.CheckErr(err, 105, "Failed to remove image - Please make sure all containers are stopped")
+	if err != nil {
+		return &DockerError{errOpImageRemove, err, err.Error()}
+	}
+	return nil
 }
 
 // GetContainerList from docker
-func GetContainerList() []types.Container {
+func GetContainerList() ([]types.Container, *DockerError) {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.WithVersion("1.30"))
-	errors.CheckErr(err, 200, "")
+	if err != nil {
+		return nil, &DockerError{errOpContainerList, err, err.Error()}
+	}
 
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
-	errors.CheckErr(err, 107, "")
-
-	return containers
+	if err != nil {
+		return nil, &DockerError{errOpContainerList, err, err.Error()}
+	}
+	return containers, nil
 }
 
 // GetImageList from docker
-func GetImageList() []types.ImageSummary {
+func GetImageList() ([]types.ImageSummary, *DockerError) {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.WithVersion("1.30"))
-	errors.CheckErr(err, 200, "")
+	if err != nil {
+		return nil, &DockerError{errOpImageList, err, err.Error()}
+	}
 
 	images, err := cli.ImageList(ctx, types.ImageListOptions{})
-	errors.CheckErr(err, 109, "")
-
-	return images
+	if err != nil {
+		return nil, &DockerError{errOpImageList, err, err.Error()}
+	}
+	return images, nil
 }
 
 // StopContainer will stop only codewind containers
-func StopContainer(container types.Container) {
+func StopContainer(container types.Container) *DockerError {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.WithVersion("1.30"))
-	errors.CheckErr(err, 200, "")
+	if err != nil {
+		return &DockerError{errOpStopContainer, err, err.Error()}
+	}
 
 	// Check if the container will remove after it is stopped
 	isAutoRemoved, isAutoRemovedErr := getContainerAutoRemovePolicy(container.ID)
 	if isAutoRemovedErr != nil {
-		errors.CheckErr(err, 108, "")
+		return &DockerError{errOpStopContainer, err, err.Error()}
 	}
 
 	// Stop the running container
-	if err := cli.ContainerStop(ctx, container.ID, nil); err != nil {
-		errors.CheckErr(err, 108, "")
+	err = cli.ContainerStop(ctx, container.ID, nil)
+	if err != nil {
+		return &DockerError{errOpStopContainer, err, err.Error()}
 	}
 
 	if !isAutoRemoved {
 		// Remove the container so it isnt lingering in the background
-		if err := cli.ContainerRemove(ctx, container.ID, types.ContainerRemoveOptions{}); err != nil {
-			errors.CheckErr(err, 108, "")
+		err = cli.ContainerRemove(ctx, container.ID, types.ContainerRemoveOptions{})
+		if err != nil {
+			return &DockerError{errOpStopContainer, err, err.Error()}
 		}
 	}
+	return nil
 }
 
 // getContainerAutoRemovePolicy will get the auto remove policy of a given container
@@ -438,31 +478,41 @@ func getContainerAutoRemovePolicy(containerID string) (bool, *DockerError) {
 }
 
 // GetPFEHostAndPort will return the current hostname and port that PFE is running on
-func GetPFEHostAndPort() (string, string) {
+func GetPFEHostAndPort() (string, string, *DockerError) {
+	containerIsRunning, err := CheckContainerStatus()
+	if err != nil {
+		return "", "", err
+	}
 	// on Che, can assume PFE is always on localhost:9090
 	if os.Getenv("CHE_API_EXTERNAL") != "" {
-		return "localhost", "9090"
-	} else if CheckContainerStatus() {
-		containerList := GetContainerList()
+		return "localhost", "9090", nil
+	} else if containerIsRunning {
+		containerList, err := GetContainerList()
+		if err != nil {
+			return "", "", err
+		}
 		for _, container := range containerList {
 			if strings.HasPrefix(container.Image, pfeImageName) {
 				for _, port := range container.Ports {
 					if port.PrivatePort == internalPFEPort {
-						return port.IP, strconv.Itoa(int(port.PublicPort))
+						return port.IP, strconv.Itoa(int(port.PublicPort)), nil
 					}
 				}
 			}
 		}
 	}
-	return "", ""
+	return "", "", nil
 }
 
 // GetImageTags of Codewind images
-func GetImageTags() []string {
+func GetImageTags() ([]string, *DockerError) {
 	imageArr := baseImageNameArr
 	tagArr := []string{}
 
-	images := GetImageList()
+	images, err := GetImageList()
+	if err != nil {
+		return nil, err
+	}
 
 	for _, image := range images {
 		imageRepo := strings.Join(image.RepoDigests, " ")
@@ -482,7 +532,7 @@ func GetImageTags() []string {
 	}
 
 	tagArr = RemoveDuplicateEntries(tagArr)
-	return tagArr
+	return tagArr, err
 }
 
 // IsTCPPortAvailable checks to find the next available port and returns it
@@ -509,11 +559,14 @@ func DetermineDebugPortForPFE() (pfeDebugPort string) {
 }
 
 // GetContainerTags of the Codewind version(s) currently running
-func GetContainerTags() []string {
+func GetContainerTags() ([]string, *DockerError) {
 	containerArr := baseImageNameArr
 	tagArr := []string{}
 
-	containers := GetContainerList()
+	containers, err := GetContainerList()
+	if err != nil {
+		return nil, err
+	}
 
 	for _, container := range containers {
 		for _, key := range containerArr {
@@ -525,5 +578,5 @@ func GetContainerTags() []string {
 	}
 
 	tagArr = RemoveDuplicateEntries(tagArr)
-	return tagArr
+	return tagArr, nil
 }

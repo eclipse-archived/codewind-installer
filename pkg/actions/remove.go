@@ -25,6 +25,7 @@ import (
 //RemoveCommand to remove all codewind and project images
 func RemoveCommand(c *cli.Context, dockerComposeFile string) {
 	tag := c.String("tag")
+	printAsJSON := c.GlobalBool("json")
 	if tag == "" {
 		tag = "latest"
 	}
@@ -32,7 +33,16 @@ func RemoveCommand(c *cli.Context, dockerComposeFile string) {
 		"cw-",
 	}
 
-	images := utils.GetImageList()
+	images, err := utils.GetImageList()
+
+	if err != nil {
+		if printAsJSON {
+			fmt.Println(err.Error())
+		} else {
+			logr.Println(err.Desc)
+		}
+		os.Exit(1)
+	}
 
 	fmt.Println("Removing Codewind docker images..")
 

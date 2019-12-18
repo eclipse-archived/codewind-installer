@@ -41,8 +41,8 @@ func PFEOriginFromConnection(connection *connections.Connection) (string, *Confi
 }
 
 func getLocalHostnameAndPort() (string, *ConfigError) {
-	hostname, port := utils.GetPFEHostAndPort()
-	if hostname == "" || port == "" {
+	hostname, port, err := utils.GetPFEHostAndPort()
+	if err != nil || hostname == "" || port == "" {
 		return "", &ConfigError{errOpConfPFEHostnamePortNotFound, nil, "Hostname or port for PFE not found"}
 	}
 	val, ok := os.LookupEnv("CHE_API_EXTERNAL")
