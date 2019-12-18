@@ -39,7 +39,7 @@ func RemoveCommand(c *cli.Context, dockerComposeFile string) {
 		if printAsJSON {
 			fmt.Println(err.Error())
 		} else {
-			logr.Println(err.Desc)
+			logr.Error(err.Desc)
 		}
 		os.Exit(1)
 	}

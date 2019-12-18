@@ -13,6 +13,7 @@ package actions
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/eclipse/codewind-installer/pkg/utils"
 	logr "github.com/sirupsen/logrus"
@@ -27,8 +28,9 @@ func StartCommand(c *cli.Context, dockerComposeFile string, healthEndpoint strin
 		if printAsJSON {
 			fmt.Println(err.Error())
 		} else {
-			logr.Println(err.Desc)
+			logr.Error(err.Desc)
 		}
+		os.Exit(1)
 	}
 
 	if status {
@@ -46,8 +48,9 @@ func StartCommand(c *cli.Context, dockerComposeFile string, healthEndpoint strin
 			if printAsJSON {
 				fmt.Println(err.Error())
 			} else {
-				logr.Println(err.Desc)
+				logr.Error(err.Desc)
 			}
+			os.Exit(1)
 		}
 
 		_, pingHealthErr := utils.PingHealth(healthEndpoint)
@@ -55,8 +58,9 @@ func StartCommand(c *cli.Context, dockerComposeFile string, healthEndpoint strin
 			if printAsJSON {
 				fmt.Println(pingHealthErr.Error())
 			} else {
-				logr.Println(pingHealthErr.Desc)
+				logr.Error(pingHealthErr.Desc)
 			}
+			os.Exit(1)
 		}
 	}
 }

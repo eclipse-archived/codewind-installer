@@ -94,7 +94,7 @@ func StatusCommandLocalConnection(c *cli.Context) {
 		if jsonOutput {
 			fmt.Println(err.Error())
 		} else {
-			logr.Println(err.Desc)
+			logr.Error(err.Desc)
 		}
 		os.Exit(1)
 	}
@@ -106,7 +106,7 @@ func StatusCommandLocalConnection(c *cli.Context) {
 			if jsonOutput {
 				fmt.Println(err.Error())
 			} else {
-				logr.Println(err.Desc)
+				logr.Error(err.Desc)
 			}
 			os.Exit(1)
 		}
@@ -150,7 +150,7 @@ func StatusCommandLocalConnection(c *cli.Context) {
 		if jsonOutput {
 			fmt.Println(err.Error())
 		} else {
-			logr.Println(err.Desc)
+			logr.Error(err.Desc)
 		}
 		os.Exit(1)
 	}
