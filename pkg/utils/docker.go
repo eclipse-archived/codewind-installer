@@ -431,17 +431,6 @@ func getContainerAutoRemovePolicy(containerID string) (bool, *DockerError) {
 	return containerInfo.HostConfig.AutoRemove, nil
 }
 
-// RemoveNetwork will remove docker network
-func RemoveNetwork(network types.NetworkResource) {
-	ctx := context.Background()
-	cli, err := client.NewClientWithOpts(client.WithVersion("1.30"))
-	errors.CheckErr(err, 200, "")
-
-	if err := cli.NetworkRemove(ctx, network.ID); err != nil {
-		errors.CheckErr(err, 111, "Cannot remove "+network.Name+". Use 'stop-all' flag to ensure all containers have been terminated")
-	}
-}
-
 // GetPFEHostAndPort will return the current hostname and port that PFE is running on
 func GetPFEHostAndPort() (string, string) {
 	// on Che, can assume PFE is always on localhost:9090
