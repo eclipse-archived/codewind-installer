@@ -377,18 +377,6 @@ func GetImageList() []types.ImageSummary {
 	return images
 }
 
-// GetNetworkList from docker
-func GetNetworkList() []types.NetworkResource {
-	ctx := context.Background()
-	cli, err := client.NewClientWithOpts(client.WithVersion("1.30"))
-	errors.CheckErr(err, 200, "")
-
-	networks, err := cli.NetworkList(ctx, types.NetworkListOptions{})
-	errors.CheckErr(err, 110, "")
-
-	return networks
-}
-
 // StopContainer will stop only codewind containers
 func StopContainer(container types.Container) {
 	ctx := context.Background()
