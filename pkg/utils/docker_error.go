@@ -24,7 +24,6 @@ const (
 	errOpValidate            = "DOCKER_VALIDATE"
 	errOpClientCreate        = "CLIENT_CREATE_ERROR"
 	errOpContainerInspect    = "CONTAINER_INSPECT_ERROR"
-	errOpContainersStopped   = "CONTAINERS_STOPPED"
 	errOpContainerError      = "CONTAINER_ERROR"
 	errOpStopContainer       = "CONTAINER_STOP_ERROR"
 	errOpDockerComposeStart  = "DOCKER_COMPOSE_START_ERROR"
