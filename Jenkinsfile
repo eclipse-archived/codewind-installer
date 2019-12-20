@@ -81,6 +81,7 @@ spec:
                         GOOS=darwin go build -ldflags="-s -w" -o cwctl-macos
                         GOOS=windows go build -ldflags="-s -w" -o cwctl-win.exe
                         CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o cwctl-linux
+                        GOOS=linux GOARCH=ppc64le go build -o cwctl-ppc64le
                         chmod -v +x cwctl-*
 
                         # move the built binaries to the top level direcotory
@@ -203,6 +204,7 @@ spec:
                     export sshHost="genie.codewind@projects-storage.eclipse.org"
                     export deployDir="/home/data/httpd/download.eclipse.org/codewind/$REPO_NAME"
                     export CWCTL_LINUX="cwctl-linux"
+                    export CWCTL_PPC64LE="cwctl-ppc64le"
                     export CWCTL_MACOS="cwctl-macos"
                     export CWCTL_WIN="cwctl-win"
                     
@@ -222,6 +224,7 @@ spec:
                     scp ${WORKSPACE}/$REPO_NAME/* $sshHost:$deployDir/${UPLOAD_DIR}
 
                     mv ${WORKSPACE}/$REPO_NAME/$CWCTL_LINUX-* ${WORKSPACE}/$REPO_NAME/$CWCTL_LINUX
+                    mv ${WORKSPACE}/$REPO_NAME/$CWCTL_PPC64LE-* ${WORKSPACE}/$REPO_NAME/$CWCTL_PPC64LE
                     mv ${WORKSPACE}/$REPO_NAME/$CWCTL_MACOS-* ${WORKSPACE}/$REPO_NAME/$CWCTL_MACOS
                     mv ${WORKSPACE}/$REPO_NAME/$CWCTL_WIN-* ${WORKSPACE}/$REPO_NAME/$CWCTL_WIN.exe
                     
@@ -229,6 +232,9 @@ spec:
                     echo "build_info.url=$BUILD_URL" >> ${WORKSPACE}/$REPO_NAME/$BUILD_INFO
                     SHA1_LINUX=$(sha1sum ${WORKSPACE}/$REPO_NAME/$CWCTL_LINUX | cut -d ' ' -f 1)
                     echo "build_info.linux.SHA-1=${SHA1_LINUX}" >> ${WORKSPACE}/$REPO_NAME/$BUILD_INFO
+
+                    SHA1_PPC64LE=$(sha1sum ${WORKSPACE}/$REPO_NAME/$CWCTL_PPC64LE | cut -d ' ' -f 1)
+                    echo "build_info.ppc64le.SHA-1=${SHA1_PPC64LE}" >> ${WORKSPACE}/$REPO_NAME/$BUILD_INFO
 
                     SHA1_MACOS=$(sha1sum ${WORKSPACE}/$REPO_NAME/$CWCTL_MACOS | cut -d ' ' -f 1)
                     echo "build_info.macos.SHA-1=${SHA1_MACOS}" >> ${WORKSPACE}/$REPO_NAME/$BUILD_INFO
