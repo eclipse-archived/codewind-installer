@@ -157,7 +157,8 @@ spec:
                         done
 
                         DEFAULT_WORKSPACE_DIR=$(cat $DEFAULT_WORKSPACE_DIR_FILE)
-                        cp -r codewind-installer $DEFAULT_WORKSPACE_DIR
+                        mkdir DEFAULT_WORKSPACE_DIR/codewind-installer
+                        cp -r codewind-installer/* $DEFAULT_WORKSPACE_DIR/codewind-installer
                     '''
                     // stash the executables so they are avaialable outside of this agent
                     dir('codewind-installer') {
