@@ -124,7 +124,7 @@ spec:
         }
 
         stage('Upload') {
-            // This when clause disables Tagged build
+            // This when clause disables Tagged build 
             when {
                 beforeAgent true
                 not {
