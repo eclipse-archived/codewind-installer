@@ -300,6 +300,24 @@ func TagImage(source, tag string) {
 	fmt.Println(output)
 }
 
+// GetContainersToRemove returns a list of containers ([]types.Container) matching "/cw"
+func GetContainersToRemove(containerList []types.Container) []types.Container {
+	codewindContainerPrefixes := []string{
+		"/cw-",
+	}
+
+	containersToRemove := []types.Container{}
+	for _, container := range containerList {
+		for _, prefix := range codewindContainerPrefixes {
+			if strings.HasPrefix(container.Names[0], prefix) {
+				containersToRemove = append(containersToRemove, container)
+				break
+			}
+		}
+	}
+	return containersToRemove
+}
+
 // CheckContainerStatus of Codewind running/stopped
 func CheckContainerStatus() bool {
 	var containerStatus = false

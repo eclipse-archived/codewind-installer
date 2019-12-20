@@ -13,9 +13,7 @@ package actions
 
 import (
 	"fmt"
-	"strings"
 
-	"github.com/docker/docker/api/types"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/urfave/cli"
 )
@@ -27,26 +25,9 @@ func StopAllCommand(c *cli.Context, dockerComposeFile string) {
 	utils.DockerComposeStop(tag, dockerComposeFile)
 
 	fmt.Println("Stopping Project containers")
-	containersToRemove := getContainersToRemove(containers)
+	containersToRemove := utils.GetContainersToRemove(containers)
 	for _, container := range containersToRemove {
 		fmt.Println("Stopping container ", container.Names[0], "... ")
 		utils.StopContainer(container)
 	}
-}
-
-func getContainersToRemove(containerList []types.Container) []types.Container {
-	codewindContainerPrefixes := []string{
-		"/cw-",
-	}
-
-	containersToRemove := []types.Container{}
-	for _, container := range containerList {
-		for _, prefix := range codewindContainerPrefixes {
-			if strings.HasPrefix(container.Names[0], prefix) {
-				containersToRemove = append(containersToRemove, container)
-				break
-			}
-		}
-	}
-	return containersToRemove
 }
