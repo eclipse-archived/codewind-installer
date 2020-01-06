@@ -242,6 +242,7 @@ func UnTar(pathToTarFile, destination string) error {
 			if _, err := io.Copy(fileToOverwrite, tarReader); err != nil {
 				log.Fatal(err)
 			}
+			os.Chmod(target, os.FileMode(header.Mode))
 		default:
 			log.Printf("Can't extract to %s: unknown typeflag %c\n", target, header.Typeflag)
 		}
