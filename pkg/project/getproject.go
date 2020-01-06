@@ -11,15 +11,15 @@ import (
 	"github.com/eclipse/codewind-installer/pkg/utils"
 )
 
-// Represents a project
 type (
+	// Project : Represents a project
 	Project struct {
 		ProjectID      string `json:"projectID"`
 		LocationOnDisk string `json:"locOnDisk"`
 	}
 )
 
-// Get project details from Codewind
+// GetProject : Get project details from Codewind
 func GetProject(httpClient utils.HTTPClient, conID, projectID string) (*Project, error) {
 	conInfo, conInfoErr := connections.GetConnectionByID(conID)
 	if conInfoErr != nil {

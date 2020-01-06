@@ -71,7 +71,7 @@ func InstallCommand(c *cli.Context) {
 // DoRemoteInstall : Deploy a remote PFE and support containers
 func DoRemoteInstall(c *cli.Context) {
 
-	// Since remote will always use Self Signed Certificates initally, turn on insecure flag
+	// Since remote will always use Self Signed Certificates initially, turn on insecure flag
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	printAsJSON := c.GlobalBool("json")

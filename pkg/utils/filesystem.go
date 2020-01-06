@@ -276,6 +276,21 @@ func PathExists(path string) bool {
 	return false
 }
 
+// DirIsEmpty returns true if the directory at the given path if empty
+func DirIsEmpty(path string) (bool, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
+
+	_, err = f.Readdirnames(1)
+	if err == io.EOF {
+		return true, nil
+	}
+	return false, err
+}
+
 // ReplaceInFiles the placeholder string "[PROJ_NAME_PLACEHOLDER]" with a generated name based on the project directory
 func ReplaceInFiles(projectPath string, oldStr string, newStr string) error {
 

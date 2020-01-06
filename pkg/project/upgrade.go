@@ -19,6 +19,7 @@ import (
 	"path/filepath"
 )
 
+// UpgradeProjects : Upgrades Projects
 func UpgradeProjects(oldDir string) (*map[string]interface{}, *ProjectError) {
 	// Check to see if the workspace exists
 	_, err := os.Stat(oldDir)

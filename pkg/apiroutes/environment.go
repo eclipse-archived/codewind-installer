@@ -20,6 +20,7 @@ import (
 	"github.com/urfave/cli"
 )
 
+// Environment : Codewind environment details
 type Environment struct {
 	RunningOnICP      bool   `json:"running_on_icp"`
 	UserString        string `json:"user_string"`
@@ -29,6 +30,7 @@ type Environment struct {
 	Platform          string `json:"os_platform"`
 }
 
+// GetAPIEnvironment : Call environment route
 func GetAPIEnvironment(c *cli.Context, host string) (*Environment, error) {
 
 	if c.GlobalBool("insecure") {

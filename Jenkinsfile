@@ -11,7 +11,7 @@ kind: Pod
 spec:
   containers:
   - name: go
-    image: golang:1.11-stretch
+    image: golang:1.12-stretch
     tty: true
     command:
     - cat
@@ -73,15 +73,27 @@ spec:
                         dep status
                         dep ensure -v
 
+                        # go cache setup
+                        mkdir .cache
+                        cd .cache
+                        mkdir go-build
+                        cd ../
+
                         # now compile the code
                         cd cmd/cli
                         export HOME=$JENKINS_HOME
-                        export GOCACHE="off"
+                        export GOCACHE=/home/jenkins/agent/$CODE_DIRECTORY_FOR_GO/.cache/go-build
                         export GOARCH=amd64
                         GOOS=darwin go build -ldflags="-s -w" -o cwctl-macos
                         GOOS=windows go build -ldflags="-s -w" -o cwctl-win.exe
                         CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o cwctl-linux
+                        GOOS=linux GOARCH=ppc64le go build -o cwctl-ppc64le
                         chmod -v +x cwctl-*
+
+                        # clean up the cache directory
+                        cd ../../
+                        rm -rf .cache
+                        cd cmd/cli
 
                         # move the built binaries to the top level direcotory
                         mv cwctl-* ../../
@@ -106,7 +118,13 @@ spec:
                 container('go') {
                     sh '''
                         export GOPATH=/go:/home/jenkins/agent
-                        export GOCACHE="off"
+                        
+                        # go cache setup
+                        mkdir .cache
+                        cd .cache
+                        mkdir go-build
+                        cd ../
+                        export GOCACHE=/home/jenkins/agent/$CODE_DIRECTORY_FOR_GO/.cache/go-build
 
                         cd ../../$CODE_DIRECTORY_FOR_GO
                         cd pkg/config
@@ -116,6 +134,9 @@ spec:
                         cd ../desktop_utils
                         go test -v
                         cd ../../
+
+                        # clean up the cache directory
+                        rm -rf .cache
                     '''
                 }
                 echo 'End of test stage'
@@ -156,7 +177,8 @@ spec:
                         done
 
                         DEFAULT_WORKSPACE_DIR=$(cat $DEFAULT_WORKSPACE_DIR_FILE)
-                        cp -r codewind-installer $DEFAULT_WORKSPACE_DIR
+                        mkdir $DEFAULT_WORKSPACE_DIR/codewind-installer
+                        cp -r codewind-installer/* $DEFAULT_WORKSPACE_DIR/codewind-installer
                     '''
                     // stash the executables so they are avaialable outside of this agent
                     dir('codewind-installer') {
@@ -203,6 +225,7 @@ spec:
                     export sshHost="genie.codewind@projects-storage.eclipse.org"
                     export deployDir="/home/data/httpd/download.eclipse.org/codewind/$REPO_NAME"
                     export CWCTL_LINUX="cwctl-linux"
+                    export CWCTL_PPC64LE="cwctl-ppc64le"
                     export CWCTL_MACOS="cwctl-macos"
                     export CWCTL_WIN="cwctl-win"
                     
@@ -222,6 +245,7 @@ spec:
                     scp ${WORKSPACE}/$REPO_NAME/* $sshHost:$deployDir/${UPLOAD_DIR}
 
                     mv ${WORKSPACE}/$REPO_NAME/$CWCTL_LINUX-* ${WORKSPACE}/$REPO_NAME/$CWCTL_LINUX
+                    mv ${WORKSPACE}/$REPO_NAME/$CWCTL_PPC64LE-* ${WORKSPACE}/$REPO_NAME/$CWCTL_PPC64LE
                     mv ${WORKSPACE}/$REPO_NAME/$CWCTL_MACOS-* ${WORKSPACE}/$REPO_NAME/$CWCTL_MACOS
                     mv ${WORKSPACE}/$REPO_NAME/$CWCTL_WIN-* ${WORKSPACE}/$REPO_NAME/$CWCTL_WIN.exe
                     
@@ -229,6 +253,9 @@ spec:
                     echo "build_info.url=$BUILD_URL" >> ${WORKSPACE}/$REPO_NAME/$BUILD_INFO
                     SHA1_LINUX=$(sha1sum ${WORKSPACE}/$REPO_NAME/$CWCTL_LINUX | cut -d ' ' -f 1)
                     echo "build_info.linux.SHA-1=${SHA1_LINUX}" >> ${WORKSPACE}/$REPO_NAME/$BUILD_INFO
+
+                    SHA1_PPC64LE=$(sha1sum ${WORKSPACE}/$REPO_NAME/$CWCTL_PPC64LE | cut -d ' ' -f 1)
+                    echo "build_info.ppc64le.SHA-1=${SHA1_PPC64LE}" >> ${WORKSPACE}/$REPO_NAME/$BUILD_INFO
 
                     SHA1_MACOS=$(sha1sum ${WORKSPACE}/$REPO_NAME/$CWCTL_MACOS | cut -d ' ' -f 1)
                     echo "build_info.macos.SHA-1=${SHA1_MACOS}" >> ${WORKSPACE}/$REPO_NAME/$BUILD_INFO

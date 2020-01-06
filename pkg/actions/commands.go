@@ -181,7 +181,7 @@ func Commands() {
 				},
 				cli.BoolFlag{
 					Name:  "json, j",
-					Usage: "ouput as JSON",
+					Usage: "output as JSON",
 				},
 			},
 			Action: func(c *cli.Context) error {
@@ -282,7 +282,7 @@ func Commands() {
 					Usage: "dockerhub image tag",
 				},
 			},
-			Usage: "Remove Codewind/Project docker images and the codewind network",
+			Usage: "Remove Codewind and Project docker images",
 			Action: func(c *cli.Context) error {
 				RemoveCommand(c, dockerComposeFile)
 				return nil

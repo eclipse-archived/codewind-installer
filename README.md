@@ -149,7 +149,7 @@ This is the same as `go test ./...`, but outputs test coverage scores for each f
 | status      |       | 'Print the installation status of Codewind'                         |
 | stop        |       | 'Stop the running Codewind containers'                              |
 | stop-all    |       | 'Stop all of the Codewind and project containers'                   |
-| remove      | `rm`  | 'Remove Codewind/Project docker images and the codewind network'    |
+| remove      | `rm`  | 'Remove Codewind and Project docker images'                         |
 | templates   |       | 'Manage project templates'                                          |
 | version     |       | 'Print the versions of Codewind containers, for a given container'  |
 | sectoken    | `st`  | 'Authenticate with username and password to obtain an access_token' |

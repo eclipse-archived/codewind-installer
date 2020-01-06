@@ -300,6 +300,24 @@ func TagImage(source, tag string) {
 	fmt.Println(output)
 }
 
+// GetContainersToRemove returns a list of containers ([]types.Container) matching "/cw"
+func GetContainersToRemove(containerList []types.Container) []types.Container {
+	codewindContainerPrefixes := []string{
+		"/cw-",
+	}
+
+	containersToRemove := []types.Container{}
+	for _, container := range containerList {
+		for _, prefix := range codewindContainerPrefixes {
+			if strings.HasPrefix(container.Names[0], prefix) {
+				containersToRemove = append(containersToRemove, container)
+				break
+			}
+		}
+	}
+	return containersToRemove
+}
+
 // CheckContainerStatus of Codewind running/stopped
 func CheckContainerStatus() bool {
 	var containerStatus = false
@@ -377,18 +395,6 @@ func GetImageList() []types.ImageSummary {
 	return images
 }
 
-// GetNetworkList from docker
-func GetNetworkList() []types.NetworkResource {
-	ctx := context.Background()
-	cli, err := client.NewClientWithOpts(client.WithVersion("1.30"))
-	errors.CheckErr(err, 200, "")
-
-	networks, err := cli.NetworkList(ctx, types.NetworkListOptions{})
-	errors.CheckErr(err, 110, "")
-
-	return networks
-}
-
 // StopContainer will stop only codewind containers
 func StopContainer(container types.Container) {
 	ctx := context.Background()
@@ -429,17 +435,6 @@ func getContainerAutoRemovePolicy(containerID string) (bool, *DockerError) {
 	}
 
 	return containerInfo.HostConfig.AutoRemove, nil
-}
-
-// RemoveNetwork will remove docker network
-func RemoveNetwork(network types.NetworkResource) {
-	ctx := context.Background()
-	cli, err := client.NewClientWithOpts(client.WithVersion("1.30"))
-	errors.CheckErr(err, 200, "")
-
-	if err := cli.NetworkRemove(ctx, network.ID); err != nil {
-		errors.CheckErr(err, 111, "Cannot remove "+network.Name+". Use 'stop-all' flag to ensure all containers have been terminated")
-	}
 }
 
 // GetPFEHostAndPort will return the current hostname and port that PFE is running on
