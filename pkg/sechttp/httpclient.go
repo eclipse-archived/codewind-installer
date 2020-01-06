@@ -36,10 +36,9 @@ func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Requ
 		if err == nil {
 			logr.Tracef("Received HTTP Status code: %v\n", response.StatusCode)
 			return response, nil
-		} else {
-			logr.Tracef("Unable to contact server : %v\n", err)
-			return nil, err
 		}
+		logr.Tracef("Unable to contact server : %v\n", err)
+		return nil, err
 	}
 
 	// Should be a 401 (bearer only) but is infact a 302 (Redirect to a login page)

@@ -180,7 +180,7 @@ func Commands() {
 				},
 				cli.BoolFlag{
 					Name:  "json, j",
-					Usage: "ouput as JSON",
+					Usage: "output as JSON",
 				},
 			},
 			Action: func(c *cli.Context) error {

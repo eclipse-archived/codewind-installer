@@ -77,7 +77,7 @@ func ProjectBind(c *cli.Context) {
 	os.Exit(0)
 }
 
-// ProjectUnbind : Does a project remove
+// ProjectRemove : Does a project remove
 func ProjectRemove(c *cli.Context) {
 	err := project.RemoveProject(c)
 	if err != nil {

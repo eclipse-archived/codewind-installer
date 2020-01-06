@@ -300,12 +300,12 @@ func getStatus(status int) string {
 }
 
 func deleteDeployment(remoteRemovalOptions *RemoveDeploymentOptions, clientset *kubernetes.Clientset, labelSelector string) (int, error) {
-	phase := ResourceNotProcessed
+	phase := ResourceNotFound
 	deploymentList, err := clientset.AppsV1().Deployments(remoteRemovalOptions.Namespace).List(
 		v1.ListOptions{LabelSelector: labelSelector},
 	)
 	if err != nil {
-		return ResourceNotFound, err
+		return phase, err
 	}
 	if deploymentList != nil && deploymentList.Items != nil && len(deploymentList.Items) == 1 {
 		phase = ResourceFound
@@ -322,12 +322,12 @@ func deleteDeployment(remoteRemovalOptions *RemoveDeploymentOptions, clientset *
 }
 
 func deletePod(remoteRemovalOptions *RemoveDeploymentOptions, clientset *kubernetes.Clientset, labelSelector string) (int, error) {
-	phase := ResourceNotProcessed
+	phase := ResourceNotFound
 	podList, err := clientset.CoreV1().Pods(remoteRemovalOptions.Namespace).List(
 		v1.ListOptions{LabelSelector: labelSelector},
 	)
 	if err != nil {
-		return ResourceNotFound, err
+		return phase, err
 	}
 	if podList != nil && podList.Items != nil && len(podList.Items) == 1 {
 		phase = ResourceFound
@@ -344,12 +344,12 @@ func deletePod(remoteRemovalOptions *RemoveDeploymentOptions, clientset *kuberne
 }
 
 func deleteService(remoteRemovalOptions *RemoveDeploymentOptions, clientset *kubernetes.Clientset, labelSelector string) (int, error) {
-	phase := ResourceNotProcessed
+	phase := ResourceNotFound
 	serviceList, err := clientset.CoreV1().Services(remoteRemovalOptions.Namespace).List(
 		v1.ListOptions{LabelSelector: labelSelector},
 	)
 	if err != nil {
-		return ResourceNotFound, err
+		return phase, err
 	}
 	if serviceList != nil && serviceList.Items != nil && len(serviceList.Items) == 1 {
 		phase = ResourceFound
@@ -366,12 +366,12 @@ func deleteService(remoteRemovalOptions *RemoveDeploymentOptions, clientset *kub
 }
 
 func deleteSecrets(remoteRemovalOptions *RemoveDeploymentOptions, clientset *kubernetes.Clientset, labelSelector string) (int, error) {
-	phase := ResourceNotProcessed
+	phase := ResourceNotFound
 	secretList, err := clientset.CoreV1().Secrets(remoteRemovalOptions.Namespace).List(
 		v1.ListOptions{LabelSelector: labelSelector},
 	)
 	if err != nil {
-		return ResourceNotFound, err
+		return phase, err
 	}
 	if secretList != nil && secretList.Items != nil && len(secretList.Items) > 0 {
 		phase = ResourceFound
@@ -390,12 +390,12 @@ func deleteSecrets(remoteRemovalOptions *RemoveDeploymentOptions, clientset *kub
 }
 
 func deletePVC(remoteRemovalOptions *RemoveDeploymentOptions, clientset *kubernetes.Clientset, labelSelector string) (int, error) {
-	phase := ResourceNotProcessed
+	phase := ResourceNotFound
 	resourceList, err := clientset.CoreV1().PersistentVolumeClaims(remoteRemovalOptions.Namespace).List(
 		v1.ListOptions{LabelSelector: labelSelector},
 	)
 	if err != nil {
-		return ResourceNotFound, err
+		return phase, err
 	}
 	if resourceList != nil && resourceList.Items != nil && len(resourceList.Items) > 0 {
 		phase = ResourceFound
@@ -414,12 +414,12 @@ func deletePVC(remoteRemovalOptions *RemoveDeploymentOptions, clientset *kuberne
 }
 
 func deleteServiceAccount(remoteRemovalOptions *RemoveDeploymentOptions, clientset *kubernetes.Clientset, labelSelector string) (int, error) {
-	phase := ResourceNotProcessed
+	phase := ResourceNotFound
 	resourceList, err := clientset.CoreV1().ServiceAccounts(remoteRemovalOptions.Namespace).List(
 		v1.ListOptions{LabelSelector: labelSelector},
 	)
 	if err != nil {
-		return ResourceNotFound, err
+		return phase, err
 	}
 	if resourceList != nil && resourceList.Items != nil && len(resourceList.Items) > 0 {
 		phase = ResourceFound
@@ -438,12 +438,12 @@ func deleteServiceAccount(remoteRemovalOptions *RemoveDeploymentOptions, clients
 }
 
 func deleteRoleBindings(remoteRemovalOptions *RemoveDeploymentOptions, clientset *kubernetes.Clientset, labelSelector string) (int, error) {
-	phase := ResourceNotProcessed
+	phase := ResourceNotFound
 	resourceList, err := clientset.RbacV1().RoleBindings(remoteRemovalOptions.Namespace).List(
 		v1.ListOptions{LabelSelector: labelSelector},
 	)
 	if err != nil {
-		return ResourceNotFound, err
+		return phase, err
 	}
 	if resourceList != nil && resourceList.Items != nil && len(resourceList.Items) > 0 {
 		phase = ResourceFound
@@ -462,12 +462,12 @@ func deleteRoleBindings(remoteRemovalOptions *RemoveDeploymentOptions, clientset
 }
 
 func deleteIngress(remoteRemovalOptions *RemoveDeploymentOptions, clientset *kubernetes.Clientset, labelSelector string) (int, error) {
-	phase := ResourceNotProcessed
+	phase := ResourceNotFound
 	resourceList, err := clientset.ExtensionsV1beta1().Ingresses(remoteRemovalOptions.Namespace).List(
 		v1.ListOptions{LabelSelector: labelSelector},
 	)
 	if err != nil {
-		return ResourceNotFound, err
+		return phase, err
 	}
 	if resourceList != nil && resourceList.Items != nil && len(resourceList.Items) > 0 {
 		phase = ResourceFound
@@ -486,11 +486,10 @@ func deleteIngress(remoteRemovalOptions *RemoveDeploymentOptions, clientset *kub
 }
 
 func deleteRoute(config *restclient.Config, remoteRemovalOptions *RemoveDeploymentOptions, clientset *kubernetes.Clientset, labelSelector string) (int, error) {
-	phase := ResourceNotProcessed
+	phase := ResourceRemoveFailed
 	routev1client, err := routev1.NewForConfig(config)
 	if err != nil {
-		phase = ResourceRemoveFailed
-		return ResourceRemoveFailed, err
+		return phase, err
 	}
 	resourceList, err := routev1client.Routes(remoteRemovalOptions.Namespace).List(
 		v1.ListOptions{LabelSelector: labelSelector},
