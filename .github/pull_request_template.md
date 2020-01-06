@@ -13,7 +13,6 @@ Fixes # (issue)
 - [ ] This change requires a documentation update
 
 ## Testing undertaken
-
 <!-- Please describe the tests that you ran to verify your changes. Please also list any relevant information of your test configuration or test you have added to support this change -->
 
 ## Checklist
