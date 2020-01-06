@@ -90,6 +90,11 @@ spec:
                         GOOS=linux GOARCH=ppc64le go build -o cwctl-ppc64le
                         chmod -v +x cwctl-*
 
+                        # clean up the cache directory
+                        cd ../../
+                        rm -rf .cache
+                        cd cmd/cli
+
                         # move the built binaries to the top level direcotory
                         mv cwctl-* ../../
                         cd ../../
@@ -129,6 +134,9 @@ spec:
                         cd ../desktop_utils
                         go test -v
                         cd ../../
+
+                        # clean up the cache directory
+                        rm -rf .cache
                     '''
                 }
                 echo 'End of test stage'
