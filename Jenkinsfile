@@ -11,7 +11,7 @@ kind: Pod
 spec:
   containers:
   - name: go
-    image: golang:1.11-stretch
+    image: golang:1.12-stretch
     tty: true
     command:
     - cat
@@ -73,10 +73,16 @@ spec:
                         dep status
                         dep ensure -v
 
+                        # go cache setup
+                        mkdir .cache
+                        cd .cache
+                        mkdir go-build
+                        cd ../
+
                         # now compile the code
                         cd cmd/cli
                         export HOME=$JENKINS_HOME
-                        export GOCACHE="off"
+                        export GOCACHE=/home/jenkins/agent/$CODE_DIRECTORY_FOR_GO/.cache/go-build
                         export GOARCH=amd64
                         GOOS=darwin go build -ldflags="-s -w" -o cwctl-macos
                         GOOS=windows go build -ldflags="-s -w" -o cwctl-win.exe
@@ -107,7 +113,13 @@ spec:
                 container('go') {
                     sh '''
                         export GOPATH=/go:/home/jenkins/agent
-                        export GOCACHE="off"
+                        
+                        # go cache setup
+                        mkdir .cache
+                        cd .cache
+                        mkdir go-build
+                        cd ../
+                        export GOCACHE=/home/jenkins/agent/$CODE_DIRECTORY_FOR_GO/.cache/go-build
 
                         cd ../../$CODE_DIRECTORY_FOR_GO
                         cd pkg/config
