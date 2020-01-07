@@ -27,3 +27,13 @@ func HandleDockerError(err *utils.DockerError) {
 		logr.Error(err.Desc)
 	}
 }
+
+// HandleTemplateError prints a Template error, in JSON format if the global flag is set, and as a string if not
+func HandleTemplateError(err *TemplateError) {
+	// printAsJSON is a global variable, set in commands.go
+	if printAsJSON {
+		fmt.Println(err.Error())
+	} else {
+		logr.Error(err.Desc)
+	}
+}
