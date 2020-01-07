@@ -175,7 +175,7 @@ Subcommands:</br>
 > --url,-u value URL of project to download
 > --path,-p value Path at which to create the new project
 
-`validate` - Return the predicted language and build type for a project, and writes a default .cw-settings to it if one does not already exist
+`validate` - Returns the predicted language and build type for a project, and writes a default .cw-settings to it if one does not already exist
 
 > **Flags:**
 > --name,-n value Project name
