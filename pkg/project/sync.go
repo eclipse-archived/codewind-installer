@@ -20,7 +20,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -235,6 +234,10 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 
 			// get info on the referenced file
 			from := refPath.From
+			if !filepath.IsAbs(from) {
+				from = filepath.Join(projectPath, from)
+			}
+
 			info, err := os.Stat(from)
 			// skip invalid paths
 			if err != nil || info.IsDir() {
@@ -293,7 +296,7 @@ func completeUpload(projectID string, files []string, directories []string, modf
 
 // Retrieve the contents of a .cw-settings file
 func retrieveCWSettings(projectPath string) *CWSettings {
-	cwSettingsPath := path.Join(projectPath, ".cw-settings")
+	cwSettingsPath := filepath.Join(projectPath, ".cw-settings")
 	var cwSettingsJSON CWSettings
 	if _, err := os.Stat(cwSettingsPath); !os.IsNotExist(err) {
 		plan, _ := ioutil.ReadFile(cwSettingsPath)
