@@ -68,13 +68,24 @@ func Commands() {
 
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "url, u", Usage: "URL of project to download"},
-						cli.StringFlag{Name: "type, t", Usage: "Known type and subtype of project (`type:subtype`). Ignored when URL is given"},
+						cli.StringFlag{Name: "path, p", Usage: "The path at which to create the new project", Required: true},
+					},
+					Action: func(c *cli.Context) error {
+						ProjectCreate(c)
+						return nil
+					},
+				},
+				{
+					Name:    "validate",
+					Aliases: []string{""},
+					Usage:   "Returns the predicted language and build type for a project, and writes a default .cw-settings to it if one does not already exist",
+
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "type, t", Usage: "Known build type of project", Required: false},
+						cli.StringFlag{Name: "path, p", Usage: "The path at which to create the new project", Required: true},
 						cli.StringFlag{Name: "conid", Value: "local", Usage: "The connection id for the project", Required: false},
 					},
 					Action: func(c *cli.Context) error {
-						if c.String("u") != "" {
-							ProjectCreate(c)
-						}
 						ProjectValidate(c)
 						return nil
 					},

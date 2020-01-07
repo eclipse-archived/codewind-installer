@@ -52,11 +52,8 @@ type (
 )
 
 // DownloadTemplate using the url/link provided
-func DownloadTemplate(c *cli.Context) *ProjectError {
-	destination := c.Args().Get(0)
-
+func DownloadTemplate(destination string, url string) *ProjectError {
 	checkProjectDirIsEmpty(destination)
-
 	projectDir := path.Base(destination)
 
 	// Remove invalid characters from the string we will use
@@ -67,12 +64,11 @@ func DownloadTemplate(c *cli.Context) *ProjectError {
 		projectName = "PROJ_NAME_PLACEHOLDER"
 	}
 
-	url := c.String("u")
-
 	err := utils.DownloadFromURLThenExtract(url, destination)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	err = utils.ReplaceInFiles(destination, "[PROJ_NAME_PLACEHOLDER]", projectName)
 	if err != nil {
 		log.Fatal(err)
@@ -105,7 +101,6 @@ func checkIsExtension(conID, projectPath string, c *cli.Context) (string, error)
 	for _, extension := range extensions {
 
 		var isMatch bool
-
 		if len(params) > 0 {
 			// check if extension project type matched the hinted type
 			isMatch = extension.ProjectType == params["$type"]
@@ -115,9 +110,7 @@ func checkIsExtension(conID, projectPath string, c *cli.Context) (string, error)
 		}
 
 		if isMatch {
-
 			var cmdErr error
-
 			// check if there are any commands to run
 			for _, command := range extension.Commands {
 				if command.Name == commandName {
@@ -136,7 +129,7 @@ func checkIsExtension(conID, projectPath string, c *cli.Context) (string, error)
 // ValidateProject returns the language and buildType for a project at given filesystem path,
 // and writes a default .cw-settings file to that project
 func ValidateProject(c *cli.Context) *ProjectError {
-	projectPath := c.Args().Get(0)
+	projectPath := c.String("path")
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 	checkProjectPathExists(projectPath)
 	validationStatus := "success"

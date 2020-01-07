@@ -33,7 +33,9 @@ func ProjectValidate(c *cli.Context) {
 
 // ProjectCreate : Downloads template and creates a new project
 func ProjectCreate(c *cli.Context) {
-	err := project.DownloadTemplate(c)
+	destination := c.String("p")
+	url := c.String("u")
+	err := project.DownloadTemplate(destination, url)
 	if err != nil {
 		HandleProjectError(err)
 		os.Exit(1)
