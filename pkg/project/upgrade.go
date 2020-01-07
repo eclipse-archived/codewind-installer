@@ -64,6 +64,8 @@ func UpgradeProjects(oldDir string) (*map[string]interface{}, *ProjectError) {
 					errResponse["error"] = bindErr.Desc
 					migrationStatus["failed"] = append(migrationStatus["failed"].([]interface{}), &errResponse)
 				} else {
+					// attempt to delete the inf file
+					os.Remove(path)
 					migrationStatus["migrated"] = append(migrationStatus["migrated"].([]string), name)
 				}
 			} else {
