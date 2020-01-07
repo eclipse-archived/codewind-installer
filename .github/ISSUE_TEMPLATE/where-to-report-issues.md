@@ -13,4 +13,4 @@ This repository is not used for issue tracking of the Codewind plugin for VSCode
 
 🚨 Please don't submit new issues here. 🚨
 
-All issues for the Codewind plugin for VSCode are managed at [https://github.com/eclipse/codewind/issues](https://github.com/eclipse/codewind/issues)
+All issues for the Codewind Installer are managed at [https://github.com/eclipse/codewind/issues](https://github.com/eclipse/codewind/issues)
