@@ -116,6 +116,12 @@ func generatePFEService(codewind Codewind) corev1.Service {
 }
 
 func setPFEEnvVars(codewind Codewind, deployOptions *DeployOptions) []corev1.EnvVar {
+
+	authHost := deployOptions.KeycloakHost
+	if authHost == "" {
+		authHost = KeycloakPrefix + codewind.Ingress
+	}
+
 	return []corev1.EnvVar{
 		{
 			Name:  "TEKTON_PIPELINE",
@@ -195,7 +201,7 @@ func setPFEEnvVars(codewind Codewind, deployOptions *DeployOptions) []corev1.Env
 		},
 		{
 			Name:  "CODEWIND_AUTH_HOST",
-			Value: KeycloakPrefix + codewind.Ingress,
+			Value: authHost,
 		},
 	}
 }

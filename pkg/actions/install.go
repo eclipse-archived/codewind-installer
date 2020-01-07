@@ -16,6 +16,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -91,6 +92,16 @@ func DoRemoteInstall(c *cli.Context) {
 		codewindPVCSize = 1
 	}
 
+	keycloakHost := c.String("kurl")
+	if keycloakHost != "" {
+		u, err := url.Parse(keycloakHost)
+		if err != nil {
+			logr.Error("Supplied Keycloak URL is invalid")
+			os.Exit(1)
+		}
+		keycloakHost = u.Hostname()
+	}
+
 	deployOptions := remote.DeployOptions{
 		Namespace:             c.String("namespace"),
 		IngressDomain:         c.String("ingress"),
@@ -102,6 +113,7 @@ func DoRemoteInstall(c *cli.Context) {
 		KeycloakClient:        c.String("kclient"),
 		KeycloakURL:           c.String("kurl"),
 		KeycloakOnly:          c.Bool("konly"),
+		KeycloakHost:          keycloakHost,
 		GateKeeperTLSSecure:   true,
 		KeycloakTLSSecure:     true,
 		CodewindSessionSecret: session,
