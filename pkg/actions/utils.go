@@ -13,26 +13,17 @@ package actions
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/eclipse/codewind-installer/pkg/utils"
-	"github.com/urfave/cli"
+	logr "github.com/sirupsen/logrus"
 )
 
-// StopAllCommand to stop codewind and project containers
-func StopAllCommand(c *cli.Context, dockerComposeFile string) {
-	tag := c.String("tag")
-	containers, err := utils.GetContainerList()
-	if err != nil {
-		HandleDockerError(err)
-		os.Exit(1)
-	}
-	utils.DockerComposeStop(tag, dockerComposeFile)
-
-	fmt.Println("Stopping Project containers")
-	containersToRemove := utils.GetContainersToRemove(containers)
-	for _, container := range containersToRemove {
-		fmt.Println("Stopping container ", container.Names[0], "... ")
-		utils.StopContainer(container)
+// HandleDockerError prints a Docker error, in JSON format if the global flag is set, and as a string if not
+func HandleDockerError(err *utils.DockerError) {
+	// printAsJSON is a global variable, set in commands.go
+	if printAsJSON {
+		fmt.Println(err.Error())
+	} else {
+		logr.Error(err.Desc)
 	}
 }

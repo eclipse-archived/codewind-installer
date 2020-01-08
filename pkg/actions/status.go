@@ -36,7 +36,6 @@ func StatusCommand(c *cli.Context) {
 
 // StatusCommandRemoteConnection : Output remote connection details
 func StatusCommandRemoteConnection(c *cli.Context) {
-	jsonOutput := c.Bool("json") || c.GlobalBool("json")
 	conID := c.String("conid")
 	connection, conErr := connections.GetConnectionByID(conID)
 	if conErr != nil {
@@ -46,7 +45,7 @@ func StatusCommandRemoteConnection(c *cli.Context) {
 
 	PFEReady, err := apiroutes.IsPFEReady(http.DefaultClient, connection.URL)
 	if err != nil || PFEReady == false {
-		if jsonOutput {
+		if printAsJSON {
 			type status struct {
 				Status string `json:"status"`
 			}
@@ -67,7 +66,7 @@ func StatusCommandRemoteConnection(c *cli.Context) {
 	}
 
 	// Codewind responded
-	if jsonOutput {
+	if printAsJSON {
 		type status struct {
 			Status   string   `json:"status"`
 			URL      string   `json:"url"`
@@ -87,14 +86,31 @@ func StatusCommandRemoteConnection(c *cli.Context) {
 
 // StatusCommandLocalConnection : Output local connection details
 func StatusCommandLocalConnection(c *cli.Context) {
-	jsonOutput := c.Bool("json") || c.GlobalBool("json")
-	if utils.CheckContainerStatus() {
-		// Started
-		hostname, port := utils.GetPFEHostAndPort()
-		if jsonOutput {
+	containersAreRunning, err := utils.CheckContainerStatus()
+	if err != nil {
+		HandleDockerError(err)
+		os.Exit(1)
+	}
 
-			imageTagArr := utils.GetImageTags()
-			containerTagArr := utils.GetContainerTags()
+	if containersAreRunning {
+		// Started
+		hostname, port, err := utils.GetPFEHostAndPort()
+		if err != nil {
+			HandleDockerError(err)
+			os.Exit(1)
+		}
+		if printAsJSON {
+			imageTagArr, err := utils.GetImageTags()
+			if err != nil {
+				fmt.Println(err.Error())
+				os.Exit(1)
+			}
+
+			containerTagArr, err := utils.GetContainerTags()
+			if err != nil {
+				fmt.Println(err.Error())
+				os.Exit(1)
+			}
 
 			type status struct {
 				Status   string   `json:"status"`
@@ -118,11 +134,21 @@ func StatusCommandLocalConnection(c *cli.Context) {
 		os.Exit(0)
 	}
 
-	if utils.CheckImageStatus() {
-		// Installed but not started
-		if jsonOutput {
+	imagesAreInstalled, err := utils.CheckImageStatus()
+	if err != nil {
+		HandleDockerError(err)
+		os.Exit(1)
+	}
 
-			imageTagArr := utils.GetImageTags()
+	if imagesAreInstalled {
+		// Installed but not started
+		if printAsJSON {
+
+			imageTagArr, err := utils.GetImageTags()
+			if err != nil {
+				fmt.Println(err.Error())
+				os.Exit(1)
+			}
 
 			type status struct {
 				Status   string   `json:"status"`
@@ -142,7 +168,7 @@ func StatusCommandLocalConnection(c *cli.Context) {
 		os.Exit(0)
 	} else {
 		// Not installed
-		if jsonOutput {
+		if printAsJSON {
 			output, _ := json.Marshal(map[string]string{"status": "uninstalled"})
 			fmt.Println(string(output))
 		} else {

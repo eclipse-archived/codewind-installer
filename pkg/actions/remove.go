@@ -32,7 +32,12 @@ func RemoveCommand(c *cli.Context, dockerComposeFile string) {
 		"cw-",
 	}
 
-	images := utils.GetImageList()
+	images, err := utils.GetImageList()
+
+	if err != nil {
+		HandleDockerError(err)
+		os.Exit(1)
+	}
 
 	fmt.Println("Removing Codewind docker images..")
 
@@ -56,7 +61,6 @@ func RemoveCommand(c *cli.Context, dockerComposeFile string) {
 
 // DoRemoteRemove : Delete a remote Codewind deployment
 func DoRemoteRemove(c *cli.Context) {
-	printAsJSON := c.GlobalBool("json")
 	removeOptions := remote.RemoveDeploymentOptions{
 		Namespace:   c.String("namespace"),
 		WorkspaceID: c.String("workspace"),
