@@ -46,6 +46,7 @@ type DeployOptions struct {
 	KeycloakSecure        bool
 	KeycloakTLSSecure     bool
 	KeycloakURL           string
+	KeycloakHost          string
 	KeycloakOnly          bool
 	GateKeeperTLSSecure   bool
 	CodewindSessionSecret string
