@@ -23,6 +23,8 @@ Fixes # (issue)
 - [ ] If necessary, I have added tests that prove my fix is effective
 - [ ] New and existing unit tests pass locally with my changes
 - [ ] There are no typos in the code comments or this pull request
+- [ ] I have signed my commits and conformed with the Eclipse commit record guidelines
 
 ## Extra
 <!-- Please add anything extra you feel is worth mentioning regarding this pull request -->
+Eclipse commit record guidelines followed <https://wiki.eclipse.org/Development_Resources/Contributing_via_Git#The_Commit_Record>
