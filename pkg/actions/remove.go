@@ -25,7 +25,6 @@ import (
 //RemoveCommand to remove all codewind and project images
 func RemoveCommand(c *cli.Context, dockerComposeFile string) {
 	tag := c.String("tag")
-	printAsJSON := c.GlobalBool("json")
 	if tag == "" {
 		tag = "latest"
 	}
@@ -36,11 +35,7 @@ func RemoveCommand(c *cli.Context, dockerComposeFile string) {
 	images, err := utils.GetImageList()
 
 	if err != nil {
-		if printAsJSON {
-			fmt.Println(err.Error())
-		} else {
-			logr.Error(err.Desc)
-		}
+		HandleDockerError(err)
 		os.Exit(1)
 	}
 
@@ -66,7 +61,6 @@ func RemoveCommand(c *cli.Context, dockerComposeFile string) {
 
 // DoRemoteRemove : Delete a remote Codewind deployment
 func DoRemoteRemove(c *cli.Context) {
-	printAsJSON := c.GlobalBool("json")
 	removeOptions := remote.RemoveDeploymentOptions{
 		Namespace:   c.String("namespace"),
 		WorkspaceID: c.String("workspace"),

@@ -16,20 +16,14 @@ import (
 	"os"
 
 	"github.com/eclipse/codewind-installer/pkg/utils"
-	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
 // StartCommand : start the codewind containers
 func StartCommand(c *cli.Context, dockerComposeFile string, healthEndpoint string) {
-	printAsJSON := c.GlobalBool("json")
 	status, err := utils.CheckContainerStatus()
 	if err != nil {
-		if printAsJSON {
-			fmt.Println(err.Error())
-		} else {
-			logr.Error(err.Desc)
-		}
+		HandleDockerError(err)
 		os.Exit(1)
 	}
 
@@ -45,21 +39,13 @@ func StartCommand(c *cli.Context, dockerComposeFile string, healthEndpoint strin
 
 		err := utils.DockerCompose(dockerComposeFile, tag)
 		if err != nil {
-			if printAsJSON {
-				fmt.Println(err.Error())
-			} else {
-				logr.Error(err.Desc)
-			}
+			HandleDockerError(err)
 			os.Exit(1)
 		}
 
 		_, pingHealthErr := utils.PingHealth(healthEndpoint)
-		if err != nil {
-			if printAsJSON {
-				fmt.Println(pingHealthErr.Error())
-			} else {
-				logr.Error(pingHealthErr.Desc)
-			}
+		if pingHealthErr != nil {
+			HandleDockerError(pingHealthErr)
 			os.Exit(1)
 		}
 	}

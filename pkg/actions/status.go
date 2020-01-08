@@ -21,7 +21,6 @@ import (
 	"github.com/eclipse/codewind-installer/pkg/apiroutes"
 	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/utils"
-	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -37,7 +36,6 @@ func StatusCommand(c *cli.Context) {
 
 // StatusCommandRemoteConnection : Output remote connection details
 func StatusCommandRemoteConnection(c *cli.Context) {
-	jsonOutput := c.Bool("json") || c.GlobalBool("json")
 	conID := c.String("conid")
 	connection, conErr := connections.GetConnectionByID(conID)
 	if conErr != nil {
@@ -47,7 +45,7 @@ func StatusCommandRemoteConnection(c *cli.Context) {
 
 	PFEReady, err := apiroutes.IsPFEReady(http.DefaultClient, connection.URL)
 	if err != nil || PFEReady == false {
-		if jsonOutput {
+		if printAsJSON {
 			type status struct {
 				Status string `json:"status"`
 			}
@@ -68,7 +66,7 @@ func StatusCommandRemoteConnection(c *cli.Context) {
 	}
 
 	// Codewind responded
-	if jsonOutput {
+	if printAsJSON {
 		type status struct {
 			Status   string   `json:"status"`
 			URL      string   `json:"url"`
@@ -88,14 +86,9 @@ func StatusCommandRemoteConnection(c *cli.Context) {
 
 // StatusCommandLocalConnection : Output local connection details
 func StatusCommandLocalConnection(c *cli.Context) {
-	jsonOutput := c.Bool("json") || c.GlobalBool("json")
 	containersAreRunning, err := utils.CheckContainerStatus()
 	if err != nil {
-		if jsonOutput {
-			fmt.Println(err.Error())
-		} else {
-			logr.Error(err.Desc)
-		}
+		HandleDockerError(err)
 		os.Exit(1)
 	}
 
@@ -103,14 +96,10 @@ func StatusCommandLocalConnection(c *cli.Context) {
 		// Started
 		hostname, port, err := utils.GetPFEHostAndPort()
 		if err != nil {
-			if jsonOutput {
-				fmt.Println(err.Error())
-			} else {
-				logr.Error(err.Desc)
-			}
+			HandleDockerError(err)
 			os.Exit(1)
 		}
-		if jsonOutput {
+		if printAsJSON {
 			imageTagArr, err := utils.GetImageTags()
 			if err != nil {
 				fmt.Println(err.Error())
@@ -147,17 +136,13 @@ func StatusCommandLocalConnection(c *cli.Context) {
 
 	imagesAreInstalled, err := utils.CheckImageStatus()
 	if err != nil {
-		if jsonOutput {
-			fmt.Println(err.Error())
-		} else {
-			logr.Error(err.Desc)
-		}
+		HandleDockerError(err)
 		os.Exit(1)
 	}
 
 	if imagesAreInstalled {
 		// Installed but not started
-		if jsonOutput {
+		if printAsJSON {
 
 			imageTagArr, err := utils.GetImageTags()
 			if err != nil {
@@ -183,7 +168,7 @@ func StatusCommandLocalConnection(c *cli.Context) {
 		os.Exit(0)
 	} else {
 		// Not installed
-		if jsonOutput {
+		if printAsJSON {
 			output, _ := json.Marshal(map[string]string{"status": "uninstalled"})
 			fmt.Println(string(output))
 		} else {
