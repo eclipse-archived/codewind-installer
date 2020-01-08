@@ -169,7 +169,7 @@ This is the same as `go test ./...`, but outputs test coverage scores for each f
 
 Subcommands:</br>
 
-`create` - Downloads a project created from a template at the given URL
+`create` - Downloads a project created from a template, at the given URL
 
 > **Flags:**
 > --url,-u value URL of project to download
@@ -179,8 +179,8 @@ Subcommands:</br>
 
 > **Flags:**
 > --name,-n value Project name
-> --type,-t value Project Type
-> --path,-p value Project Path
+> --path,-p value Project path, on local disk
+> --type,-t value Project build type, if known (not required)
 
 `bind` - Bind a project to Codewind for building and running
 > **Flags:**

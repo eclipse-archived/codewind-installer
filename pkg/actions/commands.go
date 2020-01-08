@@ -78,7 +78,7 @@ func Commands() {
 				{
 					Name:    "validate",
 					Aliases: []string{""},
-					Usage:   "Returns the predicted language and build type for a project, and writes a default .cw-settings to it if one does not already exist",
+					Usage:   "Returns the predicted language and build type for a project, and writes a default .cw-settings if one does not already exist",
 
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "type, t", Usage: "Known build type of project", Required: false},
