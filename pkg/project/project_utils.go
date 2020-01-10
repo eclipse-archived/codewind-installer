@@ -12,17 +12,7 @@
 package project
 
 import (
-	"encoding/json"
 	"regexp"
-)
-
-// ProjectError : A Project error
-type (
-	ProjectError struct {
-		Op   string
-		Err  error
-		Desc string
-	}
 )
 
 const (
@@ -51,18 +41,6 @@ const (
 	textNoProjects       = "unable to find any codewind projects"
 	textUpgradeError     = "error occurred upgrading projects"
 )
-
-// ProjectError : Error formatted in JSON containing an errorOp and a description from
-// either a fault condition in the CLI, or an error payload from a REST request
-func (pe *ProjectError) Error() string {
-	type Output struct {
-		Operation   string `json:"error"`
-		Description string `json:"error_description"`
-	}
-	tempOutput := &Output{Operation: pe.Op, Description: pe.Err.Error()}
-	jsonError, _ := json.Marshal(tempOutput)
-	return string(jsonError)
-}
 
 // Result : status message
 type Result struct {

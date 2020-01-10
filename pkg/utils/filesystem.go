@@ -96,7 +96,7 @@ func DeleteTempFile(filePath string) (bool, error) {
 }
 
 // PingHealth - pings environment api every 15 seconds to check if containers started
-func PingHealth(healthEndpoint string) (bool, *DockerError) {
+func PingHealth(healthEndpoint string) (bool, *errors.BasicError) {
 	var started = false
 	fmt.Println("Waiting for Codewind to start")
 	hostname, port, err := GetPFEHostAndPort()

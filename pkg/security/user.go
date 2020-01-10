@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"strings"
 
+	cwerrors "github.com/eclipse/codewind-installer/pkg/errors"
 	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
@@ -34,7 +35,7 @@ type RegisteredUser struct {
 }
 
 // SecUserCreate : Create a new realm in Keycloak
-func SecUserCreate(c *cli.Context) *SecError {
+func SecUserCreate(c *cli.Context) *cwerrors.BasicError {
 
 	hostname := strings.TrimSpace(strings.ToLower(c.String("host")))
 	realm := strings.TrimSpace(c.String("realm"))
@@ -71,7 +72,7 @@ func SecUserCreate(c *cli.Context) *SecError {
 	payload := strings.NewReader(string(jsonUser))
 	req, err := http.NewRequest("POST", url, payload)
 	if err != nil {
-		return &SecError{errOpConnection, err, err.Error()}
+		return &cwerrors.BasicError{errOpConnection, err, err.Error()}
 	}
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Cache-Control", "no-cache")
@@ -81,7 +82,7 @@ func SecUserCreate(c *cli.Context) *SecError {
 	// send request
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return &SecError{errOpConnection, err, err.Error()}
+		return &cwerrors.BasicError{errOpConnection, err, err.Error()}
 	}
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
@@ -89,13 +90,13 @@ func SecUserCreate(c *cli.Context) *SecError {
 		keycloakAPIError := parseKeycloakError(string(body), res.StatusCode)
 		keycloakAPIError.Error = errOpCreate
 		kcError := errors.New(keycloakAPIError.ErrorDescription)
-		return &SecError{keycloakAPIError.Error, kcError, kcError.Error()}
+		return &cwerrors.BasicError{keycloakAPIError.Error, kcError, kcError.Error()}
 	}
 	return nil
 }
 
 // SecUserGet : Get user from Keycloak
-func SecUserGet(c *cli.Context) (*RegisteredUser, *SecError) {
+func SecUserGet(c *cli.Context) (*RegisteredUser, *cwerrors.BasicError) {
 
 	hostname := strings.TrimSpace(strings.ToLower(c.String("host")))
 	realm := strings.TrimSpace(c.String("realm"))
@@ -115,14 +116,14 @@ func SecUserGet(c *cli.Context) (*RegisteredUser, *SecError) {
 	url := hostname + "/auth/admin/realms/" + realm + "/users?username=" + searchName
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, &SecError{errOpConnection, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpConnection, err, err.Error()}
 	}
 	req.Header.Add("Authorization", "Bearer "+accesstoken)
 	req.Header.Add("cache-control", "no-cache")
 	req.Header.Add("Cache-Control", "no-cache")
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, &SecError{errOpConnection, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpConnection, err, err.Error()}
 	}
 
 	defer res.Body.Close()
@@ -131,14 +132,14 @@ func SecUserGet(c *cli.Context) (*RegisteredUser, *SecError) {
 	if res.StatusCode != http.StatusOK {
 		body, _ := ioutil.ReadAll(res.Body)
 		err = errors.New(string(body))
-		return nil, &SecError{errOpResponse, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpResponse, err, err.Error()}
 	}
 
 	registeredUsers := RegisteredUsers{}
 	body, err := ioutil.ReadAll(res.Body)
 	err = json.Unmarshal([]byte(body), &registeredUsers.Collection)
 	if err != nil {
-		return nil, &SecError{errOpResponseFormat, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpResponseFormat, err, err.Error()}
 	}
 
 	registeredUser := RegisteredUser{}
@@ -150,12 +151,12 @@ func SecUserGet(c *cli.Context) (*RegisteredUser, *SecError) {
 
 	// user not found
 	errNotFound := errors.New(textUserNotFound)
-	return nil, &SecError{errOpNotFound, errNotFound, errNotFound.Error()}
+	return nil, &cwerrors.BasicError{errOpNotFound, errNotFound, errNotFound.Error()}
 
 }
 
 // SecUserSetPW : Resets the users password in keycloak to a new one supplied
-func SecUserSetPW(c *cli.Context) *SecError {
+func SecUserSetPW(c *cli.Context) *cwerrors.BasicError {
 
 	hostname := strings.TrimSpace(strings.ToLower(c.String("host")))
 	realm := strings.TrimSpace(c.String("realm"))
@@ -190,7 +191,7 @@ func SecUserSetPW(c *cli.Context) *SecError {
 	payload := strings.NewReader(string(jsonPasswordChange))
 	req, err := http.NewRequest("PUT", url, payload)
 	if err != nil {
-		return &SecError{errOpConnection, err, err.Error()}
+		return &cwerrors.BasicError{errOpConnection, err, err.Error()}
 	}
 
 	req.Header.Add("Authorization", "Bearer "+accesstoken)
@@ -200,7 +201,7 @@ func SecUserSetPW(c *cli.Context) *SecError {
 	res, err := http.DefaultClient.Do(req)
 
 	if err != nil {
-		return &SecError{errOpConnection, err, err.Error()}
+		return &cwerrors.BasicError{errOpConnection, err, err.Error()}
 	}
 
 	defer res.Body.Close()
@@ -208,14 +209,14 @@ func SecUserSetPW(c *cli.Context) *SecError {
 	// handle HTTP status codes
 	if res.StatusCode != http.StatusNoContent {
 		errNotFound := errors.New(res.Status)
-		return &SecError{errOpNotFound, errNotFound, errNotFound.Error()}
+		return &cwerrors.BasicError{errOpNotFound, errNotFound, errNotFound.Error()}
 	}
 
 	return nil
 }
 
 // SecUserAddRole : Adds a role to a specified user
-func SecUserAddRole(c *cli.Context) *SecError {
+func SecUserAddRole(c *cli.Context) *cwerrors.BasicError {
 	hostname := strings.TrimSpace(strings.ToLower(c.String("host")))
 	realm := strings.TrimSpace(c.String("realm"))
 	accesstoken := strings.TrimSpace(c.String("accesstoken"))
@@ -250,7 +251,7 @@ func SecUserAddRole(c *cli.Context) *SecError {
 
 	req, err := http.NewRequest("POST", url, payload)
 	if err != nil {
-		return &SecError{errOpConnection, err, err.Error()}
+		return &cwerrors.BasicError{errOpConnection, err, err.Error()}
 	}
 
 	req.Header.Add("Authorization", "Bearer "+accesstoken)
@@ -259,13 +260,13 @@ func SecUserAddRole(c *cli.Context) *SecError {
 	req.Header.Add("Cache-Control", "no-cache")
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return &SecError{errOpConnection, err, err.Error()}
+		return &cwerrors.BasicError{errOpConnection, err, err.Error()}
 	}
 
 	// handle HTTP status codes (success returns status code StatusNoContent)
 	if res.StatusCode != http.StatusNoContent {
 		errNotFound := errors.New(res.Status)
-		return &SecError{errOpNotFound, errNotFound, errNotFound.Error()}
+		return &cwerrors.BasicError{errOpNotFound, errNotFound, errNotFound.Error()}
 	}
 
 	return nil

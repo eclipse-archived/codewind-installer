@@ -14,6 +14,7 @@ package remote
 import (
 	"path/filepath"
 
+	"github.com/eclipse/codewind-installer/pkg/errors"
 	"github.com/eclipse/codewind-installer/pkg/remote/kube"
 	routev1 "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
 	logr "github.com/sirupsen/logrus"
@@ -85,14 +86,14 @@ type RemovalResult struct {
 }
 
 // RemoveRemote : Remove remote install from Kube
-func RemoveRemote(remoteRemovalOptions *RemoveDeploymentOptions) (*RemovalResult, *RemInstError) {
+func RemoveRemote(remoteRemovalOptions *RemoveDeploymentOptions) (*RemovalResult, *errors.BasicError) {
 
 	kubeconfig := filepath.Join(getHomeDir(), ".kube", "config")
 	namespace := remoteRemovalOptions.Namespace
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		logr.Infof("Unable to retrieve Kubernetes Config %v\n", err)
-		return nil, &RemInstError{errOpNotFound, err, err.Error()}
+		return nil, &errors.BasicError{errOpNotFound, err, err.Error()}
 	}
 
 	// Determine if we're running on OpenShift or not.
@@ -118,13 +119,13 @@ func RemoveRemote(remoteRemovalOptions *RemoveDeploymentOptions) (*RemovalResult
 
 	if err != nil {
 		logr.Infof("Unable to retrieve Kubernetes Config %v\n", err)
-		return nil, &RemInstError{errOpNotFound, err, err.Error()}
+		return nil, &errors.BasicError{errOpNotFound, err, err.Error()}
 	}
 
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		logr.Infof("Unable to retrieve Kubernetes clientset %v\n", err)
-		return nil, &RemInstError{errOpNotFound, err, err.Error()}
+		return nil, &errors.BasicError{errOpNotFound, err, err.Error()}
 	}
 
 	// Check if namespace exists
@@ -132,7 +133,7 @@ func RemoveRemote(remoteRemovalOptions *RemoveDeploymentOptions) (*RemovalResult
 	_, err = clientset.CoreV1().Namespaces().Get(namespace, v1.GetOptions{})
 	if err != nil {
 		logr.Errorf("Unable to locate %v namespace: %v", namespace, err)
-		return nil, &RemInstError{errOpCreateNamespace, err, err.Error()}
+		return nil, &errors.BasicError{errOpCreateNamespace, err, err.Error()}
 	}
 	logr.Infof("Found '%v' namespace\n", namespace)
 
@@ -195,14 +196,14 @@ func RemoveRemote(remoteRemovalOptions *RemoveDeploymentOptions) (*RemovalResult
 }
 
 // RemoveRemoteKeycloak : Remove remote keycloak install from Kube
-func RemoveRemoteKeycloak(remoteRemovalOptions *RemoveDeploymentOptions) (*RemovalResult, *RemInstError) {
+func RemoveRemoteKeycloak(remoteRemovalOptions *RemoveDeploymentOptions) (*RemovalResult, *errors.BasicError) {
 
 	kubeconfig := filepath.Join(getHomeDir(), ".kube", "config")
 	namespace := remoteRemovalOptions.Namespace
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		logr.Infof("Unable to retrieve Kubernetes Config %v\n", err)
-		return nil, &RemInstError{errOpNotFound, err, err.Error()}
+		return nil, &errors.BasicError{errOpNotFound, err, err.Error()}
 	}
 
 	// Determine if we're running on OpenShift or not.
@@ -221,13 +222,13 @@ func RemoveRemoteKeycloak(remoteRemovalOptions *RemoveDeploymentOptions) (*Remov
 
 	if err != nil {
 		logr.Errorf("Unable to retrieve Kubernetes Config %v\n", err)
-		return nil, &RemInstError{errOpNotFound, err, err.Error()}
+		return nil, &errors.BasicError{errOpNotFound, err, err.Error()}
 	}
 
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		logr.Errorf("Unable to retrieve Kubernetes clientset %v\n", err)
-		return nil, &RemInstError{errOpNotFound, err, err.Error()}
+		return nil, &errors.BasicError{errOpNotFound, err, err.Error()}
 	}
 
 	// Check if namespace exists
@@ -235,7 +236,7 @@ func RemoveRemoteKeycloak(remoteRemovalOptions *RemoveDeploymentOptions) (*Remov
 	_, err = clientset.CoreV1().Namespaces().Get(namespace, v1.GetOptions{})
 	if err != nil {
 		logr.Errorf("Unable to locate %v namespace: %v", namespace, err)
-		return nil, &RemInstError{errOpCreateNamespace, err, err.Error()}
+		return nil, &errors.BasicError{errOpCreateNamespace, err, err.Error()}
 	}
 	logr.Infof("Found '%v' namespace\n", namespace)
 

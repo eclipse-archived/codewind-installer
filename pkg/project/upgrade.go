@@ -17,20 +17,22 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	cwerrors "github.com/eclipse/codewind-installer/pkg/errors"
 )
 
 // UpgradeProjects : Upgrades Projects
-func UpgradeProjects(oldDir string) (*map[string]interface{}, *ProjectError) {
+func UpgradeProjects(oldDir string) (*map[string]interface{}, *cwerrors.BasicError) {
 	// Check to see if the workspace exists
 	_, err := os.Stat(oldDir)
 	if err != nil {
-		return nil, &ProjectError{errBadPath, err, err.Error()}
+		return nil, &cwerrors.BasicError{errBadPath, err, err.Error()}
 	}
 	projectDir := oldDir + "/.projects/"
 	// Check to see if the .projects dir exists
 	_, fileerr := os.Stat(projectDir)
 	if fileerr != nil {
-		return nil, &ProjectError{textNoProjects, fileerr, fileerr.Error()}
+		return nil, &cwerrors.BasicError{textNoProjects, fileerr, fileerr.Error()}
 	}
 
 	migrationStatus := make(map[string]interface{})
@@ -40,7 +42,7 @@ func UpgradeProjects(oldDir string) (*map[string]interface{}, *ProjectError) {
 	filepath.Walk(projectDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			err = errors.New(textUpgradeError)
-			return &ProjectError{errOpFileParse, err, textUpgradeError}
+			return &cwerrors.BasicError{errOpFileParse, err, textUpgradeError}
 		}
 
 		if !info.IsDir() {

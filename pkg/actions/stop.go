@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/eclipse/codewind-installer/pkg/errors"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/urfave/cli"
 )
@@ -25,7 +26,7 @@ func StopCommand(c *cli.Context, dockerComposeFile string) {
 	fmt.Println("Only stopping Codewind containers. To stop project containers, please use 'stop-all'")
 	err := utils.DockerComposeStop(tag, dockerComposeFile)
 	if err != nil {
-		HandleDockerError(err)
+		errors.PrintError(err, printAsJSON)
 		os.Exit(1)
 	}
 }

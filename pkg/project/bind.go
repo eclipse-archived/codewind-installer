@@ -23,6 +23,7 @@ import (
 
 	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
+	cwerrors "github.com/eclipse/codewind-installer/pkg/errors"
 	"github.com/eclipse/codewind-installer/pkg/sechttp"
 	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
@@ -60,7 +61,7 @@ type (
 )
 
 // BindProject : Bind a project
-func BindProject(c *cli.Context) (*BindResponse, *ProjectError) {
+func BindProject(c *cli.Context) (*BindResponse, *cwerrors.BasicError) {
 	projectPath := strings.TrimSpace(c.String("path"))
 	name := strings.TrimSpace(c.String("name"))
 	language := strings.TrimSpace(c.String("language"))
@@ -70,10 +71,10 @@ func BindProject(c *cli.Context) (*BindResponse, *ProjectError) {
 }
 
 // Bind is used to bind a project for building and running
-func Bind(projectPath string, name string, language string, projectType string, conID string) (*BindResponse, *ProjectError) {
+func Bind(projectPath string, name string, language string, projectType string, conID string) (*BindResponse, *cwerrors.BasicError) {
 	_, err := os.Stat(projectPath)
 	if err != nil {
-		return nil, &ProjectError{errBadPath, err, err.Error()}
+		return nil, &cwerrors.BasicError{errBadPath, err, err.Error()}
 	}
 	creationTime := time.Now().UnixNano() / 1000000
 
@@ -89,12 +90,12 @@ func Bind(projectPath string, name string, language string, projectType string, 
 
 	conInfo, conInfoErr := connections.GetConnectionByID(conID)
 	if conInfoErr != nil {
-		return nil, &ProjectError{errOpConNotFound, conInfoErr.Err, conInfoErr.Desc}
+		return nil, &cwerrors.BasicError{errOpConNotFound, conInfoErr.Err, conInfoErr.Desc}
 	}
 
 	conURL, conURLErr := config.PFEOriginFromConnection(conInfo)
 	if conURLErr != nil {
-		return nil, &ProjectError{errOpConNotFound, conURLErr.Err, conURLErr.Desc}
+		return nil, &cwerrors.BasicError{errOpConNotFound, conURLErr.Err, conURLErr.Desc}
 	}
 
 	bindURL := conURL + "/api/v1/projects/bind/start"
@@ -105,19 +106,19 @@ func Bind(projectPath string, name string, language string, projectType string, 
 	request.Header.Set("Content-Type", "application/json")
 	resp, httpSecError := sechttp.DispatchHTTPRequest(client, request, conInfo)
 	if httpSecError != nil {
-		return nil, &ProjectError{errOpResponse, httpSecError.Err, httpSecError.Desc}
+		return nil, &cwerrors.BasicError{errOpResponse, httpSecError.Err, httpSecError.Desc}
 	}
 
 	switch httpCode := resp.StatusCode; {
 	case httpCode == 400:
 		err = errors.New(textInvalidType)
-		return nil, &ProjectError{errOpResponse, err, textInvalidType}
+		return nil, &cwerrors.BasicError{errOpResponse, err, textInvalidType}
 	case httpCode == 404:
 		err = errors.New(textAPINotFound)
-		return nil, &ProjectError{errOpResponse, err, textAPINotFound}
+		return nil, &cwerrors.BasicError{errOpResponse, err, textAPINotFound}
 	case httpCode == 409:
 		err = errors.New(textDupName)
-		return nil, &ProjectError{errOpResponse, err, textDupName}
+		return nil, &cwerrors.BasicError{errOpResponse, err, textDupName}
 	}
 
 	defer resp.Body.Close()

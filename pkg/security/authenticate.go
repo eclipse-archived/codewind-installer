@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/eclipse/codewind-installer/pkg/connections"
+	cwerrors "github.com/eclipse/codewind-installer/pkg/errors"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/urfave/cli"
 )
@@ -36,7 +37,7 @@ type AuthToken struct {
 
 // SecAuthenticate - sends credentials to the auth server for a specific realm and returns an AuthToken
 // connectionRealm can be used to override the supplied context arguments
-func SecAuthenticate(httpClient utils.HTTPClient, c *cli.Context, connectionRealm string, connectionClient string) (*AuthToken, *SecError) {
+func SecAuthenticate(httpClient utils.HTTPClient, c *cli.Context, connectionRealm string, connectionClient string) (*AuthToken, *cwerrors.BasicError) {
 
 	cliHostname := strings.TrimSpace(strings.ToLower(c.String("host")))
 	cliUsername := strings.TrimSpace(strings.ToLower(c.String("username")))
@@ -48,7 +49,7 @@ func SecAuthenticate(httpClient utils.HTTPClient, c *cli.Context, connectionReal
 	// Check supplied context flags
 	if connectionID == "" && (cliHostname == "" || cliUsername == "" || cliRealm == "" || cliClient == "") {
 		err := errors.New("Must supply a connection ID or connection details")
-		return nil, &SecError{errOpConConfig, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpConConfig, err, err.Error()}
 	}
 
 	hostname := ""
@@ -60,7 +61,7 @@ func SecAuthenticate(httpClient utils.HTTPClient, c *cli.Context, connectionReal
 	// Check connection is known
 	connection, ConErr := connections.GetConnectionByID(connectionID)
 	if connectionID != "" && ConErr != nil {
-		return nil, &SecError{errOpConConfig, ConErr.Err, ConErr.Desc}
+		return nil, &cwerrors.BasicError{errOpConConfig, ConErr.Err, ConErr.Desc}
 	}
 
 	if connection != nil {
@@ -110,7 +111,7 @@ func SecAuthenticate(httpClient utils.HTTPClient, c *cli.Context, connectionReal
 
 	if hostname == "" || realm == "" || username == "" || password == "" || client == "" {
 		err := errors.New(textInvalidOptions)
-		return nil, &SecError{errOpCLICommand, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpCLICommand, err, err.Error()}
 	}
 
 	// build REST request
@@ -118,7 +119,7 @@ func SecAuthenticate(httpClient utils.HTTPClient, c *cli.Context, connectionReal
 	payload := strings.NewReader("grant_type=password&client_id=" + client + "&username=" + username + "&password=" + password)
 	req, err := http.NewRequest("POST", url, payload)
 	if err != nil {
-		return nil, &SecError{errOpConnection, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpConnection, err, err.Error()}
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Add("Accept", "application/json")
@@ -128,7 +129,7 @@ func SecAuthenticate(httpClient utils.HTTPClient, c *cli.Context, connectionReal
 	// send request
 	res, err := httpClient.Do(req)
 	if err != nil {
-		return nil, &SecError{errOpConnection, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpConnection, err, err.Error()}
 	}
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
@@ -138,24 +139,24 @@ func SecAuthenticate(httpClient utils.HTTPClient, c *cli.Context, connectionReal
 	case httpCode == http.StatusBadRequest, httpCode == http.StatusUnauthorized:
 		keycloakAPIError := parseKeycloakError(string(body), res.StatusCode)
 		kcError := errors.New(string(keycloakAPIError.ErrorDescription))
-		return nil, &SecError{keycloakAPIError.Error, kcError, kcError.Error()}
+		return nil, &cwerrors.BasicError{keycloakAPIError.Error, kcError, kcError.Error()}
 	case httpCode == http.StatusNotFound:
 		keycloakAPIError := parseKeycloakError(string(body), res.StatusCode)
 		kcError := errors.New(string(keycloakAPIError.Error))
-		return nil, &SecError{errOpResponse, kcError, kcError.Error()}
+		return nil, &cwerrors.BasicError{errOpResponse, kcError, kcError.Error()}
 	case httpCode == http.StatusServiceUnavailable:
 		txtError := errors.New(textAuthIsDown)
-		return nil, &SecError{errOpResponse, txtError, txtError.Error()}
+		return nil, &cwerrors.BasicError{errOpResponse, txtError, txtError.Error()}
 	case httpCode != http.StatusOK:
 		err = errors.New(string(body))
-		return nil, &SecError{errOpResponse, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpResponse, err, err.Error()}
 	}
 
 	// Parse and return authtoken
 	authToken := AuthToken{}
 	err = json.Unmarshal([]byte(body), &authToken)
 	if err != nil {
-		return nil, &SecError{errOpResponseFormat, err, textUnableToParse}
+		return nil, &cwerrors.BasicError{errOpResponseFormat, err, textUnableToParse}
 	}
 
 	// store access and refresh tokens in keyring if a connection is known
@@ -182,13 +183,13 @@ func SecAuthenticate(httpClient utils.HTTPClient, c *cli.Context, connectionReal
 }
 
 // SecRefreshTokens : Retrieve new tokens using the cached refresh token
-func SecRefreshTokens(httpClient utils.HTTPClient, c *cli.Context) (*AuthToken, *SecError) {
+func SecRefreshTokens(httpClient utils.HTTPClient, c *cli.Context) (*AuthToken, *cwerrors.BasicError) {
 	conID := c.String("conid")
 
 	// Read connection
 	connection, conErr := connections.GetConnectionByID(conID)
 	if conErr != nil {
-		secErr := &SecError{Op: conErr.Op, Err: conErr.Err, Desc: conErr.Desc}
+		secErr := &cwerrors.BasicError{Op: conErr.Op, Err: conErr.Err, Desc: conErr.Desc}
 		return nil, secErr
 	}
 	// Read refresh token
@@ -205,7 +206,7 @@ func SecRefreshTokens(httpClient utils.HTTPClient, c *cli.Context) (*AuthToken, 
 }
 
 // SecRefreshAccessToken : Obtain an access token using a refresh token
-func SecRefreshAccessToken(httpClient utils.HTTPClient, connection *connections.Connection, refreshToken string) (*AuthToken, *SecError) {
+func SecRefreshAccessToken(httpClient utils.HTTPClient, connection *connections.Connection, refreshToken string) (*AuthToken, *cwerrors.BasicError) {
 
 	// build REST request
 	url := connection.AuthURL + "/auth/realms/" + connection.Realm + "/protocol/openid-connect/token"
@@ -213,7 +214,7 @@ func SecRefreshAccessToken(httpClient utils.HTTPClient, connection *connections.
 	payload := strings.NewReader("grant_type=refresh_token&client_id=" + connection.ClientID + "&refresh_token=" + refreshToken)
 	req, err := http.NewRequest("POST", url, payload)
 	if err != nil {
-		return nil, &SecError{errOpConnection, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpConnection, err, err.Error()}
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Add("Cache-Control", "no-cache")
@@ -222,7 +223,7 @@ func SecRefreshAccessToken(httpClient utils.HTTPClient, connection *connections.
 	// send request
 	res, err := httpClient.Do(req)
 	if err != nil {
-		return nil, &SecError{errOpConnection, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpConnection, err, err.Error()}
 	}
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
@@ -232,10 +233,10 @@ func SecRefreshAccessToken(httpClient utils.HTTPClient, connection *connections.
 	case httpCode == http.StatusBadRequest, httpCode == http.StatusUnauthorized:
 		keycloakAPIError := parseKeycloakError(string(body), res.StatusCode)
 		kcError := errors.New(string(keycloakAPIError.ErrorDescription))
-		return nil, &SecError{keycloakAPIError.Error, kcError, kcError.Error()}
+		return nil, &cwerrors.BasicError{keycloakAPIError.Error, kcError, kcError.Error()}
 	case httpCode != http.StatusOK:
 		err = errors.New(string(body))
-		return nil, &SecError{errOpResponse, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpResponse, err, err.Error()}
 	}
 
 	// Parse and return AuthToken
@@ -255,7 +256,7 @@ func SecRefreshAccessToken(httpClient utils.HTTPClient, connection *connections.
 		}
 
 		respErr := errors.New(string(body))
-		return nil, &SecError{errOpResponse, respErr, respErr.Error()}
+		return nil, &cwerrors.BasicError{errOpResponse, respErr, respErr.Error()}
 	}
 
 	return &authToken, nil

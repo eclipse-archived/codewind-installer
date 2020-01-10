@@ -21,6 +21,7 @@ import (
 	"strconv"
 	"strings"
 
+	cwerrors "github.com/eclipse/codewind-installer/pkg/errors"
 	"github.com/eclipse/codewind-installer/pkg/gatekeeper"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/urfave/cli"
@@ -51,7 +52,7 @@ const actionUpdateEntry = 0x01
 const actionAddEntry = 0x02
 
 // InitConfigFileIfRequired : Check the config file exist, if it does not then create a new default configuration
-func InitConfigFileIfRequired() *ConError {
+func InitConfigFileIfRequired() *cwerrors.BasicError {
 	_, err := os.Stat(GetConnectionConfigFilename())
 	if os.IsNotExist(err) {
 		os.MkdirAll(getConnectionConfigDir(), 0777)
@@ -61,7 +62,7 @@ func InitConfigFileIfRequired() *ConError {
 }
 
 // ResetConnectionsFile : Creates a new / overwrites connection config file with a default single local Codewind connection
-func ResetConnectionsFile() *ConError {
+func ResetConnectionsFile() *cwerrors.BasicError {
 	// create the default local connection
 	initialConfig := ConnectionConfig{
 		SchemaVersion: connectionsSchemaVersion,
@@ -79,18 +80,18 @@ func ResetConnectionsFile() *ConError {
 	}
 	body, err := json.MarshalIndent(initialConfig, "", "\t")
 	if err != nil {
-		return &ConError{errOpFileParse, err, err.Error()}
+		return &cwerrors.BasicError{errOpFileParse, err, err.Error()}
 	}
 
 	err = ioutil.WriteFile(GetConnectionConfigFilename(), body, 0644)
 	if err != nil {
-		return &ConError{errOpFileWrite, err, err.Error()}
+		return &cwerrors.BasicError{errOpFileWrite, err, err.Error()}
 	}
 	return nil
 }
 
 // GetConnectionByID : retrieve a single connection with matching ID
-func GetConnectionByID(conID string) (*Connection, *ConError) {
+func GetConnectionByID(conID string) (*Connection, *cwerrors.BasicError) {
 	connectionList, conErr := GetAllConnections()
 	if conErr != nil {
 		return nil, conErr
@@ -101,11 +102,11 @@ func GetConnectionByID(conID string) (*Connection, *ConError) {
 		}
 	}
 	err := errors.New("Connection " + strings.ToUpper(conID) + " not found")
-	return nil, &ConError{errOpNotFound, err, err.Error()}
+	return nil, &cwerrors.BasicError{errOpNotFound, err, err.Error()}
 }
 
 // GetConnectionsConfig : Retrieves and returns the entire Connection configuration contents
-func GetConnectionsConfig() (*ConnectionConfig, *ConError) {
+func GetConnectionsConfig() (*ConnectionConfig, *cwerrors.BasicError) {
 	data, conErr := loadConnectionsConfigFile()
 	if conErr != nil {
 		return nil, conErr
@@ -114,7 +115,7 @@ func GetConnectionsConfig() (*ConnectionConfig, *ConError) {
 }
 
 // AddConnectionToList : validates then adds a new connection to the connection config
-func AddConnectionToList(httpClient utils.HTTPClient, c *cli.Context) (*Connection, *ConError) {
+func AddConnectionToList(httpClient utils.HTTPClient, c *cli.Context) (*Connection, *cwerrors.BasicError) {
 	conID := strings.ToUpper(strconv.FormatInt(utils.CreateTimestamp(), 36))
 	label := strings.TrimSpace(c.String("label"))
 	url := strings.TrimSpace(c.String("url"))
@@ -124,7 +125,7 @@ func AddConnectionToList(httpClient utils.HTTPClient, c *cli.Context) (*Connecti
 }
 
 // UpdateExistingConnection : Update an existing connection
-func UpdateExistingConnection(httpClient utils.HTTPClient, c *cli.Context) (*Connection, *ConError) {
+func UpdateExistingConnection(httpClient utils.HTTPClient, c *cli.Context) (*Connection, *cwerrors.BasicError) {
 	conID := strings.ToUpper(c.String("conid"))
 	label := strings.TrimSpace(c.String("label"))
 	url := strings.TrimSpace(c.String("url"))
@@ -134,10 +135,10 @@ func UpdateExistingConnection(httpClient utils.HTTPClient, c *cli.Context) (*Con
 }
 
 // updateConnectionList : validates then adds a new connection to the connection config
-func updateConnectionList(action int, httpClient utils.HTTPClient, connectionID string, label string, url string, username string) (*Connection, *ConError) {
+func updateConnectionList(action int, httpClient utils.HTTPClient, connectionID string, label string, url string, username string) (*Connection, *cwerrors.BasicError) {
 	if strings.EqualFold(connectionID, "LOCAL") {
 		err := errors.New("Local is a required connection that must not be modified")
-		return nil, &ConError{errOpProtected, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpProtected, err, err.Error()}
 	}
 	if url != "" && len(strings.TrimSpace(url)) > 0 {
 		url = strings.TrimSuffix(url, "/")
@@ -152,7 +153,7 @@ func updateConnectionList(action int, httpClient utils.HTTPClient, connectionID 
 		for i := 0; i < len(data.Connections); i++ {
 			if strings.EqualFold(label, data.Connections[i].Label) || strings.EqualFold(url, data.Connections[i].URL) {
 				conErr := errors.New("Connection ID: " + data.Connections[i].ID + " already exists. Use the update command to modify")
-				return nil, &ConError{errOpConflict, conErr, conErr.Error()}
+				return nil, &cwerrors.BasicError{errOpConflict, conErr, conErr.Error()}
 			}
 		}
 	}
@@ -165,13 +166,13 @@ func updateConnectionList(action int, httpClient utils.HTTPClient, connectionID 
 		}
 		if connInfo == nil {
 			err := errors.New("Unable to update connection")
-			return nil, &ConError{errOpNotFound, err, err.Error()}
+			return nil, &cwerrors.BasicError{errOpNotFound, err, err.Error()}
 		}
 	}
 
 	gatekeeperEnv, err := gatekeeper.GetGatekeeperEnvironment(httpClient, url)
 	if err != nil {
-		return nil, &ConError{errOpGetEnv, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpGetEnv, err, err.Error()}
 	}
 
 	// create the new connection
@@ -207,24 +208,24 @@ func updateConnectionList(action int, httpClient utils.HTTPClient, connectionID 
 	// Write list
 	body, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {
-		return nil, &ConError{errOpFileParse, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpFileParse, err, err.Error()}
 	}
 
 	err = ioutil.WriteFile(GetConnectionConfigFilename(), body, 0644)
 	if err != nil {
-		return nil, &ConError{errOpFileWrite, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpFileWrite, err, err.Error()}
 	}
 
 	return &newConnection, nil
 }
 
 // RemoveConnectionFromList : Removes the stored entry
-func RemoveConnectionFromList(c *cli.Context) *ConError {
+func RemoveConnectionFromList(c *cli.Context) *cwerrors.BasicError {
 	id := strings.ToUpper(c.String("conid"))
 
 	if strings.EqualFold(id, "LOCAL") {
 		err := errors.New("Local is a required connection and must not be removed")
-		return &ConError{errOpProtected, err, err.Error()}
+		return &cwerrors.BasicError{errOpProtected, err, err.Error()}
 	}
 
 	// check connection has been registered
@@ -246,18 +247,18 @@ func RemoveConnectionFromList(c *cli.Context) *ConError {
 	}
 	body, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {
-		return &ConError{errOpFileParse, err, err.Error()}
+		return &cwerrors.BasicError{errOpFileParse, err, err.Error()}
 	}
 
 	err = ioutil.WriteFile(GetConnectionConfigFilename(), body, 0644)
 	if err != nil {
-		return &ConError{errOpFileWrite, err, err.Error()}
+		return &cwerrors.BasicError{errOpFileWrite, err, err.Error()}
 	}
 	return nil
 }
 
 // GetAllConnections : Retrieve all saved connections
-func GetAllConnections() ([]Connection, *ConError) {
+func GetAllConnections() ([]Connection, *cwerrors.BasicError) {
 	ConnectionConfig, conErr := GetConnectionsConfig()
 	if conErr != nil {
 		return nil, conErr
@@ -266,34 +267,34 @@ func GetAllConnections() ([]Connection, *ConError) {
 		return ConnectionConfig.Connections, nil
 	}
 	err := errors.New("No Connections found")
-	return nil, &ConError{errOpNotFound, err, err.Error()}
+	return nil, &cwerrors.BasicError{errOpNotFound, err, err.Error()}
 }
 
 // loadConnectionsConfigFile : Load the connections configuration file from disk
 // and returns the contents of the file or an error
-func loadConnectionsConfigFile() (*ConnectionConfig, *ConError) {
+func loadConnectionsConfigFile() (*ConnectionConfig, *cwerrors.BasicError) {
 	file, err := ioutil.ReadFile(GetConnectionConfigFilename())
 	if err != nil {
-		return nil, &ConError{errOpFileLoad, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpFileLoad, err, err.Error()}
 	}
 	data := ConnectionConfig{}
 	err = json.Unmarshal([]byte(file), &data)
 	if err != nil {
-		return nil, &ConError{errOpFileParse, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpFileParse, err, err.Error()}
 	}
 	return &data, nil
 }
 
 // saveConnectionsConfigFile : Save the connections configuration file to disk
 // returns an error, and error code
-func saveConnectionsConfigFile(ConnectionConfig *ConnectionConfig) *ConError {
+func saveConnectionsConfigFile(ConnectionConfig *ConnectionConfig) *cwerrors.BasicError {
 	body, err := json.MarshalIndent(ConnectionConfig, "", "\t")
 	if err != nil {
-		return &ConError{errOpFileParse, err, err.Error()}
+		return &cwerrors.BasicError{errOpFileParse, err, err.Error()}
 	}
 	conErr := ioutil.WriteFile(GetConnectionConfigFilename(), body, 0644)
 	if conErr != nil {
-		return &ConError{errOpFileWrite, conErr, conErr.Error()}
+		return &cwerrors.BasicError{errOpFileWrite, conErr, conErr.Error()}
 	}
 	return nil
 }
@@ -326,16 +327,16 @@ func GetConnectionConfigFilename() string {
 	return path.Join(getConnectionConfigDir(), "connections.json")
 }
 
-func loadRawConnectionsFile() ([]byte, *ConError) {
+func loadRawConnectionsFile() ([]byte, *cwerrors.BasicError) {
 	file, err := ioutil.ReadFile(GetConnectionConfigFilename())
 	if err != nil {
-		return nil, &ConError{errOpFileLoad, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpFileLoad, err, err.Error()}
 	}
 	return file, nil
 }
 
 // applySchemaUpdates : update any existing entries to use the new schema design
-func applySchemaUpdates() *ConError {
+func applySchemaUpdates() *cwerrors.BasicError {
 
 	loadedFile, conErr := loadConnectionsConfigFile()
 	if conErr != nil {
@@ -361,7 +362,7 @@ func applySchemaUpdates() *ConError {
 
 			err := json.Unmarshal([]byte(file), &ConnectionConfig)
 			if err != nil {
-				return &ConError{errOpFileParse, err, err.Error()}
+				return &cwerrors.BasicError{errOpFileParse, err, err.Error()}
 			}
 
 			newConnectionConfig.SchemaVersion = 1
@@ -382,11 +383,11 @@ func applySchemaUpdates() *ConError {
 			// schema has been updated
 			body, err := json.MarshalIndent(newConnectionConfig, "", "\t")
 			if err != nil {
-				return &ConError{errOpFileParse, err, err.Error()}
+				return &cwerrors.BasicError{errOpFileParse, err, err.Error()}
 			}
 			err = ioutil.WriteFile(GetConnectionConfigFilename(), body, 0644)
 			if err != nil {
-				return &ConError{errOpFileWrite, err, err.Error()}
+				return &cwerrors.BasicError{errOpFileWrite, err, err.Error()}
 			}
 		}
 	}

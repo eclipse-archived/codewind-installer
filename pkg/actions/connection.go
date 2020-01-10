@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/eclipse/codewind-installer/pkg/connections"
+	"github.com/eclipse/codewind-installer/pkg/errors"
 	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
@@ -27,7 +28,7 @@ import (
 func ConnectionAddToList(c *cli.Context) {
 	connection, conErr := connections.AddConnectionToList(http.DefaultClient, c)
 	if conErr != nil {
-		HandleConnectionError(conErr)
+		errors.PrintError(conErr, printAsJSON)
 		os.Exit(1)
 	}
 
@@ -51,7 +52,7 @@ func ConnectionAddToList(c *cli.Context) {
 func ConnectionUpdate(c *cli.Context) {
 	connection, conErr := connections.UpdateExistingConnection(http.DefaultClient, c)
 	if conErr != nil {
-		HandleConnectionError(conErr)
+		errors.PrintError(conErr, printAsJSON)
 		os.Exit(1)
 	}
 	type Result struct {
@@ -74,7 +75,7 @@ func ConnectionGetByID(c *cli.Context) {
 	connectionID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 	connection, conErr := connections.GetConnectionByID(connectionID)
 	if conErr != nil {
-		HandleConnectionError(conErr)
+		errors.PrintError(conErr, printAsJSON)
 		os.Exit(1)
 	}
 	response, _ := json.Marshal(connection)
@@ -86,7 +87,7 @@ func ConnectionGetByID(c *cli.Context) {
 func ConnectionRemoveFromList(c *cli.Context) {
 	conErr := connections.RemoveConnectionFromList(c)
 	if conErr != nil {
-		HandleConnectionError(conErr)
+		errors.PrintError(conErr, printAsJSON)
 		os.Exit(1)
 	}
 	response, _ := json.Marshal(connections.Result{Status: "OK", StatusMessage: "Connection removed"})
@@ -102,7 +103,7 @@ func ConnectionRemoveFromList(c *cli.Context) {
 func ConnectionListAll(c *cli.Context) {
 	allConnections, conErr := connections.GetConnectionsConfig()
 	if conErr != nil {
-		HandleConnectionError(conErr)
+		errors.PrintError(conErr, printAsJSON)
 		os.Exit(1)
 	}
 	response, _ := json.Marshal(allConnections)
@@ -114,7 +115,7 @@ func ConnectionListAll(c *cli.Context) {
 func ConnectionResetList(c *cli.Context) {
 	conErr := connections.ResetConnectionsFile()
 	if conErr != nil {
-		HandleConnectionError(conErr)
+		errors.PrintError(conErr, printAsJSON)
 		os.Exit(1)
 	}
 	response, _ := json.Marshal(connections.Result{Status: "OK", StatusMessage: "Connection list reset"})

@@ -52,7 +52,7 @@ type (
 )
 
 // DownloadTemplate using the url/link provided
-func DownloadTemplate(c *cli.Context) *ProjectError {
+func DownloadTemplate(c *cli.Context) *errors.BasicError {
 	destination := c.Args().Get(0)
 
 	checkProjectDirIsEmpty(destination)
@@ -135,7 +135,7 @@ func checkIsExtension(conID, projectPath string, c *cli.Context) (string, error)
 
 // ValidateProject returns the language and buildType for a project at given filesystem path,
 // and writes a default .cw-settings file to that project
-func ValidateProject(c *cli.Context) *ProjectError {
+func ValidateProject(c *cli.Context) *errors.BasicError {
 	projectPath := c.Args().Get(0)
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 	checkProjectPathExists(projectPath)

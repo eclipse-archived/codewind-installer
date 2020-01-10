@@ -27,6 +27,7 @@ import (
 
 	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
+	"github.com/eclipse/codewind-installer/pkg/errors"
 	"github.com/eclipse/codewind-installer/pkg/sechttp"
 	"github.com/urfave/cli"
 )
@@ -64,14 +65,14 @@ type (
 )
 
 // SyncProject syncs a project with its remote connection
-func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
+func SyncProject(c *cli.Context) (*SyncResponse, *errors.BasicError) {
 	var currentSyncTime = time.Now().UnixNano() / 1000000
 	projectPath := strings.TrimSpace(c.String("path"))
 	projectID := strings.TrimSpace(c.String("id"))
 	synctime := int64(c.Int("time"))
 	_, err := os.Stat(projectPath)
 	if err != nil {
-		return nil, &ProjectError{errBadPath, err, err.Error()}
+		return nil, &errors.BasicError{errBadPath, err, err.Error()}
 	}
 
 	if !ConnectionFileExists(projectID) {
@@ -87,12 +88,12 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 
 	conInfo, conInfoErr := connections.GetConnectionByID(conID)
 	if conInfoErr != nil {
-		return nil, &ProjectError{errOpConNotFound, conInfoErr, conInfoErr.Desc}
+		return nil, &errors.BasicError{errOpConNotFound, conInfoErr, conInfoErr.Desc}
 	}
 
 	conURL, conURLErr := config.PFEOriginFromConnection(conInfo)
 	if conURLErr != nil {
-		return nil, &ProjectError{errOpConNotFound, conURLErr.Err, conURLErr.Desc}
+		return nil, &errors.BasicError{errOpConNotFound, conURLErr.Err, conURLErr.Desc}
 	}
 
 	// Sync all the necessary project files

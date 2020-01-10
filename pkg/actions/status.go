@@ -20,6 +20,7 @@ import (
 
 	"github.com/eclipse/codewind-installer/pkg/apiroutes"
 	"github.com/eclipse/codewind-installer/pkg/connections"
+	"github.com/eclipse/codewind-installer/pkg/errors"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/urfave/cli"
 )
@@ -88,7 +89,7 @@ func StatusCommandRemoteConnection(c *cli.Context) {
 func StatusCommandLocalConnection(c *cli.Context) {
 	containersAreRunning, err := utils.CheckContainerStatus()
 	if err != nil {
-		HandleDockerError(err)
+		errors.PrintError(err, printAsJSON)
 		os.Exit(1)
 	}
 
@@ -96,7 +97,7 @@ func StatusCommandLocalConnection(c *cli.Context) {
 		// Started
 		hostname, port, err := utils.GetPFEHostAndPort()
 		if err != nil {
-			HandleDockerError(err)
+			errors.PrintError(err, printAsJSON)
 			os.Exit(1)
 		}
 		if printAsJSON {
@@ -136,7 +137,7 @@ func StatusCommandLocalConnection(c *cli.Context) {
 
 	imagesAreInstalled, err := utils.CheckImageStatus()
 	if err != nil {
-		HandleDockerError(err)
+		errors.PrintError(err, printAsJSON)
 		os.Exit(1)
 	}
 

@@ -19,6 +19,7 @@ import (
 	"strconv"
 	"strings"
 
+	cwerrors "github.com/eclipse/codewind-installer/pkg/errors"
 	"github.com/eclipse/codewind-installer/pkg/remote/kube"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 	logr "github.com/sirupsen/logrus"
@@ -61,7 +62,7 @@ type DeploymentResult struct {
 }
 
 // DeployRemote : InstallRemote
-func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemInstError) {
+func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *cwerrors.BasicError) {
 
 	homeDir := ""
 	const GOOS string = runtime.GOOS
@@ -79,14 +80,14 @@ func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemIn
 		config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
 		if err != nil {
 			logr.Infof("Unable to retrieve Kubernetes Config %v\n", err)
-			return nil, &RemInstError{errOpNotFound, err, err.Error()}
+			return nil, &cwerrors.BasicError{errOpNotFound, err, err.Error()}
 		}
 	}
 
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		logr.Infof("Unable to retrieve Kubernetes clientset %v\n", err)
-		return nil, &RemInstError{errOpNotFound, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpNotFound, err, err.Error()}
 	}
 
 	namespace := remoteDeployOptions.Namespace
@@ -115,7 +116,7 @@ func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemIn
 		requestedNamespace, err := clientset.CoreV1().Namespaces().Create(&deploymentNamespace)
 		if err != nil || requestedNamespace == nil {
 			logr.Errorf("Unable to create %v namespace: %v", namespace, err)
-			return nil, &RemInstError{errOpCreateNamespace, err, err.Error()}
+			return nil, &cwerrors.BasicError{errOpCreateNamespace, err, err.Error()}
 		}
 	}
 
@@ -153,7 +154,7 @@ func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemIn
 	// Check ingress service installed
 	if ingressDomain == "" {
 		remoteInstError := errors.New(errNoIngressService)
-		return nil, &RemInstError{errOpNoIngress, remoteInstError, remoteInstError.Error()}
+		return nil, &cwerrors.BasicError{errOpNoIngress, remoteInstError, remoteInstError.Error()}
 	}
 
 	logr.Infof("Using ingress domain: %v\n", ingressDomain)

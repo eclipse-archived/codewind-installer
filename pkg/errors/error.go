@@ -12,8 +12,12 @@
 package errors
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
+
+	logr "github.com/sirupsen/logrus"
 )
 
 // CheckErr function to respond with appropriate error messages
@@ -77,4 +81,34 @@ func CheckErr(err error, code int, optMsg string) {
 
 func newError(text string) error {
 	return errors.New(text)
+}
+
+type ErrorStruct interface {
+	Error() string
+}
+
+type BasicError struct {
+	Op   string
+	Err  error
+	Desc string
+}
+
+func (basicError BasicError) Error() string {
+	type Output struct {
+		Operation   string `json:"error"`
+		Description string `json:"error_description"`
+	}
+	tempOutput := &Output{Operation: basicError.Op, Description: basicError.Err.Error()}
+	jsonError, _ := json.Marshal(tempOutput)
+	return string(jsonError)
+}
+
+// PrintError prints a Basic error, in JSON format if the global flag is set, and as a string if not
+func PrintError(err *BasicError, printAsJSON bool) {
+	// printAsJSON is a global variable, set in commands.go
+	if printAsJSON {
+		fmt.Println(err.Error())
+	} else {
+		logr.Error(err.Desc)
+	}
 }

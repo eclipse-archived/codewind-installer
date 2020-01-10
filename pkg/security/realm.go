@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"strings"
 
+	cwerrors "github.com/eclipse/codewind-installer/pkg/errors"
 	"github.com/urfave/cli"
 )
 
@@ -31,7 +32,7 @@ type KeycloakRealm struct {
 }
 
 // SecRealmCreate : Create a new realm in Keycloak
-func SecRealmCreate(c *cli.Context) *SecError {
+func SecRealmCreate(c *cli.Context) *cwerrors.BasicError {
 
 	hostname := strings.TrimSpace(strings.ToLower(c.String("host")))
 	newRealm := strings.TrimSpace(c.String("newrealm"))
@@ -69,7 +70,7 @@ func SecRealmCreate(c *cli.Context) *SecError {
 	payload := strings.NewReader(string(jsonRealm))
 	req, err := http.NewRequest("POST", url, payload)
 	if err != nil {
-		return &SecError{errOpConnection, err, err.Error()}
+		return &cwerrors.BasicError{errOpConnection, err, err.Error()}
 	}
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Cache-Control", "no-cache")
@@ -79,7 +80,7 @@ func SecRealmCreate(c *cli.Context) *SecError {
 	// send request
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return &SecError{errOpConnection, err, err.Error()}
+		return &cwerrors.BasicError{errOpConnection, err, err.Error()}
 	}
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
@@ -87,17 +88,17 @@ func SecRealmCreate(c *cli.Context) *SecError {
 		keycloakAPIError := parseKeycloakError(string(body), res.StatusCode)
 		keycloakAPIError.Error = errOpResponseFormat
 		kcError := errors.New(keycloakAPIError.ErrorDescription)
-		return &SecError{keycloakAPIError.Error, kcError, kcError.Error()}
+		return &cwerrors.BasicError{keycloakAPIError.Error, kcError, kcError.Error()}
 	}
 	return nil
 }
 
 // SecRealmGet : Reads a realm in Keycloak
-func SecRealmGet(authURL string, accessToken string, realmName string) (*KeycloakRealm, *SecError) {
+func SecRealmGet(authURL string, accessToken string, realmName string) (*KeycloakRealm, *cwerrors.BasicError) {
 
 	req, err := http.NewRequest("GET", authURL+"/auth/admin/realms/"+realmName, nil)
 	if err != nil {
-		return nil, &SecError{errOpConnection, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpConnection, err, err.Error()}
 	}
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Cache-Control", "no-cache")
@@ -106,7 +107,7 @@ func SecRealmGet(authURL string, accessToken string, realmName string) (*Keycloa
 	// send request
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, &SecError{errOpConnection, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpConnection, err, err.Error()}
 	}
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
@@ -117,7 +118,7 @@ func SecRealmGet(authURL string, accessToken string, realmName string) (*Keycloa
 		err = json.Unmarshal([]byte(body), &keycloakRealm)
 		if err != nil {
 			kcError := errors.New("Error parsing")
-			return nil, &SecError{errOpResponseFormat, kcError, kcError.Error()}
+			return nil, &cwerrors.BasicError{errOpResponseFormat, kcError, kcError.Error()}
 		}
 		return &keycloakRealm, nil
 	}
@@ -126,7 +127,7 @@ func SecRealmGet(authURL string, accessToken string, realmName string) (*Keycloa
 		keycloakAPIError := parseKeycloakError(string(body), res.StatusCode)
 		keycloakAPIError.Error = errOpResponseFormat
 		kcError := errors.New(keycloakAPIError.ErrorDescription)
-		return nil, &SecError{keycloakAPIError.Error, kcError, kcError.Error()}
+		return nil, &cwerrors.BasicError{keycloakAPIError.Error, kcError, kcError.Error()}
 	}
 
 	return nil, nil

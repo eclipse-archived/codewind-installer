@@ -18,11 +18,12 @@ import (
 	"os"
 	"strings"
 
+	cwerrors "github.com/eclipse/codewind-installer/pkg/errors"
 	"github.com/urfave/cli"
 )
 
 // RemoveProject : Unbind a project from Codewind and delete json connection file
-func RemoveProject(c *cli.Context) *ProjectError {
+func RemoveProject(c *cli.Context) *cwerrors.BasicError {
 	projectID := strings.TrimSpace(c.String("id"))
 	deleteFiles := c.Bool("delete")
 	projectPath := ""
@@ -38,7 +39,7 @@ func RemoveProject(c *cli.Context) *ProjectError {
 		project, projErr := GetProject(http.DefaultClient, conID, projectID)
 		if projErr != nil {
 			fmt.Println(projErr)
-			return &ProjectError{errOpGetProject, projErr, projErr.Error()}
+			return &cwerrors.BasicError{errOpGetProject, projErr, projErr.Error()}
 		}
 		projectPath = project.LocationOnDisk
 	}
@@ -47,7 +48,7 @@ func RemoveProject(c *cli.Context) *ProjectError {
 	err := Unbind(http.DefaultClient, conID, projectID)
 	if err != nil {
 		projError := errors.New("Project unbind failed")
-		return &ProjectError{errOpFileDelete, projError, projError.Error()}
+		return &cwerrors.BasicError{errOpFileDelete, projError, projError.Error()}
 	}
 
 	// Delete the associated connection file
@@ -60,7 +61,7 @@ func RemoveProject(c *cli.Context) *ProjectError {
 	if deleteFiles {
 		var err = os.RemoveAll(projectPath)
 		if err != nil {
-			return &ProjectError{errOpFileDelete, err, err.Error()}
+			return &cwerrors.BasicError{errOpFileDelete, err, err.Error()}
 		}
 	}
 	return nil

@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	"github.com/eclipse/codewind-installer/pkg/connections"
+	cwerrors "github.com/eclipse/codewind-installer/pkg/errors"
 	"github.com/zalando/go-keyring"
 )
 
@@ -26,7 +27,7 @@ type KeyringSecret struct {
 }
 
 // SecKeyUpdate : Creates or updates a key in the platforms keyring
-func SecKeyUpdate(connectionID string, username string, password string) *SecError {
+func SecKeyUpdate(connectionID string, username string, password string) *cwerrors.BasicError {
 
 	conID := strings.TrimSpace(strings.ToLower(connectionID))
 	uName := strings.TrimSpace(strings.ToLower(username))
@@ -36,12 +37,12 @@ func SecKeyUpdate(connectionID string, username string, password string) *SecErr
 	_, conErr := connections.GetConnectionByID(conID)
 	if conErr != nil {
 		err := errors.New("Connection " + strings.ToUpper(conID) + " not found")
-		return &SecError{errOpNotFound, err, conErr.Error()}
+		return &cwerrors.BasicError{errOpNotFound, err, conErr.Error()}
 	}
 
 	err := keyring.Set(KeyringServiceName+"."+conID, uName, pass)
 	if err != nil {
-		return &SecError{errOpKeyring, err, err.Error()}
+		return &cwerrors.BasicError{errOpKeyring, err, err.Error()}
 	}
 
 	/// check password can be retrieved
@@ -51,21 +52,21 @@ func SecKeyUpdate(connectionID string, username string, password string) *SecErr
 	}
 	if secret != pass {
 		secErr := errors.New("Saved password does not match retrieved password")
-		return &SecError{errOpPasswordRead, secErr, secErr.Error()}
+		return &cwerrors.BasicError{errOpPasswordRead, secErr, secErr.Error()}
 	}
 
 	return nil
 }
 
 // SecKeyGetSecret : retrieve secret / credentials from the keyring
-func SecKeyGetSecret(connectionID string, username string) (string, *SecError) {
+func SecKeyGetSecret(connectionID string, username string) (string, *cwerrors.BasicError) {
 
 	conID := strings.TrimSpace(strings.ToLower(connectionID))
 	uName := strings.TrimSpace(strings.ToLower(username))
 
 	secret, err := keyring.Get(KeyringServiceName+"."+conID, uName)
 	if err != nil {
-		return "", &SecError{errOpKeyring, err, err.Error()}
+		return "", &cwerrors.BasicError{errOpKeyring, err, err.Error()}
 	}
 	return secret, nil
 }

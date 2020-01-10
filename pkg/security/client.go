@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"strings"
 
+	cwerrors "github.com/eclipse/codewind-installer/pkg/errors"
 	"github.com/urfave/cli"
 )
 
@@ -42,7 +43,7 @@ type RegisteredClientSecret struct {
 }
 
 // SecClientCreate : Create a new client in Keycloak
-func SecClientCreate(c *cli.Context) *SecError {
+func SecClientCreate(c *cli.Context) *cwerrors.BasicError {
 
 	hostname := strings.TrimSpace(strings.ToLower(c.String("host")))
 	realm := strings.TrimSpace(c.String("realm"))
@@ -74,7 +75,7 @@ func SecClientCreate(c *cli.Context) *SecError {
 	req, err := http.NewRequest("POST", url, payload)
 
 	if err != nil {
-		return &SecError{errOpConnection, err, err.Error()}
+		return &cwerrors.BasicError{errOpConnection, err, err.Error()}
 	}
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Cache-Control", "no-cache")
@@ -84,7 +85,7 @@ func SecClientCreate(c *cli.Context) *SecError {
 	// send request
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return &SecError{errOpConnection, err, err.Error()}
+		return &cwerrors.BasicError{errOpConnection, err, err.Error()}
 	}
 	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)
@@ -92,13 +93,13 @@ func SecClientCreate(c *cli.Context) *SecError {
 		keycloakAPIError := parseKeycloakError(string(body), res.StatusCode)
 		keycloakAPIError.Error = errOpResponseFormat
 		kcError := errors.New(string(keycloakAPIError.ErrorDescription))
-		return &SecError{keycloakAPIError.Error, kcError, kcError.Error()}
+		return &cwerrors.BasicError{keycloakAPIError.Error, kcError, kcError.Error()}
 	}
 	return nil
 }
 
 // SecClientGet : Retrieve Client information
-func SecClientGet(c *cli.Context) (*RegisteredClient, *SecError) {
+func SecClientGet(c *cli.Context) (*RegisteredClient, *cwerrors.BasicError) {
 
 	hostname := strings.TrimSpace(strings.ToLower(c.String("host")))
 	realm := strings.TrimSpace(c.String("realm"))
@@ -118,14 +119,14 @@ func SecClientGet(c *cli.Context) (*RegisteredClient, *SecError) {
 	url := hostname + "/auth/admin/realms/" + realm + "/clients?clientId=" + clientid
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, &SecError{errOpConnection, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpConnection, err, err.Error()}
 	}
 	req.Header.Add("Authorization", "Bearer "+accesstoken)
 	req.Header.Add("Cache-Control", "no-cache")
 	req.Header.Add("cache-control", "no-cache")
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, &SecError{errOpConnection, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpConnection, err, err.Error()}
 	}
 	defer res.Body.Close()
 
@@ -133,14 +134,14 @@ func SecClientGet(c *cli.Context) (*RegisteredClient, *SecError) {
 	if res.StatusCode != http.StatusOK {
 		body, _ := ioutil.ReadAll(res.Body)
 		err = errors.New(string(body))
-		return nil, &SecError{errOpResponse, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpResponse, err, err.Error()}
 	}
 
 	registeredClients := RegisteredClients{}
 	body, err := ioutil.ReadAll(res.Body)
 	err = json.Unmarshal([]byte(body), &registeredClients.Collection)
 	if err != nil {
-		return nil, &SecError{errOpResponseFormat, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpResponseFormat, err, err.Error()}
 	}
 
 	registeredClient := RegisteredClient{}
@@ -153,7 +154,7 @@ func SecClientGet(c *cli.Context) (*RegisteredClient, *SecError) {
 }
 
 // SecClientGetSecret : Retrieve the client secret for the supplied clientID
-func SecClientGetSecret(c *cli.Context) (*RegisteredClientSecret, *SecError) {
+func SecClientGetSecret(c *cli.Context) (*RegisteredClientSecret, *cwerrors.BasicError) {
 
 	hostname := strings.TrimSpace(strings.ToLower(c.String("host")))
 	realm := strings.TrimSpace(c.String("realm"))
@@ -181,7 +182,7 @@ func SecClientGetSecret(c *cli.Context) (*RegisteredClientSecret, *SecError) {
 	url := hostname + "/auth/admin/realms/" + realm + "/clients/" + registeredClient.ID + "/client-secret"
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, &SecError{errOpConnection, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpConnection, err, err.Error()}
 	}
 
 	req.Header.Add("Authorization", "Bearer "+accesstoken)
@@ -189,7 +190,7 @@ func SecClientGetSecret(c *cli.Context) (*RegisteredClientSecret, *SecError) {
 	req.Header.Add("Cache-Control", "no-cache")
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, &SecError{errOpConnection, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpConnection, err, err.Error()}
 	}
 	defer res.Body.Close()
 
@@ -197,21 +198,21 @@ func SecClientGetSecret(c *cli.Context) (*RegisteredClientSecret, *SecError) {
 	if res.StatusCode != http.StatusOK {
 		body, _ := ioutil.ReadAll(res.Body)
 		err = errors.New(string(body))
-		return nil, &SecError{errOpResponse, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpResponse, err, err.Error()}
 	}
 
 	registeredClientSecret := RegisteredClientSecret{}
 	body, err := ioutil.ReadAll(res.Body)
 	err = json.Unmarshal([]byte(body), &registeredClientSecret)
 	if err != nil {
-		return nil, &SecError{errOpResponseFormat, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpResponseFormat, err, err.Error()}
 	}
 
 	return &registeredClientSecret, nil
 }
 
 // SecClientAppendURL : Append an additional url to the whitelist
-func SecClientAppendURL(c *cli.Context, gatekeeperURL string) *SecError {
+func SecClientAppendURL(c *cli.Context, gatekeeperURL string) *cwerrors.BasicError {
 
 	hostname := strings.TrimSpace(strings.ToLower(c.String("host")))
 	realm := strings.TrimSpace(c.String("realm"))
@@ -238,7 +239,7 @@ func SecClientAppendURL(c *cli.Context, gatekeeperURL string) *SecError {
 	req, err := http.NewRequest("PUT", url, payload)
 
 	if err != nil {
-		return &SecError{errOpConnection, err, err.Error()}
+		return &cwerrors.BasicError{errOpConnection, err, err.Error()}
 	}
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Cache-Control", "no-cache")
@@ -248,7 +249,7 @@ func SecClientAppendURL(c *cli.Context, gatekeeperURL string) *SecError {
 	// send request
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return &SecError{errOpConnection, err, err.Error()}
+		return &cwerrors.BasicError{errOpConnection, err, err.Error()}
 	}
 	defer res.Body.Close()
 	return nil

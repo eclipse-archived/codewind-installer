@@ -16,6 +16,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/eclipse/codewind-installer/pkg/errors"
 	"github.com/eclipse/codewind-installer/pkg/remote"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 	logr "github.com/sirupsen/logrus"
@@ -35,7 +36,7 @@ func RemoveCommand(c *cli.Context, dockerComposeFile string) {
 	images, err := utils.GetImageList()
 
 	if err != nil {
-		HandleDockerError(err)
+		errors.PrintError(err, printAsJSON)
 		os.Exit(1)
 	}
 

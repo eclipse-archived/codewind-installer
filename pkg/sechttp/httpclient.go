@@ -18,6 +18,7 @@ import (
 	"strings"
 
 	"github.com/eclipse/codewind-installer/pkg/connections"
+	cwerrors "github.com/eclipse/codewind-installer/pkg/errors"
 	"github.com/eclipse/codewind-installer/pkg/security"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 	logr "github.com/sirupsen/logrus"
@@ -26,8 +27,8 @@ import (
 )
 
 // DispatchHTTPRequest : Perform an HTTP request against PFE with token based authentication
-// Returns: HTTPResponse, HTTPSecError
-func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Request, connection *connections.Connection) (*http.Response, *HTTPSecError) {
+// Returns: HTTPResponse, cwerrors.BasicError
+func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Request, connection *connections.Connection) (*http.Response, *cwerrors.BasicError) {
 
 	logr.Tracef("Request URL: %v %v\n", originalRequest.Method, originalRequest.URL)
 
@@ -90,7 +91,7 @@ func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Requ
 	if keyErr != nil {
 		logr.Tracef("ERROR:  %v\n", keyErr.Error())
 		err := errors.New(errMissingPassword)
-		return nil, &HTTPSecError{errOpNoPassword, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpNoPassword, err, err.Error()}
 	}
 
 	set := flag.NewFlagSet("Authentication", 0)
@@ -105,7 +106,7 @@ func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Requ
 	if secError != nil {
 		// Bailing out, user cant authenticate
 		logr.Tracef("Bailing out, user can not authenticate")
-		return nil, &HTTPSecError{errOpAuthFailed, secError.Err, secError.Desc}
+		return nil, &cwerrors.BasicError{errOpAuthFailed, secError.Err, secError.Desc}
 	}
 
 	// Try to access the resource again with the new access token
@@ -120,11 +121,11 @@ func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Requ
 	// No other methods of authentication left to try, tell the user and give up
 	logr.Tracef("No other methods of authentication left to try, tell the user and give up")
 	failedError := errors.New("No other methods left to try")
-	return nil, &HTTPSecError{errOpFailed, failedError, failedError.Error()}
+	return nil, &cwerrors.BasicError{errOpFailed, failedError, failedError.Error()}
 }
 
 // Send the HTTP request along with supplied headers and access_token
-func sendRequest(httpClient utils.HTTPClient, originalRequest *http.Request, accessToken string) (*http.Response, *HTTPSecError) {
+func sendRequest(httpClient utils.HTTPClient, originalRequest *http.Request, accessToken string) (*http.Response, *cwerrors.BasicError) {
 
 	// Add auth headers
 	if accessToken != "" {
@@ -137,7 +138,7 @@ func sendRequest(httpClient utils.HTTPClient, originalRequest *http.Request, acc
 	res, err := httpClient.Do(originalRequest)
 	if err != nil {
 		logr.Tracef("sendRequest: REQUEST FAILED")
-		return nil, &HTTPSecError{errOpNoConnection, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpNoConnection, err, err.Error()}
 	}
 	return res, nil
 }

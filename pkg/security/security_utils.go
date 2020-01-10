@@ -30,13 +30,6 @@ const CodewindClientID string = "codewind-backend"
 // KeyringServiceName : name
 const KeyringServiceName string = "org.eclipse.codewind"
 
-// SecError : Security package errors
-type SecError struct {
-	Op   string
-	Err  error
-	Desc string
-}
-
 const (
 	errOpConnection     = "sec_connection"      // Connection failed
 	errOpResponse       = "sec_response"        // Bad response
@@ -58,18 +51,6 @@ const (
 	textInvalidOptions = "Invalid or missing command line options"
 	textAuthIsDown     = "Authentication service unavailable"
 )
-
-// SecError : Error formatted in JSON containing an errorOp and a description from
-// either a fault condition in the CLI, or an error payload from a REST request
-func (se *SecError) Error() string {
-	type Output struct {
-		Operation   string `json:"error"`
-		Description string `json:"error_description"`
-	}
-	tempOutput := &Output{Operation: se.Op, Description: se.Err.Error()}
-	jsonError, _ := json.Marshal(tempOutput)
-	return string(jsonError)
-}
 
 // KeycloakAPIError : Error responses from Keycloak
 type KeycloakAPIError struct {

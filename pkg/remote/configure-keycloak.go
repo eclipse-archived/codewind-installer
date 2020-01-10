@@ -16,6 +16,7 @@ import (
 	"flag"
 	"net/http"
 
+	cwerrors "github.com/eclipse/codewind-installer/pkg/errors"
 	"github.com/eclipse/codewind-installer/pkg/security"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 	logr "github.com/sirupsen/logrus"
@@ -119,7 +120,7 @@ func SetupKeycloak(codewindInstance Codewind, deployOptions *DeployOptions) erro
 	return nil
 }
 
-func configureKeycloakRealm(deployOptions *DeployOptions, authURL string, tokens *security.AuthToken) *security.SecError {
+func configureKeycloakRealm(deployOptions *DeployOptions, authURL string, tokens *security.AuthToken) *cwerrors.BasicError {
 	// Check if realm is already registered
 	realm, _ := security.SecRealmGet(authURL, tokens.AccessToken, deployOptions.KeycloakRealm)
 	if realm != nil && realm.ID != "" {
@@ -140,7 +141,7 @@ func configureKeycloakRealm(deployOptions *DeployOptions, authURL string, tokens
 	return nil
 }
 
-func configureKeycloakClient(deployOptions *DeployOptions, authURL string, tokens *security.AuthToken, gatekeeperPublicURL string) *security.SecError {
+func configureKeycloakClient(deployOptions *DeployOptions, authURL string, tokens *security.AuthToken, gatekeeperPublicURL string) *cwerrors.BasicError {
 
 	// Check if the client is already registered
 	logr.Infof("Checking for Keycloak client '%v'", deployOptions.KeycloakClient)
@@ -175,7 +176,7 @@ func configureKeycloakClient(deployOptions *DeployOptions, authURL string, token
 	return nil
 }
 
-func configureKeycloakAccessRole(deployOptions *DeployOptions, authURL string, tokens *security.AuthToken, accessRoleName string) *security.SecError {
+func configureKeycloakAccessRole(deployOptions *DeployOptions, authURL string, tokens *security.AuthToken, accessRoleName string) *cwerrors.BasicError {
 	// Create a new access role for this deployment
 	logr.Infof("Creating access role '%v' in realm '%v'", accessRoleName, deployOptions.KeycloakRealm)
 	clientFlagset := flag.NewFlagSet("setupClient", 0)
@@ -191,7 +192,7 @@ func configureKeycloakAccessRole(deployOptions *DeployOptions, authURL string, t
 	return nil
 }
 
-func configureKeycloakUser(deployOptions *DeployOptions, authURL string, tokens *security.AuthToken) *security.SecError {
+func configureKeycloakUser(deployOptions *DeployOptions, authURL string, tokens *security.AuthToken) *cwerrors.BasicError {
 
 	// Check if user is already registered
 	clientFlagset := flag.NewFlagSet("setupUser", 0)
@@ -235,7 +236,7 @@ func configureKeycloakUser(deployOptions *DeployOptions, authURL string, tokens 
 }
 
 // Grant the user access to this Deployment
-func grantUserAccessToDeployment(deployOptions *DeployOptions, authURL string, tokens *security.AuthToken, accessRoleName string) *security.SecError {
+func grantUserAccessToDeployment(deployOptions *DeployOptions, authURL string, tokens *security.AuthToken, accessRoleName string) *cwerrors.BasicError {
 	logr.Printf("Grant '%v' access to this deployment ", deployOptions.KeycloakDevUser)
 	clientFlagset := flag.NewFlagSet("setupClient", 0)
 	clientFlagset.String("host", authURL, "doc")
@@ -252,7 +253,7 @@ func grantUserAccessToDeployment(deployOptions *DeployOptions, authURL string, t
 }
 
 // fetchClientSecret : Load client secret
-func fetchClientSecret(deployOptions *DeployOptions, authURL string, tokens *security.AuthToken) (*security.RegisteredClientSecret, *security.SecError) {
+func fetchClientSecret(deployOptions *DeployOptions, authURL string, tokens *security.AuthToken) (*security.RegisteredClientSecret, *cwerrors.BasicError) {
 	logr.Infoln("Fetching client secret")
 	clientSecFlagset := flag.NewFlagSet("getClientSecret", 0)
 	clientSecFlagset.String("host", authURL, "doc")

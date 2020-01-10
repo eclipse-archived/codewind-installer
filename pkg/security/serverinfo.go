@@ -17,6 +17,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	cwerrors "github.com/eclipse/codewind-installer/pkg/errors"
 )
 
 // RegisteredTheme : A Keycloak theme
@@ -41,13 +43,13 @@ type ServerInfo struct {
 }
 
 // GetServerInfo - fetch Keycloak server info
-func GetServerInfo(keycloakHostname string, accesstoken string) (*ServerInfo, *SecError) {
+func GetServerInfo(keycloakHostname string, accesstoken string) (*ServerInfo, *cwerrors.BasicError) {
 
 	// build REST request
 	url := keycloakHostname + "/auth/admin/serverinfo"
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, &SecError{errOpConnection, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpConnection, err, err.Error()}
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	req.Header.Add("Authorization", "Bearer "+accesstoken)
@@ -57,12 +59,12 @@ func GetServerInfo(keycloakHostname string, accesstoken string) (*ServerInfo, *S
 	// send request
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, &SecError{errOpConnection, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpConnection, err, err.Error()}
 	}
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return nil, &SecError{errOpResponseFormat, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpResponseFormat, err, err.Error()}
 	}
 
 	// Handle special case http status codes
@@ -70,23 +72,23 @@ func GetServerInfo(keycloakHostname string, accesstoken string) (*ServerInfo, *S
 	case httpCode == http.StatusBadRequest, httpCode == http.StatusUnauthorized:
 		keycloakAPIError := parseKeycloakError(string(body), res.StatusCode)
 		kcError := errors.New(string(keycloakAPIError.ErrorDescription))
-		return nil, &SecError{keycloakAPIError.Error, kcError, kcError.Error()}
+		return nil, &cwerrors.BasicError{keycloakAPIError.Error, kcError, kcError.Error()}
 	case httpCode != http.StatusOK:
 		err = errors.New(string(body))
-		return nil, &SecError{errOpResponse, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpResponse, err, err.Error()}
 	}
 
 	// Parse and return ServerInfo
 	serverInfo := ServerInfo{}
 	err = json.Unmarshal([]byte(body), &serverInfo)
 	if err != nil {
-		return nil, &SecError{errOpResponseFormat, err, textUnableToParse}
+		return nil, &cwerrors.BasicError{errOpResponseFormat, err, textUnableToParse}
 	}
 	return &serverInfo, nil
 }
 
 // GetSuggestedTheme - Recommends the Codewind theme, else Che, else keycloak default
-func GetSuggestedTheme(keycloakHostname string, accesstoken string) (string, *SecError) {
+func GetSuggestedTheme(keycloakHostname string, accesstoken string) (string, *cwerrors.BasicError) {
 	serverInfo, secErr := GetServerInfo(keycloakHostname, accesstoken)
 	if secErr != nil {
 		return "", secErr

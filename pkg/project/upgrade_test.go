@@ -15,6 +15,7 @@ import (
 	"path"
 	"testing"
 
+	"github.com/eclipse/codewind-installer/pkg/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -94,7 +95,7 @@ func Test_UpgradeProjects(t *testing.T) {
 			if test.expectsErr {
 				assert.Error(t, err, "upgrade did not return an error when one was expected")
 			} else {
-				assert.Equal(t, (*ProjectError)(nil), err, "upgrade returned error %+v when none were expected", err)
+				assert.Equal(t, (*errors.BasicError)(nil), err, "upgrade returned error %+v when none were expected", err)
 			}
 		})
 	}

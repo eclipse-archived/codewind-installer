@@ -17,6 +17,7 @@ import (
 	"strings"
 
 	"github.com/eclipse/codewind-installer/pkg/apiroutes"
+	"github.com/eclipse/codewind-installer/pkg/errors"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/urfave/cli"
 )
@@ -29,8 +30,8 @@ func ListTemplates(c *cli.Context) {
 	showEnabledOnly := c.Bool("showEnabledOnly")
 	templates, err := apiroutes.GetTemplates(conID, projectStyle, showEnabledOnly)
 	if err != nil {
-		templateErr := &TemplateError{errOpListTemplates, err, err.Error()}
-		HandleTemplateError(templateErr)
+		basicErr := &errors.BasicError{errOpListTemplates, err, err.Error()}
+		errors.PrintError(basicErr, printAsJSON)
 		return
 	}
 	if len(templates) > 0 {
@@ -45,8 +46,8 @@ func ListTemplateStyles(c *cli.Context) {
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 	styles, err := apiroutes.GetTemplateStyles(conID)
 	if err != nil {
-		templateErr := &TemplateError{errOpListStyles, err, err.Error()}
-		HandleTemplateError(templateErr)
+		basicErr := &errors.BasicError{errOpListStyles, err, err.Error()}
+		errors.PrintError(basicErr, printAsJSON)
 		return
 	}
 	PrettyPrintJSON(styles)
@@ -57,8 +58,8 @@ func ListTemplateRepos(c *cli.Context) {
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 	repos, err := apiroutes.GetTemplateRepos(conID)
 	if err != nil {
-		templateErr := &TemplateError{errOpListRepos, err, err.Error()}
-		HandleTemplateError(templateErr)
+		basicErr := &errors.BasicError{errOpListRepos, err, err.Error()}
+		errors.PrintError(basicErr, printAsJSON)
 		return
 	}
 	PrettyPrintJSON(repos)
@@ -72,8 +73,8 @@ func AddTemplateRepo(c *cli.Context) {
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 	repos, err := apiroutes.AddTemplateRepo(conID, url, desc, name)
 	if err != nil {
-		templateErr := &TemplateError{errOpAddRepo, err, err.Error()}
-		HandleTemplateError(templateErr)
+		basicErr := &errors.BasicError{errOpAddRepo, err, err.Error()}
+		errors.PrintError(basicErr, printAsJSON)
 		return
 	}
 	extensions, err := apiroutes.GetExtensions(conID)
@@ -96,8 +97,8 @@ func DeleteTemplateRepo(c *cli.Context) {
 	}
 	repos, err := apiroutes.DeleteTemplateRepo(conID, url)
 	if err != nil {
-		templateErr := &TemplateError{errOpDeleteRepo, err, err.Error()}
-		HandleTemplateError(templateErr)
+		basicErr := &errors.BasicError{errOpDeleteRepo, err, err.Error()}
+		errors.PrintError(basicErr, printAsJSON)
 		return
 	}
 	PrettyPrintJSON(repos)
@@ -108,8 +109,8 @@ func EnableTemplateRepos(c *cli.Context) {
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 	repos, err := apiroutes.EnableTemplateRepos(conID, c.Args())
 	if err != nil {
-		templateErr := &TemplateError{errOpEnableRepo, err, err.Error()}
-		HandleTemplateError(templateErr)
+		basicErr := &errors.BasicError{errOpEnableRepo, err, err.Error()}
+		errors.PrintError(basicErr, printAsJSON)
 		return
 	}
 	PrettyPrintJSON(repos)
@@ -120,8 +121,8 @@ func DisableTemplateRepos(c *cli.Context) {
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 	repos, err := apiroutes.DisableTemplateRepos(conID, c.Args())
 	if err != nil {
-		templateErr := &TemplateError{errOpDisableRepo, err, err.Error()}
-		HandleTemplateError(templateErr)
+		basicErr := &errors.BasicError{errOpDisableRepo, err, err.Error()}
+		errors.PrintError(basicErr, printAsJSON)
 		return
 	}
 	PrettyPrintJSON(repos)

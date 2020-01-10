@@ -11,15 +11,6 @@
 
 package actions
 
-import "encoding/json"
-
-// TemplateError struct will format the error
-type TemplateError struct {
-	Op   string
-	Err  error
-	Desc string
-}
-
 const (
 	errOpListTemplates = "LIST_TEMPLATES_ERROR"
 	errOpListStyles    = "LIST_STYLES_ERROR"
@@ -29,14 +20,3 @@ const (
 	errOpEnableRepo    = "ENABLE_REPO_ERROR"
 	errOpDisableRepo   = "DISABLE_REPO_ERROR"
 )
-
-// TemplateError : Error formatted in JSON containing an errorOp and a description
-func (te *TemplateError) Error() string {
-	type Output struct {
-		Operation   string `json:"error"`
-		Description string `json:"error_description"`
-	}
-	tempOutput := &Output{Operation: te.Op, Description: te.Err.Error()}
-	jsonError, _ := json.Marshal(tempOutput)
-	return string(jsonError)
-}

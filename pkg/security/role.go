@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"strings"
 
+	cwerrors "github.com/eclipse/codewind-installer/pkg/errors"
 	"github.com/urfave/cli"
 )
 
@@ -31,7 +32,7 @@ type Role struct {
 }
 
 // SecRoleCreate : Create a new role in Keycloak
-func SecRoleCreate(c *cli.Context) *SecError {
+func SecRoleCreate(c *cli.Context) *cwerrors.BasicError {
 
 	hostname := strings.TrimSpace(strings.ToLower(c.String("host")))
 	realmName := strings.TrimSpace(c.String("realm"))
@@ -60,7 +61,7 @@ func SecRoleCreate(c *cli.Context) *SecError {
 	payload := strings.NewReader(string(jsonRole))
 	req, err := http.NewRequest("POST", url, payload)
 	if err != nil {
-		return &SecError{errOpConnection, err, err.Error()}
+		return &cwerrors.BasicError{errOpConnection, err, err.Error()}
 	}
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Cache-Control", "no-cache")
@@ -70,12 +71,12 @@ func SecRoleCreate(c *cli.Context) *SecError {
 	// send request
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return &SecError{errOpConnection, err, err.Error()}
+		return &cwerrors.BasicError{errOpConnection, err, err.Error()}
 	}
 
 	if res.StatusCode != http.StatusCreated {
 		secErr := errors.New("HTTP " + res.Status)
-		return &SecError{errOpConnection, secErr, secErr.Error()}
+		return &cwerrors.BasicError{errOpConnection, secErr, secErr.Error()}
 	}
 
 	defer res.Body.Close()
@@ -84,12 +85,12 @@ func SecRoleCreate(c *cli.Context) *SecError {
 		keycloakAPIError := parseKeycloakError(string(body), res.StatusCode)
 		keycloakAPIError.Error = errOpResponseFormat
 		kcError := errors.New(keycloakAPIError.ErrorDescription)
-		return &SecError{keycloakAPIError.Error, kcError, kcError.Error()}
+		return &cwerrors.BasicError{keycloakAPIError.Error, kcError, kcError.Error()}
 	}
 	return nil
 }
 
-func getRoleByName(c *cli.Context, roleName string) (*Role, *SecError) {
+func getRoleByName(c *cli.Context, roleName string) (*Role, *cwerrors.BasicError) {
 
 	hostname := strings.TrimSpace(strings.ToLower(c.String("host")))
 	accesstoken := strings.TrimSpace(c.String("accesstoken"))
@@ -103,7 +104,7 @@ func getRoleByName(c *cli.Context, roleName string) (*Role, *SecError) {
 	url := hostname + "/auth/admin/realms/" + realmName + "/roles/" + requestedRole
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, &SecError{errOpConnection, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpConnection, err, err.Error()}
 	}
 
 	req.Header.Add("Content-Type", "application/json")
@@ -114,13 +115,13 @@ func getRoleByName(c *cli.Context, roleName string) (*Role, *SecError) {
 	// send request
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return nil, &SecError{errOpConnection, err, err.Error()}
+		return nil, &cwerrors.BasicError{errOpConnection, err, err.Error()}
 	}
 
 	// check we received a valid response
 	if res.StatusCode != http.StatusOK {
 		unableToReadErr := errors.New("Bad response")
-		return nil, &SecError{errOpConnection, unableToReadErr, unableToReadErr.Error()}
+		return nil, &cwerrors.BasicError{errOpConnection, unableToReadErr, unableToReadErr.Error()}
 	}
 
 	defer res.Body.Close()
@@ -130,7 +131,7 @@ func getRoleByName(c *cli.Context, roleName string) (*Role, *SecError) {
 	var role *Role
 	err = json.Unmarshal([]byte(body), &role)
 	if err != nil {
-		return nil, &SecError{errOpResponseFormat, err, textUnableToParse}
+		return nil, &cwerrors.BasicError{errOpResponseFormat, err, textUnableToParse}
 	}
 
 	// found role

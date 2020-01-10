@@ -15,39 +15,33 @@ import (
 	"os"
 
 	"github.com/eclipse/codewind-installer/pkg/connections"
+	"github.com/eclipse/codewind-installer/pkg/errors"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 )
-
-// ConfigError : config package errors
-type ConfigError struct {
-	Op   string
-	Err  error
-	Desc string
-}
 
 const errOpConfConNotFound = "config_connection_notfound"
 const errOpConfPFEHostnamePortNotFound = "config_pfe_hostname_port_notfound"
 
 // PFEOriginFromConnection is used when GetConnectionByID(conID) has already been called to stop it being run twice in one function
-func PFEOriginFromConnection(connection *connections.Connection) (string, *ConfigError) {
+func PFEOriginFromConnection(connection *connections.Connection) (string, *errors.BasicError) {
 	if connection.ID != "local" {
 		return connection.URL, nil
 	}
 	localURL, localErr := getLocalHostnameAndPort()
 	if localErr != nil {
-		return "", &ConfigError{errOpConfConNotFound, localErr.Err, localErr.Desc}
+		return "", &errors.BasicError{errOpConfConNotFound, localErr.Err, localErr.Desc}
 	}
 	return localURL, nil
 }
 
-func getLocalHostnameAndPort() (string, *ConfigError) {
+func getLocalHostnameAndPort() (string, *errors.BasicError) {
 	val, ok := os.LookupEnv("CHE_API_EXTERNAL")
 	if ok && (val != "") {
 		return "https://localhost:9090", nil
 	}
 	hostname, port, err := utils.GetPFEHostAndPort()
 	if err != nil || hostname == "" || port == "" {
-		return "", &ConfigError{errOpConfPFEHostnamePortNotFound, nil, "Hostname or port for PFE not found"}
+		return "", &errors.BasicError{errOpConfPFEHostnamePortNotFound, nil, "Hostname or port for PFE not found"}
 	}
 	return "http://" + hostname + ":" + port, nil
 }
