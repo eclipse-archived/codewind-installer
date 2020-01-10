@@ -41,13 +41,13 @@ func PFEOriginFromConnection(connection *connections.Connection) (string, *Confi
 }
 
 func getLocalHostnameAndPort() (string, *ConfigError) {
+	val, ok := os.LookupEnv("CHE_API_EXTERNAL")
+	if ok && (val != "") {
+		return "https://localhost:9090", nil
+	}
 	hostname, port, err := utils.GetPFEHostAndPort()
 	if err != nil || hostname == "" || port == "" {
 		return "", &ConfigError{errOpConfPFEHostnamePortNotFound, nil, "Hostname or port for PFE not found"}
-	}
-	val, ok := os.LookupEnv("CHE_API_EXTERNAL")
-	if ok && (val != "") {
-		return "https://" + hostname + ":" + port, nil
 	}
 	return "http://" + hostname + ":" + port, nil
 }
