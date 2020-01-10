@@ -36,7 +36,7 @@ func Unbind(httpClient utils.HTTPClient, conID, projectID string) error {
 	}
 
 	// send request
-	res, httpSecError := sechttp.DispatchHTTPRequest(http.DefaultClient, req, conInfo)
+	res, httpSecError := sechttp.DispatchHTTPRequest(httpClient, req, conInfo)
 	if httpSecError != nil {
 		return httpSecError
 	}

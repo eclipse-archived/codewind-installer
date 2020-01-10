@@ -37,7 +37,7 @@ func GetProject(httpClient utils.HTTPClient, conID, projectID string) (*Project,
 	}
 
 	// send request
-	resp, httpSecError := sechttp.DispatchHTTPRequest(http.DefaultClient, req, conInfo)
+	resp, httpSecError := sechttp.DispatchHTTPRequest(httpClient, req, conInfo)
 	if httpSecError != nil {
 		return nil, httpSecError
 	}
