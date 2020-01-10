@@ -13,7 +13,6 @@ package project
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -130,7 +129,7 @@ func checkIsExtension(conID, projectPath string, c *cli.Context) (string, error)
 
 // ValidateProject returns the language and buildType for a project at given filesystem path,
 // and writes a default .cw-settings file to that project
-func ValidateProject(c *cli.Context) *ProjectError {
+func ValidateProject(c *cli.Context) (ValidationResponse, *ProjectError) {
 	projectPath := c.String("path")
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 	checkProjectPathExists(projectPath)
@@ -160,15 +159,13 @@ func ValidateProject(c *cli.Context) *ProjectError {
 		Path:   projectPath,
 		Result: validationResult,
 	}
-	projectInfo, err := json.Marshal(response)
 
 	errors.CheckErr(err, 203, "")
 	// write settings file only for non-extension projects
 	if extensionType == "" {
 		writeCwSettingsIfNotInProject(conID, projectPath, buildType)
 	}
-	fmt.Println(string(projectInfo))
-	return nil
+	return response, nil
 }
 
 func writeCwSettingsIfNotInProject(conID string, projectPath string, BuildType string) {
