@@ -12,6 +12,8 @@
 package project
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/eclipse/codewind-installer/pkg/connections"
@@ -19,19 +21,31 @@ import (
 	"github.com/eclipse/codewind-installer/pkg/utils"
 )
 
-// Unbind a project from Codewind
-func Unbind(httpClient utils.HTTPClient, connection *connections.Connection, url, projectID string) error {
-	req, err := http.NewRequest("POST", url+"/api/v1/projects/"+projectID+"/unbind", nil)
-	if err != nil {
-		return err
+// GetAll : returns all projects that are bound to Codewind
+func GetAll(httpClient utils.HTTPClient, connection *connections.Connection, url string) ([]Project, error) {
+
+	request, requestErr := http.NewRequest("GET", url+"/api/v1/projects/", nil)
+	if requestErr != nil {
+		return nil, requestErr
 	}
 
-	// send request
-	res, httpSecError := sechttp.DispatchHTTPRequest(httpClient, req, connection)
+	response, httpSecError := sechttp.DispatchHTTPRequest(httpClient, request, connection)
 	if httpSecError != nil {
-		return httpSecError
+		return nil, httpSecError
 	}
 
-	defer res.Body.Close()
-	return nil
+	defer response.Body.Close()
+
+	byteArray, byteArrayError := ioutil.ReadAll(response.Body)
+	if byteArrayError != nil {
+		return nil, byteArrayError
+	}
+
+	var projects []Project
+	jsonError := json.Unmarshal(byteArray, &projects)
+	if jsonError != nil {
+		return nil, jsonError
+	}
+
+	return projects, nil
 }

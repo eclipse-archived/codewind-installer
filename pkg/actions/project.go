@@ -14,9 +14,13 @@ package actions
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
+	"text/tabwriter"
 
+	"github.com/eclipse/codewind-installer/pkg/config"
+	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/project"
 	"github.com/urfave/cli"
 )
@@ -123,7 +127,7 @@ func ProjectGetConnection(c *cli.Context) {
 	os.Exit(0)
 }
 
-// ProjectRemoveConnection : Remove Connection from  a project
+// ProjectRemoveConnection : Remove Connection from a project
 func ProjectRemoveConnection(c *cli.Context) {
 	projectID := strings.TrimSpace(strings.ToLower(c.String("id")))
 	err := project.ResetConnectionFile(projectID)
@@ -133,5 +137,98 @@ func ProjectRemoveConnection(c *cli.Context) {
 	}
 	response, _ := json.Marshal(project.Result{Status: "OK", StatusMessage: "Project target removed successfully"})
 	fmt.Println(string(response))
+	os.Exit(0)
+}
+
+// ProjectList : Print the list of projects to the terminal
+func ProjectList(c *cli.Context) {
+	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
+
+	conInfo, conInfoErr := connections.GetConnectionByID(conID)
+	if conInfoErr != nil {
+		fmt.Println(conInfoErr.Err.Error())
+		os.Exit(1)
+	}
+
+	conURL, conErr := config.PFEOriginFromConnection(conInfo)
+	if conErr != nil {
+		fmt.Println(conErr.Err.Error())
+		os.Exit(1)
+	}
+
+	projects, err := project.GetAll(http.DefaultClient, conInfo, conURL)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+	if printAsJSON {
+		json, _ := json.Marshal(projects)
+		fmt.Println(string(json))
+	} else {
+		if len(projects) == 0 {
+			fmt.Println("No projects bound to Codewind")
+		} else {
+			w := new(tabwriter.Writer)
+			w.Init(os.Stdout, 0, 8, 0, '\t', 0)
+			fmt.Fprintln(w, "PROJECT ID \tNAME \tLANGUAGE \tAPP STATUS \tLOCATION ON DISK")
+			for _, project := range projects {
+				appStatus := strings.Title(project.AppStatus)
+				fmt.Fprintln(w, project.ProjectID+"\t"+project.Name+"\t"+project.Language+"\t"+appStatus+"\t"+project.LocationOnDisk)
+			}
+			fmt.Fprintln(w)
+			w.Flush()
+		}
+	}
+	os.Exit(0)
+}
+
+// ProjectGet : Prints information about a given project using its ID
+func ProjectGet(c *cli.Context) {
+	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
+	projectID := strings.TrimSpace(strings.ToLower(c.String("id")))
+	projectName := c.String("name")
+	if projectID == "" && projectName == "" {
+		fmt.Println("Error: Must specify one of project ID (--id) or project name (--name)")
+		os.Exit(1)
+	}
+
+	conInfo, conInfoErr := connections.GetConnectionByID(conID)
+	if conInfoErr != nil {
+		fmt.Println(conInfoErr.Err.Error())
+		os.Exit(1)
+	}
+
+	conURL, conErr := config.PFEOriginFromConnection(conInfo)
+	if conErr != nil {
+		fmt.Println(conErr.Err.Error())
+		os.Exit(1)
+	}
+
+	if projectID == "" && projectName != "" {
+		newProjectID, projectNameErr := project.GetProjectIDFromName(http.DefaultClient, conInfo, conURL, projectName)
+		if projectNameErr != nil {
+			fmt.Println(projectNameErr)
+			os.Exit(1)
+		}
+		projectID = newProjectID
+	}
+
+	project, err := project.GetProject(http.DefaultClient, conInfo, conURL, projectID)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	if printAsJSON {
+		json, _ := json.Marshal(project)
+		fmt.Println(string(json))
+	} else {
+		w := new(tabwriter.Writer)
+		w.Init(os.Stdout, 0, 8, 0, '\t', 0)
+		fmt.Fprintln(w, "PROJECT ID \tNAME \tLANGUAGE \tAPP STATUS \tLOCATION ON DISK")
+		appStatus := strings.Title(project.AppStatus)
+		fmt.Fprintln(w, project.ProjectID+"\t"+project.Name+"\t"+project.Language+"\t"+appStatus+"\t"+project.LocationOnDisk)
+		fmt.Fprintln(w)
+		w.Flush()
+	}
 	os.Exit(0)
 }
