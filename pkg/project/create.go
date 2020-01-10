@@ -52,7 +52,7 @@ type (
 )
 
 // DownloadTemplate using the url/link provided
-func DownloadTemplate(destination string, url string) *ProjectError {
+func DownloadTemplate(destination string, url string) (Result, *ProjectError) {
 	checkProjectDirIsEmpty(destination)
 	projectDir := path.Base(destination)
 
@@ -73,7 +73,9 @@ func DownloadTemplate(destination string, url string) *ProjectError {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return nil
+
+	response := Result{Status: "success", StatusMessage: "Project downloaded to" + destination}
+	return response, nil
 }
 
 // checkIsExtension checks if a project is an extension project and run associated commands as necessary

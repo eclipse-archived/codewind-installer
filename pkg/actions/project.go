@@ -35,11 +35,18 @@ func ProjectValidate(c *cli.Context) {
 func ProjectCreate(c *cli.Context) {
 	destination := c.String("p")
 	url := c.String("u")
-	err := project.DownloadTemplate(destination, url)
+	result, err := project.DownloadTemplate(destination, url)
 	if err != nil {
 		HandleProjectError(err)
 		os.Exit(1)
 	}
+	if printAsJSON {
+		jsonResponse, _ := json.Marshal(result)
+		fmt.Println(string(jsonResponse))
+	} else {
+		fmt.Println("Project downloaded to " + destination)
+	}
+	os.Exit(0)
 }
 
 // ProjectSync : Does a project Sync
