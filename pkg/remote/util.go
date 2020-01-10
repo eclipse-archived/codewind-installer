@@ -252,12 +252,14 @@ func pemBlockForKey(privateKey interface{}) *pem.Block {
 }
 
 // WaitForPodReady : Wait for pod to enter the running phase
-func WaitForPodReady(clientset *kubernetes.Clientset, codewindInstance Codewind, labelSelector string, podName string) {
+func WaitForPodReady(clientset *kubernetes.Clientset, codewindInstance Codewind, labelSelector string, podName string) bool {
 
 	logr.Infof("Waiting for pod: %v", podName)
+	var waitTime int64 = 30
 
 	watcher, err := clientset.CoreV1().Pods(codewindInstance.Namespace).Watch(metav1.ListOptions{
 		LabelSelector: labelSelector,
+		TimeoutSeconds: &waitTime,
 	})
 	if err != nil {
 		logr.Errorln("Unable to attach watcher")
@@ -267,25 +269,28 @@ func WaitForPodReady(clientset *kubernetes.Clientset, codewindInstance Codewind,
 	lastReason := ""
 	changeEvent := watcher.ResultChan()
 	for {
-		select {
-		case event := <-changeEvent:
-			foundPod, err := event.Object.(*corev1.Pod)
-			if !err {
-				logr.Errorf("Expected a Pod but found: %T\n", event.Object)
-				os.Exit(1)
+		event, channelOk := <- changeEvent
+		if !channelOk {
+			// Channel closed, no event value. (Watch probably timed out.)
+			logr.Warnf("Watch for Pod %v ended. Timeout or connection error.", podName);
+			return false
+		}
+		foundPod, castOk := event.Object.(*corev1.Pod)
+		if castOk == false {
+			logr.Errorf("Expected a Pod but found: %T\n", event.Object)
+			os.Exit(1)
+		}
+		status := foundPod.Status
+		for _, condition := range foundPod.Status.Conditions {
+			currentReason := string(condition.Reason)
+			if lastPhase != string(status.Phase) || (lastReason != currentReason && currentReason != "") {
+				logr.Printf("%v, phase: %v %v \n", podName, status.Phase, currentReason)
 			}
-			status := foundPod.Status
-			for _, condition := range foundPod.Status.Conditions {
-				currentReason := string(condition.Reason)
-				if lastPhase != string(status.Phase) || (lastReason != currentReason && currentReason != "") {
-					logr.Printf("%v, phase: %v %v \n", podName, status.Phase, currentReason)
-				}
-				lastPhase = string(status.Phase)
-				lastReason = currentReason
-				if status.Phase == corev1.PodRunning {
-					watcher.Stop()
-					return
-				}
+			lastPhase = string(status.Phase)
+			lastReason = currentReason
+			if status.Phase == corev1.PodRunning {
+				watcher.Stop()
+				return true
 			}
 		}
 	}
