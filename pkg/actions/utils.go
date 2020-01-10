@@ -14,11 +14,13 @@ package actions
 import (
 	"fmt"
 
+	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/utils"
+	"github.com/eclipse/codewind-installer/pkg/project"
 	logr "github.com/sirupsen/logrus"
 )
 
-// HandleDockerError prints a Docker error, in JSON format if the global flag is set, and as a string if not
+// HandleDockerError prints a Docker error, in JSON format if the global flag is set and as a string if not
 func HandleDockerError(err *utils.DockerError) {
 	// printAsJSON is a global variable, set in commands.go
 	if printAsJSON {
@@ -31,6 +33,24 @@ func HandleDockerError(err *utils.DockerError) {
 // HandleTemplateError prints a Template error, in JSON format if the global flag is set, and as a string if not
 func HandleTemplateError(err *TemplateError) {
 	// printAsJSON is a global variable, set in commands.go
+	if printAsJSON {
+		fmt.Println(err.Error())
+	} else {
+		logr.Error(err.Desc)
+	}
+}
+
+// HandleConnectionError prints a Connection error, in JSON format if the global flag is set and as a string if not
+func HandleConnectionError(err *connections.ConError) {
+	if printAsJSON {
+		fmt.Println(err.Error())
+	} else {
+		logr.Error(err.Desc)
+	}
+}
+
+// HandleProjectError prints a Project error, in JSON format if the global flag is set and as a string if not
+func HandleProjectError(err *project.ProjectError) {
 	if printAsJSON {
 		fmt.Println(err.Error())
 	} else {

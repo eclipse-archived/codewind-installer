@@ -25,14 +25,9 @@ import (
 
 // ConnectionAddToList : Add new connection to the connections config file and returns the ID of the added entry
 func ConnectionAddToList(c *cli.Context) {
-	printAsJSON := c.GlobalBool("json")
 	connection, conErr := connections.AddConnectionToList(http.DefaultClient, c)
 	if conErr != nil {
-		if printAsJSON {
-			fmt.Println(conErr.Error())
-		} else {
-			logr.Println(conErr.Desc)
-		}
+		HandleConnectionError(conErr)
 		os.Exit(1)
 	}
 
@@ -54,14 +49,9 @@ func ConnectionAddToList(c *cli.Context) {
 
 // ConnectionUpdate : Update an existing connection
 func ConnectionUpdate(c *cli.Context) {
-	printAsJSON := c.GlobalBool("json")
 	connection, conErr := connections.UpdateExistingConnection(http.DefaultClient, c)
 	if conErr != nil {
-		if printAsJSON {
-			fmt.Println(conErr.Error())
-		} else {
-			logr.Println(conErr.Desc)
-		}
+		HandleConnectionError(conErr)
 		os.Exit(1)
 	}
 	type Result struct {
@@ -81,15 +71,10 @@ func ConnectionUpdate(c *cli.Context) {
 
 // ConnectionGetByID : Get connection by its id
 func ConnectionGetByID(c *cli.Context) {
-	printAsJSON := c.GlobalBool("json")
 	connectionID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 	connection, conErr := connections.GetConnectionByID(connectionID)
 	if conErr != nil {
-		if printAsJSON {
-			fmt.Println(conErr.Error())
-		} else {
-			logr.Println(conErr.Desc)
-		}
+		HandleConnectionError(conErr)
 		os.Exit(1)
 	}
 	response, _ := json.Marshal(connection)
@@ -99,14 +84,9 @@ func ConnectionGetByID(c *cli.Context) {
 
 // ConnectionRemoveFromList : Removes a connection from the connections config file
 func ConnectionRemoveFromList(c *cli.Context) {
-	printAsJSON := c.GlobalBool("json")
 	conErr := connections.RemoveConnectionFromList(c)
 	if conErr != nil {
-		if printAsJSON {
-			fmt.Println(conErr.Error())
-		} else {
-			logr.Println(conErr.Desc)
-		}
+		HandleConnectionError(conErr)
 		os.Exit(1)
 	}
 	response, _ := json.Marshal(connections.Result{Status: "OK", StatusMessage: "Connection removed"})
@@ -120,14 +100,9 @@ func ConnectionRemoveFromList(c *cli.Context) {
 
 // ConnectionListAll : Fetch all connections
 func ConnectionListAll(c *cli.Context) {
-	printAsJSON := c.GlobalBool("json")
 	allConnections, conErr := connections.GetConnectionsConfig()
 	if conErr != nil {
-		if printAsJSON {
-			fmt.Println(conErr.Error())
-		} else {
-			logr.Println(conErr.Desc)
-		}
+		HandleConnectionError(conErr)
 		os.Exit(1)
 	}
 	response, _ := json.Marshal(allConnections)
@@ -137,14 +112,9 @@ func ConnectionListAll(c *cli.Context) {
 
 // ConnectionResetList : Reset to a single default local connection
 func ConnectionResetList(c *cli.Context) {
-	printAsJSON := c.GlobalBool("json")
 	conErr := connections.ResetConnectionsFile()
 	if conErr != nil {
-		if printAsJSON {
-			fmt.Println(conErr.Error())
-		} else {
-			logr.Println(conErr.Desc)
-		}
+		HandleConnectionError(conErr)
 		os.Exit(1)
 	}
 	response, _ := json.Marshal(connections.Result{Status: "OK", StatusMessage: "Connection list reset"})
