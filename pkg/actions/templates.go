@@ -14,7 +14,6 @@ package actions
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/eclipse/codewind-installer/pkg/apiroutes"
@@ -28,9 +27,10 @@ func ListTemplates(c *cli.Context) {
 	projectStyle := c.String("projectStyle")
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 	showEnabledOnly := c.Bool("showEnabledOnly")
-	templates, templatesErr := apiroutes.GetTemplates(conID, projectStyle, showEnabledOnly)
-	if templatesErr != nil {
-		log.Printf("Error getting templates: %q", templatesErr)
+	templates, err := apiroutes.GetTemplates(conID, projectStyle, showEnabledOnly)
+	if err != nil {
+		templateErr := &TemplateError{errOpListTemplates, err, err.Error()}
+		HandleTemplateError(templateErr)
 		return
 	}
 	if len(templates) > 0 {
@@ -38,7 +38,6 @@ func ListTemplates(c *cli.Context) {
 	} else {
 		fmt.Println(templates)
 	}
-
 }
 
 // ListTemplateStyles lists all template styles of which Codewind is aware.
@@ -46,7 +45,8 @@ func ListTemplateStyles(c *cli.Context) {
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 	styles, err := apiroutes.GetTemplateStyles(conID)
 	if err != nil {
-		log.Printf("Error getting template styles: %q", err)
+		templateErr := &TemplateError{errOpListStyles, err, err.Error()}
+		HandleTemplateError(templateErr)
 		return
 	}
 	PrettyPrintJSON(styles)
@@ -57,7 +57,8 @@ func ListTemplateRepos(c *cli.Context) {
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 	repos, err := apiroutes.GetTemplateRepos(conID)
 	if err != nil {
-		log.Printf("Error getting template repos: %q", err)
+		templateErr := &TemplateError{errOpListRepos, err, err.Error()}
+		HandleTemplateError(templateErr)
 		return
 	}
 	PrettyPrintJSON(repos)
@@ -71,7 +72,8 @@ func AddTemplateRepo(c *cli.Context) {
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 	repos, err := apiroutes.AddTemplateRepo(conID, url, desc, name)
 	if err != nil {
-		log.Printf("Error adding template repo: %q", err)
+		templateErr := &TemplateError{errOpAddRepo, err, err.Error()}
+		HandleTemplateError(templateErr)
 		return
 	}
 	extensions, err := apiroutes.GetExtensions(conID)
@@ -92,9 +94,10 @@ func DeleteTemplateRepo(c *cli.Context) {
 			utils.OnDeleteTemplateRepo(extensions, url, repos)
 		}
 	}
-	repos, reposErr := apiroutes.DeleteTemplateRepo(conID, url)
-	if reposErr != nil {
-		log.Printf("Error deleting template repo: %q", reposErr)
+	repos, err := apiroutes.DeleteTemplateRepo(conID, url)
+	if err != nil {
+		templateErr := &TemplateError{errOpDeleteRepo, err, err.Error()}
+		HandleTemplateError(templateErr)
 		return
 	}
 	PrettyPrintJSON(repos)
@@ -103,9 +106,10 @@ func DeleteTemplateRepo(c *cli.Context) {
 // EnableTemplateRepos enables templates repo of which Codewind is aware.
 func EnableTemplateRepos(c *cli.Context) {
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
-	repos, reposErr := apiroutes.EnableTemplateRepos(conID, c.Args())
-	if reposErr != nil {
-		log.Printf("Error enabling template repos: %q", reposErr)
+	repos, err := apiroutes.EnableTemplateRepos(conID, c.Args())
+	if err != nil {
+		templateErr := &TemplateError{errOpEnableRepo, err, err.Error()}
+		HandleTemplateError(templateErr)
 		return
 	}
 	PrettyPrintJSON(repos)
@@ -114,9 +118,10 @@ func EnableTemplateRepos(c *cli.Context) {
 // DisableTemplateRepos disables templates repo of which Codewind is aware.
 func DisableTemplateRepos(c *cli.Context) {
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
-	repos, reposErr := apiroutes.DisableTemplateRepos(conID, c.Args())
-	if reposErr != nil {
-		log.Printf("Error enabling template repos: %q", reposErr)
+	repos, err := apiroutes.DisableTemplateRepos(conID, c.Args())
+	if err != nil {
+		templateErr := &TemplateError{errOpDisableRepo, err, err.Error()}
+		HandleTemplateError(templateErr)
 		return
 	}
 	PrettyPrintJSON(repos)
