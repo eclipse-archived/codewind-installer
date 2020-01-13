@@ -61,16 +61,21 @@ type (
 		UploadedFiles []UploadedFile `json:"uploadedFiles"`
 	}
 
+	// extendedFileInfo a FileInfo object that includes the path
+	extendedFileInfo struct {
+		os.FileInfo
+		Path string
+	}
+
 	// refPath is a referenced file path to sync
 	refPath struct {
 		From string `json:"from"`
 		To   string `json:"to"`
 	}
 
-	// extendedFileInfo a FileInfo object that includes the path
-	extendedFileInfo struct {
-		os.FileInfo
-		Path string
+	// refPaths is an array of refPath objects
+	refPaths struct {
+		RefPaths []refPath
 	}
 )
 
@@ -223,31 +228,33 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 
 	// sync referenced file paths
 	if processRefPaths {
-		/*
-			for _, refPath := range cwSettingsRefPathsList {
 
-				// get info on the referenced file
-				from := refPath.From
-				if !filepath.IsAbs(from) {
-					from = filepath.Join(projectPath, from)
-				}
+		cwRefPathsList := retrieveRefPathsList(projectPath)
 
-				info, err := os.Stat(from)
-				// skip invalid paths
-				if err != nil || info.IsDir() {
-					fmt.Printf("Skipping invalid file reference %q: %v\n", from, err)
-					continue
-				}
+		for _, refPath := range cwRefPathsList {
 
-				// now pass it to the walk function
-				extendedInfo := extendedFileInfo{
-					info,
-					from,
-				}
-				// to path is relative to the project
-				walker(filepath.Join(projectPath, refPath.To), extendedInfo, nil)
+			// get From path and resolve to absolute if needed
+			from := refPath.From
+			if !filepath.IsAbs(from) {
+				from = filepath.Join(projectPath, from)
 			}
-		*/
+
+			// get info on the referenced file
+			info, err := os.Stat(from)
+			// skip invalid paths
+			if err != nil || info.IsDir() {
+				fmt.Printf("Skipping invalid file reference %q: %v\n", from, err)
+				continue
+			}
+
+			// now pass it to the walker function
+			extendedInfo := extendedFileInfo{
+				info,
+				from,
+			}
+			// To path is relative to the project
+			walker(filepath.Join(projectPath, refPath.To), extendedInfo, nil)
+		}
 	}
 
 	return fileList, directoryList, modifiedList, uploadedFiles
@@ -301,6 +308,20 @@ func retrieveIgnoredPathsList(projectPath string) []string {
 		cwSettingsIgnoredPathsList = cwSettingsJSON.IgnoredPaths
 	}
 	return cwSettingsIgnoredPathsList
+}
+
+// Retrieve the refPaths list from a .cw-refpaths.json file
+func retrieveRefPathsList(projectPath string) []refPath {
+	cwRefPathsPath := filepath.Join(projectPath, ".cw-refpaths.json")
+	var cwRefPathsList []refPath
+	if _, err := os.Stat(cwRefPathsPath); !os.IsNotExist(err) {
+		plan, _ := ioutil.ReadFile(cwRefPathsPath)
+		var cwRefPathsJSON refPaths
+		// Don't need to handle an invalid JSON file as we should just return []
+		json.Unmarshal(plan, &cwRefPathsJSON)
+		cwRefPathsList = cwRefPathsJSON.RefPaths
+	}
+	return cwRefPathsList
 }
 
 func ignoreFileOrDirectory(name string, isDir bool, cwSettingsIgnoredPathsList []string) bool {
