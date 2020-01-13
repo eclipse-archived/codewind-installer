@@ -33,6 +33,7 @@ const (
 	errOpFileLoad    = "proj_load"
 	errOpFileWrite   = "proj_write"
 	errOpFileDelete  = "proj_delete"
+	errOpUnbind      = "proj_unbind"
 	errOpGetProject  = "proj_get"
 	errOpConflict    = "proj_conflict"
 	errOpNotFound    = "proj_notfound"

@@ -12,8 +12,6 @@
 package project
 
 import (
-	"errors"
-	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -37,7 +35,6 @@ func RemoveProject(c *cli.Context) *ProjectError {
 	if deleteFiles {
 		project, projErr := GetProject(http.DefaultClient, conID, projectID)
 		if projErr != nil {
-			fmt.Println(projErr)
 			return &ProjectError{errOpGetProject, projErr, projErr.Error()}
 		}
 		projectPath = project.LocationOnDisk
@@ -46,8 +43,7 @@ func RemoveProject(c *cli.Context) *ProjectError {
 	// Unbind the project from codewind
 	err := Unbind(http.DefaultClient, conID, projectID)
 	if err != nil {
-		projError := errors.New("Project unbind failed")
-		return &ProjectError{errOpFileDelete, projError, projError.Error()}
+		return &ProjectError{errOpUnbind, err, err.Error()}
 	}
 
 	// Delete the associated connection file
