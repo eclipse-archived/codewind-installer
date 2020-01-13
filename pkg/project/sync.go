@@ -85,7 +85,6 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	projectPath := strings.TrimSpace(c.String("path"))
 	projectID := strings.TrimSpace(c.String("id"))
 	synctime := int64(c.Int("time"))
-	processRefPaths := c.Bool("refPaths")
 	_, err := os.Stat(projectPath)
 	if err != nil {
 		return nil, &ProjectError{errBadPath, err, err.Error()}
@@ -113,7 +112,7 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	}
 
 	// Sync all the necessary project files
-	fileList, directoryList, modifiedList, uploadedFilesList := syncFiles(projectPath, projectID, conURL, synctime, conInfo, processRefPaths)
+	fileList, directoryList, modifiedList, uploadedFilesList := syncFiles(projectPath, projectID, conURL, synctime, conInfo)
 	// Complete the upload
 	completeStatus, completeStatusCode := completeUpload(projectID, fileList, directoryList, modifiedList, conID, currentSyncTime)
 	response := SyncResponse{
@@ -125,7 +124,7 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	return &response, nil
 }
 
-func syncFiles(projectPath string, projectID string, conURL string, synctime int64, connection *connections.Connection, processRefPaths bool) ([]string, []string, []string, []UploadedFile) {
+func syncFiles(projectPath string, projectID string, conURL string, synctime int64, connection *connections.Connection) ([]string, []string, []string, []UploadedFile) {
 	var fileList []string
 	var directoryList []string
 	var modifiedList []string
@@ -227,34 +226,31 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 	}
 
 	// sync referenced file paths
-	if processRefPaths {
+	cwRefPathsList := retrieveRefPathsList(projectPath)
 
-		cwRefPathsList := retrieveRefPathsList(projectPath)
+	for _, refPath := range cwRefPathsList {
 
-		for _, refPath := range cwRefPathsList {
-
-			// get From path and resolve to absolute if needed
-			from := refPath.From
-			if !filepath.IsAbs(from) {
-				from = filepath.Join(projectPath, from)
-			}
-
-			// get info on the referenced file
-			info, err := os.Stat(from)
-			// skip invalid paths
-			if err != nil || info.IsDir() {
-				fmt.Printf("Skipping invalid file reference %q: %v\n", from, err)
-				continue
-			}
-
-			// now pass it to the walker function
-			extendedInfo := extendedFileInfo{
-				info,
-				from,
-			}
-			// To path is relative to the project
-			walker(filepath.Join(projectPath, refPath.To), extendedInfo, nil)
+		// get From path and resolve to absolute if needed
+		from := refPath.From
+		if !filepath.IsAbs(from) {
+			from = filepath.Join(projectPath, from)
 		}
+
+		// get info on the referenced file
+		info, err := os.Stat(from)
+		// skip invalid paths
+		if err != nil || info.IsDir() {
+			fmt.Printf("Skipping invalid file reference %q: %v\n", from, err)
+			continue
+		}
+
+		// now pass it to the walker function
+		extendedInfo := extendedFileInfo{
+			info,
+			from,
+		}
+		// To path is relative to the project
+		walker(filepath.Join(projectPath, refPath.To), extendedInfo, nil)
 	}
 
 	return fileList, directoryList, modifiedList, uploadedFiles
