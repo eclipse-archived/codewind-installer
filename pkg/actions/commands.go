@@ -155,7 +155,6 @@ func Commands() {
 							Name:    "remove",
 							Aliases: []string{"r"},
 							Usage:   "Remove connection from a project",
-
 							Flags: []cli.Flag{
 								cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
 							},
@@ -178,10 +177,6 @@ func Commands() {
 					Name:  "tag, t",
 					Value: "latest",
 					Usage: "dockerhub image tag",
-				},
-				cli.BoolFlag{
-					Name:  "json, j",
-					Usage: "output as JSON",
 				},
 			},
 			Action: func(c *cli.Context) error {
@@ -240,10 +235,6 @@ func Commands() {
 			Name:  "status",
 			Usage: "Print the installation status of Codewind",
 			Flags: []cli.Flag{
-				cli.BoolFlag{
-					Name:  "json, j",
-					Usage: "output as JSON",
-				},
 				cli.StringFlag{
 					Name:  "conid",
 					Usage: "ConnectionID to check",

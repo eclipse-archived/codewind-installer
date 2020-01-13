@@ -1,16 +1,16 @@
 #!/usr/bin/env bats
 
-@test "invoke install command - install latest with --json" {
+@test "invoke install command - install latest with --json global flag set" {
   cd cmd/cli/
-  run go run main.go install --json
+  run go run main.go --json install
   echo "status = ${status}"
   echo "output trace = ${output}"
     [ "$status" -eq 0 ]
 }
 
-@test "invoke status -j command - output = '{"status":"stopped","installed-versions":["latest"]}'" {
+@test "invoke status command with --json global flag set - output = '{"status":"stopped","installed-versions":["latest"]}'" {
   cd cmd/cli/
-  run go run main.go status -j
+  run go run main.go --json status
   echo "status = ${status}"
   echo "output trace = ${output}"
   [ "$output" = '{"status":"stopped","installed-versions":["latest"]}' ]
