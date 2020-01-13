@@ -17,6 +17,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/eclipse/codewind-installer/pkg/errors"
 	"github.com/eclipse/codewind-installer/pkg/project"
 	"github.com/urfave/cli"
 )
@@ -25,7 +26,7 @@ import (
 func ProjectValidate(c *cli.Context) {
 	err := project.ValidateProject(c)
 	if err != nil {
-		HandleProjectError(err)
+		errors.PrintError(err, printAsJSON)
 		os.Exit(1)
 	}
 	os.Exit(0)
@@ -35,7 +36,7 @@ func ProjectValidate(c *cli.Context) {
 func ProjectCreate(c *cli.Context) {
 	err := project.DownloadTemplate(c)
 	if err != nil {
-		HandleProjectError(err)
+		errors.PrintError(err, printAsJSON)
 		os.Exit(1)
 	}
 }
@@ -44,7 +45,7 @@ func ProjectCreate(c *cli.Context) {
 func ProjectSync(c *cli.Context) {
 	response, err := project.SyncProject(c)
 	if err != nil {
-		HandleProjectError(err)
+		errors.PrintError(err, printAsJSON)
 		os.Exit(1)
 	} else {
 		if printAsJSON {
@@ -61,7 +62,7 @@ func ProjectSync(c *cli.Context) {
 func ProjectBind(c *cli.Context) {
 	response, err := project.BindProject(c)
 	if err != nil {
-		HandleProjectError(err)
+		errors.PrintError(err, printAsJSON)
 		os.Exit(1)
 	} else {
 		if printAsJSON {
@@ -79,7 +80,7 @@ func ProjectBind(c *cli.Context) {
 func ProjectRemove(c *cli.Context) {
 	err := project.RemoveProject(c)
 	if err != nil {
-		HandleProjectError(err)
+		errors.PrintError(err, printAsJSON)
 		os.Exit(1)
 	}
 	os.Exit(0)
@@ -90,7 +91,7 @@ func UpgradeProjects(c *cli.Context) {
 	dir := strings.TrimSpace(c.String("workspace"))
 	response, err := project.UpgradeProjects(dir)
 	if err != nil {
-		HandleProjectError(err)
+		errors.PrintError(err, printAsJSON)
 		os.Exit(1)
 	}
 	PrettyPrintJSON(response)
@@ -103,7 +104,7 @@ func ProjectSetConnection(c *cli.Context) {
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 	err := project.SetConnection(conID, projectID)
 	if err != nil {
-		HandleProjectError(err)
+		errors.PrintError(err, printAsJSON)
 		os.Exit(1)
 	}
 	response, _ := json.Marshal(project.Result{Status: "OK", StatusMessage: "Project target added successfully"})
@@ -116,7 +117,7 @@ func ProjectGetConnection(c *cli.Context) {
 	projectID := strings.TrimSpace(strings.ToLower(c.String("id")))
 	connectionTargets, err := project.GetConnectionID(projectID)
 	if err != nil {
-		HandleProjectError(err)
+		errors.PrintError(err, printAsJSON)
 		os.Exit(1)
 	}
 	fmt.Println(connectionTargets)
@@ -128,7 +129,7 @@ func ProjectRemoveConnection(c *cli.Context) {
 	projectID := strings.TrimSpace(strings.ToLower(c.String("id")))
 	err := project.ResetConnectionFile(projectID)
 	if err != nil {
-		HandleProjectError(err)
+		errors.PrintError(err, printAsJSON)
 		os.Exit(1)
 	}
 	response, _ := json.Marshal(project.Result{Status: "OK", StatusMessage: "Project target removed successfully"})
