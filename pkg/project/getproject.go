@@ -8,6 +8,7 @@ import (
 
 	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
+	"github.com/eclipse/codewind-installer/pkg/sechttp"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 )
 
@@ -36,9 +37,9 @@ func GetProject(httpClient utils.HTTPClient, conID, projectID string) (*Project,
 	}
 
 	// send request
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		return nil, err
+	resp, httpSecError := sechttp.DispatchHTTPRequest(httpClient, req, conInfo)
+	if httpSecError != nil {
+		return nil, httpSecError
 	}
 	defer resp.Body.Close()
 

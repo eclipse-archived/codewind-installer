@@ -16,6 +16,7 @@ import (
 
 	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
+	"github.com/eclipse/codewind-installer/pkg/sechttp"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 )
 
@@ -35,10 +36,11 @@ func Unbind(httpClient utils.HTTPClient, conID, projectID string) error {
 	}
 
 	// send request
-	res, err := httpClient.Do(req)
-	if err != nil {
-		return err
+	res, httpSecError := sechttp.DispatchHTTPRequest(httpClient, req, conInfo)
+	if httpSecError != nil {
+		return httpSecError
 	}
+
 	defer res.Body.Close()
 	return nil
 }

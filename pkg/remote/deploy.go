@@ -46,6 +46,7 @@ type DeployOptions struct {
 	KeycloakSecure        bool
 	KeycloakTLSSecure     bool
 	KeycloakURL           string
+	KeycloakHost          string
 	KeycloakOnly          bool
 	GateKeeperTLSSecure   bool
 	CodewindSessionSecret string
@@ -216,7 +217,10 @@ func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemIn
 			os.Exit(1)
 		}
 		podSearch := "codewindWorkspace=" + codewindInstance.WorkspaceID + ",app=" + KeycloakPrefix
-		WaitForPodReady(clientset, codewindInstance, podSearch, KeycloakPrefix+"-"+codewindInstance.WorkspaceID)
+		ready := false
+		for !ready {
+			ready = WaitForPodReady(clientset, codewindInstance, podSearch, KeycloakPrefix+"-"+codewindInstance.WorkspaceID)
+		}
 	}
 
 	err = SetupKeycloak(codewindInstance, remoteDeployOptions)
@@ -239,7 +243,10 @@ func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemIn
 	}
 
 	podSearch := "codewindWorkspace=" + codewindInstance.WorkspaceID + ",app=" + PFEPrefix
-	WaitForPodReady(clientset, codewindInstance, podSearch, PFEPrefix+"-"+codewindInstance.WorkspaceID)
+	ready := false
+	for !ready {
+		ready = WaitForPodReady(clientset, codewindInstance, podSearch, PFEPrefix+"-"+codewindInstance.WorkspaceID)
+	}
 
 	err = DeployPerformance(clientset, codewindInstance, remoteDeployOptions)
 	if err != nil {
@@ -248,7 +255,10 @@ func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemIn
 	}
 
 	podSearch = "codewindWorkspace=" + codewindInstance.WorkspaceID + ",app=" + PerformancePrefix
-	WaitForPodReady(clientset, codewindInstance, podSearch, PerformancePrefix+"-"+codewindInstance.WorkspaceID)
+	ready = false
+	for !ready {
+		ready = WaitForPodReady(clientset, codewindInstance, podSearch, PerformancePrefix+"-"+codewindInstance.WorkspaceID)
+	}
 
 	err = DeployGatekeeper(config, clientset, codewindInstance, remoteDeployOptions)
 	if err != nil {
@@ -257,7 +267,10 @@ func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemIn
 	}
 
 	podSearch = "codewindWorkspace=" + codewindInstance.WorkspaceID + ",app=" + GatekeeperPrefix
-	WaitForPodReady(clientset, codewindInstance, podSearch, GatekeeperPrefix+"-"+codewindInstance.WorkspaceID)
+	ready = false
+	for !ready {
+		ready = WaitForPodReady(clientset, codewindInstance, podSearch, GatekeeperPrefix+"-"+codewindInstance.WorkspaceID)
+	}
 
 	if remoteDeployOptions.GateKeeperTLSSecure {
 		gatekeeperURL = "https://" + gatekeeperURL

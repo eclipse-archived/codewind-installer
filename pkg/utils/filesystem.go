@@ -96,10 +96,13 @@ func DeleteTempFile(filePath string) (bool, error) {
 }
 
 // PingHealth - pings environment api every 15 seconds to check if containers started
-func PingHealth(healthEndpoint string) bool {
+func PingHealth(healthEndpoint string) (bool, *DockerError) {
 	var started = false
 	fmt.Println("Waiting for Codewind to start")
-	hostname, port := GetPFEHostAndPort()
+	hostname, port, err := GetPFEHostAndPort()
+	if err != nil {
+		return false, err
+	}
 	for i := 0; i < 120; i++ {
 		resp, err := http.Get("http://" + hostname + ":" + port + healthEndpoint)
 		if err != nil {
@@ -118,7 +121,7 @@ func PingHealth(healthEndpoint string) bool {
 	if started != true {
 		log.Fatal("Codewind containers are taking a while to start. Please check the container logs and/or restart Codewind")
 	}
-	return started
+	return started, nil
 }
 
 // GetZipURL from github api /repos/:owner/:repo/:archive_format/:ref
@@ -242,6 +245,7 @@ func UnTar(pathToTarFile, destination string) error {
 			if _, err := io.Copy(fileToOverwrite, tarReader); err != nil {
 				log.Fatal(err)
 			}
+			os.Chmod(target, os.FileMode(header.Mode))
 		default:
 			log.Printf("Can't extract to %s: unknown typeflag %c\n", target, header.Typeflag)
 		}

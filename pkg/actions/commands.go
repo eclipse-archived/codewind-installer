@@ -25,6 +25,7 @@ import (
 
 var homeDir = desktoputils.GetHomeDir()
 var dockerComposeFile = homeDir + "/.codewind/docker-compose.yaml"
+var printAsJSON = false
 
 const healthEndpoint = "/api/v1/environment"
 
@@ -822,6 +823,8 @@ func Commands() {
 		if c.GlobalBool("insecure") {
 			http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 		}
+
+		printAsJSON = c.GlobalBool("json")
 
 		// Handle Global log level flag
 

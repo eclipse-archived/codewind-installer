@@ -76,15 +76,15 @@ func SetupKeycloak(codewindInstance Codewind, deployOptions *DeployOptions) erro
 		return secErr.Err
 	}
 
+	// No additional Keycloak config required for a Keycloak only deployment
+	if deployOptions.KeycloakOnly {
+		return nil
+	}
+
 	secErr = configureKeycloakRealm(deployOptions, authURL, tokens)
 	if secErr != nil {
 		utils.PrettyPrintJSON(secErr)
 		return secErr.Err
-	}
-
-	// No additional Keycloak config required for a Keycloak only deployment
-	if deployOptions.KeycloakOnly {
-		return nil
 	}
 
 	secErr = configureKeycloakClient(deployOptions, authURL, tokens, gatekeeperPublicURL)
