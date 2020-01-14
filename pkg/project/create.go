@@ -192,7 +192,7 @@ func checkProjectDirIsEmpty(projectPath string) {
 			log.Fatal(err)
 		}
 		if !dirIsEmpty {
-			log.Fatal("Non empty project at given path")
+			log.Fatal("Non empty directory provided")
 		}
 	}
 }
