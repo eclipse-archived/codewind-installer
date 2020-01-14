@@ -133,9 +133,8 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 	projectUploadURL := conURL + "/api/v1/projects/" + projectID + "/upload"
 	client := &http.Client{}
 
-	cwSettingsIgnoredPathsList := retrieveIgnoredPathsList(projectPath)
-
-	walker := func(path string, info extendedFileInfo, err error) error {
+	// define a walker function
+	walker := func(path string, info extendedFileInfo, ignoredPathsList []string, err error) error {
 		if err != nil {
 			panic(err)
 			// TODO - How to handle *some* files being unreadable
@@ -150,7 +149,7 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 		relativePath := filepath.ToSlash(path[(len(projectPath) + 1):])
 
 		if !info.IsDir() {
-			shouldIgnore := ignoreFileOrDirectory(filepath.Base(relativePath), false, cwSettingsIgnoredPathsList)
+			shouldIgnore := ignoreFileOrDirectory(relativePath, false, ignoredPathsList)
 			if shouldIgnore {
 				return nil
 			}
@@ -204,7 +203,7 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 				defer resp.Body.Close()
 			}
 		} else {
-			shouldIgnore := ignoreFileOrDirectory(filepath.Base(relativePath), true, cwSettingsIgnoredPathsList)
+			shouldIgnore := ignoreFileOrDirectory(relativePath, true, ignoredPathsList)
 			if shouldIgnore {
 				return filepath.SkipDir
 			}
@@ -213,12 +212,27 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 		return nil
 	}
 
+	// read the referenced and ignored paths into lists
+	cwRefPathsList := retrieveRefPathsList(projectPath)
+	cwSettingsIgnoredPathsList := retrieveIgnoredPathsList(projectPath)
+
+	// initialize a combined list, prime it first with referenced "To" paths
+	// then append the ignored paths from .cw-settings
+	var cwCombinedIgnoredPathsList []string
+	for _, refPath := range cwRefPathsList {
+		cwCombinedIgnoredPathsList = append(cwCombinedIgnoredPathsList, refPath.To)
+	}
+	cwCombinedIgnoredPathsList = append(cwCombinedIgnoredPathsList, cwSettingsIgnoredPathsList...)
+
+	// sync files that are physically in the project
 	err := filepath.Walk(projectPath, func(path string, info os.FileInfo, err error) error {
 		extendedInfo := extendedFileInfo{
 			info,
 			path,
 		}
-		return walker(path, extendedInfo, err)
+		// use combined ignored paths here, files in the project that
+		// are also the target of a reference should not be synced
+		return walker(path, extendedInfo, cwCombinedIgnoredPathsList, err)
 	})
 	if err != nil {
 		fmt.Printf("error walking the path %q: %v\n", projectPath, err)
@@ -226,8 +240,6 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 	}
 
 	// sync referenced file paths
-	cwRefPathsList := retrieveRefPathsList(projectPath)
-
 	for _, refPath := range cwRefPathsList {
 
 		// get From path and resolve to absolute if needed
@@ -250,7 +262,7 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 			from,
 		}
 		// To path is relative to the project
-		walker(filepath.Join(projectPath, refPath.To), extendedInfo, nil)
+		walker(filepath.Join(projectPath, refPath.To), extendedInfo, cwSettingsIgnoredPathsList, nil)
 	}
 
 	return fileList, directoryList, modifiedList, uploadedFiles
@@ -292,20 +304,6 @@ func completeUpload(projectID string, files []string, directories []string, modf
 	return resp.Status, resp.StatusCode
 }
 
-// Retrieve the ignoredPaths list from a .cw-settings file
-func retrieveIgnoredPathsList(projectPath string) []string {
-	cwSettingsPath := filepath.Join(projectPath, ".cw-settings")
-	var cwSettingsIgnoredPathsList []string
-	if _, err := os.Stat(cwSettingsPath); !os.IsNotExist(err) {
-		plan, _ := ioutil.ReadFile(cwSettingsPath)
-		var cwSettingsJSON CWSettings
-		// Don't need to handle an invalid JSON file as we should just return []
-		json.Unmarshal(plan, &cwSettingsJSON)
-		cwSettingsIgnoredPathsList = cwSettingsJSON.IgnoredPaths
-	}
-	return cwSettingsIgnoredPathsList
-}
-
 // Retrieve the refPaths list from a .cw-refpaths.json file
 func retrieveRefPathsList(projectPath string) []refPath {
 	cwRefPathsPath := filepath.Join(projectPath, ".cw-refpaths.json")
@@ -318,6 +316,20 @@ func retrieveRefPathsList(projectPath string) []refPath {
 		cwRefPathsList = cwRefPathsJSON.RefPaths
 	}
 	return cwRefPathsList
+}
+
+// Retrieve the ignoredPaths list from a .cw-settings file
+func retrieveIgnoredPathsList(projectPath string) []string {
+	cwSettingsPath := filepath.Join(projectPath, ".cw-settings")
+	var cwSettingsIgnoredPathsList []string
+	if _, err := os.Stat(cwSettingsPath); !os.IsNotExist(err) {
+		plan, _ := ioutil.ReadFile(cwSettingsPath)
+		var cwSettingsJSON CWSettings
+		// Don't need to handle an invalid JSON file as we should just return []
+		json.Unmarshal(plan, &cwSettingsJSON)
+		cwSettingsIgnoredPathsList = cwSettingsJSON.IgnoredPaths
+	}
+	return cwSettingsIgnoredPathsList
 }
 
 func ignoreFileOrDirectory(name string, isDir bool, cwSettingsIgnoredPathsList []string) bool {
@@ -367,6 +379,7 @@ func ignoreFileOrDirectory(name string, isDir bool, cwSettingsIgnoredPathsList [
 
 	isFileInIgnoredList := false
 	for _, fileName := range ignoredList {
+		fileName = filepath.Clean(fileName)
 		matched, err := filepath.Match(fileName, name)
 		if err != nil {
 			return false
