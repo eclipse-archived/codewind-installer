@@ -24,17 +24,18 @@ type (
 )
 
 // GetProject : Get project details from Codewind
-func GetProject(httpClient utils.HTTPClient, connection *connections.Connection, url, projectID string) (*Project, error) {
-	req, getProjectErr := http.NewRequest("GET", url+"/api/v1/projects/"+projectID+"/", nil)
-	if getProjectErr != nil {
-		return nil, getProjectErr
+func GetProject(httpClient utils.HTTPClient, connection *connections.Connection, url, projectID string) (*Project, *ProjectError) {
+	req, requestErr := http.NewRequest("GET", url+"/api/v1/projects/"+projectID+"/", nil)
+	if requestErr != nil {
+		return nil, &ProjectError{errOpRequest, requestErr, requestErr.Error()}
 	}
 
 	// send request
 	resp, httpSecError := sechttp.DispatchHTTPRequest(httpClient, req, connection)
 	if httpSecError != nil {
-		return nil, httpSecError
+		return nil, &ProjectError{errOpRequest, httpSecError, httpSecError.Desc}
 	}
+
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusNotFound {
 		respErr := errors.New(textAPINotFound)
@@ -43,18 +44,18 @@ func GetProject(httpClient utils.HTTPClient, connection *connections.Connection,
 
 	byteArray, readErr := ioutil.ReadAll(resp.Body)
 	if readErr != nil {
-		return nil, readErr
+		return nil, &ProjectError{errOpRequest, readErr, readErr.Error()}
 	}
 	var project Project
-	getProjectErr = json.Unmarshal(byteArray, &project)
-	if getProjectErr != nil {
-		return nil, getProjectErr
+	jsonErr := json.Unmarshal(byteArray, &project)
+	if jsonErr != nil {
+		return nil, &ProjectError{errOpRequest, jsonErr, jsonErr.Error()}
 	}
 	return &project, nil
 }
 
 // GetProjectIDFromName : Get a project ID using its name
-func GetProjectIDFromName(httpClient utils.HTTPClient, connection *connections.Connection, url, projectName string) (string, error) {
+func GetProjectIDFromName(httpClient utils.HTTPClient, connection *connections.Connection, url, projectName string) (string, *ProjectError) {
 	projects, err := GetAll(httpClient, connection, url)
 	if err != nil {
 		return "", err

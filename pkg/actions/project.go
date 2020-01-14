@@ -146,19 +146,19 @@ func ProjectList(c *cli.Context) {
 
 	conInfo, conInfoErr := connections.GetConnectionByID(conID)
 	if conInfoErr != nil {
-		fmt.Println(conInfoErr.Err.Error())
+		HandleConnectionError(conInfoErr)
 		os.Exit(1)
 	}
 
 	conURL, conErr := config.PFEOriginFromConnection(conInfo)
 	if conErr != nil {
-		fmt.Println(conErr.Err.Error())
+		HandleConfigError(conErr)
 		os.Exit(1)
 	}
 
-	projects, err := project.GetAll(http.DefaultClient, conInfo, conURL)
-	if err != nil {
-		fmt.Println(err.Error())
+	projects, getAllErr := project.GetAll(http.DefaultClient, conInfo, conURL)
+	if getAllErr != nil {
+		HandleProjectError(getAllErr)
 		os.Exit(1)
 	}
 	if printAsJSON {
@@ -196,7 +196,7 @@ func ProjectGet(c *cli.Context) {
 	if projectID != "" && (conID == "local" || conID == "") {
 		newConID, conIDErr := project.GetConnectionID(projectID)
 		if conIDErr != nil {
-			fmt.Println(conIDErr.Err.Error())
+			HandleProjectError(conIDErr)
 			os.Exit(1)
 		}
 		conID = newConID
@@ -204,20 +204,20 @@ func ProjectGet(c *cli.Context) {
 
 	conInfo, conInfoErr := connections.GetConnectionByID(conID)
 	if conInfoErr != nil {
-		fmt.Println(conInfoErr.Err.Error())
+		HandleConnectionError(conInfoErr)
 		os.Exit(1)
 	}
 
 	conURL, conErr := config.PFEOriginFromConnection(conInfo)
 	if conErr != nil {
-		fmt.Println(conErr.Err.Error())
+		HandleConfigError(conErr)
 		os.Exit(1)
 	}
 
 	if projectID == "" && projectName != "" {
 		newProjectID, projectNameErr := project.GetProjectIDFromName(http.DefaultClient, conInfo, conURL, projectName)
 		if projectNameErr != nil {
-			fmt.Println(projectNameErr)
+			HandleProjectError(projectNameErr)
 			os.Exit(1)
 		}
 		projectID = newProjectID
@@ -225,7 +225,7 @@ func ProjectGet(c *cli.Context) {
 
 	project, err := project.GetProject(http.DefaultClient, conInfo, conURL, projectID)
 	if err != nil {
-		fmt.Println(err)
+		HandleProjectError(err)
 		os.Exit(1)
 	}
 	if printAsJSON {

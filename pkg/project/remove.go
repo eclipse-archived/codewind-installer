@@ -47,7 +47,7 @@ func RemoveProject(c *cli.Context) *ProjectError {
 	if deleteFiles {
 		project, projErr := GetProject(http.DefaultClient, conInfo, conURL, projectID)
 		if projErr != nil {
-			return &ProjectError{errOpGetProject, projErr, projErr.Error()}
+			return projErr
 		}
 		projectPath = project.LocationOnDisk
 	}

@@ -12,6 +12,7 @@
 package config
 
 import (
+	"encoding/json"
 	"errors"
 	"os"
 
@@ -29,6 +30,18 @@ type ConfigError struct {
 const errOpConfConNotFound = "config_connection_notfound"
 const errOpConfPFEHostnamePortNotFound = "config_pfe_hostname_port_notfound"
 const textHostnameOrPortNotFound = "Hostname or port for PFE not found"
+
+// ConfigError : Error formatted in JSON containing an errorOp and a description from
+// either a fault condition in the CLI, or an error payload from a REST request
+func (ce *ConfigError) Error() string {
+	type Output struct {
+		Operation   string `json:"error"`
+		Description string `json:"error_description"`
+	}
+	tempOutput := &Output{Operation: ce.Op, Description: ce.Err.Error()}
+	jsonError, _ := json.Marshal(tempOutput)
+	return string(jsonError)
+}
 
 // PFEOriginFromConnection is used when GetConnectionByID(conID) has already been called to stop it being run twice in one function
 func PFEOriginFromConnection(connection *connections.Connection) (string, *ConfigError) {

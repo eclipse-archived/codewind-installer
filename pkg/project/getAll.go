@@ -22,29 +22,29 @@ import (
 )
 
 // GetAll : returns all projects that are bound to Codewind
-func GetAll(httpClient utils.HTTPClient, connection *connections.Connection, url string) ([]Project, error) {
+func GetAll(httpClient utils.HTTPClient, connection *connections.Connection, url string) ([]Project, *ProjectError) {
 
 	request, requestErr := http.NewRequest("GET", url+"/api/v1/projects/", nil)
 	if requestErr != nil {
-		return nil, requestErr
+		return nil, &ProjectError{errOpRequest, requestErr, requestErr.Error()}
 	}
 
 	response, httpSecError := sechttp.DispatchHTTPRequest(httpClient, request, connection)
 	if httpSecError != nil {
-		return nil, httpSecError
+		return nil, &ProjectError{errOpRequest, httpSecError, httpSecError.Desc}
 	}
 
 	defer response.Body.Close()
 
 	byteArray, byteArrayError := ioutil.ReadAll(response.Body)
 	if byteArrayError != nil {
-		return nil, byteArrayError
+		return nil, &ProjectError{errOpRequest, byteArrayError, byteArrayError.Error()}
 	}
 
 	var projects []Project
 	jsonError := json.Unmarshal(byteArray, &projects)
 	if jsonError != nil {
-		return nil, jsonError
+		return nil, &ProjectError{errOpRequest, jsonError, jsonError.Error()}
 	}
 
 	return projects, nil
