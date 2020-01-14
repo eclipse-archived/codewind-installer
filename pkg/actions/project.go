@@ -28,11 +28,7 @@ func ProjectValidate(c *cli.Context) {
 		fmt.Println(projectErr.Error())
 		os.Exit(1)
 	}
-	projectInfo, err := json.Marshal(response)
-	if err != nil {
-		HandleProjectError(err)
-		os.Exit(1)
-	}
+	projectInfo, _ := json.Marshal(response)
 	fmt.Println(string(projectInfo))
 	os.Exit(0)
 }
