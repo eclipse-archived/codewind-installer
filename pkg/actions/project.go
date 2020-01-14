@@ -187,9 +187,19 @@ func ProjectGet(c *cli.Context) {
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 	projectID := strings.TrimSpace(strings.ToLower(c.String("id")))
 	projectName := c.String("name")
+
 	if projectID == "" && projectName == "" {
-		fmt.Println("Error: Must specify one of project ID (--id) or project name (--name)")
+		fmt.Println("Error: Must specify either project ID (--id) or project name (--name)")
 		os.Exit(1)
+	}
+
+	if projectID != "" && (conID == "local" || conID == "") {
+		newConID, conIDErr := project.GetConnectionID(projectID)
+		if conIDErr != nil {
+			fmt.Println(conIDErr.Err.Error())
+			os.Exit(1)
+		}
+		conID = newConID
 	}
 
 	conInfo, conInfoErr := connections.GetConnectionByID(conID)
