@@ -31,15 +31,13 @@ import (
 //InstallCommand to pull images from dockerhub
 func InstallCommand(c *cli.Context) {
 	tag := c.String("tag")
-	jsonOutput := c.Bool("json") || c.GlobalBool("json")
 
 	imageArr := [2]string{
 		"docker.io/eclipse/codewind-pfe-amd64:" + tag,
 		"docker.io/eclipse/codewind-performance-amd64:" + tag,
 	}
-
 	for i := 0; i < len(imageArr); i++ {
-		utils.PullImage(imageArr[i], jsonOutput)
+		utils.PullImage(imageArr[i], printAsJSON)
 		imageID, dockerError := utils.ValidateImageDigest(imageArr[i])
 
 		if dockerError != nil {
@@ -48,13 +46,13 @@ func InstallCommand(c *cli.Context) {
 			utils.RemoveImage(imageID)
 
 			// pull image again
-			utils.PullImage(imageArr[i], jsonOutput)
+			utils.PullImage(imageArr[i], printAsJSON)
 
 			// validate the new image
 			_, dockerError = utils.ValidateImageDigest(imageArr[i])
 
 			if dockerError != nil {
-				if jsonOutput {
+				if printAsJSON {
 					fmt.Println(dockerError)
 				} else {
 					logr.Errorf("Validation of image '%v' checksum failed - Removing image", imageArr[i])

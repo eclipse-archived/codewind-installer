@@ -524,7 +524,7 @@ func GetImageTags() ([]string, *DockerError) {
 					tag = strings.Split(tag, ":")[1]
 					tagArr = append(tagArr, tag)
 				} else {
-					log.Println("No tag available. Defaulting to ''")
+					logr.Debug("No tag available for '" + imageRepo + "'. Defaulting to ''")
 					tagArr = append(tagArr, "")
 				}
 			}
