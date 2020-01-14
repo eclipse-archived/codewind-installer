@@ -16,6 +16,7 @@ import (
 	"compress/zlib"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -112,7 +113,7 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	}
 
 	// Sync all the necessary project files
-	fileList, directoryList, modifiedList, uploadedFilesList := syncFiles(projectPath, projectID, conURL, synctime, conInfo)
+	fileList, directoryList, modifiedList, uploadedFilesList, syncErr := syncFiles(projectPath, projectID, conURL, synctime, conInfo)
 	// Complete the upload
 	completeStatus, completeStatusCode := completeUpload(projectID, fileList, directoryList, modifiedList, conID, currentSyncTime)
 	response := SyncResponse{
@@ -121,10 +122,10 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 		StatusCode:    completeStatusCode,
 	}
 
-	return &response, nil
+	return &response, syncErr
 }
 
-func syncFiles(projectPath string, projectID string, conURL string, synctime int64, connection *connections.Connection) ([]string, []string, []string, []UploadedFile) {
+func syncFiles(projectPath string, projectID string, conURL string, synctime int64, connection *connections.Connection) ([]string, []string, []string, []UploadedFile, *ProjectError) {
 	var fileList []string
 	var directoryList []string
 	var modifiedList []string
@@ -136,7 +137,7 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 	// define a walker function
 	walker := func(path string, info extendedFileInfo, ignoredPathsList []string, err error) error {
 		if err != nil {
-			panic(err)
+			return err
 			// TODO - How to handle *some* files being unreadable
 		}
 
@@ -234,9 +235,11 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 		return walker(path, extendedInfo, cwCombinedIgnoredPathsList, err)
 	})
 	if err != nil {
-		fmt.Printf("error walking the path %q: %v\n", projectPath, err)
-		return nil, nil, nil, nil
+		text := fmt.Sprintf("error walking the path %q: %v\n", projectPath, err)
+		return nil, nil, nil, nil, &ProjectError{errOpSync, errors.New(text), text}
 	}
+
+	errText := ""
 
 	// sync referenced file paths
 	for _, refPath := range cwRefPathsList {
@@ -250,7 +253,8 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 		// get info on the referenced file; skip invalid paths
 		info, err := os.Stat(from)
 		if err != nil || info.IsDir() {
-			fmt.Printf("Skipping invalid file reference %q: %v\n", from, err)
+			text := fmt.Sprintf("invalid file reference %q: %v\n", from, err)
+			errText += text
 			continue
 		}
 
@@ -263,7 +267,11 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 		walker(filepath.Join(projectPath, refPath.To), extendedInfo, cwSettingsIgnoredPathsList, nil)
 	}
 
-	return fileList, directoryList, modifiedList, uploadedFiles
+	if errText != "" {
+		return fileList, directoryList, modifiedList, uploadedFiles, &ProjectError{errOpSyncRef, errors.New(errText), errText}
+	}
+
+	return fileList, directoryList, modifiedList, uploadedFiles, nil
 }
 
 func completeUpload(projectID string, files []string, directories []string, modfiles []string, conID string, currentSyncTime int64) (string, int) {
