@@ -16,6 +16,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/eclipse/codewind-installer/pkg/config"
+	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/urfave/cli"
 )
 
@@ -31,17 +33,27 @@ func RemoveProject(c *cli.Context) *ProjectError {
 		return conErr
 	}
 
+	conInfo, conInfoErr := connections.GetConnectionByID(conID)
+	if conInfoErr != nil {
+		return &ProjectError{conInfoErr.Op, conInfoErr.Err, conInfoErr.Desc}
+	}
+
+	conURL, configErr := config.PFEOriginFromConnection(conInfo)
+	if configErr != nil {
+		return &ProjectError{configErr.Op, configErr.Err, configErr.Desc}
+	}
+
 	// If we are deleting the source, retrieve project to find out the path
 	if deleteFiles {
-		project, projErr := GetProject(http.DefaultClient, conID, projectID)
+		project, projErr := GetProjectFromID(http.DefaultClient, conInfo, conURL, projectID)
 		if projErr != nil {
-			return &ProjectError{errOpGetProject, projErr, projErr.Error()}
+			return projErr
 		}
 		projectPath = project.LocationOnDisk
 	}
 
 	// Unbind the project from codewind
-	err := Unbind(http.DefaultClient, conID, projectID)
+	err := Unbind(http.DefaultClient, conInfo, conURL, projectID)
 	if err != nil {
 		return &ProjectError{errOpUnbind, err, err.Error()}
 	}

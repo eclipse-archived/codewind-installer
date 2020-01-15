@@ -14,9 +14,10 @@ package actions
 import (
 	"fmt"
 
+	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
-	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/eclipse/codewind-installer/pkg/project"
+	"github.com/eclipse/codewind-installer/pkg/utils"
 	logr "github.com/sirupsen/logrus"
 )
 
@@ -51,6 +52,15 @@ func HandleConnectionError(err *connections.ConError) {
 
 // HandleProjectError prints a Project error, in JSON format if the global flag is set and as a string if not
 func HandleProjectError(err *project.ProjectError) {
+	if printAsJSON {
+		fmt.Println(err.Error())
+	} else {
+		logr.Error(err.Desc)
+	}
+}
+
+// HandleConfigError prints a Config error, in JSON format if the global flag is set and as a string if not
+func HandleConfigError(err *config.ConfigError) {
 	if printAsJSON {
 		fmt.Println(err.Error())
 	} else {

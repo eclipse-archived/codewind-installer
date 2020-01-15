@@ -101,7 +101,11 @@ func Bind(projectPath string, name string, language string, projectType string, 
 
 	client := &http.Client{}
 
-	request, err := http.NewRequest("POST", bindURL, bytes.NewReader(buf.Bytes()))
+	request, requestErr := http.NewRequest("POST", bindURL, bytes.NewReader(buf.Bytes()))
+	if requestErr != nil {
+		return nil, &ProjectError{errOpRequest, requestErr, requestErr.Error()}
+	}
+
 	request.Header.Set("Content-Type", "application/json")
 	resp, httpSecError := sechttp.DispatchHTTPRequest(client, request, conInfo)
 	if httpSecError != nil {
