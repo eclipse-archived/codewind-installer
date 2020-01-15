@@ -136,6 +136,8 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 	projectUploadURL := conURL + "/api/v1/projects/" + projectID + "/upload"
 	client := &http.Client{}
 
+	refPathsChanged := false
+
 	// define a walker function
 	walker := func(path string, info walkerInfo, err error) error {
 		if err != nil {
@@ -171,7 +173,7 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 
 			// Has this file been modified since last sync
 			if modifiedmillis > info.LastSync {
-				fileContent, err := ioutil.ReadFile(path)
+				fileContent, err := ioutil.ReadFile(info.Path)
 				// Skip this file if there is an error reading it.
 				if err != nil {
 					return nil
@@ -203,6 +205,11 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 					return nil
 				}
 				defer resp.Body.Close()
+
+				// if this file changed, it should force referenced files to re-sync
+				if relativePath == ".cw-refpaths.json" {
+					refPathsChanged = true
+				}
 			}
 		} else {
 			shouldIgnore := ignoreFileOrDirectory(relativePath, true, info.IgnoredPaths)
@@ -218,14 +225,14 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 	cwSettingsIgnoredPathsList := retrieveIgnoredPathsList(projectPath)
 	cwRefPathsList := retrieveRefPathsList(projectPath)
 
-	// initialize a combined list, prime it ignored paths from .cw-settings
+	// initialize a combined list, prime it with ignored paths from .cw-settings
 	// then append with referenced "To" paths
 	cwCombinedIgnoredPathsList := append([]string{}, cwSettingsIgnoredPathsList...)
 	for _, refPath := range cwRefPathsList {
 		cwCombinedIgnoredPathsList = append(cwCombinedIgnoredPathsList, refPath.To)
 	}
 
-	// sync files that are physically in the project
+	// first sync files that are physically in the project
 	err := filepath.Walk(projectPath, func(path string, info os.FileInfo, err error) error {
 		// use combined ignored paths here, files in the project that
 		// are also the target of a reference should not be synced
@@ -244,7 +251,7 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 
 	errText := ""
 
-	// sync referenced file paths
+	// then sync referenced file paths
 	for _, refPath := range cwRefPathsList {
 
 		// get From path and resolve to absolute if needed
@@ -261,12 +268,18 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 			continue
 		}
 
+		lastSync := synctime
+		// force re-sync if .cw-refpaths.json itself was changed
+		if refPathsChanged {
+			lastSync = 0
+		}
+
 		// now pass it to the walker function
 		wInfo := walkerInfo{
 			from,
 			info,
 			cwSettingsIgnoredPathsList,
-			synctime,
+			lastSync,
 		}
 		// "To" path is relative to the project
 		walker(filepath.Join(projectPath, refPath.To), wInfo, nil)
