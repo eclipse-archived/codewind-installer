@@ -22,6 +22,7 @@ import (
 	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/project"
+	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -169,7 +170,7 @@ func ProjectList(c *cli.Context) {
 			fmt.Println("No projects bound to Codewind")
 		} else {
 			w := new(tabwriter.Writer)
-			w.Init(os.Stdout, 0, 8, 0, '\t', 0)
+			w.Init(os.Stdout, 0, 8, 2, '\t', 0)
 			fmt.Fprintln(w, "PROJECT ID \tNAME \tLANGUAGE \tAPP STATUS \tLOCATION ON DISK")
 			for _, project := range projects {
 				appStatus := strings.Title(project.AppStatus)
@@ -189,7 +190,7 @@ func ProjectGet(c *cli.Context) {
 	projectName := c.String("name")
 
 	if projectID == "" && projectName == "" {
-		fmt.Println("Error: Must specify either project ID (--id) or project name (--name)")
+		logr.Errorln("Must specify either project ID (--id) or project name (--name)")
 		os.Exit(1)
 	}
 
@@ -214,29 +215,27 @@ func ProjectGet(c *cli.Context) {
 		os.Exit(1)
 	}
 
+	var projectObj *project.Project
+	var projectErr *project.ProjectError
 	if projectID == "" && projectName != "" {
-		newProjectID, projectNameErr := project.GetProjectIDFromName(http.DefaultClient, conInfo, conURL, projectName)
-		if projectNameErr != nil {
-			HandleProjectError(projectNameErr)
-			os.Exit(1)
-		}
-		projectID = newProjectID
+		projectObj, projectErr = project.GetProjectFromName(http.DefaultClient, conInfo, conURL, projectName)
+	} else {
+		projectObj, projectErr = project.GetProjectFromID(http.DefaultClient, conInfo, conURL, projectID)
 	}
-
-	project, err := project.GetProject(http.DefaultClient, conInfo, conURL, projectID)
-	if err != nil {
-		HandleProjectError(err)
+	if projectErr != nil {
+		HandleProjectError(projectErr)
 		os.Exit(1)
 	}
+
 	if printAsJSON {
-		json, _ := json.Marshal(project)
+		json, _ := json.Marshal(projectObj)
 		fmt.Println(string(json))
 	} else {
 		w := new(tabwriter.Writer)
-		w.Init(os.Stdout, 0, 8, 0, '\t', 0)
+		w.Init(os.Stdout, 0, 8, 2, '\t', 0)
 		fmt.Fprintln(w, "PROJECT ID \tNAME \tLANGUAGE \tAPP STATUS \tLOCATION ON DISK")
-		appStatus := strings.Title(project.AppStatus)
-		fmt.Fprintln(w, project.ProjectID+"\t"+project.Name+"\t"+project.Language+"\t"+appStatus+"\t"+project.LocationOnDisk)
+		appStatus := strings.Title(projectObj.AppStatus)
+		fmt.Fprintln(w, projectObj.ProjectID+"\t"+projectObj.Name+"\t"+projectObj.Language+"\t"+appStatus+"\t"+projectObj.LocationOnDisk)
 		fmt.Fprintln(w)
 		w.Flush()
 	}

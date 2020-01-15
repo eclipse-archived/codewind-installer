@@ -45,7 +45,7 @@ func RemoveProject(c *cli.Context) *ProjectError {
 
 	// If we are deleting the source, retrieve project to find out the path
 	if deleteFiles {
-		project, projErr := GetProject(http.DefaultClient, conInfo, conURL, projectID)
+		project, projErr := GetProjectFromID(http.DefaultClient, conInfo, conURL, projectID)
 		if projErr != nil {
 			return projErr
 		}

@@ -24,7 +24,7 @@ type (
 )
 
 // GetProject : Get project details from Codewind
-func GetProject(httpClient utils.HTTPClient, connection *connections.Connection, url, projectID string) (*Project, *ProjectError) {
+func GetProjectFromID(httpClient utils.HTTPClient, connection *connections.Connection, url, projectID string) (*Project, *ProjectError) {
 	req, requestErr := http.NewRequest("GET", url+"/api/v1/projects/"+projectID+"/", nil)
 	if requestErr != nil {
 		return nil, &ProjectError{errOpRequest, requestErr, requestErr.Error()}
@@ -68,4 +68,19 @@ func GetProjectIDFromName(httpClient utils.HTTPClient, connection *connections.C
 	}
 	respErr := errors.New(textAPINotFound)
 	return "", &ProjectError{errOpNotFound, respErr, textAPINotFound}
+}
+
+// GetProjectFromName : Get a project using its name
+func GetProjectFromName(httpClient utils.HTTPClient, connection *connections.Connection, url, projectName string) (*Project, *ProjectError) {
+	projectID, getProjectIDError := GetProjectIDFromName(httpClient, connection, url, projectName)
+	if getProjectIDError != nil {
+		return nil, getProjectIDError
+	}
+
+	project, getProjectError := GetProjectFromID(httpClient, connection, url, projectID)
+	if getProjectError != nil {
+		return nil, getProjectError
+	}
+
+	return project, nil
 }
