@@ -162,6 +162,7 @@ func ProjectList(c *cli.Context) {
 		HandleProjectError(getAllErr)
 		os.Exit(1)
 	}
+
 	if printAsJSON {
 		json, _ := json.Marshal(projects)
 		fmt.Println(string(json))
@@ -222,6 +223,7 @@ func ProjectGet(c *cli.Context) {
 	} else {
 		projectObj, projectErr = project.GetProjectFromID(http.DefaultClient, conInfo, conURL, projectID)
 	}
+
 	if projectErr != nil {
 		HandleProjectError(projectErr)
 		os.Exit(1)

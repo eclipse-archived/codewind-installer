@@ -63,7 +63,7 @@ func Commands() {
 			Subcommands: []cli.Command{
 				{
 					Name:  "create",
-					Usage: "create a project on disk",
+					Usage: "Create a project on disk",
 
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "url, u", Usage: "URL of project to download"},
@@ -80,7 +80,7 @@ func Commands() {
 				},
 				{
 					Name:  "bind",
-					Usage: "bind a project to codewind for building and running",
+					Usage: "Bind a project to codewind for building and running",
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "name, n", Usage: "The name of the project", Required: true},
 						cli.StringFlag{Name: "language, l", Usage: "The project language", Required: true},
@@ -95,7 +95,7 @@ func Commands() {
 				},
 				{
 					Name:  "remove",
-					Usage: "remove a project from codewind",
+					Usage: "Remove a project from codewind",
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "id, i", Usage: "the project id", Required: true},
 						cli.BoolFlag{Name: "delete, d", Usage: "delete local project files"},
@@ -107,7 +107,7 @@ func Commands() {
 				},
 				{
 					Name:  "sync",
-					Usage: "synchronize a project to codewind for building and running",
+					Usage: "Synchronize a project to codewind for building and running",
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "path, p", Usage: "the path to the project", Required: true},
 						cli.StringFlag{Name: "id, i", Usage: "the project id", Required: true},
@@ -164,7 +164,7 @@ func Commands() {
 				{
 					Name:    "list",
 					Aliases: []string{"ls"},
-					Usage:   "list projects",
+					Usage:   "List projects",
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "conid", Value: "local", Usage: "The connection id of the remote deployment to use", Required: false},
 					},
@@ -175,7 +175,7 @@ func Commands() {
 				},
 				{
 					Name:  "get",
-					Usage: "get a single project, requires either 'id' or 'name'",
+					Usage: "Get a single project, requires either 'id' or 'name'",
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: false},
 						cli.StringFlag{Name: "name,n", Usage: "Project name", Required: false},
