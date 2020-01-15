@@ -154,7 +154,6 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 			// Has this file been modified since last sync
 			if modifiedmillis > synctime {
 				fileContent, err := ioutil.ReadFile(path)
-				//jsonContent, err := json.Marshal(string(fileContent))
 				// Skip this file if there is an error reading it.
 				if err != nil {
 					return nil
