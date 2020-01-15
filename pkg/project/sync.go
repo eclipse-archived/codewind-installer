@@ -62,10 +62,12 @@ type (
 		UploadedFiles []UploadedFile `json:"uploadedFiles"`
 	}
 
-	// extendedFileInfo a FileInfo object that includes the path
-	extendedFileInfo struct {
-		os.FileInfo
-		Path string
+	// walkerInfo is the input struct to the walker function
+	walkerInfo struct {
+		Path         string   // the path of the current file
+		os.FileInfo           // the FileInfo of the current file
+		IgnoredPaths []string // paths to ignore
+		LastSync     int64    // last sync time
 	}
 
 	// refPath is a referenced file path to sync
@@ -135,7 +137,7 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 	client := &http.Client{}
 
 	// define a walker function
-	walker := func(path string, info extendedFileInfo, ignoredPathsList []string, err error) error {
+	walker := func(path string, info walkerInfo, err error) error {
 		if err != nil {
 			return err
 			// TODO - How to handle *some* files being unreadable
@@ -150,7 +152,7 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 		relativePath := filepath.ToSlash(path[(len(projectPath) + 1):])
 
 		if !info.IsDir() {
-			shouldIgnore := ignoreFileOrDirectory(relativePath, false, ignoredPathsList)
+			shouldIgnore := ignoreFileOrDirectory(relativePath, false, info.IgnoredPaths)
 			if shouldIgnore {
 				return nil
 			}
@@ -168,7 +170,7 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 			}
 
 			// Has this file been modified since last sync
-			if modifiedmillis > synctime {
+			if modifiedmillis > info.LastSync {
 				fileContent, err := ioutil.ReadFile(path)
 				// Skip this file if there is an error reading it.
 				if err != nil {
@@ -203,7 +205,7 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 				defer resp.Body.Close()
 			}
 		} else {
-			shouldIgnore := ignoreFileOrDirectory(relativePath, true, ignoredPathsList)
+			shouldIgnore := ignoreFileOrDirectory(relativePath, true, info.IgnoredPaths)
 			if shouldIgnore {
 				return filepath.SkipDir
 			}
@@ -225,13 +227,15 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 
 	// sync files that are physically in the project
 	err := filepath.Walk(projectPath, func(path string, info os.FileInfo, err error) error {
-		extendedInfo := extendedFileInfo{
-			info,
-			path,
-		}
 		// use combined ignored paths here, files in the project that
 		// are also the target of a reference should not be synced
-		return walker(path, extendedInfo, cwCombinedIgnoredPathsList, err)
+		wInfo := walkerInfo{
+			path,
+			info,
+			cwCombinedIgnoredPathsList,
+			synctime,
+		}
+		return walker(path, wInfo, err)
 	})
 	if err != nil {
 		text := fmt.Sprintf("error walking the path %q: %v\n", projectPath, err)
@@ -258,12 +262,14 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 		}
 
 		// now pass it to the walker function
-		extendedInfo := extendedFileInfo{
-			info,
+		wInfo := walkerInfo{
 			from,
+			info,
+			cwSettingsIgnoredPathsList,
+			synctime,
 		}
 		// "To" path is relative to the project
-		walker(filepath.Join(projectPath, refPath.To), extendedInfo, cwSettingsIgnoredPathsList, nil)
+		walker(filepath.Join(projectPath, refPath.To), wInfo, nil)
 	}
 
 	if errText != "" {
