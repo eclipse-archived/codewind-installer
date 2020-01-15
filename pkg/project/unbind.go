@@ -14,29 +14,20 @@ package project
 import (
 	"net/http"
 
-	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/sechttp"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 )
 
 // Unbind a project from Codewind
-func Unbind(httpClient utils.HTTPClient, conID, projectID string) error {
-	conInfo, conInfoErr := connections.GetConnectionByID(conID)
-	if conInfoErr != nil {
-		return conInfoErr.Err
-	}
-	conURL, conErr := config.PFEOriginFromConnection(conInfo)
-	if conErr != nil {
-		return conErr.Err
-	}
-	req, err := http.NewRequest("POST", conURL+"/api/v1/projects/"+projectID+"/unbind", nil)
+func Unbind(httpClient utils.HTTPClient, connection *connections.Connection, url, projectID string) error {
+	req, err := http.NewRequest("POST", url+"/api/v1/projects/"+projectID+"/unbind", nil)
 	if err != nil {
 		return err
 	}
 
 	// send request
-	res, httpSecError := sechttp.DispatchHTTPRequest(httpClient, req, conInfo)
+	res, httpSecError := sechttp.DispatchHTTPRequest(httpClient, req, connection)
 	if httpSecError != nil {
 		return httpSecError
 	}

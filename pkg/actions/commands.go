@@ -62,9 +62,8 @@ func Commands() {
 
 			Subcommands: []cli.Command{
 				{
-					Name:    "create",
-					Aliases: []string{""},
-					Usage:   "create a project on disk",
+					Name:  "create",
+					Usage: "Create a project on disk",
 
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "url, u", Usage: "URL of project to download"},
@@ -80,9 +79,8 @@ func Commands() {
 					},
 				},
 				{
-					Name:    "bind",
-					Aliases: []string{""},
-					Usage:   "bind a project to codewind for building and running",
+					Name:  "bind",
+					Usage: "Bind a project to codewind for building and running",
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "name, n", Usage: "The name of the project", Required: true},
 						cli.StringFlag{Name: "language, l", Usage: "The project language", Required: true},
@@ -96,9 +94,8 @@ func Commands() {
 					},
 				},
 				{
-					Name:    "remove",
-					Aliases: []string{""},
-					Usage:   "remove a project from codewind",
+					Name:  "remove",
+					Usage: "Remove a project from codewind",
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "id, i", Usage: "the project id", Required: true},
 						cli.BoolFlag{Name: "delete, d", Usage: "delete local project files"},
@@ -109,9 +106,8 @@ func Commands() {
 					},
 				},
 				{
-					Name:    "sync",
-					Aliases: []string{""},
-					Usage:   "synchronize a project to codewind for building and running",
+					Name:  "sync",
+					Usage: "Synchronize a project to codewind for building and running",
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "path, p", Usage: "the path to the project", Required: true},
 						cli.StringFlag{Name: "id, i", Usage: "the project id", Required: true},
@@ -163,6 +159,31 @@ func Commands() {
 								return nil
 							},
 						},
+					},
+				},
+				{
+					Name:    "list",
+					Aliases: []string{"ls"},
+					Usage:   "List projects",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "conid", Value: "local", Usage: "The connection id of the remote deployment to use", Required: false},
+					},
+					Action: func(c *cli.Context) error {
+						ProjectList(c)
+						return nil
+					},
+				},
+				{
+					Name:  "get",
+					Usage: "Get a single project, requires either 'id' or 'name'",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: false},
+						cli.StringFlag{Name: "name,n", Usage: "Project name", Required: false},
+						cli.StringFlag{Name: "conid", Value: "local", Usage: "The connection id of the remote deployment to use", Required: false},
+					},
+					Action: func(c *cli.Context) error {
+						ProjectGet(c)
+						return nil
 					},
 				},
 			},

@@ -26,19 +26,21 @@ type (
 )
 
 const (
-	errBadPath       = "proj_path"     // Invalid path provided
-	errBadType       = "proj_type"     // Invalid type provided
-	errOpResponse    = "proj_response" // Bad response to http
-	errOpFileParse   = "proj_parse"
-	errOpFileLoad    = "proj_load"
-	errOpFileWrite   = "proj_write"
-	errOpFileDelete  = "proj_delete"
-	errOpUnbind      = "proj_unbind"
-	errOpGetProject  = "proj_get"
-	errOpConflict    = "proj_conflict"
-	errOpNotFound    = "proj_notfound"
-	errOpConNotFound = "connection_notfound"
-	errOpInvalidID   = "proj_id_invalid"
+	errBadPath          = "proj_path" // Invalid path provided
+	errBadType          = "proj_type" // Invalid type provided
+	errOpRequest        = "proj_request"
+	errOpResponse       = "proj_response" // Bad response to http
+	errOpFileParse      = "proj_parse"
+	errOpFileLoad       = "proj_load"
+	errOpFileWrite      = "proj_write"
+	errOpFileDelete     = "proj_delete"
+	errOpUnbind         = "proj_unbind"
+	errOpGetProject     = "proj_get"
+	errOpConflict       = "proj_conflict"
+	errOpNotFound       = "proj_notfound"
+	errOpConNotFound    = "connection_notfound"
+	errOpInvalidID      = "proj_id_invalid"
+	errOpInvalidOptions = "proj_options_invalid"
 )
 
 const (
