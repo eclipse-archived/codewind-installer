@@ -153,6 +153,10 @@ func ValidateProject(c *cli.Context) (*ValidationResponse, *ProjectError) {
 	}
 
 	extensionType, err := checkIsExtension(conID, projectPath, c)
+	if err != nil {
+		return nil, &ProjectError{errOpCreateProject, err, err.Error()}
+	}
+
 	if extensionType != "" {
 		if err == nil {
 			validationResult = ProjectType{
@@ -169,10 +173,6 @@ func ValidateProject(c *cli.Context) (*ValidationResponse, *ProjectError) {
 		Status: validationStatus,
 		Path:   projectPath,
 		Result: validationResult,
-	}
-
-	if err != nil {
-		return nil, &ProjectError{errOpCreateProject, err, err.Error()}
 	}
 
 	// write settings file only for non-extension projects
