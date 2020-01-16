@@ -816,6 +816,22 @@ func Commands() {
 			},
 		},
 		{
+			Name:    "loglevels",
+			Aliases: []string{"log"},
+			Usage:   "Get or set logging levels of remotely deployed Codewind containers",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "conid",
+					Usage: "ConnectionID to check",
+					Value: "local",
+				},
+			},
+			Action: func(c *cli.Context) error {
+				LogLevels(c)
+				return nil
+			},
+		},
+		{
 			Name:    "version",
 			Aliases: []string{"v"},
 			Usage:   "Get versions of remotely deployed Codewind containers",
