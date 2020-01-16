@@ -23,7 +23,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetProject(t *testing.T) {
+func TestGetProjectFromID(t *testing.T) {
 	t.Run("Expect success - project should be returned", func(t *testing.T) {
 		// construct mock response body and status code
 		projectID := "1234"
@@ -36,7 +36,7 @@ func TestGetProject(t *testing.T) {
 
 		mockConnection := connections.Connection{ID: "local"}
 
-		response, getAllError := GetProject(mockClient, &mockConnection, "dummyurl", projectID)
+		response, getAllError := GetProjectFromID(mockClient, &mockConnection, "dummyurl", projectID)
 		if getAllError != nil {
 			t.Fail()
 		}

@@ -51,7 +51,7 @@ type (
 )
 
 // DownloadTemplate using the url/link provided
-func DownloadTemplate(destination string, url string) (Result, *ProjectError) {
+func DownloadTemplate(destination string, url string) (*Result, *ProjectError) {
 	checkProjectDirIsEmpty(destination)
 
 	projErr := checkProjectDirIsEmpty(destination)
@@ -80,7 +80,7 @@ func DownloadTemplate(destination string, url string) (Result, *ProjectError) {
 	}
 
 	response := Result{Status: "success", StatusMessage: "Project downloaded to" + destination}
-	return response, nil
+	return &response, nil
 }
 
 // checkIsExtension checks if a project is an extension project and run associated commands as necessary
@@ -135,13 +135,13 @@ func checkIsExtension(conID, projectPath string, c *cli.Context) (string, error)
 
 // ValidateProject returns the language and buildType for a project at given filesystem path,
 // and writes a default .cw-settings file to that project
-func ValidateProject(c *cli.Context) (ValidationResponse, *ProjectError) {
-	projectPath := c.String("path")
+func ValidateProject(c *cli.Context) (*ValidationResponse, *ProjectError) {
+	projectPath := c.Args().Get(0)
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 
 	projErr := checkProjectPathExists(projectPath)
 	if projErr != nil {
-		return projErr
+		return nil, projErr
 	}
 
 	validationStatus := "success"
@@ -172,14 +172,14 @@ func ValidateProject(c *cli.Context) (ValidationResponse, *ProjectError) {
 	}
 
 	if err != nil {
-		return &ProjectError{errOpCreateProject, err, err.Error()}
+		return nil, &ProjectError{errOpCreateProject, err, err.Error()}
 	}
 
 	// write settings file only for non-extension projects
 	if extensionType == "" {
 		writeCwSettingsIfNotInProject(conID, projectPath, buildType)
 	}
-	return response, nil
+	return &response, nil
 }
 
 func writeCwSettingsIfNotInProject(conID string, projectPath string, BuildType string) {
