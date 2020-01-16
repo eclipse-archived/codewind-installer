@@ -152,6 +152,7 @@ func ValidateProject(c *cli.Context) (*ValidationResponse, *ProjectError) {
 		Language:  language,
 		BuildType: buildType,
 	}
+
 	extensionType, err := checkIsExtension(conID, projectPath, c)
 	if extensionType != "" {
 		if err == nil {
@@ -177,23 +178,33 @@ func ValidateProject(c *cli.Context) (*ValidationResponse, *ProjectError) {
 
 	// write settings file only for non-extension projects
 	if extensionType == "" {
-		writeCwSettingsIfNotInProject(conID, projectPath, buildType)
+		err := writeCwSettingsIfNotInProject(conID, projectPath, buildType)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return &response, nil
 }
 
-func writeCwSettingsIfNotInProject(conID string, projectPath string, BuildType string) {
+func writeCwSettingsIfNotInProject(conID string, projectPath string, BuildType string) *ProjectError {
 	pathToCwSettings := path.Join(projectPath, ".cw-settings")
 	pathToLegacySettings := path.Join(projectPath, ".mc-settings")
 
 	if _, err := os.Stat(pathToLegacySettings); os.IsExist(err) {
-		renameLegacySettings(pathToLegacySettings, pathToCwSettings)
+		err := renameLegacySettings(pathToLegacySettings, pathToCwSettings)
+		if err != nil {
+			return &ProjectError{errOpWriteCwSettings, err, err.Error()}
+		}
 	} else if _, err := os.Stat(pathToCwSettings); os.IsNotExist(err) {
-		writeNewCwSettings(conID, pathToCwSettings, BuildType)
+		err := writeNewCwSettings(conID, pathToCwSettings, BuildType)
+		if err != nil {
+			return &ProjectError{errOpWriteCwSettings, err, err.Error()}
+		}
 	}
+	return nil
 }
 
-// checkProjectDirIsEmpty return an error if the given local filepath already exists, or is an empty string
+// checkProjectDirIsEmpty return a project error if the given local filepath already exists, or is an empty string
 func checkProjectDirIsEmpty(projectPath string) *ProjectError {
 	if projectPath == "" {
 		err := errors.New(textNoProjectPath)
@@ -214,7 +225,7 @@ func checkProjectDirIsEmpty(projectPath string) *ProjectError {
 	return nil
 }
 
-// checkProjectPathExists returns an error if the given local filepath does not exist, or is an empty string
+// checkProjectPathExists returns a project error if the given local filepath does not exist, or is an empty string
 func checkProjectPathExists(projectPath string) *ProjectError {
 	if projectPath == "" {
 		err := errors.New(textNoProjectPath)
