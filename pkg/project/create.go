@@ -23,6 +23,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
 
 	"github.com/eclipse/codewind-installer/pkg/apiroutes"
@@ -155,10 +156,6 @@ func ValidateProject(c *cli.Context) (*ValidationResponse, *ProjectError) {
 	}
 
 	extensionType, err := checkIsExtension(conID, projectPath, c)
-	if err != nil {
-		return nil, &ProjectError{errOpCreateProject, err, err.Error()}
-	}
-
 	if extensionType != "" {
 		if err == nil {
 			validationResult = ProjectType{
@@ -175,6 +172,10 @@ func ValidateProject(c *cli.Context) (*ValidationResponse, *ProjectError) {
 		Status: validationStatus,
 		Path:   projectPath,
 		Result: validationResult,
+	}
+
+	if err != nil {
+		return nil, &ProjectError{errOpCreateProject, err, err.Error()}
 	}
 
 	// write settings file only for non-extension projects
@@ -314,7 +315,10 @@ func renameLegacySettings(pathToLegacySettings string, pathToCwSettings string) 
 // writeNewCwSettings writes a default .cw-settings file to the given path,
 // dependant on the build type of the project
 func writeNewCwSettings(conID string, pathToCwSettings string, BuildType string) error {
-	defaultCwSettings := getDefaultCwSettings(conID, BuildType)
+	defaultCwSettings, err := getDefaultCwSettings(conID, BuildType)
+	if err != nil {
+		return err
+	}
 	cwSettings := addNonDefaultFieldsToCwSettings(defaultCwSettings, BuildType)
 	settings, err := json.MarshalIndent(cwSettings, "", "  ")
 	if err != nil {
@@ -325,22 +329,17 @@ func writeNewCwSettings(conID string, pathToCwSettings string, BuildType string)
 	return nil
 }
 
-func getDefaultCwSettings(conID string, BuildType string) CWSettings {
+func getDefaultCwSettings(conID string, BuildType string) (CWSettings, error) {
 	client := &http.Client{}
 
-	// return errors in here
 	connection, conErr := connections.GetConnectionByID(conID)
 	if conErr != nil {
-		fmt.Println(conErr)
-		os.Exit(1)
+		return CWSettings{}, &ProjectError{errOpCreateProject, conErr, conErr.Desc}
 	}
 
-	fmt.Println(connection)
-
-	conURL, conErr2 := config.PFEOriginFromConnection(connection)
-	if conErr2 != nil {
-		fmt.Println(conErr2)
-		os.Exit(1)
+	conURL, configErr := config.PFEOriginFromConnection(connection)
+	if configErr != nil {
+		return CWSettings{}, &ProjectError{errOpCreateProject, conErr, configErr.Desc}
 	}
 
 	IgnoredPaths, err := apiroutes.GetIgnoredPaths(client, connection, BuildType, conURL)
@@ -355,7 +354,7 @@ func getDefaultCwSettings(conID string, BuildType string) CWSettings {
 		IsHTTPS:           false,
 		IgnoredPaths:      IgnoredPaths,
 		StatusPingTimeout: "",
-	}
+	}, nil
 }
 
 func addNonDefaultFieldsToCwSettings(cwSettings CWSettings, ProjectType string) CWSettings {
