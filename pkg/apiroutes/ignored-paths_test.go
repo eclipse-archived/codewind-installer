@@ -18,6 +18,8 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/eclipse/codewind-installer/pkg/connections"
+	"github.com/eclipse/codewind-installer/pkg/security"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -29,16 +31,18 @@ func Test_IgnoredPaths(t *testing.T) {
 			t.Fail()
 		}
 		body := ioutil.NopCloser(bytes.NewReader([]byte(jsonResponse)))
-		mockClientTrue := &MockResponse{StatusCode: http.StatusOK, Body: body}
-		gotIgnoredPaths, err := GetIgnoredPaths("local", "nodejs", mockClientTrue)
+		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusOK, Body: body}
+		mockConnection := connections.Connection{ID: "local"}
+		gotIgnoredPaths, err := GetIgnoredPaths(mockClient, &mockConnection, "nodejs", "dummyurl")
 		if err != nil {
 			t.Fail()
 		}
 		assert.Equal(t, testIgnoredPaths, gotIgnoredPaths)
 	})
 	t.Run("Asserts 400 response from PFE returns an error", func(t *testing.T) {
-		mockClientFalse := &MockResponse{StatusCode: http.StatusNotFound, Body: nil}
-		_, err := GetIgnoredPaths("local", "nodejs", mockClientFalse)
+		mockConnection := connections.Connection{ID: "local"}
+		mockClientFalse := &security.ClientMockAuthenticate{StatusCode: http.StatusNotFound, Body: nil}
+		_, err := GetIgnoredPaths(mockClientFalse, &mockConnection, "nodejs", "dummyurl")
 		if err == nil {
 			t.Fail()
 		}

@@ -23,6 +23,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/eclipse/codewind-installer/pkg/connections"
+
 	"github.com/eclipse/codewind-installer/pkg/apiroutes"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/urfave/cli"
@@ -325,7 +327,23 @@ func writeNewCwSettings(conID string, pathToCwSettings string, BuildType string)
 
 func getDefaultCwSettings(conID string, BuildType string) CWSettings {
 	client := &http.Client{}
-	IgnoredPaths, err := apiroutes.GetIgnoredPaths(conID, BuildType, client)
+
+	// return errors in here
+	connection, conErr := connections.GetConnectionByID(conID)
+	if conErr != nil {
+		fmt.Println(conErr)
+		os.Exit(1)
+	}
+
+	fmt.Println(connection)
+
+	conURL, conErr2 := config.PFEOriginFromConnection(connection)
+	if conErr2 != nil {
+		fmt.Println(conErr2)
+		os.Exit(1)
+	}
+
+	IgnoredPaths, err := apiroutes.GetIgnoredPaths(client, connection, BuildType, conURL)
 	if err != nil {
 		// If error getting the default ignoredPaths, set as empty slice
 		IgnoredPaths = []string{}
