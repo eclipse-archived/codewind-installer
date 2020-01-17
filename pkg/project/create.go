@@ -214,7 +214,7 @@ func determineProjectInfo(projectPath string) (string, string) {
 		language = "java"
 		buildType = determineJavaBuildType(projectPath)
 	} else if utils.PathExists(path.Join(projectPath, "package.json")) {
-		language = "nodejs"
+		language = "javascript"
 		buildType = "nodejs"
 	} else if utils.PathExists(path.Join(projectPath, "Package.swift")) {
 		language = "swift"
