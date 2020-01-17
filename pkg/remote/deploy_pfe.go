@@ -203,6 +203,10 @@ func setPFEEnvVars(codewind Codewind, deployOptions *DeployOptions) []corev1.Env
 			Name:  "CODEWIND_AUTH_HOST",
 			Value: authHost,
 		},
+		{
+			Name:  "LOG_LEVEL",
+			Value: deployOptions.LogLevel,
+		},
 	}
 }
 
