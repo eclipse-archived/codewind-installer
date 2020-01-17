@@ -169,6 +169,19 @@ This is the same as `go test ./...`, but outputs test coverage scores for each f
 
 Subcommands:</br>
 
+`create` - Downloads a project created from a template, at the given URL
+
+> **Flags:**
+> --url,-u value URL of project to download
+> --path,-p value Path at which to create the new project
+
+`validate` - Returns the predicted language and build type for a project, and writes a default .cw-settings to it if one does not already exist
+
+> **Flags:**
+> --name,-n value Project name
+> --path,-p value Project path, on local disk
+> --type,-t value Project build type, if known (not required)
+
 `bind` - Bind a project to Codewind for building and running
 > **Flags:**
 > --name,-n value               Project name
