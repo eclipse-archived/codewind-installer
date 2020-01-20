@@ -136,11 +136,15 @@ func DockerCompose(dockerComposeFile string, tag string, loglevel string) *Docke
 	cmd.Stdout = output
 	cmd.Stderr = output
 	if err := cmd.Start(); err != nil { // after 'Start' the program is continued and script is executing in background
+	    //print out docker-compose sysout & syserr for error diagnosis
+		fmt.Printf(output.String())
 		DeleteTempFile(dockerComposeFile)
 		return &DockerError{errOpDockerComposeStart, err, err.Error()}
 	}
 	fmt.Printf("Please wait while containers initialize... %s \n", output.String())
 	if err := cmd.Wait(); err != nil {
+		//print out docker-compose sysout & syserr for error diagnosis
+		fmt.Printf(output.String())
 		DeleteTempFile(dockerComposeFile)
 		return &DockerError{errOpDockerComposeStart, err, err.Error()}
 	}
