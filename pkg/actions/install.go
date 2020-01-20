@@ -116,6 +116,7 @@ func DoRemoteInstall(c *cli.Context) {
 		KeycloakTLSSecure:     true,
 		CodewindSessionSecret: session,
 		CodewindPVCSize:       strconv.Itoa(codewindPVCSize) + "Gi",
+		LogLevel:              c.GlobalString("loglevel"),
 	}
 
 	deploymentResult, remInstError := remote.DeployRemote(&deployOptions)

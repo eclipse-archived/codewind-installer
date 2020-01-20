@@ -49,7 +49,15 @@ services:
   image: ${PFE_IMAGE_NAME}${PLATFORM}:${TAG}
   container_name: codewind-pfe
   user: root
-  environment: ["HOST_WORKSPACE_DIRECTORY=${WORKSPACE_DIRECTORY}","CONTAINER_WORKSPACE_DIRECTORY=/codewind-workspace","HOST_OS=${HOST_OS}","CODEWIND_VERSION=${TAG}","PERFORMANCE_CONTAINER=codewind-performance${PLATFORM}:${TAG}","HOST_HOME=${HOST_HOME}","HOST_MAVEN_OPTS=${HOST_MAVEN_OPTS}"]
+  environment: [
+    "HOST_WORKSPACE_DIRECTORY=${WORKSPACE_DIRECTORY}",
+    "CONTAINER_WORKSPACE_DIRECTORY=/codewind-workspace",
+    "HOST_OS=${HOST_OS}","CODEWIND_VERSION=${TAG}",
+    "PERFORMANCE_CONTAINER=codewind-performance${PLATFORM}:${TAG}",
+    "HOST_HOME=${HOST_HOME}",
+    "HOST_MAVEN_OPTS=${HOST_MAVEN_OPTS}",
+    "LOG_LEVEL=${LOG_LEVEL}"
+  ]
   depends_on: [codewind-performance]
   ports: ["127.0.0.1:${PFE_EXTERNAL_PORT}:9090"]
   volumes: ["/var/run/docker.sock:/var/run/docker.sock","cw-workspace:/codewind-workspace","${WORKSPACE_DIRECTORY}:/mounted-workspace"]
@@ -113,8 +121,8 @@ const (
 )
 
 // DockerCompose to set up the Codewind environment
-func DockerCompose(dockerComposeFile string, tag string) *DockerError {
-	setupDockerComposeEnvs(tag, "")
+func DockerCompose(dockerComposeFile string, tag string, loglevel string) *DockerError {
+	setupDockerComposeEnvs(tag, "", loglevel)
 	cmd := exec.Command("docker-compose", "-f", dockerComposeFile, "up", "-d", "--force-recreate")
 	output := new(bytes.Buffer)
 	cmd.Stdout = output
@@ -144,7 +152,7 @@ func DockerCompose(dockerComposeFile string, tag string) *DockerError {
 
 // DockerComposeStop to stop Codewind containers
 func DockerComposeStop(tag, dockerComposeFile string) *DockerError {
-	setupDockerComposeEnvs(tag, "stop")
+	setupDockerComposeEnvs(tag, "stop", "")
 	cmd := exec.Command("docker-compose", "-f", dockerComposeFile, "rm", "--stop", "-f")
 	output := new(bytes.Buffer)
 	cmd.Stdout = output
@@ -166,7 +174,7 @@ func DockerComposeStop(tag, dockerComposeFile string) *DockerError {
 
 // DockerComposeRemove to remove Codewind images
 func DockerComposeRemove(dockerComposeFile, tag string) *DockerError {
-	setupDockerComposeEnvs(tag, "remove")
+	setupDockerComposeEnvs(tag, "remove", "")
 	cmd := exec.Command("docker-compose", "-f", dockerComposeFile, "down", "--rmi", "all")
 	output := new(bytes.Buffer)
 	cmd.Stdout = output
@@ -190,7 +198,7 @@ func DockerComposeRemove(dockerComposeFile, tag string) *DockerError {
 }
 
 // setupDockerComposeEnvs for docker-compose to use
-func setupDockerComposeEnvs(tag, command string) {
+func setupDockerComposeEnvs(tag, command string, loglevel string) {
 	home := os.Getenv("HOME")
 	os.Setenv("PFE_IMAGE_NAME", pfeImageName)
 	os.Setenv("PERFORMANCE_IMAGE_NAME", performanceImageName)
@@ -229,6 +237,7 @@ func setupDockerComposeEnvs(tag, command string) {
 		}
 		os.Setenv("PFE_EXTERNAL_PORT", port)
 	}
+	os.Setenv("LOG_LEVEL", loglevel)
 }
 
 // PullImage - pull pfe/performance images from dockerhub

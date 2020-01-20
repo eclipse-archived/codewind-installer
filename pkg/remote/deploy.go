@@ -52,6 +52,7 @@ type DeployOptions struct {
 	CodewindSessionSecret string
 	ClientSecret          string
 	CodewindPVCSize       string
+	LogLevel              string
 }
 
 // DeploymentResult : Ingress root URLs

@@ -26,23 +26,34 @@ import (
 	"github.com/urfave/cli"
 )
 
-// ProjectValidate : Validate a project
+// ProjectValidate : Detects the project type, and adds .cw-settings if it does not already exist
 func ProjectValidate(c *cli.Context) {
-	err := project.ValidateProject(c)
-	if err != nil {
-		HandleProjectError(err)
+	response, projectErr := project.ValidateProject(c)
+	if projectErr != nil {
+		fmt.Println(projectErr.Error())
 		os.Exit(1)
 	}
+	projectInfo, _ := json.Marshal(response)
+	fmt.Println(string(projectInfo))
 	os.Exit(0)
 }
 
 // ProjectCreate : Downloads template and creates a new project
 func ProjectCreate(c *cli.Context) {
-	err := project.DownloadTemplate(c)
+	destination := c.String("p")
+	url := c.String("u")
+	result, err := project.DownloadTemplate(destination, url)
 	if err != nil {
 		HandleProjectError(err)
 		os.Exit(1)
 	}
+	if printAsJSON {
+		jsonResponse, _ := json.Marshal(result)
+		fmt.Println(string(jsonResponse))
+	} else {
+		fmt.Println("Project downloaded to " + destination)
+	}
+	os.Exit(0)
 }
 
 // ProjectSync : Does a project Sync
