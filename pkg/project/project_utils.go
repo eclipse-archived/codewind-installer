@@ -41,6 +41,8 @@ const (
 	errOpConNotFound    = "connection_notfound"
 	errOpInvalidID      = "proj_id_invalid"
 	errOpInvalidOptions = "proj_options_invalid"
+	errOpSync           = "proj_sync"
+	errOpSyncRef        = "proj_sync_ref"
 )
 
 const (

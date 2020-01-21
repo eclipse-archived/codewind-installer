@@ -16,11 +16,11 @@ import (
 	"compress/zlib"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -61,6 +61,25 @@ type (
 		StatusCode    int            `json:"statusCode"`
 		UploadedFiles []UploadedFile `json:"uploadedFiles"`
 	}
+
+	// walkerInfo is the input struct to the walker function
+	walkerInfo struct {
+		Path         string   // the path of the current file
+		os.FileInfo           // the FileInfo of the current file
+		IgnoredPaths []string // paths to ignore
+		LastSync     int64    // last sync time
+	}
+
+	// refPath is a referenced file path to sync
+	refPath struct {
+		From string `json:"from"`
+		To   string `json:"to"`
+	}
+
+	// refPaths is an array of refPath objects
+	refPaths struct {
+		RefPaths []refPath
+	}
 )
 
 // SyncProject syncs a project with its remote connection
@@ -96,7 +115,7 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	}
 
 	// Sync all the necessary project files
-	fileList, directoryList, modifiedList, uploadedFilesList := syncFiles(projectPath, projectID, conURL, synctime, conInfo)
+	fileList, directoryList, modifiedList, uploadedFilesList, syncErr := syncFiles(projectPath, projectID, conURL, synctime, conInfo)
 	// Complete the upload
 	completeStatus, completeStatusCode := completeUpload(projectID, fileList, directoryList, modifiedList, conID, currentSyncTime)
 	response := SyncResponse{
@@ -105,10 +124,10 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 		StatusCode:    completeStatusCode,
 	}
 
-	return &response, nil
+	return &response, syncErr
 }
 
-func syncFiles(projectPath string, projectID string, conURL string, synctime int64, connection *connections.Connection) ([]string, []string, []string, []UploadedFile) {
+func syncFiles(projectPath string, projectID string, conURL string, synctime int64, connection *connections.Connection) ([]string, []string, []string, []UploadedFile, *ProjectError) {
 	var fileList []string
 	var directoryList []string
 	var modifiedList []string
@@ -117,11 +136,12 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 	projectUploadURL := conURL + "/api/v1/projects/" + projectID + "/upload"
 	client := &http.Client{}
 
-	cwSettingsIgnoredPathsList := retrieveIgnoredPathsList(projectPath)
+	refPathsChanged := false
 
-	err := filepath.Walk(projectPath, func(path string, info os.FileInfo, err error) error {
+	// define a walker function
+	walker := func(path string, info walkerInfo, err error) error {
 		if err != nil {
-			panic(err)
+			return err
 			// TODO - How to handle *some* files being unreadable
 		}
 
@@ -134,7 +154,7 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 		relativePath := filepath.ToSlash(path[(len(projectPath) + 1):])
 
 		if !info.IsDir() {
-			shouldIgnore := ignoreFileOrDirectory(info.Name(), false, cwSettingsIgnoredPathsList)
+			shouldIgnore := ignoreFileOrDirectory(relativePath, false, info.IgnoredPaths)
 			if shouldIgnore {
 				return nil
 			}
@@ -152,8 +172,8 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 			}
 
 			// Has this file been modified since last sync
-			if modifiedmillis > synctime {
-				fileContent, err := ioutil.ReadFile(path)
+			if modifiedmillis > info.LastSync {
+				fileContent, err := ioutil.ReadFile(info.Path)
 				// Skip this file if there is an error reading it.
 				if err != nil {
 					return nil
@@ -185,21 +205,91 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 					return nil
 				}
 				defer resp.Body.Close()
+
+				// if this file changed, it should force referenced files to re-sync
+				if relativePath == ".cw-refpaths.json" {
+					refPathsChanged = true
+				}
 			}
 		} else {
-			shouldIgnore := ignoreFileOrDirectory(info.Name(), true, cwSettingsIgnoredPathsList)
+			shouldIgnore := ignoreFileOrDirectory(relativePath, true, info.IgnoredPaths)
 			if shouldIgnore {
 				return filepath.SkipDir
 			}
 			directoryList = append(directoryList, relativePath)
 		}
 		return nil
+	}
+
+	// read the ignored and referenced paths into lists
+	cwSettingsIgnoredPathsList := retrieveIgnoredPathsList(projectPath)
+	cwRefPathsList := retrieveRefPathsList(projectPath)
+
+	// initialize a combined list, prime it with ignored paths from .cw-settings
+	// then append with referenced "To" paths
+	cwCombinedIgnoredPathsList := append([]string{}, cwSettingsIgnoredPathsList...)
+	for _, refPath := range cwRefPathsList {
+		cwCombinedIgnoredPathsList = append(cwCombinedIgnoredPathsList, refPath.To)
+	}
+
+	// first sync files that are physically in the project
+	err := filepath.Walk(projectPath, func(path string, info os.FileInfo, err error) error {
+		// use combined ignored paths here, files in the project that
+		// are also the target of a reference should not be synced
+		wInfo := walkerInfo{
+			path,
+			info,
+			cwCombinedIgnoredPathsList,
+			synctime,
+		}
+		return walker(path, wInfo, err)
 	})
 	if err != nil {
-		fmt.Printf("error walking the path %q: %v\n", projectPath, err)
-		return nil, nil, nil, nil
+		text := fmt.Sprintf("error walking the path %q: %v\n", projectPath, err)
+		return nil, nil, nil, nil, &ProjectError{errOpSync, errors.New(text), text}
 	}
-	return fileList, directoryList, modifiedList, uploadedFiles
+
+	errText := ""
+
+	// then sync referenced file paths
+	for _, refPath := range cwRefPathsList {
+
+		// get From path and resolve to absolute if needed
+		from := refPath.From
+		if !filepath.IsAbs(from) {
+			from = filepath.Join(projectPath, from)
+		}
+
+		// get info on the referenced file; skip invalid paths
+		info, err := os.Stat(from)
+		if err != nil || info.IsDir() {
+			text := fmt.Sprintf("invalid file reference %q: %v\n", from, err)
+			errText += text
+			continue
+		}
+
+		lastSync := synctime
+		// force re-sync if .cw-refpaths.json itself was changed
+		if refPathsChanged {
+			lastSync = 0
+		}
+
+		// now pass it to the walker function
+		wInfo := walkerInfo{
+			from,
+			info,
+			cwSettingsIgnoredPathsList,
+			lastSync,
+		}
+		// "To" path is relative to the project
+		walker(filepath.Join(projectPath, refPath.To), wInfo, nil)
+	}
+
+	if errText != "" {
+		return fileList, directoryList, modifiedList, uploadedFiles, &ProjectError{errOpSyncRef, errors.New(errText), errText}
+	}
+
+	return fileList, directoryList, modifiedList, uploadedFiles, nil
 }
 
 func completeUpload(projectID string, files []string, directories []string, modfiles []string, conID string, currentSyncTime int64) (string, int) {
@@ -240,7 +330,7 @@ func completeUpload(projectID string, files []string, directories []string, modf
 
 // Retrieve the ignoredPaths list from a .cw-settings file
 func retrieveIgnoredPathsList(projectPath string) []string {
-	cwSettingsPath := path.Join(projectPath, ".cw-settings")
+	cwSettingsPath := filepath.Join(projectPath, ".cw-settings")
 	var cwSettingsIgnoredPathsList []string
 	if _, err := os.Stat(cwSettingsPath); !os.IsNotExist(err) {
 		plan, _ := ioutil.ReadFile(cwSettingsPath)
@@ -250,6 +340,20 @@ func retrieveIgnoredPathsList(projectPath string) []string {
 		cwSettingsIgnoredPathsList = cwSettingsJSON.IgnoredPaths
 	}
 	return cwSettingsIgnoredPathsList
+}
+
+// Retrieve the refPaths list from a .cw-refpaths.json file
+func retrieveRefPathsList(projectPath string) []refPath {
+	cwRefPathsPath := filepath.Join(projectPath, ".cw-refpaths.json")
+	var cwRefPathsList []refPath
+	if _, err := os.Stat(cwRefPathsPath); !os.IsNotExist(err) {
+		plan, _ := ioutil.ReadFile(cwRefPathsPath)
+		var cwRefPathsJSON refPaths
+		// Don't need to handle an invalid JSON file as we should just return []
+		json.Unmarshal(plan, &cwRefPathsJSON)
+		cwRefPathsList = cwRefPathsJSON.RefPaths
+	}
+	return cwRefPathsList
 }
 
 func ignoreFileOrDirectory(name string, isDir bool, cwSettingsIgnoredPathsList []string) bool {
@@ -299,6 +403,7 @@ func ignoreFileOrDirectory(name string, isDir bool, cwSettingsIgnoredPathsList [
 
 	isFileInIgnoredList := false
 	for _, fileName := range ignoredList {
+		fileName = filepath.Clean(fileName)
 		matched, err := filepath.Match(fileName, name)
 		if err != nil {
 			return false
