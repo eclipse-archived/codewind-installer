@@ -170,10 +170,14 @@ func DockerComposeStop(tag, dockerComposeFile string) *DockerError {
 	cmd.Stdout = output
 	cmd.Stderr = output
 	if err := cmd.Start(); err != nil { // after 'Start' the program is continued and script is executing in background
+		//print out docker-compose sysout & syserr for error diagnosis
+		fmt.Printf(output.String())
 		return &DockerError{errOpDockerComposeStop, err, err.Error()}
 	}
 	fmt.Printf("Please wait while containers shutdown... %s \n", output.String())
 	if err := cmd.Wait(); err != nil {
+		//print out docker-compose sysout & syserr for error diagnosis
+		fmt.Printf(output.String())
 		return &DockerError{errOpDockerComposeStop, err, err.Error()}
 	}
 	fmt.Printf(output.String()) // Wait to finish execution, so we can read all output
@@ -194,11 +198,15 @@ func DockerComposeRemove(dockerComposeFile, tag string) *DockerError {
 	// after 'Start' the program is continued and script is executing in background
 	err := cmd.Start()
 	if err != nil {
+		//print out docker-compose sysout & syserr for error diagnosis
+		fmt.Printf(output.String())
 		return &DockerError{errOpDockerComposeRemove, err, err.Error()}
 	}
 	fmt.Printf("Please wait whilst images are removed... %s \n", output.String())
 	err = cmd.Wait()
 	if err != nil {
+		//print out docker-compose sysout & syserr for error diagnosis
+		fmt.Printf(output.String())
 		return &DockerError{errOpImageRemove, err, err.Error()}
 	}
 	fmt.Printf(output.String()) // Wait to finish execution, so we can read all output
