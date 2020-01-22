@@ -44,7 +44,7 @@ var baseImageNameArr = [2]string{
 const pfeContainerName = "codewind-pfe"
 const performanceContainerName = "codewind-performance"
 
-var containerImageNames = []string{
+var containerImageNames = [...]string{
 	pfeContainerName,
 	performanceContainerName,
 }
