@@ -816,6 +816,23 @@ func Commands() {
 			},
 		},
 		{
+			Name:  "remote",
+			Usage: "Manage remote connections",
+			Subcommands: []cli.Command{
+				{
+					Name:  "list",
+					Usage: "List the remote installs",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "namespace, n", Usage: "The namespace to check", Required: false},
+					},
+					Action: func(c *cli.Context) error {
+						RemoteListAll(c)
+						return nil
+					},
+				},
+			},
+		},
+		{
 			Name:    "upgrade",
 			Aliases: []string{"up"},
 			Usage:   "Upgrade projects",
