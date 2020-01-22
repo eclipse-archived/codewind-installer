@@ -13,6 +13,7 @@ package project
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -23,7 +24,6 @@ import (
 	"strings"
 
 	"github.com/eclipse/codewind-installer/pkg/apiroutes"
-	"github.com/eclipse/codewind-installer/pkg/errors"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/urfave/cli"
 )
@@ -51,8 +51,14 @@ type (
 )
 
 // DownloadTemplate using the url/link provided
-func DownloadTemplate(destination string, url string) (Result, *ProjectError) {
+func DownloadTemplate(destination string, url string) (*Result, *ProjectError) {
 	checkProjectDirIsEmpty(destination)
+
+	projErr := checkProjectDirIsEmpty(destination)
+	if projErr != nil {
+		return nil, projErr
+	}
+
 	projectDir := path.Base(destination)
 
 	// Remove invalid characters from the string we will use
@@ -65,16 +71,16 @@ func DownloadTemplate(destination string, url string) (Result, *ProjectError) {
 
 	err := utils.DownloadFromURLThenExtract(url, destination)
 	if err != nil {
-		log.Fatal(err)
+		return nil, &ProjectError{errOpCreateProject, err, err.Error()}
 	}
 
 	err = utils.ReplaceInFiles(destination, "[PROJ_NAME_PLACEHOLDER]", projectName)
 	if err != nil {
-		log.Fatal(err)
+		return nil, &ProjectError{errOpCreateProject, err, err.Error()}
 	}
 
 	response := Result{Status: "success", StatusMessage: "Project downloaded to" + destination}
-	return response, nil
+	return &response, nil
 }
 
 // checkIsExtension checks if a project is an extension project and run associated commands as necessary
@@ -129,10 +135,14 @@ func checkIsExtension(conID, projectPath string, c *cli.Context) (string, error)
 
 // ValidateProject returns the language and buildType for a project at given filesystem path,
 // and writes a default .cw-settings file to that project
-func ValidateProject(c *cli.Context) (ValidationResponse, *ProjectError) {
+func ValidateProject(c *cli.Context) (*ValidationResponse, *ProjectError) {
 	projectPath := c.String("path")
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
-	checkProjectPathExists(projectPath)
+	projErr := checkProjectPathExists(projectPath)
+	if projErr != nil {
+		return nil, projErr
+	}
+
 	validationStatus := "success"
 	// result could be ProjectType or string, so define as an interface
 	var validationResult interface{}
@@ -141,6 +151,7 @@ func ValidateProject(c *cli.Context) (ValidationResponse, *ProjectError) {
 		Language:  language,
 		BuildType: buildType,
 	}
+
 	extensionType, err := checkIsExtension(conID, projectPath, c)
 	if extensionType != "" {
 		if err == nil {
@@ -160,51 +171,70 @@ func ValidateProject(c *cli.Context) (ValidationResponse, *ProjectError) {
 		Result: validationResult,
 	}
 
-	errors.CheckErr(err, 203, "")
+	if err != nil {
+		return nil, &ProjectError{errOpCreateProject, err, err.Error()}
+	}
+
 	// write settings file only for non-extension projects
 	if extensionType == "" {
-		writeCwSettingsIfNotInProject(conID, projectPath, buildType)
+		err := writeCwSettingsIfNotInProject(conID, projectPath, buildType)
+		if err != nil {
+			return nil, err
+		}
 	}
-	return response, nil
+	return &response, nil
 }
 
-func writeCwSettingsIfNotInProject(conID string, projectPath string, BuildType string) {
+func writeCwSettingsIfNotInProject(conID string, projectPath string, BuildType string) *ProjectError {
 	pathToCwSettings := path.Join(projectPath, ".cw-settings")
 	pathToLegacySettings := path.Join(projectPath, ".mc-settings")
 
 	if _, err := os.Stat(pathToLegacySettings); os.IsExist(err) {
-		renameLegacySettings(pathToLegacySettings, pathToCwSettings)
+		err := renameLegacySettings(pathToLegacySettings, pathToCwSettings)
+		if err != nil {
+			return &ProjectError{errOpWriteCwSettings, err, err.Error()}
+		}
 	} else if _, err := os.Stat(pathToCwSettings); os.IsNotExist(err) {
-		writeNewCwSettings(conID, pathToCwSettings, BuildType)
+		err := writeNewCwSettings(conID, pathToCwSettings, BuildType)
+		if err != nil {
+			return &ProjectError{errOpWriteCwSettings, err, err.Error()}
+		}
 	}
+	return nil
 }
 
-// checkProjectDirIsEmpty stops the process if the given local filepath already exists, or is an empty string
-func checkProjectDirIsEmpty(projectPath string) {
+// checkProjectDirIsEmpty return a project error if the given local filepath already exists, or is an empty string
+func checkProjectDirIsEmpty(projectPath string) *ProjectError {
 	if projectPath == "" {
-		log.Fatal("destination not set")
+		err := errors.New(textNoProjectPath)
+		return &ProjectError{errOpCreateProject, err, err.Error()}
 	}
 
 	// if the project dir already exists, continue if empty and exit if not
 	if utils.PathExists(projectPath) {
 		dirIsEmpty, err := utils.DirIsEmpty(projectPath)
 		if err != nil {
-			log.Fatal(err)
+			return &ProjectError{errOpCreateProject, err, err.Error()}
 		}
 		if !dirIsEmpty {
-			log.Fatal("Non empty directory provided")
+			projErr := errors.New(textProjectPathNonEmpty)
+			return &ProjectError{errOpCreateProject, projErr, projErr.Error()}
 		}
 	}
+	return nil
 }
 
-// checkProjectPathExists stops the process if the given local filepath does not exist, or is an empty string
-func checkProjectPathExists(projectPath string) {
+// checkProjectPathExists returns a project error if the given local filepath does not exist, or is an empty string
+func checkProjectPathExists(projectPath string) *ProjectError {
 	if projectPath == "" {
-		log.Fatal("Project path not given")
+		err := errors.New(textNoProjectPath)
+		return &ProjectError{errOpCreateProject, err, err.Error()}
 	}
 	if !utils.PathExists(projectPath) {
-		log.Fatal("Project not found at given path")
+		err := errors.New(textProjectPathDoesNotExist)
+		return &ProjectError{errOpCreateProject, err, err.Error()}
 	}
+	return nil
 }
 
 // determineProjectInfo returns the language and build-type of a project
@@ -220,7 +250,11 @@ func determineProjectInfo(projectPath string) (string, string) {
 		language = "swift"
 		buildType = "swift"
 	} else {
-		language = determineProjectLanguage(projectPath)
+		determinedLanguage, err := determineProjectLanguage(projectPath)
+		if err != nil {
+			language = "unknown"
+		}
+		language = determinedLanguage
 		buildType = "docker"
 	}
 	return language, buildType
@@ -246,41 +280,47 @@ func determineJavaBuildType(projectPath string) string {
 	return "docker"
 }
 
-func determineProjectLanguage(projectPath string) string {
+func determineProjectLanguage(projectPath string) (string, error) {
 	projectFiles, err := ioutil.ReadDir(projectPath)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 	for _, file := range projectFiles {
 		if !file.IsDir() {
 			switch filepath.Ext(file.Name()) {
 			case ".py":
-				return "python"
+				return "python", nil
 			case ".go":
-				return "go"
+				return "go", nil
 			default:
 				continue
 			}
 		}
 	}
-	return "unknown"
+	return "unknown", nil
 }
 
 // RenameLegacySettings renames a .mc-settings file to .cw-settings
-func renameLegacySettings(pathToLegacySettings string, pathToCwSettings string) {
+func renameLegacySettings(pathToLegacySettings string, pathToCwSettings string) error {
 	err := os.Rename(pathToLegacySettings, pathToCwSettings)
-	errors.CheckErr(err, 205, "")
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // writeNewCwSettings writes a default .cw-settings file to the given path,
 // dependant on the build type of the project
-func writeNewCwSettings(conID string, pathToCwSettings string, BuildType string) {
+func writeNewCwSettings(conID string, pathToCwSettings string, BuildType string) error {
 	defaultCwSettings := getDefaultCwSettings(conID, BuildType)
 	cwSettings := addNonDefaultFieldsToCwSettings(defaultCwSettings, BuildType)
 	settings, err := json.MarshalIndent(cwSettings, "", "  ")
-	errors.CheckErr(err, 203, "")
+	if err != nil {
+		return err
+	}
 	// File permission 0644 grants read and write access to the owner
 	err = ioutil.WriteFile(pathToCwSettings, settings, 0644)
+	return nil
 }
 
 func getDefaultCwSettings(conID string, BuildType string) CWSettings {
