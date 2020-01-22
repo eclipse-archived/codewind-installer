@@ -41,11 +41,19 @@ var baseImageNameArr = [2]string{
 	performanceImageName,
 }
 
+const pfeContainerName = "codewind-pfe"
+const performanceContainerName = "codewind-performance"
+
+var containerImageNames = [...]string{
+	pfeContainerName,
+	performanceContainerName,
+}
+
 // codewind-docker-compose.yaml data
 var data = `
 version: 2
 services:
- codewind-pfe:
+ ` + pfeContainerName + `:
   image: ${PFE_IMAGE_NAME}${PLATFORM}:${TAG}
   container_name: codewind-pfe
   user: root
@@ -62,7 +70,7 @@ services:
   ports: ["127.0.0.1:${PFE_EXTERNAL_PORT}:9090"]
   volumes: ["/var/run/docker.sock:/var/run/docker.sock","cw-workspace:/codewind-workspace","${WORKSPACE_DIRECTORY}:/mounted-workspace"]
   networks: [network]
- codewind-performance:
+ ` + performanceContainerName + `:
   image: ${PERFORMANCE_IMAGE_NAME}${PLATFORM}:${TAG}
   ports: ["127.0.0.1:9095:9095"]
   container_name: codewind-performance
@@ -350,7 +358,7 @@ func GetContainersToRemove(containerList []types.Container) []types.Container {
 // CheckContainerStatus of Codewind running/stopped
 func CheckContainerStatus() (bool, *DockerError) {
 	var containerStatus = false
-	containerArr := baseImageNameArr
+	containerArr := containerImageNames
 	containers, err := GetContainerList()
 	if err != nil {
 		return false, err
@@ -359,7 +367,11 @@ func CheckContainerStatus() (bool, *DockerError) {
 	containerCount := 0
 	for _, container := range containers {
 		for _, key := range containerArr {
-			if strings.HasPrefix(container.Image, key) {
+			if len(container.Names) != 1 {
+				continue
+			}
+			// The container names returned by docker are prefixed with "/"
+			if strings.HasPrefix(container.Names[0], "/"+key) {
 				containerCount++
 			}
 		}
