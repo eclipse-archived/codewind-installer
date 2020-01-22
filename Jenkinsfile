@@ -112,6 +112,11 @@ spec:
                 }
             }
 
+            options {
+                timeout(time: 10, unit: 'MINUTES') 
+                retry(3) 
+            }
+
             steps {
                 echo 'Starting tests'
 
@@ -199,6 +204,11 @@ spec:
                         buildingTag()
                     }
                 }
+            }
+
+            options {
+                timeout(time: 20, unit: 'MINUTES') 
+                retry(3) 
             }
 
             agent any
