@@ -38,10 +38,10 @@ func ProjectValidate(c *cli.Context) {
 	os.Exit(0)
 }
 
-// ProjectCreate : Downloads template and creates a new project
+// ProjectCreate : Downloads template, create a new project then validate it
 func ProjectCreate(c *cli.Context) {
-	destination := c.String("p")
-	url := c.String("u")
+	destination := c.String("path")
+	url := c.String("url")
 	result, err := project.DownloadTemplate(destination, url)
 	if err != nil {
 		HandleProjectError(err)
@@ -49,11 +49,11 @@ func ProjectCreate(c *cli.Context) {
 	}
 	if printAsJSON {
 		jsonResponse, _ := json.Marshal(result)
-		fmt.Println(string(jsonResponse))
+		logr.Tracef(string(jsonResponse))
 	} else {
-		fmt.Println("Project downloaded to " + destination)
+		logr.Tracef("Project downloaded to %v", destination)
 	}
-	os.Exit(0)
+	ProjectValidate(c)
 }
 
 // ProjectSync : Does a project Sync
