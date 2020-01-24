@@ -13,7 +13,6 @@ package remote
 
 import (
 	"errors"
-	"fmt"
 	"testing"
 	"time"
 
@@ -33,14 +32,14 @@ type MockDeploymentOptions struct {
 	Env               []corev1.EnvVar
 }
 
-func newTestSimpleK8s() *KubernetesAPI {
-	client := KubernetesAPI{}
+func newTestSimpleK8s() *K8sAPI {
+	client := K8sAPI{}
 	client.clientset = fake.NewSimpleClientset()
 	return &client
 }
 
-func newTestK8s() *KubernetesAPI {
-	client := KubernetesAPI{
+func newTestK8s() *K8sAPI {
+	client := K8sAPI{
 		clientset: &fake.Clientset{},
 	}
 	return &client
@@ -67,11 +66,9 @@ func generateMockDeployment(options MockDeploymentOptions) v1.Deployment {
 	}
 }
 
-func Test_Deploy_Get(t *testing.T) {
-	k8s := newTestSimpleK8s()
+func TestSuccessfulDeployGet(t *testing.T) {
 	timeNow := time.Now()
-
-	deploy1 := generateMockDeployment(MockDeploymentOptions{
+	mockDeploymentOptions1 := MockDeploymentOptions{
 		Namespace:         "test1",
 		CreationTimestamp: timeNow,
 		Labels:            map[string]string{"app": "codewind-pfe", "codewindWorkspace": "WID1"},
@@ -89,9 +86,9 @@ func Test_Deploy_Get(t *testing.T) {
 				Value: "codewind",
 			},
 		},
-	})
+	}
 
-	deploy2 := generateMockDeployment(MockDeploymentOptions{
+	mockDeploymentOptions2 := MockDeploymentOptions{
 		Namespace:         "test2",
 		CreationTimestamp: timeNow,
 		Labels:            map[string]string{"app": "codewind-pfe", "codewindWorkspace": "WID2"},
@@ -109,15 +106,7 @@ func Test_Deploy_Get(t *testing.T) {
 				Value: "codewind",
 			},
 		},
-	})
-
-	// mock the deployment list returned from the k8s client
-	fakeDeploymentList := v1.DeploymentList{
-		Items: []v1.Deployment{
-			deploy1, deploy2,
-		},
 	}
-	k8s.clientset = fake.NewSimpleClientset(&fakeDeploymentList)
 
 	ExistingDeployment1 := ExistingDeployment{
 		Namespace:         "test1",
@@ -137,39 +126,64 @@ func Test_Deploy_Get(t *testing.T) {
 		Version:           "0.7.0",
 	}
 
-	// using an empty string searches all namespaces
-	gotForAllNamespaces, err := k8s.FindDeployments("")
-	wantForAllNamespaces := []ExistingDeployment{
-		ExistingDeployment1, ExistingDeployment2,
+	tests := map[string]struct {
+		mockDeploymentOptions []MockDeploymentOptions
+		inNamespace           string
+		wantedDeploymentInfo  []ExistingDeployment
+	}{
+		"1 namespace, all deployment options": {
+			mockDeploymentOptions: []MockDeploymentOptions{mockDeploymentOptions1},
+			inNamespace:           "",
+			wantedDeploymentInfo:  []ExistingDeployment{ExistingDeployment1},
+		},
+		"2 namespaces, all deployment options, search all namespaces": {
+			mockDeploymentOptions: []MockDeploymentOptions{mockDeploymentOptions1, mockDeploymentOptions2},
+			inNamespace:           "",
+			wantedDeploymentInfo:  []ExistingDeployment{ExistingDeployment1, ExistingDeployment2},
+		},
+		"2 namespaces, all deployment options, search 1 namespace": {
+			mockDeploymentOptions: []MockDeploymentOptions{mockDeploymentOptions1, mockDeploymentOptions2},
+			inNamespace:           mockDeploymentOptions1.Namespace,
+			wantedDeploymentInfo:  []ExistingDeployment{ExistingDeployment1},
+		},
 	}
-	if err != nil {
-		fmt.Println(err)
-		t.Fatal("findDeployments() should not return an error")
-	}
-	assert.EqualValues(t, wantForAllNamespaces, gotForAllNamespaces)
 
-	// now search a particular namespace, and check the details for only one is returned
-	wantForSingleNamespace := []ExistingDeployment{
-		ExistingDeployment1,
-	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			k8s := newTestSimpleK8s()
+			deploymentList := []v1.Deployment{}
+			for _, options := range test.mockDeploymentOptions {
+				deploymentList = append(deploymentList, generateMockDeployment(options))
+			}
+			fakeDeploymentList := v1.DeploymentList{
+				Items: deploymentList,
+			}
 
-	gotForSingleNamespace, err := k8s.FindDeployments("test1")
-	if err != nil {
-		fmt.Println(err)
-		t.Fatal("findDeployments() should not return an error")
+			// this mocks the k8s client to return the given deployment list
+			k8s.clientset = fake.NewSimpleClientset(&fakeDeploymentList)
+			got, err := k8s.findDeployments(test.inNamespace)
+			checkDeployments(t, got, test.wantedDeploymentInfo, err)
+		})
 	}
-	assert.Equal(t, wantForSingleNamespace, gotForSingleNamespace)
+}
+
+func checkDeployments(t *testing.T, got, want []ExistingDeployment, err *RemInstError) {
+	t.Helper()
+	if err != nil {
+		t.Errorf("findDeployments() returned the error: %v", err)
+	}
+	assert.EqualValues(t, got, want)
 }
 
 func Test_Deploy_Get_Error(t *testing.T) {
 	k8s := newTestK8s()
 	errorDesc := "Mock error getting deployments"
 	mockErr := errors.New(errorDesc)
-	// this mocks the kube client to return an error
+	// this mocks the k8s client to return an error
 	k8s.clientset.(*fake.Clientset).Fake.AddReactor("list", "deployments", func(action k8stesting.Action) (handled bool, ret runtime.Object, err error) {
 		return true, &v1.DeploymentList{}, mockErr
 	})
 	wantedErr := RemInstError{errOpNotFound, mockErr, errorDesc}
-	_, gotErr := k8s.FindDeployments("")
+	_, gotErr := k8s.findDeployments("")
 	assert.Equal(t, wantedErr, *gotErr)
 }
