@@ -56,7 +56,11 @@ func RemoveCommand(c *cli.Context, dockerComposeFile string) {
 		}
 	}
 
-	utils.DockerComposeRemove(dockerComposeFile, tag)
+	dockerErr := utils.DockerComposeRemove(dockerComposeFile, tag)
+	if dockerErr != nil {
+		HandleDockerError(dockerErr)
+		os.Exit(1)
+	}
 }
 
 // DoRemoteRemove : Delete a remote Codewind deployment
