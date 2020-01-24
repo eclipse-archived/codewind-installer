@@ -29,6 +29,11 @@ type ExistingDeployment struct {
 	CodewindAuthRealm string `json:"codewindAuthRealm"`
 }
 
+// KubernetesAPI is the k8s client called by the function
+type KubernetesAPI struct {
+	clientset kubernetes.Interface
+}
+
 // GetExistingDeployments returns information about the remote installations of codewind, across all namespaces by default
 func GetExistingDeployments(namespace string) ([]ExistingDeployment, *RemInstError) {
 
@@ -38,12 +43,23 @@ func GetExistingDeployments(namespace string) ([]ExistingDeployment, *RemInstErr
 		return nil, &RemInstError{errOpNotFound, err, err.Error()}
 	}
 
-	clientset, err := kubernetes.NewForConfig(config)
+	client := KubernetesAPI{}
+	client.clientset, err = kubernetes.NewForConfig(config)
 	if err != nil {
 		return nil, &RemInstError{errOpNotFound, err, err.Error()}
 	}
 
-	deployments, err := clientset.AppsV1beta1().Deployments(namespace).List(v1.ListOptions{
+	deployments, RemInstErr := client.FindDeployments(namespace)
+	if RemInstErr != nil {
+		return nil, RemInstErr
+	}
+
+	return deployments, nil
+}
+
+// FindDeployments calls the given k8s API to get Codewind deployments
+func (client KubernetesAPI) FindDeployments(namespace string) ([]ExistingDeployment, *RemInstError) {
+	deployments, err := client.clientset.AppsV1().Deployments(namespace).List(v1.ListOptions{
 		LabelSelector: "app=codewind-pfe",
 	})
 	if err != nil {
@@ -53,17 +69,20 @@ func GetExistingDeployments(namespace string) ([]ExistingDeployment, *RemInstErr
 	var RemoteInstalls []ExistingDeployment
 	for _, deployment := range deployments.Items {
 		installTime := deployment.GetCreationTimestamp().Format("02-Jan-2006")
-		env := deployment.Spec.Template.Spec.Containers[0].Env
 		var keycloakAddress, cwVersion, authRealm string
-		for _, e := range env {
-			if e.Name == "CODEWIND_AUTH_HOST" {
-				keycloakAddress = "https://" + e.Value
-			}
-			if e.Name == "CODEWIND_VERSION" {
-				cwVersion = e.Value
-			}
-			if e.Name == "CODEWIND_AUTH_REALM" {
-				authRealm = e.Value
+		// ensure there are containers in the list, to avoid index errors
+		if containers := deployment.Spec.Template.Spec.Containers; len(containers) > 0 {
+			env := containers[0].Env
+			for _, e := range env {
+				if e.Name == "CODEWIND_AUTH_HOST" {
+					keycloakAddress = "https://" + e.Value
+				}
+				if e.Name == "CODEWIND_VERSION" {
+					cwVersion = e.Value
+				}
+				if e.Name == "CODEWIND_AUTH_REALM" {
+					authRealm = e.Value
+				}
 			}
 		}
 
