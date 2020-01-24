@@ -174,13 +174,14 @@ Subcommands:</br>
 > **Flags:**
 > --url,-u value URL of project to download
 > --path,-p value Path at which to create the new project
+> --conid value Connection ID of PFE that will be used to validate the project (optional)
 
 `validate` - Returns the predicted language and build type for a project, and writes a default .cw-settings to it if one does not already exist
 
 > **Flags:**
-> --name,-n value Project name
 > --path,-p value Project path, on local disk
 > --type,-t value Project build type, if known (not required)
+> --conid value Connection ID of PFE that will be used to validate the project (optional)
 
 `bind` - Bind a project to Codewind for building and running
 > **Flags:**

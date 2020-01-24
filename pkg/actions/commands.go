@@ -66,8 +66,9 @@ func Commands() {
 					Usage: "Create a project on disk",
 
 					Flags: []cli.Flag{
-						cli.StringFlag{Name: "url, u", Usage: "URL of project to download"},
+						cli.StringFlag{Name: "url, u", Usage: "URL of project to download", Required: true},
 						cli.StringFlag{Name: "path, p", Usage: "The path at which to create the new project", Required: true},
+						cli.StringFlag{Name: "conid", Value: "local", Usage: "The connection id of PFE which will be used to validate the project", Required: false},
 					},
 					Action: func(c *cli.Context) error {
 						ProjectCreate(c)

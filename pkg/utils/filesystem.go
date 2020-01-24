@@ -30,6 +30,7 @@ import (
 
 	"github.com/eclipse/codewind-installer/pkg/errors"
 	"github.com/google/go-github/github"
+	logr "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v3"
 )
 
@@ -157,7 +158,7 @@ func DownloadFile(URL, destination string) error {
 
 	// Write body to file
 	_, err = io.Copy(file, resp.Body)
-	log.Printf("Downloaded file from '%s' to '%s'\n", URL, destination)
+	logr.Tracef("Downloaded file from '%s' to '%s'\n", URL, destination)
 
 	return err
 }
@@ -204,7 +205,7 @@ func UnZip(filePath, destination string) error {
 			errors.CheckErr(err, 404, "")
 		}
 	}
-	log.Printf("Extracted file from '%s' to '%s'\n", filePath, destination)
+	logr.Tracef("Extracted file from '%s' to '%s'\n", filePath, destination)
 	return nil
 }
 
