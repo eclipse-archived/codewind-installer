@@ -84,7 +84,7 @@ func TestGetTemplates(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got, err := GetTemplates("local", test.inProjectStyle, test.inShowEnabledOnly)
 			assert.IsType(t, test.wantedType, got)
-			assert.Equal(t, test.wantedLength, len(got))
+			assert.True(t, len(got) >= test.wantedLength)
 			assert.Nil(t, err)
 		})
 	}
@@ -125,7 +125,7 @@ func TestGetTemplateRepos(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got, err := GetTemplateRepos("local")
 			assert.IsType(t, test.wantedType, got)
-			assert.Equal(t, test.wantedLength, len(got))
+			assert.True(t, len(got) >= test.wantedLength)
 			assert.Equal(t, test.wantedErr, err)
 		})
 	}
