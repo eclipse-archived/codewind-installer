@@ -193,14 +193,14 @@ func writeCwSettingsIfNotInProject(conID string, projectPath string, BuildType s
 	pathToLegacySettings := path.Join(projectPath, ".mc-settings")
 
 	if _, err := os.Stat(pathToLegacySettings); os.IsExist(err) {
-		err := renameLegacySettings(pathToLegacySettings, pathToCwSettings)
-		if err != nil {
-			return &ProjectError{errOpWriteCwSettings, err, err.Error()}
+		projErr := renameLegacySettings(pathToLegacySettings, pathToCwSettings)
+		if projErr != nil {
+			return projErr
 		}
 	} else if _, err := os.Stat(pathToCwSettings); os.IsNotExist(err) {
-		err := writeNewCwSettings(conID, pathToCwSettings, BuildType)
-		if err != nil {
-			return &ProjectError{errOpWriteCwSettings, err, err.Error()}
+		projErr := writeNewCwSettings(conID, pathToCwSettings, BuildType)
+		if projErr != nil {
+			return projErr
 		}
 	}
 	return nil
@@ -283,10 +283,10 @@ func determineJavaBuildType(projectPath string) string {
 	return "docker"
 }
 
-func determineProjectLanguage(projectPath string) (string, error) {
+func determineProjectLanguage(projectPath string) (string, *ProjectError) {
 	projectFiles, err := ioutil.ReadDir(projectPath)
 	if err != nil {
-		return "", err
+		return "", &ProjectError{errOpCreateProject, err, err.Error()}
 	}
 	for _, file := range projectFiles {
 		if !file.IsDir() {
@@ -304,32 +304,32 @@ func determineProjectLanguage(projectPath string) (string, error) {
 }
 
 // RenameLegacySettings renames a .mc-settings file to .cw-settings
-func renameLegacySettings(pathToLegacySettings string, pathToCwSettings string) error {
+func renameLegacySettings(pathToLegacySettings string, pathToCwSettings string) *ProjectError {
 	err := os.Rename(pathToLegacySettings, pathToCwSettings)
 	if err != nil {
-		return err
+		return &ProjectError{errOpCreateProject, err, err.Error()}
 	}
 	return nil
 }
 
 // writeNewCwSettings writes a default .cw-settings file to the given path,
 // dependant on the build type of the project
-func writeNewCwSettings(conID string, pathToCwSettings string, BuildType string) error {
-	defaultCwSettings, err := getDefaultCwSettings(conID, BuildType)
-	if err != nil {
-		return err
+func writeNewCwSettings(conID string, pathToCwSettings string, BuildType string) *ProjectError {
+	defaultCwSettings, projErr := getDefaultCwSettings(conID, BuildType)
+	if projErr != nil {
+		return projErr
 	}
 	cwSettings := addNonDefaultFieldsToCwSettings(defaultCwSettings, BuildType)
 	settings, err := json.MarshalIndent(cwSettings, "", "  ")
 	if err != nil {
-		return err
+		return &ProjectError{errOpCreateProject, err, err.Error()}
 	}
 	// File permission 0644 grants read and write access to the owner
 	err = ioutil.WriteFile(pathToCwSettings, settings, 0644)
 	return nil
 }
 
-func getDefaultCwSettings(conID string, BuildType string) (CWSettings, error) {
+func getDefaultCwSettings(conID string, BuildType string) (CWSettings, *ProjectError) {
 	client := &http.Client{}
 
 	connection, conErr := connections.GetConnectionByID(conID)
