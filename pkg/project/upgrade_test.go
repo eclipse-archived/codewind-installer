@@ -74,7 +74,7 @@ func Test_UpgradeProjects(t *testing.T) {
 					expectedOutput: &validOuput,
 				},
 		*/
-		"success case: reports failed upgrade when project inf is mnissing information": {
+		"success case: reports failed upgrade when project inf is missing information": {
 			workspaceDir:   "/error-projects/missing-project-info",
 			expectsErr:     false,
 			expectedOutput: &missingInfoOutput,
