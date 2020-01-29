@@ -24,6 +24,7 @@ import (
 	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/sechttp"
+	"github.com/eclipse/codewind-installer/pkg/utils"
 	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
@@ -84,8 +85,8 @@ func Bind(projectPath string, name string, language string, projectType string, 
 		Path:        projectPath,
 		Time:        creationTime,
 	}
-	buf := new(bytes.Buffer)
-	json.NewEncoder(buf).Encode(bindRequest)
+
+	client := &http.Client{}
 
 	conInfo, conInfoErr := connections.GetConnectionByID(conID)
 	if conInfoErr != nil {
@@ -97,42 +98,13 @@ func Bind(projectPath string, name string, language string, projectType string, 
 		return nil, &ProjectError{errOpConNotFound, conURLErr.Err, conURLErr.Desc}
 	}
 
-	bindURL := conURL + "/api/v1/projects/bind/start"
+	projectInfo, projErr := bindToPFE(client, bindRequest, conInfo, conURL)
 
-	client := &http.Client{}
-
-	request, requestErr := http.NewRequest("POST", bindURL, bytes.NewReader(buf.Bytes()))
-	if requestErr != nil {
-		return nil, &ProjectError{errOpRequest, requestErr, requestErr.Error()}
+	if projErr != nil {
+		return nil, projErr
 	}
 
-	request.Header.Set("Content-Type", "application/json")
-	resp, httpSecError := sechttp.DispatchHTTPRequest(client, request, conInfo)
-	if httpSecError != nil {
-		return nil, &ProjectError{errOpResponse, httpSecError.Err, httpSecError.Desc}
-	}
-
-	switch httpCode := resp.StatusCode; {
-	case httpCode == 400:
-		err = errors.New(textInvalidType)
-		return nil, &ProjectError{errOpResponse, err, textInvalidType}
-	case httpCode == 404:
-		err = errors.New(textAPINotFound)
-		return nil, &ProjectError{errOpResponse, err, textAPINotFound}
-	case httpCode == 409:
-		err = errors.New(textDupName)
-		return nil, &ProjectError{errOpResponse, err, textDupName}
-	}
-
-	defer resp.Body.Close()
-	bodyBytes, err := ioutil.ReadAll(resp.Body)
-
-	var projectInfo map[string]interface{}
-	if err := json.Unmarshal(bodyBytes, &projectInfo); err != nil {
-		logr.Errorln(err)
-	}
-
-	projectID := projectInfo["projectID"].(string)
+	projectID := projectInfo.ProjectID
 
 	// Generate the .codewind/connections/{projectID}.json file based on the given conID
 	SetConnection(conID, projectID)
@@ -149,6 +121,48 @@ func Bind(projectPath string, name string, language string, projectType string, 
 		StatusCode:    completeStatusCode,
 	}
 	return &response, syncErr
+}
+
+func bindToPFE(client utils.HTTPClient, bindRequest BindRequest, conInfo *connections.Connection, conURL string) (*BindResponse, *ProjectError) {
+	bindURL := conURL + "/api/v1/projects/bind/start"
+
+	buf := new(bytes.Buffer)
+	json.NewEncoder(buf).Encode(bindRequest)
+
+	request, requestErr := http.NewRequest("POST", bindURL, bytes.NewReader(buf.Bytes()))
+	if requestErr != nil {
+		return nil, &ProjectError{errOpRequest, requestErr, requestErr.Error()}
+	}
+
+	request.Header.Set("Content-Type", "application/json")
+	resp, httpSecError := sechttp.DispatchHTTPRequest(client, request, conInfo)
+	if httpSecError != nil {
+		return nil, &ProjectError{errOpResponse, httpSecError.Err, httpSecError.Desc}
+	}
+
+	switch httpCode := resp.StatusCode; {
+	case httpCode == 400:
+		err := errors.New(textInvalidType)
+		return nil, &ProjectError{errOpResponse, err, textInvalidType}
+	case httpCode == 404:
+		err := errors.New(textAPINotFound)
+		return nil, &ProjectError{errOpResponse, err, textAPINotFound}
+	case httpCode == 409:
+		err := errors.New(textDupName)
+		return nil, &ProjectError{errOpResponse, err, textDupName}
+	}
+	defer resp.Body.Close()
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, &ProjectError{errOpBind, err, err.Error()}
+	}
+
+	var projectInfo *BindResponse
+	if err := json.Unmarshal(bodyBytes, &projectInfo); err != nil {
+		logr.Errorln(err)
+	}
+
+	return projectInfo, nil
 }
 
 func completeBind(projectID string, conURL string, connection *connections.Connection) (string, int) {
