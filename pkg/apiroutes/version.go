@@ -25,8 +25,9 @@ import (
 type (
 	// ContainerVersionsList : sdf
 	ContainerVersionsList struct {
-		CwctlVersion string                       `json:"cwctlVersion"`
-		Connections  map[string]ContainerVersions `json:"connections"`
+		CwctlVersion     string                       `json:"cwctlVersion"`
+		Connections      map[string]ContainerVersions `json:"connections"`
+		ConnectionErrors map[string]string            `json:"errors"`
 	}
 
 	// ContainerVersions : The versions of the Codewind containers that are running
@@ -50,14 +51,18 @@ func GetAllContainerVersions(conIDList []string, cwctlVersion string, httpClient
 	containerVersionsList.CwctlVersion = cwctlVersion
 
 	var connectionVersions = make(map[string]ContainerVersions)
+	var connectionVersionsErrors = make(map[string]string)
+
 	for _, conID := range conIDList {
 		containerVersion, containerVersionErr := GetContainerVersions(conID, "", httpClient)
 		if containerVersionErr != nil {
-			return ContainerVersionsList{}, containerVersionErr
+			connectionVersionsErrors[conID] = containerVersionErr.Error()
+		} else {
+			connectionVersions[conID] = containerVersion
 		}
-		connectionVersions[conID] = containerVersion
 	}
 	containerVersionsList.Connections = connectionVersions
+	containerVersionsList.ConnectionErrors = connectionVersionsErrors
 
 	return containerVersionsList, nil
 }

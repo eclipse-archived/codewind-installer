@@ -19,11 +19,12 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/eclipse/codewind-installer/pkg/appconstants"
+	"github.com/eclipse/codewind-installer/pkg/connections"
+
 	"github.com/eclipse/codewind-installer/pkg/apiroutes"
 	"github.com/eclipse/codewind-installer/pkg/remote"
 	"github.com/eclipse/codewind-installer/pkg/utils"
-
-	"github.com/eclipse/codewind-installer/pkg/appconstants"
 	"github.com/urfave/cli"
 )
 
@@ -48,37 +49,48 @@ func GetSingleConnectionVersion(c *cli.Context) {
 		json, _ := json.Marshal(containerVersions)
 		fmt.Println(string(json))
 	} else {
-		w := new(tabwriter.Writer)
-		w.Init(os.Stdout, 0, 8, 2, '\t', 0)
-		fmt.Fprintln(w, "CWCTL VERSION: "+containerVersions.CwctlVersion+"\n")
-		fmt.Fprintln(w, "CONNECTION ID \tPFE VERSION\tPERFORMANCE VERSION\tGATEKEEPER VERSION")
-		fmt.Fprintln(w, containerVersions.CwctlVersion+"\t"+containerVersions.PFEVersion+"\t"+containerVersions.PerformanceVersion+"\t"+containerVersions.GatekeeperVersion)
-		fmt.Fprintln(w)
-		w.Flush()
+		var tableContent []string
+		tableContent = append(tableContent, "CWCTL VERSION: "+containerVersions.CwctlVersion+"\n")
+		tableContent = append(tableContent, "CONNECTION ID \tPFE VERSION\tPERFORMANCE VERSION\tGATEKEEPER VERSION")
+		tableContent = append(tableContent, connectionID+"\t"+containerVersions.PFEVersion+"\t"+containerVersions.PerformanceVersion+"\t"+containerVersions.GatekeeperVersion)
+
+		PrintTable(tableContent)
 	}
 }
 
 func GetAllConnectionVersions() {
-	conns := []string{"local", "K5DWSFUO"}
-	ContainerVersionsList, err := apiroutes.GetAllContainerVersions(conns, appconstants.VersionNum, http.DefaultClient)
+	connections, getConnectionsErr := connections.GetAllConnectionIDs()
+	if getConnectionsErr != nil {
+		fmt.Println(getConnectionsErr.Error())
+		os.Exit(1)
+	}
+
+	containerVersionsList, err := apiroutes.GetAllContainerVersions(connections, appconstants.VersionNum, http.DefaultClient)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
 
 	if printAsJSON {
-		json, _ := json.Marshal(ContainerVersionsList)
+		json, _ := json.Marshal(containerVersionsList)
 		fmt.Println(string(json))
 	} else {
-		w := new(tabwriter.Writer)
-		w.Init(os.Stdout, 0, 8, 2, '\t', 0)
-		fmt.Fprintln(w, "CWCTL VERSION: "+ContainerVersionsList.CwctlVersion+"\n")
-		fmt.Fprintln(w, "CONNECTION ID \tPFE VERSION\tPERFORMANCE VERSION\tGATEKEEPER VERSION")
-		for conID, con := range ContainerVersionsList.Connections {
-			fmt.Fprintln(w, conID+"\t"+con.PFEVersion+"\t"+con.PerformanceVersion+"\t"+con.GatekeeperVersion)
+		var tableContent []string
+		tableContent = append(tableContent, "CWCTL VERSION: "+containerVersionsList.CwctlVersion+"\n")
+		tableContent = append(tableContent, "CONNECTION ID \tPFE VERSION\tPERFORMANCE VERSION\tGATEKEEPER VERSION")
+		for conID, con := range containerVersionsList.Connections {
+			tableContent = append(tableContent, conID+"\t"+con.PFEVersion+"\t"+con.PerformanceVersion+"\t"+con.GatekeeperVersion)
 		}
-		fmt.Fprintln(w)
-		w.Flush()
+
+		if len(containerVersionsList.ConnectionErrors) > 0 {
+			tableContent = append(tableContent, "\nSOME ERRORS WHILE DETECTING CONNECTION VERSIONS")
+			tableContent = append(tableContent, "CONNECTION ID \tERROR")
+			for conID, conErr := range containerVersionsList.ConnectionErrors {
+				tableContent = append(tableContent, conID+"\t"+conErr)
+			}
+		}
+
+		PrintTable(tableContent)
 	}
 }
 

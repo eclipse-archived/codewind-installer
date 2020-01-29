@@ -269,6 +269,20 @@ func GetAllConnections() ([]Connection, *ConError) {
 	return nil, &ConError{errOpNotFound, err, err.Error()}
 }
 
+// GetAllConnectionIDs : Retrieve all saved connections and return their IDs
+func GetAllConnectionIDs() ([]string, *ConError) {
+	var connectionIDs []string
+	connections, getConErr := GetAllConnections()
+	if getConErr != nil {
+		return nil, getConErr
+	}
+
+	for _, con := range connections {
+		connectionIDs = append(connectionIDs, con.ID)
+	}
+	return connectionIDs, nil
+}
+
 // loadConnectionsConfigFile : Load the connections configuration file from disk
 // and returns the contents of the file or an error
 func loadConnectionsConfigFile() (*ConnectionConfig, *ConError) {

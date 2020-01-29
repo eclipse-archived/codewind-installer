@@ -13,6 +13,8 @@ package actions
 
 import (
 	"fmt"
+	"os"
+	"text/tabwriter"
 
 	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
@@ -76,4 +78,15 @@ func HandleRemInstError(err *remote.RemInstError) {
 	} else {
 		logr.Error(err.Desc)
 	}
+}
+
+// PrintTable prints a formatted table into the terminal
+func PrintTable(content []string) {
+	w := new(tabwriter.Writer)
+	w.Init(os.Stdout, 0, 8, 2, '\t', 0)
+	for _, line := range content {
+		fmt.Fprintln(w, line)
+	}
+	fmt.Fprintln(w)
+	w.Flush()
 }
