@@ -48,6 +48,13 @@ func UpgradeProjects(oldDir string) (*map[string]interface{}, *ProjectError) {
 			if err != nil {
 				return nil
 			}
+
+			// only read .inf files
+			extension := filepath.Ext(path)
+			if extension != ".inf" {
+				return nil
+			}
+
 			var result map[string]string
 			json.Unmarshal([]byte(file), &result)
 
