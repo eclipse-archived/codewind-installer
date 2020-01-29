@@ -37,6 +37,7 @@ func GetVersions(c *cli.Context) {
 	}
 }
 
+// GetSingleConnectionVersion : Gets the cwctl and container versions for a single connection
 func GetSingleConnectionVersion(c *cli.Context) {
 	connectionID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 	containerVersions, err := apiroutes.GetContainerVersions(connectionID, appconstants.VersionNum, http.DefaultClient)
@@ -58,6 +59,7 @@ func GetSingleConnectionVersion(c *cli.Context) {
 	}
 }
 
+// GetAllConnectionVersions : Gets the cwctl and container versions for all connections
 func GetAllConnectionVersions() {
 	connections, getConnectionsErr := connections.GetAllConnectionIDs()
 	if getConnectionsErr != nil {

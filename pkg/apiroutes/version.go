@@ -23,7 +23,8 @@ import (
 )
 
 type (
-	// ContainerVersionsList : sdf
+	// ContainerVersionsList : The versions of the Codewind containers that are running on all connections
+	// Adds errors into the struct in order to report as many correct versions as possible
 	ContainerVersionsList struct {
 		CwctlVersion     string                       `json:"cwctlVersion"`
 		Connections      map[string]ContainerVersions `json:"connections"`
