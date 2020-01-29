@@ -52,7 +52,6 @@ type (
 
 // DownloadTemplate using the url/link provided
 func DownloadTemplate(destination string, url string) (*Result, *ProjectError) {
-	checkProjectDirIsEmpty(destination)
 
 	projErr := checkProjectDirIsEmpty(destination)
 	if projErr != nil {

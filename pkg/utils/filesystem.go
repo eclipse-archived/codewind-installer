@@ -17,6 +17,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	goErr "errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -147,6 +148,10 @@ func DownloadFile(URL, destination string) error {
 		return err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return goErr.New(fmt.Sprintf("File download failed for %s, status code %d", URL, resp.StatusCode))
+	}
 
 	// Create the file
 	file, err := os.Create(destination)
