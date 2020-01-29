@@ -102,3 +102,10 @@ func TestBindToPFE(t *testing.T) {
 		})
 	}
 }
+
+func TestCompleteBind(t *testing.T) {
+	mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusOK, Body: nil}
+	mockConnection := connections.Connection{ID: "local"}
+	_, gotStatusCode := completeBind(mockClient, "testID", "dummyURL", &mockConnection)
+	assert.Equal(t, gotStatusCode, http.StatusOK)
+}

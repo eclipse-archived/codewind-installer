@@ -113,7 +113,7 @@ func Bind(projectPath string, name string, language string, projectType string, 
 	_, _, _, uploadedFilesList, syncErr := syncFiles(projectPath, projectID, conURL, 0, conInfo)
 
 	// Call bind/end to complete
-	completeStatus, completeStatusCode := completeBind(projectID, conURL, conInfo)
+	completeStatus, completeStatusCode := completeBind(client, projectID, conURL, conInfo)
 	response := BindResponse{
 		ProjectID:     projectID,
 		UploadedFiles: uploadedFilesList,
@@ -165,7 +165,7 @@ func bindToPFE(client utils.HTTPClient, bindRequest BindRequest, conInfo *connec
 	return projectInfo, nil
 }
 
-func completeBind(projectID string, conURL string, connection *connections.Connection) (string, int) {
+func completeBind(client utils.HTTPClient, projectID string, conURL string, connection *connections.Connection) (string, int) {
 	bindEndURL := conURL + "/api/v1/projects/" + projectID + "/bind/end"
 
 	payload := &BindEndRequest{ProjectID: projectID}
@@ -174,7 +174,7 @@ func completeBind(projectID string, conURL string, connection *connections.Conne
 	// Make the request to end the sync process.
 	request, err := http.NewRequest("POST", bindEndURL, bytes.NewBuffer(jsonPayload))
 	request.Header.Set("Content-Type", "application/json")
-	resp, httpSecError := sechttp.DispatchHTTPRequest(http.DefaultClient, request, connection)
+	resp, httpSecError := sechttp.DispatchHTTPRequest(client, request, connection)
 
 	if httpSecError != nil {
 		logr.Errorln(err)
