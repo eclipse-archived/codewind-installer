@@ -110,13 +110,13 @@ func Bind(projectPath string, name string, language string, projectType string, 
 	SetConnection(conID, projectID)
 
 	// Sync all the project files
-	_, _, _, uploadedFilesList, syncErr := syncFiles(projectPath, projectID, conURL, 0, conInfo)
+	syncInfo, syncErr := syncFiles(projectPath, projectID, conURL, 0, conInfo)
 
 	// Call bind/end to complete
 	completeStatus, completeStatusCode := completeBind(client, projectID, conURL, conInfo)
 	response := BindResponse{
 		ProjectID:     projectID,
-		UploadedFiles: uploadedFilesList,
+		UploadedFiles: syncInfo.UploadedFileList,
 		Status:        completeStatus,
 		StatusCode:    completeStatusCode,
 	}

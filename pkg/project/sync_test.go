@@ -14,6 +14,7 @@ package project
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -25,55 +26,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type noIgnoredPaths struct {
-	Field1 []string `json:"field1"`
-	Field2 string   `json:"field2"`
-}
+type (
+	noIgnoredPaths struct {
+		Field1 []string `json:"field1"`
+		Field2 string   `json:"field2"`
+	}
 
-var testFolder, cwSettingsPopulatedPath,
-	cwSettingsEmptyPath, cwSettingsNoIgnoredPathsObject string
-
-// func TestMain(m *testing.M) {
-// 	setup()
-// 	code := m.Run()
-// 	os.RemoveAll(testFolder)
-// 	os.Exit(code)
-// }
-
-// func setup() {
-// 	// Create directories to write .cw-settings files to
-// 	testFolder = "sync_test_folder_delete_me"
-// 	cwSettingsPopulatedPath = path.Join(testFolder, "cwSettingsPopulated")
-// 	cwSettingsEmptyPath = path.Join(testFolder, "cwSettingsEmpty")
-// 	cwSettingsNoIgnoredPathsObject = path.Join(testFolder, "cwSettingsNoIgnoredPathsObject")
-// 	populatedIgnoredPaths := CWSettings{
-// 		IgnoredPaths: []string{
-// 			"testfile",
-// 			"anothertestfile",
-// 		},
-// 	}
-// 	emptyIgnoredPaths := CWSettings{
-// 		IgnoredPaths: []string{},
-// 	}
-// 	noIgnoredPaths := noIgnoredPaths{
-// 		Field1: []string{"Something", "Else"},
-// 		Field2: "Something Else",
-// 	}
-
-// 	// Create test directory to store .cw-settings files in
-// 	os.Mkdir(testFolder, 0777)
-// 	os.Mkdir(cwSettingsPopulatedPath, 0777)
-// 	os.Mkdir(cwSettingsEmptyPath, 0777)
-// 	os.Mkdir(cwSettingsNoIgnoredPathsObject, 0777)
-
-// 	// Create .cw-settings files
-// 	file, _ := json.Marshal(populatedIgnoredPaths)
-// 	ioutil.WriteFile(path.Join(cwSettingsPopulatedPath, ".cw-settings"), file, 0644)
-// 	file, _ = json.Marshal(emptyIgnoredPaths)
-// 	ioutil.WriteFile(path.Join(cwSettingsEmptyPath, ".cw-settings"), file, 0644)
-// 	file, _ = json.Marshal(noIgnoredPaths)
-// 	ioutil.WriteFile(path.Join(cwSettingsNoIgnoredPathsObject, ".cw-settings"), file, 0644)
-// }
+	testDirPaths struct {
+		cwSettingsPopulated      string
+		cwSettingsEmpty          string
+		cwSettingsNoIgnoredPaths string
+	}
+)
 
 func TestCompleteUpload(t *testing.T) {
 	tests := map[string]struct {
@@ -89,6 +53,7 @@ func TestCompleteUpload(t *testing.T) {
 	mockRequest := CompleteRequest{
 		FileList: []string{"mock-file"},
 	}
+	// create empty res body, if nil resp.Body.close() will nil pointer panic
 	var resBody interface{}
 	r, _ := json.Marshal(resBody)
 	body := ioutil.NopCloser(bytes.NewReader([]byte(r)))
@@ -101,8 +66,6 @@ func TestCompleteUpload(t *testing.T) {
 			assert.Equal(t, got, test.responseStatus)
 		})
 	}
-
-	// create empty res body, if nil resp.Body.close() will nil pointer panic
 }
 
 func TestIgnoreFileOrDirectory(t *testing.T) {
@@ -184,19 +147,32 @@ func TestIgnoreFileOrDirectory(t *testing.T) {
 	}
 }
 
+func createTestDirPaths(t *testing.T, testFolder string) testDirPaths {
+	t.Helper()
+	return testDirPaths{
+		cwSettingsPopulated:      path.Join(testFolder, "cwSettingsPopulated"),
+		cwSettingsEmpty:          path.Join(testFolder, "cwSettingsEmpty"),
+		cwSettingsNoIgnoredPaths: path.Join(testFolder, "cwSettingsNoIgnoredPathsField"),
+	}
+}
+
 func TestRetrieveIgnoredPathsList(t *testing.T) {
+	testFolder := "sync_test_folder_delete_me"
+	createTestDirPaths := createTestDirPaths(t, testFolder)
+	setupIgnoredPathsTests(t, testFolder, createTestDirPaths)
+
 	tests := map[string]struct {
 		projectPath           string
 		shouldBeIgnored       []string
 		shouldBeIgnoredLength int
 	}{
 		"success case: the returned ignoredPaths list should contain testfile and anothertestfile": {
-			projectPath:           cwSettingsPopulatedPath,
+			projectPath:           createTestDirPaths.cwSettingsPopulated,
 			shouldBeIgnored:       []string{"testfile", "anothertestfile"},
 			shouldBeIgnoredLength: 2,
 		},
 		"success case: the returned ignoredPaths list should be empty": {
-			projectPath:           cwSettingsEmptyPath,
+			projectPath:           createTestDirPaths.cwSettingsEmpty,
 			shouldBeIgnored:       []string{},
 			shouldBeIgnoredLength: 0,
 		},
@@ -211,12 +187,11 @@ func TestRetrieveIgnoredPathsList(t *testing.T) {
 			shouldBeIgnoredLength: 0,
 		},
 		"success case: calling on a path that does exist and is valid JSON but doesn't contain ignoredPaths": {
-			projectPath:           cwSettingsNoIgnoredPathsObject,
+			projectPath:           createTestDirPaths.cwSettingsNoIgnoredPaths,
 			shouldBeIgnored:       nil,
 			shouldBeIgnoredLength: 0,
 		},
 	}
-	setupIgnoredPathsTests(t)
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			ignoredPathsList := retrieveIgnoredPathsList(test.projectPath)
@@ -226,44 +201,46 @@ func TestRetrieveIgnoredPathsList(t *testing.T) {
 			assert.Equal(t, test.shouldBeIgnored, ignoredPathsList, "ignoredPathsList was %b but should have been %b", ignoredPathsList, test.shouldBeIgnored)
 		})
 	}
-	cleanupIgnoredPathsTests(t)
+	cleanupIgnoredPathsTests(t, testFolder)
 }
 
-func setupIgnoredPathsTests(t *testing.T) {
+func setupIgnoredPathsTests(t *testing.T, testFolder string, createPaths testDirPaths) {
 	t.Helper()
-	testFolder = "sync_test_folder_delete_me"
-	cwSettingsPopulatedPath = path.Join(testFolder, "cwSettingsPopulated")
-	cwSettingsEmptyPath = path.Join(testFolder, "cwSettingsEmpty")
-	cwSettingsNoIgnoredPathsObject = path.Join(testFolder, "cwSettingsNoIgnoredPathsObject")
+	os.Mkdir(testFolder, 0777)
+
 	populatedIgnoredPaths := CWSettings{
 		IgnoredPaths: []string{
 			"testfile",
 			"anothertestfile",
 		},
 	}
+
 	emptyIgnoredPaths := CWSettings{
 		IgnoredPaths: []string{},
 	}
+
 	noIgnoredPaths := noIgnoredPaths{
 		Field1: []string{"Something", "Else"},
 		Field2: "Something Else",
 	}
 
-	// Create test directory to store .cw-settings files in
-	os.Mkdir(testFolder, 0777)
-	os.Mkdir(cwSettingsPopulatedPath, 0777)
-	os.Mkdir(cwSettingsEmptyPath, 0777)
-	os.Mkdir(cwSettingsNoIgnoredPathsObject, 0777)
-
+	os.Mkdir(createPaths.cwSettingsPopulated, 0777)
 	file, _ := json.Marshal(populatedIgnoredPaths)
-	ioutil.WriteFile(path.Join(cwSettingsPopulatedPath, ".cw-settings"), file, 0644)
-	file, _ = json.Marshal(emptyIgnoredPaths)
-	ioutil.WriteFile(path.Join(cwSettingsEmptyPath, ".cw-settings"), file, 0644)
-	file, _ = json.Marshal(noIgnoredPaths)
-	ioutil.WriteFile(path.Join(cwSettingsNoIgnoredPathsObject, ".cw-settings"), file, 0644)
+	ioutil.WriteFile(path.Join(createPaths.cwSettingsPopulated, ".cw-settings"), file, 0644)
+
+	os.Mkdir(createPaths.cwSettingsEmpty, 0777)
+	emptyFile, _ := json.Marshal(emptyIgnoredPaths)
+	ioutil.WriteFile(path.Join(createPaths.cwSettingsEmpty, ".cw-settings"), emptyFile, 0644)
+
+	os.Mkdir(createPaths.cwSettingsNoIgnoredPaths, 0777)
+	NoIgnoredPathsfile, _ := json.Marshal(noIgnoredPaths)
+	ioutil.WriteFile(path.Join(createPaths.cwSettingsNoIgnoredPaths, ".cw-settings"), NoIgnoredPathsfile, 0644)
 }
 
-func cleanupIgnoredPathsTests(t *testing.T) {
+func cleanupIgnoredPathsTests(t *testing.T, testFolder string) {
 	t.Helper()
-	os.RemoveAll(testFolder)
+	err := os.RemoveAll(testFolder)
+	if err != nil {
+		fmt.Println("Error removing test dir, you may need to remove manually")
+	}
 }
