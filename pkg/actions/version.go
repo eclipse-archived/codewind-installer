@@ -16,8 +16,10 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/eclipse/codewind-installer/pkg/apiroutes"
+	"github.com/eclipse/codewind-installer/pkg/remote"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/urfave/cli"
 )
@@ -31,4 +33,27 @@ func GetVersions(c *cli.Context) {
 		os.Exit(1)
 	}
 	utils.PrettyPrintJSON(containerVersions)
+}
+
+// RemoteListAll prints information for all remote installations in the given namespace
+func RemoteListAll(c *cli.Context) {
+	namespace := c.String("namespace")
+	remoteInstalls, err := remote.GetExistingDeployments(namespace)
+	if err != nil {
+		HandleRemInstError(err)
+		os.Exit(1)
+	}
+	if printAsJSON {
+		utils.PrettyPrintJSON(remoteInstalls)
+	} else {
+		w := new(tabwriter.Writer)
+		w.Init(os.Stdout, 0, 8, 2, '\t', 0)
+		fmt.Fprintln(w, "Workspace ID \tNamespace \tVersion \tInstall Date \tAuth Realm \tURL")
+		for _, install := range remoteInstalls {
+			fmt.Fprintln(w, install.WorkspaceID+"\t"+install.Namespace+"\t"+install.Version+"\t"+install.InstallDate+"\t"+install.CodewindAuthRealm+"\t"+install.CodewindURL)
+		}
+		fmt.Fprintln(w)
+		w.Flush()
+	}
+	os.Exit(0)
 }
