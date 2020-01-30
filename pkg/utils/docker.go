@@ -44,7 +44,7 @@ var baseImageNameArr = [2]string{
 const pfeContainerName = "codewind-pfe"
 const performanceContainerName = "codewind-performance"
 
-var containerImageNames = [...]string{
+var containerNames = [...]string{
 	pfeContainerName,
 	performanceContainerName,
 }
@@ -370,7 +370,7 @@ func GetContainersToRemove(containerList []types.Container) []types.Container {
 // CheckContainerStatus of Codewind running/stopped
 func CheckContainerStatus() (bool, *DockerError) {
 	var containerStatus = false
-	containerArr := containerImageNames
+	containerArr := containerNames
 	containers, err := GetContainerList()
 	if err != nil {
 		return false, err
@@ -593,7 +593,7 @@ func DetermineDebugPortForPFE() (pfeDebugPort string) {
 
 // GetContainerTags of the Codewind version(s) currently running
 func GetContainerTags() ([]string, *DockerError) {
-	containerArr := containerImageNames
+	containerArr := containerNames
 	tagArr := []string{}
 
 	containers, err := GetContainerList()
