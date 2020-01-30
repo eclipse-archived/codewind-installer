@@ -71,6 +71,14 @@ type (
 		LastSync     int64    // last sync time
 	}
 
+	// SyncInfo contains the information from a project sync
+	SyncInfo struct {
+		fileList         []string
+		directoryList    []string
+		modifiedList     []string
+		UploadedFileList []UploadedFile
+	}
+
 	// refPath is a referenced file path to sync
 	refPath struct {
 		From string `json:"from"`
@@ -116,7 +124,7 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	}
 
 	// Sync all the necessary project files
-	syncInfo, syncErr := syncFiles(projectPath, projectID, conURL, synctime, conInfo)
+	syncInfo, syncErr := syncFiles(&http.Client{}, projectPath, projectID, conURL, synctime, conInfo)
 
 	// Complete the upload
 	completeRequest := CompleteRequest{
@@ -135,20 +143,13 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	return &response, syncErr
 }
 
-// SyncInfo contains the information from a project sync
-type SyncInfo struct {
-	fileList         []string
-	directoryList    []string
-	modifiedList     []string
-	UploadedFileList []UploadedFile
-}
-
-func syncFiles(projectPath string, projectID string, conURL string, synctime int64, connection *connections.Connection) (*SyncInfo, *ProjectError) {
-	var fileList, directoryList, modifiedList []string
+func syncFiles(client utils.HTTPClient, projectPath string, projectID string, conURL string, synctime int64, connection *connections.Connection) (*SyncInfo, *ProjectError) {
+	var fileList []string
+	var directoryList []string
+	var modifiedList []string
 	var uploadedFiles []UploadedFile
 
 	projectUploadURL := conURL + "/api/v1/projects/" + projectID + "/upload"
-	client := &http.Client{}
 
 	refPathsChanged := false
 
@@ -159,7 +160,7 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 			// TODO - How to handle *some* files being unreadable
 		}
 
-		// if it is the top level directory ignore it
+		// If it is the top level directory ignore it
 		if path == projectPath {
 			return nil
 		}
@@ -167,18 +168,11 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 		// use ToSlash to try and get both Windows and *NIX paths to be *NIX for pfe
 		relativePath := filepath.ToSlash(path[(len(projectPath) + 1):])
 
-		if info.IsDir() {
-			shouldIgnore := ignoreFileOrDirectory(relativePath, true, info.IgnoredPaths)
-			if shouldIgnore {
-				return filepath.SkipDir
-			}
-			directoryList = append(directoryList, relativePath)
-		} else {
+		if !info.IsDir() {
 			shouldIgnore := ignoreFileOrDirectory(relativePath, false, info.IgnoredPaths)
 			if shouldIgnore {
 				return nil
 			}
-
 			// Create list of all files for a project
 			fileList = append(fileList, relativePath)
 
@@ -199,7 +193,7 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 				if err != nil {
 					return nil
 				}
-				// Create list of all modified files
+				// Create list of all modfied files
 				modifiedList = append(modifiedList, relativePath)
 
 				var buffer bytes.Buffer
@@ -232,6 +226,12 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 					refPathsChanged = true
 				}
 			}
+		} else {
+			shouldIgnore := ignoreFileOrDirectory(relativePath, true, info.IgnoredPaths)
+			if shouldIgnore {
+				return filepath.SkipDir
+			}
+			directoryList = append(directoryList, relativePath)
 		}
 		return nil
 	}
