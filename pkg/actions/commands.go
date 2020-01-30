@@ -863,7 +863,7 @@ func Commands() {
 		{
 			Name:    "version",
 			Aliases: []string{"v"},
-			Usage:   "Get versions of remotely deployed Codewind containers",
+			Usage:   "Get versions of deployed Codewind containers",
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "conid", Value: "local", Usage: "The connection ID", Required: false},
 				cli.BoolFlag{Name: "all, a", Usage: "Get the codewind container versions for all connections", Required: false},
