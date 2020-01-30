@@ -28,6 +28,7 @@ import (
 	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/sechttp"
+	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/urfave/cli"
 )
 
@@ -115,11 +116,18 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	}
 
 	// Sync all the necessary project files
-	fileList, directoryList, modifiedList, uploadedFilesList, syncErr := syncFiles(projectPath, projectID, conURL, synctime, conInfo)
+	syncInfo, syncErr := syncFiles(projectPath, projectID, conURL, synctime, conInfo)
+
 	// Complete the upload
-	completeStatus, completeStatusCode := completeUpload(projectID, fileList, directoryList, modifiedList, conID, currentSyncTime)
+	completeRequest := CompleteRequest{
+		FileList:      syncInfo.fileList,
+		DirectoryList: syncInfo.directoryList,
+		ModifiedList:  syncInfo.modifiedList,
+		TimeStamp:     currentSyncTime,
+	}
+	completeStatus, completeStatusCode := completeUpload(&http.Client{}, projectID, completeRequest, conInfo, conURL)
 	response := SyncResponse{
-		UploadedFiles: uploadedFilesList,
+		UploadedFiles: syncInfo.UploadedFileList,
 		Status:        completeStatus,
 		StatusCode:    completeStatusCode,
 	}
@@ -127,10 +135,16 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	return &response, syncErr
 }
 
-func syncFiles(projectPath string, projectID string, conURL string, synctime int64, connection *connections.Connection) ([]string, []string, []string, []UploadedFile, *ProjectError) {
-	var fileList []string
-	var directoryList []string
-	var modifiedList []string
+// SyncInfo contains the information from a project sync
+type SyncInfo struct {
+	fileList         []string
+	directoryList    []string
+	modifiedList     []string
+	UploadedFileList []UploadedFile
+}
+
+func syncFiles(projectPath string, projectID string, conURL string, synctime int64, connection *connections.Connection) (*SyncInfo, *ProjectError) {
+	var fileList, directoryList, modifiedList []string
 	var uploadedFiles []UploadedFile
 
 	projectUploadURL := conURL + "/api/v1/projects/" + projectID + "/upload"
@@ -145,7 +159,7 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 			// TODO - How to handle *some* files being unreadable
 		}
 
-		// If it is the top level directory ignore it
+		// if it is the top level directory ignore it
 		if path == projectPath {
 			return nil
 		}
@@ -153,11 +167,18 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 		// use ToSlash to try and get both Windows and *NIX paths to be *NIX for pfe
 		relativePath := filepath.ToSlash(path[(len(projectPath) + 1):])
 
-		if !info.IsDir() {
+		if info.IsDir() {
+			shouldIgnore := ignoreFileOrDirectory(relativePath, true, info.IgnoredPaths)
+			if shouldIgnore {
+				return filepath.SkipDir
+			}
+			directoryList = append(directoryList, relativePath)
+		} else {
 			shouldIgnore := ignoreFileOrDirectory(relativePath, false, info.IgnoredPaths)
 			if shouldIgnore {
 				return nil
 			}
+
 			// Create list of all files for a project
 			fileList = append(fileList, relativePath)
 
@@ -178,7 +199,7 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 				if err != nil {
 					return nil
 				}
-				// Create list of all modfied files
+				// Create list of all modified files
 				modifiedList = append(modifiedList, relativePath)
 
 				var buffer bytes.Buffer
@@ -211,12 +232,6 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 					refPathsChanged = true
 				}
 			}
-		} else {
-			shouldIgnore := ignoreFileOrDirectory(relativePath, true, info.IgnoredPaths)
-			if shouldIgnore {
-				return filepath.SkipDir
-			}
-			directoryList = append(directoryList, relativePath)
 		}
 		return nil
 	}
@@ -246,7 +261,7 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 	})
 	if err != nil {
 		text := fmt.Sprintf("error walking the path %q: %v\n", projectPath, err)
-		return nil, nil, nil, nil, &ProjectError{errOpSync, errors.New(text), text}
+		return nil, &ProjectError{errOpSync, errors.New(text), text}
 	}
 
 	errText := ""
@@ -286,43 +301,28 @@ func syncFiles(projectPath string, projectID string, conURL string, synctime int
 	}
 
 	if errText != "" {
-		return fileList, directoryList, modifiedList, uploadedFiles, &ProjectError{errOpSyncRef, errors.New(errText), errText}
+		return &SyncInfo{fileList, directoryList, modifiedList, uploadedFiles}, &ProjectError{errOpSyncRef, errors.New(errText), errText}
 	}
 
-	return fileList, directoryList, modifiedList, uploadedFiles, nil
+	return &SyncInfo{fileList, directoryList, modifiedList, uploadedFiles}, nil
 }
 
-func completeUpload(projectID string, files []string, directories []string, modfiles []string, conID string, currentSyncTime int64) (string, int) {
-
-	conInfo, conInfoErr := connections.GetConnectionByID(conID)
-	if conInfoErr != nil {
-		return conInfoErr.Desc, 1
-	}
-
-	conURL, conErr := config.PFEOriginFromConnection(conInfo)
-	if conErr != nil {
-		return conErr.Desc, 1
-	}
+func completeUpload(client utils.HTTPClient, projectID string, completeRequest CompleteRequest, conInfo *connections.Connection, conURL string) (string, int) {
 
 	uploadEndURL := conURL + "/api/v1/projects/" + projectID + "/upload/end"
-	payload := &CompleteRequest{FileList: files, DirectoryList: directories, ModifiedList: modfiles, TimeStamp: currentSyncTime}
-	jsonPayload, _ := json.Marshal(payload)
+	jsonPayload, _ := json.Marshal(&completeRequest)
 	req, err := http.NewRequest("POST", uploadEndURL, bytes.NewBuffer(jsonPayload))
-	req.Header.Set("Content-Type", "application/json")
 	if err != nil {
 		fmt.Printf("error setting the header  %v\n", err)
 		return err.Error(), 0
 	}
-	client := &http.Client{}
+	req.Header.Set("Content-Type", "application/json")
+
 	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo)
 	if httpSecError != nil {
 		fmt.Printf("error dispatching request  %v\n", httpSecError)
 		return httpSecError.Desc, 0
 	}
-	if resp.StatusCode != 200 {
-		return resp.Status, resp.StatusCode
-	}
-
 	defer resp.Body.Close()
 
 	return resp.Status, resp.StatusCode
@@ -414,10 +414,4 @@ func ignoreFileOrDirectory(name string, isDir bool, cwSettingsIgnoredPathsList [
 		}
 	}
 	return isFileInIgnoredList
-}
-
-// PrettyPrintJSON : Format JSON output for display
-func PrettyPrintJSON(i interface{}) {
-	s, _ := json.MarshalIndent(i, "", "\t")
-	fmt.Println(string(s))
 }
