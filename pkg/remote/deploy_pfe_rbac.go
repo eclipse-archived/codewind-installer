@@ -16,6 +16,29 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// CreateCodewindTektonClusterRoles : create Codewind tekton cluster roles
+func CreateCodewindTektonClusterRoles(deployOptions *DeployOptions) rbacv1.ClusterRole {
+	ourRoles := []rbacv1.PolicyRule{
+
+		rbacv1.PolicyRule{
+			APIGroups: []string{""},
+			Resources: []string{"services"},
+			Verbs:     []string{"get", "list"},
+		},
+	}
+	return rbacv1.ClusterRole{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "rbac.authorization.k8s.io/v1beta1",
+			Kind:       "ClusterRole",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: deployOptions.Namespace,
+			Name:      CodewindTektonClusterRoleBindingName,
+		},
+		Rules: ourRoles,
+	}
+}
+
 // CreateCodewindRoles : create Codewind roles
 func CreateCodewindRoles(deployOptions *DeployOptions) rbacv1.ClusterRole {
 	ourRoles := []rbacv1.PolicyRule{
@@ -127,6 +150,35 @@ func CreateCodewindRoleBindings(codewindInstance Codewind, deployOptions *Deploy
 		RoleRef: rbacv1.RoleRef{
 			Kind:     "ClusterRole",
 			Name:     CodewindRolesName,
+			APIGroup: "rbac.authorization.k8s.io",
+		},
+	}
+}
+
+//CreateCodewindTektonClusterRoleBindings : create Codewind tekton cluster role bindings
+func CreateCodewindTektonClusterRoleBindings(codewindInstance Codewind, deployOptions *DeployOptions, codewindRoleBindingName string) rbacv1.ClusterRoleBinding {
+	labels := map[string]string{
+		"codewindWorkspace": codewindInstance.WorkspaceID,
+	}
+	return rbacv1.ClusterRoleBinding{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "rbac.authorization.k8s.io/v1beta1",
+			Kind:       "ClusterRoleBinding",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   CodewindTektonClusterRoleBindingName,
+			Labels: labels,
+		},
+		Subjects: []rbacv1.Subject{
+			rbacv1.Subject{
+				Kind:      "ServiceAccount",
+				Name:      codewindInstance.ServiceAccountName,
+				Namespace: deployOptions.Namespace,
+			},
+		},
+		RoleRef: rbacv1.RoleRef{
+			Kind:     "ClusterRole",
+			Name:     CodewindTektonClusterRolesName,
 			APIGroup: "rbac.authorization.k8s.io",
 		},
 	}

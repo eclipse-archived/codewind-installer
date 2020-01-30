@@ -74,6 +74,12 @@ const (
 	// CodewindRoleBindingNamePrefix will include the workspaceID when deployed
 	CodewindRoleBindingNamePrefix = "codewind-rolebinding"
 
+	// CodewindTektonClusterRoleBindingName 
+	CodewindTektonClusterRoleBindingName = "codewind-tektonrolebinding"
+
+	// CodewindTektonClusterRoleBindingName
+	CodewindTektonClusterRolesName = "codewind-tekton"
+
 	// ROKSStorageClass references the storage class to use on ROKS (OpenShift on IKS)
 	ROKSStorageClass = "ibmc-file-bronze"
 )

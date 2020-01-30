@@ -74,6 +74,7 @@ type RemovalResult struct {
 
 	// Role bindings
 	StatusRoleBindings int
+	StatusTektonRoleBindings int
 
 	// Persistent volume claims
 	StatusPVCCodewind int
@@ -112,6 +113,7 @@ func RemoveRemote(remoteRemovalOptions *RemoveDeploymentOptions) (*RemovalResult
 		StatusSecretsCodewind:       ResourceNotProcessed,
 		StatusServiceAccount:        ResourceNotProcessed,
 		StatusRoleBindings:          ResourceNotProcessed,
+		StatusTektonRoleBindings:    ResourceNotProcessed,
 		StatusPVCCodewind:           ResourceNotProcessed,
 		StatusIngressGatekeeper:     ResourceNotProcessed,
 	}
@@ -163,6 +165,10 @@ func RemoveRemote(remoteRemovalOptions *RemoveDeploymentOptions) (*RemovalResult
 	logr.Trace("Removing Codewind role bindings")
 	status, err = deleteRoleBindings(remoteRemovalOptions, clientset, "codewindWorkspace="+remoteRemovalOptions.WorkspaceID)
 	removalStatus.StatusRoleBindings = status
+
+	logr.Trace("Removing Codewind tekton role bindings")
+	status, err = deleteTektonRoleBindings(remoteRemovalOptions, clientset, "codewindWorkspace="+remoteRemovalOptions.WorkspaceID)
+	removalStatus.StatusTektonRoleBindings = status
 
 	logr.Trace("Removing Codewind service account")
 	status, err = deleteServiceAccount(remoteRemovalOptions, clientset, "app=codewind-"+remoteRemovalOptions.WorkspaceID+",codewindWorkspace="+remoteRemovalOptions.WorkspaceID)
@@ -454,6 +460,28 @@ func deleteRoleBindings(remoteRemovalOptions *RemoveDeploymentOptions, clientset
 			} else {
 				phase = ResourceRemoved
 			}
+		}
+	} else {
+		phase = ResourceNotFound
+	}
+	return phase, nil
+}
+
+func deleteTektonRoleBindings(remoteRemovalOptions *RemoveDeploymentOptions, clientset *kubernetes.Clientset, labelSelector string) (int, error) {
+	phase := ResourceNotFound
+	resourceList, err := clientset.RbacV1().ClusterRoleBindings().List(
+		v1.ListOptions{LabelSelector: labelSelector},
+	)
+	if err != nil {
+		return phase, err
+	}
+	if resourceList != nil && resourceList.Items != nil && len(resourceList.Items) > 0 {
+		phase = ResourceFound
+		err := clientset.RbacV1().ClusterRoleBindings().Delete(CodewindTektonClusterRoleBindingName, nil)
+		if err != nil {
+			phase = ResourceRemoveFailed
+		} else {
+			phase = ResourceRemoved
 		}
 	} else {
 		phase = ResourceNotFound
