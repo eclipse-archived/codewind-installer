@@ -23,6 +23,9 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/eclipse/codewind-installer/pkg/config"
+	"github.com/eclipse/codewind-installer/pkg/connections"
+
 	"github.com/eclipse/codewind-installer/pkg/apiroutes"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/urfave/cli"
@@ -190,14 +193,14 @@ func writeCwSettingsIfNotInProject(conID string, projectPath string, BuildType s
 	pathToLegacySettings := path.Join(projectPath, ".mc-settings")
 
 	if _, err := os.Stat(pathToLegacySettings); os.IsExist(err) {
-		err := renameLegacySettings(pathToLegacySettings, pathToCwSettings)
-		if err != nil {
-			return &ProjectError{errOpWriteCwSettings, err, err.Error()}
+		projErr := renameLegacySettings(pathToLegacySettings, pathToCwSettings)
+		if projErr != nil {
+			return projErr
 		}
 	} else if _, err := os.Stat(pathToCwSettings); os.IsNotExist(err) {
-		err := writeNewCwSettings(conID, pathToCwSettings, BuildType)
-		if err != nil {
-			return &ProjectError{errOpWriteCwSettings, err, err.Error()}
+		projErr := writeNewCwSettings(conID, pathToCwSettings, BuildType)
+		if projErr != nil {
+			return projErr
 		}
 	}
 	return nil
@@ -280,10 +283,10 @@ func determineJavaBuildType(projectPath string) string {
 	return "docker"
 }
 
-func determineProjectLanguage(projectPath string) (string, error) {
+func determineProjectLanguage(projectPath string) (string, *ProjectError) {
 	projectFiles, err := ioutil.ReadDir(projectPath)
 	if err != nil {
-		return "", err
+		return "", &ProjectError{errOpCreateProject, err, err.Error()}
 	}
 	for _, file := range projectFiles {
 		if !file.IsDir() {
@@ -301,31 +304,45 @@ func determineProjectLanguage(projectPath string) (string, error) {
 }
 
 // RenameLegacySettings renames a .mc-settings file to .cw-settings
-func renameLegacySettings(pathToLegacySettings string, pathToCwSettings string) error {
+func renameLegacySettings(pathToLegacySettings string, pathToCwSettings string) *ProjectError {
 	err := os.Rename(pathToLegacySettings, pathToCwSettings)
 	if err != nil {
-		return err
+		return &ProjectError{errOpCreateProject, err, err.Error()}
 	}
 	return nil
 }
 
 // writeNewCwSettings writes a default .cw-settings file to the given path,
 // dependant on the build type of the project
-func writeNewCwSettings(conID string, pathToCwSettings string, BuildType string) error {
-	defaultCwSettings := getDefaultCwSettings(conID, BuildType)
+func writeNewCwSettings(conID string, pathToCwSettings string, BuildType string) *ProjectError {
+	defaultCwSettings, projErr := getDefaultCwSettings(conID, BuildType)
+	if projErr != nil {
+		return projErr
+	}
 	cwSettings := addNonDefaultFieldsToCwSettings(defaultCwSettings, BuildType)
 	settings, err := json.MarshalIndent(cwSettings, "", "  ")
 	if err != nil {
-		return err
+		return &ProjectError{errOpCreateProject, err, err.Error()}
 	}
 	// File permission 0644 grants read and write access to the owner
 	err = ioutil.WriteFile(pathToCwSettings, settings, 0644)
 	return nil
 }
 
-func getDefaultCwSettings(conID string, BuildType string) CWSettings {
+func getDefaultCwSettings(conID string, BuildType string) (CWSettings, *ProjectError) {
 	client := &http.Client{}
-	IgnoredPaths, err := apiroutes.GetIgnoredPaths(conID, BuildType, client)
+
+	connection, conErr := connections.GetConnectionByID(conID)
+	if conErr != nil {
+		return CWSettings{}, &ProjectError{errOpCreateProject, conErr, conErr.Desc}
+	}
+
+	conURL, configErr := config.PFEOriginFromConnection(connection)
+	if configErr != nil {
+		return CWSettings{}, &ProjectError{errOpCreateProject, conErr, configErr.Desc}
+	}
+
+	IgnoredPaths, err := apiroutes.GetIgnoredPaths(client, connection, BuildType, conURL)
 	if err != nil {
 		// If error getting the default ignoredPaths, set as empty slice
 		IgnoredPaths = []string{}
@@ -337,7 +354,7 @@ func getDefaultCwSettings(conID string, BuildType string) CWSettings {
 		IsHTTPS:           false,
 		IgnoredPaths:      IgnoredPaths,
 		StatusPingTimeout: "",
-	}
+	}, nil
 }
 
 func addNonDefaultFieldsToCwSettings(cwSettings CWSettings, ProjectType string) CWSettings {
