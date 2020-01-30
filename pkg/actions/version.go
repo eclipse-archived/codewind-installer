@@ -20,6 +20,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/eclipse/codewind-installer/pkg/appconstants"
+	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
 
 	"github.com/eclipse/codewind-installer/pkg/apiroutes"
@@ -40,7 +41,20 @@ func GetVersions(c *cli.Context) {
 // GetSingleConnectionVersion : Gets the cwctl and container versions for a single connection
 func GetSingleConnectionVersion(c *cli.Context) {
 	connectionID := strings.TrimSpace(strings.ToLower(c.String("conid")))
-	containerVersions, err := apiroutes.GetContainerVersions(connectionID, appconstants.VersionNum, http.DefaultClient)
+
+	conInfo, conInfoErr := connections.GetConnectionByID(connectionID)
+	if conInfoErr != nil {
+		HandleConnectionError(conInfoErr)
+		os.Exit(1)
+	}
+
+	conURL, conErr := config.PFEOriginFromConnection(conInfo)
+	if conErr != nil {
+		HandleConfigError(conErr)
+		os.Exit(1)
+	}
+
+	containerVersions, err := apiroutes.GetContainerVersions(conURL, appconstants.VersionNum, conInfo, http.DefaultClient)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
@@ -61,9 +75,9 @@ func GetSingleConnectionVersion(c *cli.Context) {
 
 // GetAllConnectionVersions : Gets the cwctl and container versions for all connections
 func GetAllConnectionVersions() {
-	connections, getConnectionsErr := connections.GetAllConnectionIDs()
+	connections, getConnectionsErr := connections.GetAllConnections()
 	if getConnectionsErr != nil {
-		fmt.Println(getConnectionsErr.Error())
+		HandleConnectionError(getConnectionsErr)
 		os.Exit(1)
 	}
 
@@ -88,7 +102,7 @@ func GetAllConnectionVersions() {
 			tableContent = append(tableContent, "\nSOME ERRORS WHILE DETECTING CONNECTION VERSIONS")
 			tableContent = append(tableContent, "CONNECTION ID \tERROR")
 			for conID, conErr := range containerVersionsList.ConnectionErrors {
-				tableContent = append(tableContent, conID+"\t"+conErr)
+				tableContent = append(tableContent, conID+"\t"+conErr.Error())
 			}
 		}
 

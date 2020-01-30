@@ -65,6 +65,18 @@ func Test_GetConnectionsConfig(t *testing.T) {
 	})
 }
 
+func Test_GetAllConnections(t *testing.T) {
+	t.Run("Asserts there is only one connection and ensures it has an ID", func(t *testing.T) {
+		ResetConnectionsFile()
+		result, err := GetAllConnections()
+		if err != nil {
+			t.Fail()
+		}
+		assert.Len(t, result, 1)
+		assert.Equal(t, result[0].ID, "local")
+	})
+}
+
 // Test_CreateNewConnection :  Adds a new connection to the list called remoteserver
 func Test_CreateNewConnection(t *testing.T) {
 	set := flag.NewFlagSet("tests", 0)
