@@ -136,7 +136,7 @@ func DockerCompose(dockerComposeFile string, tag string, loglevel string) *Docke
 	cmd.Stdout = output
 	cmd.Stderr = output
 	if err := cmd.Start(); err != nil { // after 'Start' the program is continued and script is executing in background
-	    //print out docker-compose sysout & syserr for error diagnosis
+		//print out docker-compose sysout & syserr for error diagnosis
 		fmt.Printf(output.String())
 		DeleteTempFile(dockerComposeFile)
 		return &DockerError{errOpDockerComposeStart, err, err.Error()}
@@ -593,7 +593,7 @@ func DetermineDebugPortForPFE() (pfeDebugPort string) {
 
 // GetContainerTags of the Codewind version(s) currently running
 func GetContainerTags() ([]string, *DockerError) {
-	containerArr := baseImageNameArr
+	containerArr := containerImageNames
 	tagArr := []string{}
 
 	containers, err := GetContainerList()
@@ -603,13 +603,12 @@ func GetContainerTags() ([]string, *DockerError) {
 
 	for _, container := range containers {
 		for _, key := range containerArr {
-			if strings.HasPrefix(container.Image, key) {
+			if strings.HasPrefix(container.Names[0], "/"+key) {
 				tag := strings.Split(container.Image, ":")[1]
 				tagArr = append(tagArr, tag)
 			}
 		}
 	}
-
 	tagArr = RemoveDuplicateEntries(tagArr)
 	return tagArr, nil
 }
