@@ -59,3 +59,17 @@ func Test_GetGatekeeperEnvironment(t *testing.T) {
 		assert.Equal(t, "remoteClient", gatekeeperEnv.ClientID)
 	})
 }
+
+func Test_GetGatekeeperEnvironmentBadHost(t *testing.T) {
+	body := ioutil.NopCloser(bytes.NewReader([]byte("<HTML></HTML>")))
+	mockClient := &MockResponse{StatusCode: http.StatusOK, Body: body}
+
+	t.Run("Assert a bad response fails with error", func(t *testing.T) {
+		gatekeeperEnv, err := GetGatekeeperEnvironment(mockClient, "http://noserver.test.com")
+		if err == nil {
+			t.Fail()
+		}
+		assert.Nil(t, gatekeeperEnv)
+	})
+
+}
