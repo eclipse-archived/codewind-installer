@@ -30,16 +30,16 @@ const (
 	GatekeeperPrefix = "codewind-gatekeeper"
 
 	// PFEImage is the docker image that will be used in the Codewind-PFE pod
-	PFEImage = "eclipse/codewind-pfe-amd64"
+	PFEImage = "tobespc/codewind-pfe-amd64"
 
 	// PerformanceImage is the docker image that will be used in the Performance dashboard pod
-	PerformanceImage = "eclipse/codewind-performance-amd64"
+	PerformanceImage = "tobespc/codewind-performance-amd64"
 
 	// KeycloakImage is the docker image that will be used in the Codewind-Keycloak pod
-	KeycloakImage = "eclipse/codewind-keycloak-amd64"
+	KeycloakImage = "tobespc/codewind-keycloak-amd64"
 
 	// GatekeeperImage is the docker image that will be used in the Codewind-Gatekeeper pod
-	GatekeeperImage = "eclipse/codewind-gatekeeper-amd64"
+	GatekeeperImage = "tobespc/codewind-gatekeeper-amd64"
 
 	// PFEImageTag is the image tag associated with the docker image that's used for Codewind-PFE
 	PFEImageTag = "latest"
@@ -73,6 +73,12 @@ const (
 
 	// CodewindRoleBindingNamePrefix will include the workspaceID when deployed
 	CodewindRoleBindingNamePrefix = "codewind-rolebinding"
+
+	// CodewindTektonClusterRoleBindingName 
+	CodewindTektonClusterRoleBindingName = "codewind-tektonrolebinding"
+
+	// CodewindTektonClusterRoleBindingName
+	CodewindTektonClusterRolesName = "codewind-tekton"
 
 	// ROKSStorageClass references the storage class to use on ROKS (OpenShift on IKS)
 	ROKSStorageClass = "ibmc-file-bronze"
