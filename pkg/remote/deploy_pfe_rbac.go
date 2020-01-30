@@ -16,7 +16,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// CreateCodewindRoles : create Codewind roles
+// CreateCodewindTektonClusterRoles : create Codewind tekton cluster roles
 func CreateCodewindTektonClusterRoles(deployOptions *DeployOptions) rbacv1.ClusterRole {
 	ourRoles := []rbacv1.PolicyRule{
 
@@ -155,7 +155,7 @@ func CreateCodewindRoleBindings(codewindInstance Codewind, deployOptions *Deploy
 	}
 }
 
-//CreateCodewindRoleBindings : create Codewind role bindings in the deployment namespace
+//CreateCodewindTektonClusterRoleBindings : create Codewind tekton cluster role bindings
 func CreateCodewindTektonClusterRoleBindings(codewindInstance Codewind, deployOptions *DeployOptions, codewindRoleBindingName string) rbacv1.ClusterRoleBinding {
 	labels := map[string]string{
 		"codewindWorkspace": codewindInstance.WorkspaceID,
