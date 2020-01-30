@@ -20,6 +20,7 @@ import (
 	"os"
 	"path"
 	"testing"
+	"time"
 
 	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/security"
@@ -156,6 +157,111 @@ func createTestPathsForIgnoredPathsTests(t *testing.T, testFolder string) testDi
 	}
 }
 
+func TestSyncFiles(t *testing.T) {
+	testDir := "sync_test_folder_delete_me"
+	os.Mkdir(testDir, 0777)
+	body := ioutil.NopCloser(bytes.NewReader([]byte{}))
+	mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusOK, Body: body}
+	mockConnection := connections.Connection{ID: "local"}
+
+	populatedIgnoredPaths := CWSettings{
+		IgnoredPaths: []string{
+			"testfile",
+			"anothertestfile",
+		},
+	}
+	cwSettingsFile, _ := json.Marshal(populatedIgnoredPaths)
+
+	t.Run("success case - sync new empty file", func(t *testing.T) {
+		mockProjectPath := path.Join(testDir, "empty-file")
+
+		os.Mkdir(mockProjectPath, 0777)
+
+		ioutil.WriteFile(path.Join(mockProjectPath, "test"), []byte{}, 0644)
+		ioutil.WriteFile(path.Join(mockProjectPath, ".cw-settings"), cwSettingsFile, 0644)
+
+		got, err := syncFiles(mockClient, mockProjectPath, "mockID", "dummyURL", 0, &mockConnection)
+		if err != nil {
+			t.Errorf("syncFiles() failed with error: %s", err)
+		}
+
+		expectedFileList := []string{".cw-settings", "test"}
+		assert.Equal(t, expectedFileList, got.fileList)
+	})
+
+	t.Run("success case - sync new empty file, ignore IgnoredFile", func(t *testing.T) {
+		mockProjectPath := path.Join(testDir, "empty-file")
+
+		os.Mkdir(mockProjectPath, 0777)
+
+		ioutil.WriteFile(path.Join(mockProjectPath, "test"), []byte{}, 0644)
+		ioutil.WriteFile(path.Join(mockProjectPath, "testfile"), []byte{}, 0644)
+		ioutil.WriteFile(path.Join(mockProjectPath, ".cw-settings"), cwSettingsFile, 0644)
+
+		got, err := syncFiles(mockClient, mockProjectPath, "mockID", "dummyURL", 0, &mockConnection)
+		if err != nil {
+			t.Errorf("syncFiles() failed with error: %s", err)
+		}
+
+		expectedFileList := []string{".cw-settings", "test"}
+		assert.Equal(t, expectedFileList, got.fileList)
+	})
+
+	t.Run("success case - sync new empty dir", func(t *testing.T) {
+		mockProjectPath := path.Join(testDir, "new-dir")
+		newDirPath := path.Join(mockProjectPath, "nested-dir")
+
+		os.Mkdir(mockProjectPath, 0777)
+		os.Mkdir(newDirPath, 0777)
+
+		ioutil.WriteFile(path.Join(newDirPath, "test"), []byte{}, 0644)
+		ioutil.WriteFile(path.Join(mockProjectPath, ".cw-settings"), cwSettingsFile, 0644)
+
+		got, err := syncFiles(mockClient, mockProjectPath, "mockID", "dummyURL", 0, &mockConnection)
+		if err != nil {
+			t.Errorf("syncFiles() failed with error: %s", err)
+		}
+
+		expectedFileList := []string{".cw-settings", "nested-dir/test"}
+		expectedDirList := []string{"nested-dir"}
+		assert.Equal(t, got.fileList, expectedFileList)
+		assert.Equal(t, got.directoryList, expectedDirList)
+	})
+
+	t.Run("success case - create 2 files, modify 1, only 1 added to modified list", func(t *testing.T) {
+		mockProjectPath := path.Join(testDir, "modified-file")
+		newDirPath := path.Join(mockProjectPath, "nested-dir")
+
+		os.Mkdir(mockProjectPath, 0777)
+		os.Mkdir(newDirPath, 0777)
+
+		modTestPath := path.Join(newDirPath, "testmod")
+		noModTestPath := path.Join(newDirPath, "testnomod")
+
+		ioutil.WriteFile(path.Join(mockProjectPath, ".cw-settings"), cwSettingsFile, 0644)
+		ioutil.WriteFile(modTestPath, []byte{}, 0644)
+		ioutil.WriteFile(noModTestPath, []byte{}, 0644)
+
+		file, _ := os.Stat(noModTestPath)
+		modifiedTime := file.ModTime().UnixNano() / 1000000
+		newContent := []byte("I have changed!")
+
+		// wait for a second, so file modification time is greater than the lastSync time in syncFiles parameters
+		time.Sleep(1 * time.Second)
+		ioutil.WriteFile(modTestPath, newContent, 0644)
+
+		got, _ := syncFiles(mockClient, mockProjectPath, "mockID", "dummyURL", modifiedTime, &mockConnection)
+
+		expectedFileList := []string{".cw-settings", "nested-dir/testmod", "nested-dir/testnomod"}
+		expectedDirList := []string{"nested-dir"}
+		expectedModList := []string{"nested-dir/testmod"}
+		assert.Equal(t, got.fileList, expectedFileList)
+		assert.Equal(t, got.directoryList, expectedDirList)
+		assert.Equal(t, got.modifiedList, expectedModList)
+	})
+
+	cleanupTestFolder(t, testDir)
+}
 func TestRetrieveIgnoredPathsList(t *testing.T) {
 	testFolder := "sync_test_folder_delete_me"
 	createTestDirPaths := createTestPathsForIgnoredPathsTests(t, testFolder)
@@ -202,59 +308,6 @@ func TestRetrieveIgnoredPathsList(t *testing.T) {
 		})
 	}
 	cleanupTestFolder(t, testFolder)
-}
-
-func TestSyncFiles(t *testing.T) {
-
-	testDir := "sync_test_folder_delete_me"
-	os.Mkdir(testDir, 0777)
-	body := ioutil.NopCloser(bytes.NewReader([]byte{}))
-	mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusOK, Body: body}
-	mockConnection := connections.Connection{ID: "local"}
-
-	populatedIgnoredPaths := CWSettings{
-		IgnoredPaths: []string{
-			"testfile",
-			"anothertestfile",
-		},
-	}
-	cwSettingsFile, _ := json.Marshal(populatedIgnoredPaths)
-
-	t.Run("success case - sync new empty file", func(t *testing.T) {
-		mockProjectPath := path.Join(testDir, "empty-file")
-		os.Mkdir(mockProjectPath, 0777)
-		ioutil.WriteFile(path.Join(mockProjectPath, "test"), []byte{}, 0644)
-		ioutil.WriteFile(path.Join(mockProjectPath, ".cw-settings"), cwSettingsFile, 0644)
-
-		got, err := syncFiles(mockClient, mockProjectPath, "mockID", "dummyURL", 0, &mockConnection)
-		if err != nil {
-			t.Errorf("syncFiles() should not fail")
-		}
-
-		expectedFileList := []string{".cw-settings", "test"}
-		assert.Equal(t, expectedFileList, got.fileList)
-	})
-
-	t.Run("success case - sync new empty dir", func(t *testing.T) {
-		mockProjectPath := path.Join(testDir, "new-dir")
-		os.Mkdir(mockProjectPath, 0777)
-		newDirPath := path.Join(mockProjectPath, "server")
-		os.Mkdir(newDirPath, 0777)
-		ioutil.WriteFile(path.Join(newDirPath, "test"), []byte{}, 0644)
-		ioutil.WriteFile(path.Join(mockProjectPath, ".cw-settings"), cwSettingsFile, 0644)
-
-		got, err := syncFiles(mockClient, mockProjectPath, "mockID", "dummyURL", 0, &mockConnection)
-		if err != nil {
-			t.Errorf("syncFiles() should not fail")
-		}
-
-		expectedFileList := []string{".cw-settings", "server/test"}
-		expectedDirList := []string{"server"}
-		assert.Equal(t, got.fileList, expectedFileList)
-		assert.Equal(t, got.directoryList, expectedDirList)
-	})
-
-	cleanupTestFolder(t, testDir)
 }
 
 func setupIgnoredPathsTests(t *testing.T, testFolder string, createPaths testDirPaths) {

@@ -308,19 +308,18 @@ func syncFiles(client utils.HTTPClient, projectPath string, projectID string, co
 }
 
 func completeUpload(client utils.HTTPClient, projectID string, completeRequest CompleteRequest, conInfo *connections.Connection, conURL string) (string, int) {
-
 	uploadEndURL := conURL + "/api/v1/projects/" + projectID + "/upload/end"
 	jsonPayload, _ := json.Marshal(&completeRequest)
 	req, err := http.NewRequest("POST", uploadEndURL, bytes.NewBuffer(jsonPayload))
 	if err != nil {
-		fmt.Printf("error setting the header  %v\n", err)
+		fmt.Printf("error creating request %v\n", err)
 		return err.Error(), 0
 	}
-	req.Header.Set("Content-Type", "application/json")
 
+	req.Header.Set("Content-Type", "application/json")
 	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo)
 	if httpSecError != nil {
-		fmt.Printf("error dispatching request  %v\n", httpSecError)
+		fmt.Printf("error making request  %v\n", httpSecError)
 		return httpSecError.Desc, 0
 	}
 	defer resp.Body.Close()
