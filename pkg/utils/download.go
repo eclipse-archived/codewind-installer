@@ -35,9 +35,10 @@ func DownloadFromURLThenExtract(URL string, destination string) error {
 // DownloadFromTarGzURL downloads a tar.gz file from a URL
 // and extracts it to a destination
 func DownloadFromTarGzURL(URL string, destination string) error {
-	_ = os.MkdirAll(destination, 0755) // gives User rwx permission, everyone else rx
+	time := time.Now().Format(time.RFC3339)
+	time = strings.Replace(time, ":", "-", -1) // ":" is illegal char in windows
+	pathToTempFile := path.Join(os.TempDir(), "_"+time+"temp.tar.gz")
 
-	pathToTempFile := path.Join(destination, "temp.tar.gz")
 	err := DownloadFile(URL, pathToTempFile)
 	if err != nil {
 		return err
