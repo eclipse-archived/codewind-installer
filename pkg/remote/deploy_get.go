@@ -13,6 +13,7 @@ package remote
 
 import (
 	"path/filepath"
+	"time"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -66,7 +67,7 @@ func (client K8sAPI) findDeployments(namespace string) ([]ExistingDeployment, *R
 
 	var RemoteInstalls []ExistingDeployment
 	for _, deployment := range deployments.Items {
-		installTime := deployment.GetCreationTimestamp().Format("02-Jan-2006")
+		installTime := deployment.GetCreationTimestamp().Format(time.RFC1123)
 		var keycloakAddress, cwVersion, authRealm string
 		// ensure there are containers in the list, to avoid index errors
 		if containers := deployment.Spec.Template.Spec.Containers; len(containers) > 0 {

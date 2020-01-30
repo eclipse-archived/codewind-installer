@@ -113,7 +113,7 @@ func TestSuccessfulDeployGet(t *testing.T) {
 		WorkspaceID:       "WID1",
 		CodewindURL:       "https://codewind-keycloak-WID1.nip.io",
 		CodewindAuthRealm: "codewind",
-		InstallDate:       timeNow.Format("02-Jan-2006"),
+		InstallDate:       timeNow.Format(time.RFC1123),
 		Version:           "0.7.0",
 	}
 
@@ -122,7 +122,7 @@ func TestSuccessfulDeployGet(t *testing.T) {
 		WorkspaceID:       "WID2",
 		CodewindURL:       "https://codewind-keycloak-WID2.nip.io",
 		CodewindAuthRealm: "codewind",
-		InstallDate:       timeNow.Format("02-Jan-2006"),
+		InstallDate:       timeNow.Format(time.RFC1123),
 		Version:           "0.7.0",
 	}
 
