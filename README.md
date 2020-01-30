@@ -159,6 +159,7 @@ This is the same as `go test ./...`, but outputs test coverage scores for each f
 | seckeyring  | `sk`  | 'Manage Codewind keys in the desktop keyring'                       |
 | secuser     | `su`  | 'Manage new or existing USER access configurations'                 |
 | connections | `con` | 'Manage connections configuration list'                             |
+| loglevels   | `log` | 'Get or set logging levels for Codewind containers'                 |
 | help        | `h`   | 'Shows a list of commands or help for one command'                  |
 
 ### Command Options:
@@ -429,6 +430,14 @@ Subcommands:</br>
 `reset` - Resets the connections list to a single local connection
 
 >**Note:** No additional flags
+
+## loglevels
+
+> **Flags:**
+> --conid value     The Connection ID of the remote Codewind installation. Defaults to `local`.
+
+> **Arguments:**
+> The log level to set, one of `error`, `warn`, `info`, `debug`, `trace`
 
 ## help
 
