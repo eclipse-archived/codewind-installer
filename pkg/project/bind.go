@@ -24,6 +24,7 @@ import (
 	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/sechttp"
+	"github.com/eclipse/codewind-installer/pkg/utils"
 	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
@@ -84,8 +85,8 @@ func Bind(projectPath string, name string, language string, projectType string, 
 		Path:        projectPath,
 		Time:        creationTime,
 	}
-	buf := new(bytes.Buffer)
-	json.NewEncoder(buf).Encode(bindRequest)
+
+	client := &http.Client{}
 
 	conInfo, conInfoErr := connections.GetConnectionByID(conID)
 	if conInfoErr != nil {
@@ -97,9 +98,36 @@ func Bind(projectPath string, name string, language string, projectType string, 
 		return nil, &ProjectError{errOpConNotFound, conURLErr.Err, conURLErr.Desc}
 	}
 
+	projectInfo, projErr := bindToPFE(client, bindRequest, conInfo, conURL)
+
+	if projErr != nil {
+		return nil, projErr
+	}
+
+	projectID := projectInfo.ProjectID
+
+	// Generate the .codewind/connections/{projectID}.json file based on the given conID
+	SetConnection(conID, projectID)
+
+	// Sync all the project files
+	_, _, _, uploadedFilesList, syncErr := syncFiles(projectPath, projectID, conURL, 0, conInfo)
+
+	// Call bind/end to complete
+	completeStatus, completeStatusCode := completeBind(client, projectID, conURL, conInfo)
+	response := BindResponse{
+		ProjectID:     projectID,
+		UploadedFiles: uploadedFilesList,
+		Status:        completeStatus,
+		StatusCode:    completeStatusCode,
+	}
+	return &response, syncErr
+}
+
+func bindToPFE(client utils.HTTPClient, bindRequest BindRequest, conInfo *connections.Connection, conURL string) (*BindResponse, *ProjectError) {
 	bindURL := conURL + "/api/v1/projects/bind/start"
 
-	client := &http.Client{}
+	buf := new(bytes.Buffer)
+	json.NewEncoder(buf).Encode(bindRequest)
 
 	request, requestErr := http.NewRequest("POST", bindURL, bytes.NewReader(buf.Bytes()))
 	if requestErr != nil {
@@ -114,44 +142,30 @@ func Bind(projectPath string, name string, language string, projectType string, 
 
 	switch httpCode := resp.StatusCode; {
 	case httpCode == 400:
-		err = errors.New(textInvalidType)
+		err := errors.New(textInvalidType)
 		return nil, &ProjectError{errOpResponse, err, textInvalidType}
 	case httpCode == 404:
-		err = errors.New(textAPINotFound)
+		err := errors.New(textAPINotFound)
 		return nil, &ProjectError{errOpResponse, err, textAPINotFound}
 	case httpCode == 409:
-		err = errors.New(textDupName)
+		err := errors.New(textDupName)
 		return nil, &ProjectError{errOpResponse, err, textDupName}
 	}
-
 	defer resp.Body.Close()
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, &ProjectError{errOpBind, err, err.Error()}
+	}
 
-	var projectInfo map[string]interface{}
+	var projectInfo *BindResponse
 	if err := json.Unmarshal(bodyBytes, &projectInfo); err != nil {
 		logr.Errorln(err)
 	}
 
-	projectID := projectInfo["projectID"].(string)
-
-	// Generate the .codewind/connections/{projectID}.json file based on the given conID
-	SetConnection(conID, projectID)
-
-	// Sync all the project files
-	_, _, _, uploadedFilesList, syncErr := syncFiles(projectPath, projectID, conURL, 0, conInfo)
-
-	// Call bind/end to complete
-	completeStatus, completeStatusCode := completeBind(projectID, conURL, conInfo)
-	response := BindResponse{
-		ProjectID:     projectID,
-		UploadedFiles: uploadedFilesList,
-		Status:        completeStatus,
-		StatusCode:    completeStatusCode,
-	}
-	return &response, syncErr
+	return projectInfo, nil
 }
 
-func completeBind(projectID string, conURL string, connection *connections.Connection) (string, int) {
+func completeBind(client utils.HTTPClient, projectID string, conURL string, connection *connections.Connection) (string, int) {
 	bindEndURL := conURL + "/api/v1/projects/" + projectID + "/bind/end"
 
 	payload := &BindEndRequest{ProjectID: projectID}
@@ -160,7 +174,7 @@ func completeBind(projectID string, conURL string, connection *connections.Conne
 	// Make the request to end the sync process.
 	request, err := http.NewRequest("POST", bindEndURL, bytes.NewBuffer(jsonPayload))
 	request.Header.Set("Content-Type", "application/json")
-	resp, httpSecError := sechttp.DispatchHTTPRequest(http.DefaultClient, request, connection)
+	resp, httpSecError := sechttp.DispatchHTTPRequest(client, request, connection)
 
 	if httpSecError != nil {
 		logr.Errorln(err)

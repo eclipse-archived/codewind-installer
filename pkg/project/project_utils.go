@@ -28,6 +28,7 @@ type (
 const (
 	errBadPath           = "proj_path" // Invalid path provided
 	errBadType           = "proj_type" // Invalid type provided
+	errOpBind            = "proj_bind"
 	errOpRequest         = "proj_request"
 	errOpResponse        = "proj_response" // Bad response to http
 	errOpFileParse       = "proj_parse"
