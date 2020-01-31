@@ -200,6 +200,17 @@ Subcommands:</br>
 > --id,-i value Project ID
 > --time,-t value Time of last project sync
 
+`list` - List projects bound to a Codewind deployment
+> **Flags**
+> --conid value                 Connection ID
+
+`get` - Get a single project, requires either the project ID or name
+When using a project ID the CLI will automatically detect which connection it relates to
+> **Flags**
+> --id value                    Project ID
+> --name                        Project name
+> --conid                       Connection ID
+
 `connection/con` - Manage the connection targets for a project
 
 `set,s` - Sets the connection for a projectID
