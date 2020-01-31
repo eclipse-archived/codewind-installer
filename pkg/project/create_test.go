@@ -24,6 +24,7 @@ import (
 
 	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/security"
+	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -255,6 +256,29 @@ func TestCheckProjectDirIsEmpty(t *testing.T) {
 			assert.Equal(t, err, test.wantError)
 		})
 	}
+	os.RemoveAll(testFolder)
+}
+
+func TestRenameLegacySettings(t *testing.T) {
+	testFolder := "rename_legacy_settings_delete_me"
+	os.Mkdir(testFolder, 0777)
+	legacySettingsPath := path.Join(testFolder, ".mc-settings")
+	newSettingsPath := path.Join(testFolder, ".cw-settings")
+	ioutil.WriteFile(legacySettingsPath, []byte{}, 0644)
+
+	t.Run("error case - path to legacy settings does not exist", func(t *testing.T) {
+		err := renameLegacySettings("/not_a_path/.mc-settings", "/not_a_path/.cw-settings")
+		assert.Error(t, err)
+	})
+
+	t.Run("success case - renames legacy settings", func(t *testing.T) {
+		err := renameLegacySettings(legacySettingsPath, newSettingsPath)
+		assert.Nil(t, err)
+		newSettingsFileExists := utils.PathExists(newSettingsPath)
+		legacySettingsFileExists := utils.PathExists(legacySettingsPath)
+		assert.True(t, newSettingsFileExists)
+		assert.False(t, legacySettingsFileExists)
+	})
 	os.RemoveAll(testFolder)
 }
 

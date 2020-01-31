@@ -323,9 +323,9 @@ func renameLegacySettings(pathToLegacySettings string, pathToCwSettings string) 
 
 // writeNewCwSettings writes a default .cw-settings file to the given path,
 // dependant on the build type of the project
-func writeNewCwSettings(client utils.HTTPClient, connection *connections.Connection, conURL string, pathToCwSettings string, BuildType string) *ProjectError {
+func writeNewCwSettings(httpClient utils.HTTPClient, connection *connections.Connection, conURL string, pathToCwSettings string, BuildType string) *ProjectError {
 
-	defaultCwSettings, projErr := getDefaultCwSettings(client, connection, conURL, BuildType)
+	defaultCwSettings, projErr := getDefaultCwSettings(httpClient, connection, conURL, BuildType)
 	if projErr != nil {
 		return projErr
 	}
@@ -344,9 +344,9 @@ func writeNewCwSettings(client utils.HTTPClient, connection *connections.Connect
 	return nil
 }
 
-func getDefaultCwSettings(client utils.HTTPClient, connection *connections.Connection, conURL string, BuildType string) (CWSettings, *ProjectError) {
+func getDefaultCwSettings(httpClient utils.HTTPClient, connection *connections.Connection, conURL string, BuildType string) (CWSettings, *ProjectError) {
 
-	IgnoredPaths, err := apiroutes.GetIgnoredPaths(client, connection, BuildType, conURL)
+	IgnoredPaths, err := apiroutes.GetIgnoredPaths(httpClient, connection, BuildType, conURL)
 	if err != nil {
 		// If error getting the default ignoredPaths, set as empty slice
 		IgnoredPaths = []string{}
