@@ -177,13 +177,11 @@ func ValidateProject(c *cli.Context) (*ValidationResponse, *ProjectError) {
 		return nil, &ProjectError{errOpCreateProject, err, err.Error()}
 	}
 
-	// write settings file only for non-extension projects
-	if extensionType == "" {
-		err := writeCwSettingsIfNotInProject(conID, projectPath, buildType)
-		if err != nil {
-			return nil, err
-		}
+	writeErr := writeCwSettingsIfNotInProject(conID, projectPath, buildType)
+	if writeErr != nil {
+		return nil, writeErr
 	}
+
 	return &response, nil
 }
 
