@@ -85,33 +85,6 @@ func Test_GetContainerVersions(t *testing.T) {
 		// Ensure all mock responses have been used
 		assert.Equal(t, mockClient.Counter, len(mockClient.MockResponses))
 	})
-
-	// t.Run("Gets the version of cwctl and the PFE, Performance and Gatekeeper containers", func(t *testing.T) {
-	// 	pfeBody := CreateMockResponseBody(EnvResponse{Version: "x.x.dev", ImageBuildTime: "20200129-142743"})
-	// 	performanceBody := CreateMockResponseBody(EnvResponse{Version: "x.x.dev", ImageBuildTime: "performanceversion"})
-	// 	gatekeeperBody := CreateMockResponseBody(EnvResponse{Version: "x.x.dev", ImageBuildTime: "gatekeeperversion"})
-
-	// 	mockClient := MockMultipleResponses{
-	// 		Counter: 0,
-	// 		MockResponses: []MockResponse{
-	// 			{StatusCode: http.StatusOK, Body: pfeBody},
-	// 			{StatusCode: http.StatusOK, Body: performanceBody},
-	// 			{StatusCode: http.StatusOK, Body: gatekeeperBody},
-	// 		},
-	// 	}
-
-	// 	mockConnection := connections.Connection{
-	// 		ID: "123",
-	// 	}
-
-	// 	versions, err := GetContainerVersions("www.pfe.com/", "latest", &mockConnection, &mockClient)
-
-	// 	assert.Nil(t, err)
-	// 	assert.Equal(t, "latest", versions.CwctlVersion)
-	// 	assert.Equal(t, "x.x.dev-pfeversion", versions.PFEVersion)
-	// 	assert.Equal(t, "x.x.dev-performanceversion", versions.PerformanceVersion)
-	// 	assert.Equal(t, "x.x.dev-gatekeeperversion", versions.GatekeeperVersion)
-	// })
 }
 
 func Test_GetPFEVersionFromConnection(t *testing.T) {
