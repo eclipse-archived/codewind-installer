@@ -226,6 +226,38 @@ func TestProjectPathExists(t *testing.T) {
 	}
 }
 
+func TestCheckProjectDirIsEmpty(t *testing.T) {
+	errNoPath := errors.New(textNoProjectPath)
+	errProjectNonEmpty := errors.New(textProjectPathNonEmpty)
+
+	testFolder := "check_project_dir_empty_folder_delete_me"
+	os.Mkdir(testFolder, 0777)
+	tests := map[string]struct {
+		path      string
+		wantError *ProjectError
+	}{
+		"error case - empty path": {
+			path:      "",
+			wantError: &ProjectError{errOpCreateProject, errNoPath, errNoPath.Error()},
+		},
+		"error case - non empty path": {
+			path:      "../../resources/test/go-project",
+			wantError: &ProjectError{errOpCreateProject, errProjectNonEmpty, errProjectNonEmpty.Error()},
+		},
+		"success case - empty project at path": {
+			path:      testFolder,
+			wantError: nil,
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			err := checkProjectDirIsEmpty(test.path)
+			assert.Equal(t, err, test.wantError)
+		})
+	}
+	os.RemoveAll(testFolder)
+}
+
 func readCwSettings(filepath string) CWSettings {
 	cwSettingsFile, err := ioutil.ReadFile(filepath)
 	if err != nil {
