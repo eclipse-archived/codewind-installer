@@ -14,6 +14,7 @@ package project
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -193,6 +194,34 @@ func TestWriteNewCwSettings(t *testing.T) {
 				assert.Equal(t, cwSettings.MavenProperties, test.wantCwSettings.MavenProperties)
 			}
 			os.Remove(test.inProjectPath)
+		})
+	}
+}
+
+func TestProjectPathExists(t *testing.T) {
+	errNoPath := errors.New(textNoProjectPath)
+	errNoProject := errors.New(textProjectPathDoesNotExist)
+	tests := map[string]struct {
+		path      string
+		wantError *ProjectError
+	}{
+		"success case - path exists": {
+			path:      "../../resources/test/go-project",
+			wantError: nil,
+		},
+		"error case - empty path": {
+			path:      "",
+			wantError: &ProjectError{errOpCreateProject, errNoPath, errNoPath.Error()},
+		},
+		"error case - no project at path": {
+			path:      "not_a_path",
+			wantError: &ProjectError{errOpCreateProject, errNoProject, errNoProject.Error()},
+		},
+	}
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			err := checkProjectPathExists(test.path)
+			assert.Equal(t, err, test.wantError)
 		})
 	}
 }
