@@ -18,6 +18,8 @@ import (
 	"strings"
 
 	"github.com/eclipse/codewind-installer/pkg/apiroutes"
+	"github.com/eclipse/codewind-installer/pkg/config"
+	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/urfave/cli"
 )
@@ -28,15 +30,27 @@ func LogLevels(c *cli.Context) {
 	connectionID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 	newLogLevel := strings.TrimSpace(strings.ToLower(c.Args().Get(0)))
 
+	conInfo, conInfoErr := connections.GetConnectionByID(connectionID)
+	if conInfoErr != nil {
+		fmt.Println(conInfoErr.Err)
+		os.Exit(1)
+	}
+
+	conURL, conErr := config.PFEOriginFromConnection(conInfo)
+	if conErr != nil {
+		fmt.Println(conErr.Err)
+		os.Exit(1)
+	}
+
 	if newLogLevel != "" {
-		err := apiroutes.SetLogLevel(connectionID, http.DefaultClient, newLogLevel)
+		err := apiroutes.SetLogLevel(conInfo, conURL, http.DefaultClient, newLogLevel)
 		if err != nil {
 			fmt.Println(err.Error())
 			os.Exit(1)
 		}
 	}
 
-	loggingLevels, err := apiroutes.GetLogLevels(connectionID, http.DefaultClient)
+	loggingLevels, err := apiroutes.GetLogLevel(conInfo, conURL, http.DefaultClient)
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
