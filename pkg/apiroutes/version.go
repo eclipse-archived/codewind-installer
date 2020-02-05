@@ -49,10 +49,10 @@ type (
 // GetAllContainerVersions : Get the versions of each Codewind container for each given connection ID
 func GetAllContainerVersions(connectionsList []connections.Connection, cwctlVersion string, httpClient utils.HTTPClient) (ContainerVersionsList, error) {
 	var containerVersionsList ContainerVersionsList
-	containerVersionsList.CwctlVersion = cwctlVersion
-
 	var connectionVersions = make(map[string]ContainerVersions)
 	var connectionVersionsErrors = make(map[string]error)
+
+	containerVersionsList.CwctlVersion = cwctlVersion
 
 	for _, connection := range connectionsList {
 		conID := connection.ID
@@ -101,7 +101,6 @@ func GetContainerVersions(conURL, cwctlVersion string, connection *connections.C
 		if GatekeeperVersionErr != nil {
 			return ContainerVersions{}, GatekeeperVersionErr
 		}
-
 		containerVersions.GatekeeperVersion = GatekeeperVersion
 	}
 
@@ -109,8 +108,8 @@ func GetContainerVersions(conURL, cwctlVersion string, connection *connections.C
 }
 
 // GetPFEVersionFromConnection : Get the version of the PFE container, deployed to the connection with the given ID
-func GetPFEVersionFromConnection(connection *connections.Connection, url string, HTTPClient utils.HTTPClient) (string, error) {
-	req, err := http.NewRequest("GET", url+"/api/v1/environment", nil)
+func GetPFEVersionFromConnection(connection *connections.Connection, conURL string, HTTPClient utils.HTTPClient) (string, error) {
+	req, err := http.NewRequest("GET", conURL+"/api/v1/environment", nil)
 	if err != nil {
 		return "", err
 	}

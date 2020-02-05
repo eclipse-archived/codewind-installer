@@ -22,9 +22,9 @@ import (
 
 func Test_GetAllContainerVersions(t *testing.T) {
 	t.Run("Asserts PFE ready", func(t *testing.T) {
-		pfeBody1 := CreateMockResponseBody(EnvResponse{Version: "x.x.dev", ImageBuildTime: "pfeversion"})
-		performanceBody1 := CreateMockResponseBody(EnvResponse{Version: "x.x.dev", ImageBuildTime: "performanceversion"})
-		pfeBody2 := CreateMockResponseBody(EnvResponse{Version: "x.x.dev", ImageBuildTime: "pfeversion2"})
+		pfeBody1 := CreateMockResponseBody(EnvResponse{Version: "x.x.dev", ImageBuildTime: "1"})
+		performanceBody1 := CreateMockResponseBody(EnvResponse{Version: "x.x.dev", ImageBuildTime: "2"})
+		pfeBody2 := CreateMockResponseBody(EnvResponse{Version: "x.x.dev", ImageBuildTime: "3"})
 		performanceBody2 := CreateMockResponseBody(EnvResponse{Version: "x.x.dev", ImageBuildTime: "nil"})
 
 		mockClient := MockMultipleResponses{
@@ -45,8 +45,8 @@ func Test_GetAllContainerVersions(t *testing.T) {
 		versions, err := GetAllContainerVersions(mockConnections, "latest", &mockClient)
 
 		expectedLocalVersion := ContainerVersions{
-			PFEVersion:         "x.x.dev-pfeversion",
-			PerformanceVersion: "x.x.dev-performanceversion",
+			PFEVersion:         "x.x.dev-1",
+			PerformanceVersion: "x.x.dev-2",
 		}
 
 		assert.Nil(t, err)
@@ -62,8 +62,8 @@ func Test_GetAllContainerVersions(t *testing.T) {
 
 func Test_GetContainerVersions(t *testing.T) {
 	t.Run("Gets the version of cwctl and the PFE, Performance containers when the connection ID = local (no Gatekeeper)", func(t *testing.T) {
-		pfeBody := CreateMockResponseBody(EnvResponse{Version: "x.x.dev", ImageBuildTime: "pfeversion"})
-		performanceBody := CreateMockResponseBody(EnvResponse{Version: "x.x.dev", ImageBuildTime: "performanceversion"})
+		pfeBody := CreateMockResponseBody(EnvResponse{Version: "x.x.dev", ImageBuildTime: "1"})
+		performanceBody := CreateMockResponseBody(EnvResponse{Version: "x.x.dev", ImageBuildTime: "2"})
 
 		mockClient := MockMultipleResponses{
 			Counter: 0,
@@ -79,8 +79,8 @@ func Test_GetContainerVersions(t *testing.T) {
 
 		assert.Nil(t, err)
 		assert.Equal(t, "latest", versions.CwctlVersion)
-		assert.Equal(t, "x.x.dev-pfeversion", versions.PFEVersion)
-		assert.Equal(t, "x.x.dev-performanceversion", versions.PerformanceVersion)
+		assert.Equal(t, "x.x.dev-1", versions.PFEVersion)
+		assert.Equal(t, "x.x.dev-2", versions.PerformanceVersion)
 		assert.Empty(t, versions.GatekeeperVersion)
 		// Ensure all mock responses have been used
 		assert.Equal(t, mockClient.Counter, len(mockClient.MockResponses))

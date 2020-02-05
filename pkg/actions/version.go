@@ -12,7 +12,6 @@
 package actions
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -22,6 +21,7 @@ import (
 	"github.com/eclipse/codewind-installer/pkg/appconstants"
 	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
+	"github.com/eclipse/codewind-installer/pkg/utils"
 
 	"github.com/eclipse/codewind-installer/pkg/apiroutes"
 	"github.com/eclipse/codewind-installer/pkg/remote"
@@ -61,8 +61,7 @@ func GetSingleConnectionVersion(c *cli.Context) {
 	}
 
 	if printAsJSON {
-		json, _ := json.Marshal(containerVersions)
-		fmt.Println(string(json))
+		utils.PrettyPrintJSON(containerVersions)
 	} else {
 		var tableContent []string
 		tableContent = append(tableContent, "CWCTL VERSION: "+containerVersions.CwctlVersion+"\n")
@@ -88,8 +87,7 @@ func GetAllConnectionVersions() {
 	}
 
 	if printAsJSON {
-		json, _ := json.Marshal(containerVersionsList)
-		fmt.Println(string(json))
+		utils.PrettyPrintJSON(containerVersionsList)
 	} else {
 		var tableContent []string
 		tableContent = append(tableContent, "CWCTL VERSION: "+containerVersionsList.CwctlVersion+"\n")
@@ -97,15 +95,14 @@ func GetAllConnectionVersions() {
 		for conID, con := range containerVersionsList.Connections {
 			tableContent = append(tableContent, conID+"\t"+con.PFEVersion+"\t"+con.PerformanceVersion+"\t"+con.GatekeeperVersion)
 		}
-
-		if len(containerVersionsList.ConnectionErrors) > 0 {
+		numConErrs := len(containerVersionsList.ConnectionErrors)
+		if numConErrs > 0 {
 			tableContent = append(tableContent, "\nSOME ERRORS WHILE DETECTING CONNECTION VERSIONS")
 			tableContent = append(tableContent, "CONNECTION ID \tERROR")
 			for conID, conErr := range containerVersionsList.ConnectionErrors {
 				tableContent = append(tableContent, conID+"\t"+conErr.Error())
 			}
 		}
-
 		PrintTable(tableContent)
 	}
 }
