@@ -22,12 +22,20 @@ import (
 // StopAllCommand to stop codewind and project containers
 func StopAllCommand(c *cli.Context, dockerComposeFile string) {
 	tag := c.String("tag")
-	containers, err := utils.GetContainerList()
+
+	dockerClient, dockerErr := utils.NewDockerClient()
+	if dockerErr != nil {
+		HandleDockerError(dockerErr)
+		os.Exit(1)
+	}
+
+	containers, err := utils.GetContainerList(dockerClient)
 	if err != nil {
 		HandleDockerError(err)
 		os.Exit(1)
 	}
-	dockerErr := utils.DockerComposeStop(tag, dockerComposeFile)
+
+	dockerErr = utils.DockerComposeStop(tag, dockerComposeFile)
 	if dockerErr != nil {
 		HandleDockerError(dockerErr)
 		os.Exit(1)
@@ -37,6 +45,6 @@ func StopAllCommand(c *cli.Context, dockerComposeFile string) {
 	containersToRemove := utils.GetContainersToRemove(containers)
 	for _, container := range containersToRemove {
 		fmt.Println("Stopping container ", container.Names[0], "... ")
-		utils.StopContainer(container)
+		utils.StopContainer(dockerClient, container)
 	}
 }

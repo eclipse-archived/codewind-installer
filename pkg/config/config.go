@@ -56,11 +56,17 @@ func PFEOriginFromConnection(connection *connections.Connection) (string, *Confi
 }
 
 func getLocalHostnameAndPort() (string, *ConfigError) {
+	dockerClient, err := utils.NewDockerClient()
+	if err != nil {
+		return "", &ConfigError{errOpConfPFEHostnamePortNotFound, err, err.Error()}
+	}
+
 	val, ok := os.LookupEnv("CHE_API_EXTERNAL")
 	if ok && (val != "") {
 		return "https://localhost:9090", nil
 	}
-	hostname, port, err := utils.GetPFEHostAndPort()
+
+	hostname, port, err := utils.GetPFEHostAndPort(dockerClient)
 	if err != nil {
 		return "", &ConfigError{errOpConfPFEHostnamePortNotFound, err, err.Desc}
 	} else if hostname == "" || port == "" {

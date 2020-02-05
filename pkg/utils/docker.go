@@ -25,8 +25,10 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/registry"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
@@ -127,6 +129,26 @@ const (
 	minDebugPort = 34000
 	maxDebugPort = 35000
 )
+
+// DockerClient requires all the functions called on the docker client package
+type DockerClient interface {
+	ImagePull(ctx context.Context, image string, imagePullOptions types.ImagePullOptions) (io.ReadCloser, error)
+	ImageList(ctx context.Context, imageListOptions types.ImageListOptions) ([]types.ImageSummary, error)
+	ContainerList(ctx context.Context, containerListOptions types.ContainerListOptions) ([]types.Container, error)
+	ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error)
+	ContainerStop(ctx context.Context, containerID string, timeout *time.Duration) error
+	ContainerRemove(ctx context.Context, containerID string, options types.ContainerRemoveOptions) error
+	DistributionInspect(ctx context.Context, image, encodedRegistryAuth string) (registry.DistributionInspect, error)
+}
+
+// NewDockerClient creates a new client for the docker API
+func NewDockerClient() (*client.Client, *DockerError) {
+	dockerClient, err := client.NewClientWithOpts(client.WithVersion("1.30"))
+	if err != nil {
+		return nil, &DockerError{errOpClientCreate, err, err.Error()}
+	}
+	return dockerClient, nil
+}
 
 // DockerCompose to set up the Codewind environment
 func DockerCompose(dockerComposeFile string, tag string, loglevel string) *DockerError {
@@ -261,16 +283,9 @@ func setupDockerComposeEnvs(tag, command string, loglevel string) {
 }
 
 // PullImage - pull pfe/performance images from dockerhub
-func PullImage(image string, jsonOutput bool) *DockerError {
-	ctx := context.Background()
-	cli, err := client.NewClientWithOpts(client.WithVersion("1.30"))
-	if err != nil {
-		return &DockerError{errOpImageNotFound, err, err.Error()}
-	}
+func PullImage(dockerClient DockerClient, image string, jsonOutput bool) *DockerError {
 
-	var codewindOut io.ReadCloser
-
-	codewindOut, err = cli.ImagePull(ctx, image, types.ImagePullOptions{})
+	codewindOut, err := dockerClient.ImagePull(context.Background(), image, types.ImagePullOptions{})
 
 	if err != nil {
 		return &DockerError{errOpImagePull, err, err.Error()}
@@ -289,15 +304,11 @@ func PullImage(image string, jsonOutput bool) *DockerError {
 
 // ValidateImageDigest - will ensure the image digest matches that of the one in dockerhub
 // returns imageID, docker error
-func ValidateImageDigest(image string) (string, *DockerError) {
-
+func ValidateImageDigest(dockerClient DockerClient, image string) (string, *DockerError) {
 	ctx := context.Background()
-	cli, err := client.NewClientWithOpts(client.WithVersion("1.30"))
-	if err != nil {
-		return "", &DockerError{errOpImageDigest, err, err.Error()}
-	}
+
 	// call docker api for image digest
-	queryDigest, err := cli.DistributionInspect(ctx, image, "")
+	queryDigest, err := dockerClient.DistributionInspect(ctx, image, "")
 	if err != nil {
 		logr.Error(err)
 	}
@@ -305,9 +316,8 @@ func ValidateImageDigest(image string) (string, *DockerError) {
 	// turn digest -> []byte -> string
 	digest, _ := json.Marshal(queryDigest.Descriptor.Digest)
 	logr.Traceln("Query image digest is.. ", queryDigest.Descriptor.Digest)
-
 	// get local image digest
-	imageList, dockerError := GetImageList()
+	imageList, dockerError := GetImageList(dockerClient)
 	if err != nil {
 		return "", dockerError
 	}
@@ -337,18 +347,6 @@ func ValidateImageDigest(image string) (string, *DockerError) {
 	return "", nil
 }
 
-// TagImage - locally retag the downloaded images
-func TagImage(source, tag string) *DockerError {
-	out, err := exec.Command("docker", "tag", source, tag).Output()
-	if err != nil {
-		return &DockerError{errOpImageTag, err, err.Error()}
-	}
-
-	output := string(out[:])
-	fmt.Println(output)
-	return nil
-}
-
 // GetContainersToRemove returns a list of containers ([]types.Container) matching "/cw"
 func GetContainersToRemove(containerList []types.Container) []types.Container {
 	codewindContainerPrefixes := []string{
@@ -368,10 +366,11 @@ func GetContainersToRemove(containerList []types.Container) []types.Container {
 }
 
 // CheckContainerStatus of Codewind running/stopped
-func CheckContainerStatus() (bool, *DockerError) {
+func CheckContainerStatus(dockerClient DockerClient) (bool, *DockerError) {
 	var containerStatus = false
 	containerArr := containerNames
-	containers, err := GetContainerList()
+
+	containers, err := GetContainerList(dockerClient)
 	if err != nil {
 		return false, err
 	}
@@ -397,10 +396,10 @@ func CheckContainerStatus() (bool, *DockerError) {
 }
 
 // CheckImageStatus of Codewind installed/uninstalled
-func CheckImageStatus() (bool, *DockerError) {
+func CheckImageStatus(dockerClient DockerClient) (bool, *DockerError) {
 	var imageStatus = false
 	imageArr := baseImageNameArr
-	images, err := GetImageList()
+	images, err := GetImageList(dockerClient)
 	if err != nil {
 		return false, err
 	}
@@ -434,14 +433,10 @@ func RemoveImage(imageID string) *DockerError {
 }
 
 // GetContainerList from docker
-func GetContainerList() ([]types.Container, *DockerError) {
+func GetContainerList(dockerClient DockerClient) ([]types.Container, *DockerError) {
 	ctx := context.Background()
-	cli, err := client.NewClientWithOpts(client.WithVersion("1.30"))
-	if err != nil {
-		return nil, &DockerError{errOpContainerList, err, err.Error()}
-	}
 
-	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+	containers, err := dockerClient.ContainerList(ctx, types.ContainerListOptions{})
 	if err != nil {
 		return nil, &DockerError{errOpContainerList, err, err.Error()}
 	}
@@ -449,14 +444,10 @@ func GetContainerList() ([]types.Container, *DockerError) {
 }
 
 // GetImageList from docker
-func GetImageList() ([]types.ImageSummary, *DockerError) {
+func GetImageList(dockerClient DockerClient) ([]types.ImageSummary, *DockerError) {
 	ctx := context.Background()
-	cli, err := client.NewClientWithOpts(client.WithVersion("1.30"))
-	if err != nil {
-		return nil, &DockerError{errOpImageList, err, err.Error()}
-	}
 
-	images, err := cli.ImageList(ctx, types.ImageListOptions{})
+	images, err := dockerClient.ImageList(ctx, types.ImageListOptions{})
 	if err != nil {
 		return nil, &DockerError{errOpImageList, err, err.Error()}
 	}
@@ -464,28 +455,24 @@ func GetImageList() ([]types.ImageSummary, *DockerError) {
 }
 
 // StopContainer will stop only codewind containers
-func StopContainer(container types.Container) *DockerError {
+func StopContainer(dockerClient DockerClient, container types.Container) *DockerError {
 	ctx := context.Background()
-	cli, err := client.NewClientWithOpts(client.WithVersion("1.30"))
-	if err != nil {
-		return &DockerError{errOpStopContainer, err, err.Error()}
-	}
 
 	// Check if the container will remove after it is stopped
-	isAutoRemoved, isAutoRemovedErr := getContainerAutoRemovePolicy(container.ID)
+	isAutoRemoved, isAutoRemovedErr := getContainerAutoRemovePolicy(dockerClient, container.ID)
 	if isAutoRemovedErr != nil {
-		return &DockerError{errOpStopContainer, err, err.Error()}
+		return &DockerError{errOpStopContainer, isAutoRemovedErr, isAutoRemovedErr.Error()}
 	}
 
 	// Stop the running container
-	err = cli.ContainerStop(ctx, container.ID, nil)
+	err := dockerClient.ContainerStop(ctx, container.ID, nil)
 	if err != nil {
 		return &DockerError{errOpStopContainer, err, err.Error()}
 	}
 
 	if !isAutoRemoved {
 		// Remove the container so it isnt lingering in the background
-		err = cli.ContainerRemove(ctx, container.ID, types.ContainerRemoveOptions{})
+		err = dockerClient.ContainerRemove(ctx, container.ID, types.ContainerRemoveOptions{})
 		if err != nil {
 			return &DockerError{errOpStopContainer, err, err.Error()}
 		}
@@ -494,15 +481,10 @@ func StopContainer(container types.Container) *DockerError {
 }
 
 // getContainerAutoRemovePolicy will get the auto remove policy of a given container
-func getContainerAutoRemovePolicy(containerID string) (bool, *DockerError) {
+func getContainerAutoRemovePolicy(dockerClient DockerClient, containerID string) (bool, *DockerError) {
 	ctx := context.Background()
 
-	cli, err := client.NewClientWithOpts(client.WithVersion("1.30"))
-	if err != nil {
-		return false, &DockerError{errOpClientCreate, err, err.Error()}
-	}
-
-	containerInfo, err := cli.ContainerInspect(ctx, containerID)
+	containerInfo, err := dockerClient.ContainerInspect(ctx, containerID)
 	if err != nil {
 		return false, &DockerError{errOpContainerInspect, err, err.Error()}
 	}
@@ -511,16 +493,17 @@ func getContainerAutoRemovePolicy(containerID string) (bool, *DockerError) {
 }
 
 // GetPFEHostAndPort will return the current hostname and port that PFE is running on
-func GetPFEHostAndPort() (string, string, *DockerError) {
-	containerIsRunning, err := CheckContainerStatus()
+func GetPFEHostAndPort(dockerClient DockerClient) (string, string, *DockerError) {
+	containerIsRunning, err := CheckContainerStatus(dockerClient)
 	if err != nil {
 		return "", "", err
 	}
+
 	// on Che, can assume PFE is always on localhost:9090
 	if os.Getenv("CHE_API_EXTERNAL") != "" {
 		return "localhost", "9090", nil
 	} else if containerIsRunning {
-		containerList, err := GetContainerList()
+		containerList, err := GetContainerList(dockerClient)
 		if err != nil {
 			return "", "", err
 		}
@@ -538,11 +521,10 @@ func GetPFEHostAndPort() (string, string, *DockerError) {
 }
 
 // GetImageTags of Codewind images
-func GetImageTags() ([]string, *DockerError) {
+func GetImageTags(dockerClient DockerClient) ([]string, *DockerError) {
 	imageArr := baseImageNameArr
 	tagArr := []string{}
-
-	images, err := GetImageList()
+	images, err := GetImageList(dockerClient)
 	if err != nil {
 		return nil, err
 	}
@@ -592,11 +574,11 @@ func DetermineDebugPortForPFE() (pfeDebugPort string) {
 }
 
 // GetContainerTags of the Codewind version(s) currently running
-func GetContainerTags() ([]string, *DockerError) {
+func GetContainerTags(dockerClient DockerClient) ([]string, *DockerError) {
 	containerArr := containerNames
 	tagArr := []string{}
 
-	containers, err := GetContainerList()
+	containers, err := GetContainerList(dockerClient)
 	if err != nil {
 		return nil, err
 	}

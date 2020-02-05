@@ -1,13 +1,13 @@
-/*******************************************************************************
- * Copyright (c) 2019 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v2.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v20.html
- *
- * Contributors:
- *     IBM Corporation - initial API and implementation
- *******************************************************************************/
+// /*******************************************************************************
+//  * Copyright (c) 2019 IBM Corporation and others.
+//  * All rights reserved. This program and the accompanying materials
+//  * are made available under the terms of the Eclipse Public License v2.0
+//  * which accompanies this distribution, and is available at
+//  * http://www.eclipse.org/legal/epl-v20.html
+//  *
+//  * Contributors:
+//  *     IBM Corporation - initial API and implementation
+//  *******************************************************************************/
 
 package utils
 
@@ -22,7 +22,6 @@ import (
 	"testing"
 
 	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/client"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -34,13 +33,21 @@ func TestToggleDebug(t *testing.T) {
 
 func TestRemoveImage(t *testing.T) {
 	performanceImage := "docker.io/eclipse/codewind-performance-amd64"
-	PullImage(performanceImage, false)
+	client, err := NewDockerClient()
+	if err != nil {
+		t.Fail()
+	}
+	PullImage(client, performanceImage, false)
 	RemoveImage(performanceImage)
 }
 func TestCheckImageStatusFalse(t *testing.T) {
 	// Test checks that image list can be searched
 	// False return as no images have been installed for this test
-	result, err := CheckImageStatus()
+	client, err := NewDockerClient()
+	if err != nil {
+		t.Fail()
+	}
+	result, err := CheckImageStatus(client)
 	if err != nil {
 		t.Fail()
 	}
@@ -50,7 +57,12 @@ func TestCheckImageStatusFalse(t *testing.T) {
 func TestCheckContainerStatusFalse(t *testing.T) {
 	// Test checks that container list can be searched
 	// False return as no containers have been started for this test
-	result, err := CheckContainerStatus()
+	client, err := NewDockerClient()
+	if err != nil {
+		t.Fail()
+	}
+	result, err := CheckContainerStatus(client)
+
 	if err != nil {
 		t.Fail()
 	}
@@ -60,12 +72,14 @@ func TestCheckContainerStatusFalse(t *testing.T) {
 func TestPullDockerImage(t *testing.T) {
 	performanceImage := "docker.io/eclipse/codewind-performance-amd64"
 	performanceImageTarget := "codewind-performance-amd64:latest"
-	PullImage(performanceImage, false)
-	TagImage(performanceImage, performanceImageTarget)
+	client, dockerErr := NewDockerClient()
+	if dockerErr != nil {
+		t.Fail()
+	}
+	PullImage(client, performanceImage, false)
 
 	ctx := context.Background()
-	cli, _ := client.NewEnvClient()
-	images, _ := cli.ImageList(ctx, types.ImageListOptions{})
+	images, _ := client.ImageList(ctx, types.ImageListOptions{})
 	imageStatus := false
 	for _, image := range images {
 		imageRepo := strings.Join(image.RepoDigests, " ")

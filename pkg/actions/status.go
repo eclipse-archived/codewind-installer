@@ -86,7 +86,13 @@ func StatusCommandRemoteConnection(c *cli.Context) {
 
 // StatusCommandLocalConnection : Output local connection details
 func StatusCommandLocalConnection(c *cli.Context) {
-	containersAreRunning, err := utils.CheckContainerStatus()
+	dockerClient, dockerErr := utils.NewDockerClient()
+	if dockerErr != nil {
+		HandleDockerError(dockerErr)
+		os.Exit(1)
+	}
+
+	containersAreRunning, err := utils.CheckContainerStatus(dockerClient)
 	if err != nil {
 		HandleDockerError(err)
 		os.Exit(1)
@@ -94,19 +100,19 @@ func StatusCommandLocalConnection(c *cli.Context) {
 
 	if containersAreRunning {
 		// Started
-		hostname, port, err := utils.GetPFEHostAndPort()
+		hostname, port, err := utils.GetPFEHostAndPort(dockerClient)
 		if err != nil {
 			HandleDockerError(err)
 			os.Exit(1)
 		}
 		if printAsJSON {
-			imageTagArr, err := utils.GetImageTags()
+			imageTagArr, err := utils.GetImageTags(dockerClient)
 			if err != nil {
 				fmt.Println(err.Error())
 				os.Exit(1)
 			}
 
-			containerTagArr, err := utils.GetContainerTags()
+			containerTagArr, err := utils.GetContainerTags(dockerClient)
 			if err != nil {
 				fmt.Println(err.Error())
 				os.Exit(1)
@@ -134,7 +140,7 @@ func StatusCommandLocalConnection(c *cli.Context) {
 		os.Exit(0)
 	}
 
-	imagesAreInstalled, err := utils.CheckImageStatus()
+	imagesAreInstalled, err := utils.CheckImageStatus(dockerClient)
 	if err != nil {
 		HandleDockerError(err)
 		os.Exit(1)
@@ -144,7 +150,7 @@ func StatusCommandLocalConnection(c *cli.Context) {
 		// Installed but not started
 		if printAsJSON {
 
-			imageTagArr, err := utils.GetImageTags()
+			imageTagArr, err := utils.GetImageTags(dockerClient)
 			if err != nil {
 				fmt.Println(err.Error())
 				os.Exit(1)
