@@ -207,7 +207,7 @@ spec:
             }
 
             options {
-                timeout(time: 20, unit: 'MINUTES') 
+                timeout(time: 120, unit: 'MINUTES') 
                 retry(3) 
             }
 
