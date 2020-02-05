@@ -16,16 +16,13 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"text/tabwriter"
 
 	"github.com/eclipse/codewind-installer/pkg/appconstants"
 	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
-	"github.com/eclipse/codewind-installer/pkg/utils"
 
 	"github.com/eclipse/codewind-installer/pkg/apiroutes"
 	"github.com/eclipse/codewind-installer/pkg/remote"
-	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/urfave/cli"
 )
 
@@ -61,7 +58,7 @@ func GetSingleConnectionVersion(c *cli.Context) {
 	}
 
 	if printAsJSON {
-		utils.PrettyPrintJSON(containerVersions)
+		PrettyPrintJSON(containerVersions)
 	} else {
 		var tableContent []string
 		tableContent = append(tableContent, "CWCTL VERSION: "+containerVersions.CwctlVersion+"\n")
@@ -87,7 +84,7 @@ func GetAllConnectionVersions() {
 	}
 
 	if printAsJSON {
-		utils.PrettyPrintJSON(containerVersionsList)
+		PrettyPrintJSON(containerVersionsList)
 	} else {
 		var tableContent []string
 		tableContent = append(tableContent, "CWCTL VERSION: "+containerVersionsList.CwctlVersion+"\n")
@@ -116,16 +113,14 @@ func RemoteListAll(c *cli.Context) {
 		os.Exit(1)
 	}
 	if printAsJSON {
-		utils.PrettyPrintJSON(remoteInstalls)
+		PrettyPrintJSON(remoteInstalls)
 	} else {
-		w := new(tabwriter.Writer)
-		w.Init(os.Stdout, 0, 8, 2, '\t', 0)
-		fmt.Fprintln(w, "Workspace ID \tNamespace \tVersion \tInstall Date \tAuth Realm \tURL")
+		var tableContent []string
+		tableContent = append(tableContent, "Workspace ID \tNamespace \tVersion \tInstall Date \tAuth Realm \tURL")
 		for _, install := range remoteInstalls {
-			fmt.Fprintln(w, install.WorkspaceID+"\t"+install.Namespace+"\t"+install.Version+"\t"+install.InstallDate+"\t"+install.CodewindAuthRealm+"\t"+install.CodewindURL)
+			tableContent = append(tableContent, install.WorkspaceID+"\t"+install.Namespace+"\t"+install.Version+"\t"+install.InstallDate+"\t"+install.CodewindAuthRealm+"\t"+install.CodewindURL)
 		}
-		fmt.Fprintln(w)
-		w.Flush()
+		PrintTable(tableContent)
 	}
 	os.Exit(0)
 }
