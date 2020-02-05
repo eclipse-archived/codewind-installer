@@ -138,6 +138,18 @@ func TestIgnoreFileOrDirectory(t *testing.T) {
 			shouldBeIgnored:  true,
 			ignoredPathsList: []string{"noddy_modules"},
 		},
+		"success case: file called file.iml should be ignored (IntelliJ metadata file, *.iml)": {
+			name:             "file.iml",
+			isDir:            false,
+			shouldBeIgnored:  true,
+			ignoredPathsList: []string{},
+		},
+		"success case: path containing .idea should be ignored (IntelliJ metadata directory, .idea)": {
+			name:             ".idea",
+			isDir:            true,
+			shouldBeIgnored:  true,
+			ignoredPathsList: []string{},
+		},
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
