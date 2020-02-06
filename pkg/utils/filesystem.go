@@ -102,12 +102,12 @@ func PingHealth(healthEndpoint string) (bool, *DockerError) {
 	var started = false
 	fmt.Println("Waiting for Codewind to start")
 
-	client, err := NewDockerClient()
+	dockerClient, err := NewDockerClient()
 	if err != nil {
 		return false, err
 	}
 
-	hostname, port, err := GetPFEHostAndPort(client)
+	hostname, port, err := GetPFEHostAndPort(dockerClient)
 	if err != nil {
 		return false, err
 	}

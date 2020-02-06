@@ -37,6 +37,7 @@ func InstallCommand(c *cli.Context) {
 		"docker.io/eclipse/codewind-performance-amd64:" + tag,
 	}
 
+	// creates a new docker client, which is passed into the functions that interact with the docker API
 	dockerClient, dockerErr := utils.NewDockerClient()
 	if dockerErr != nil {
 		HandleDockerError(dockerErr)

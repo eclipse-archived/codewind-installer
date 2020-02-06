@@ -461,7 +461,7 @@ func StopContainer(dockerClient DockerClient, container types.Container) *Docker
 	// Check if the container will remove after it is stopped
 	isAutoRemoved, isAutoRemovedErr := getContainerAutoRemovePolicy(dockerClient, container.ID)
 	if isAutoRemovedErr != nil {
-		return &DockerError{errOpStopContainer, isAutoRemovedErr, isAutoRemovedErr.Error()}
+		return &DockerError{errOpStopContainer, isAutoRemovedErr, isAutoRemovedErr.Desc}
 	}
 
 	// Stop the running container
