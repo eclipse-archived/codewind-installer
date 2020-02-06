@@ -42,16 +42,16 @@ const (
 	GatekeeperImage = "eclipse/codewind-gatekeeper-amd64"
 
 	// PFEImageTag is the image tag associated with the docker image that's used for Codewind-PFE
-	PFEImageTag = "0.8.0"
+	PFEImageTag = "0.8.1"
 
 	// PerformanceTag is the image tag associated with the docker image that's used for the Performance dashboard
-	PerformanceTag = "0.8.0"
+	PerformanceTag = "0.8.1"
 
 	// KeycloakImageTag is the image tag associated with the docker image that's used for Codewind-Keycloak
-	KeycloakImageTag = "0.8.0"
+	KeycloakImageTag = "0.8.1"
 
 	// GatekeeperImageTag is the image tag associated with the docker image that's used for Codewind-Gatekeeper
-	GatekeeperImageTag = "0.8.0"
+	GatekeeperImageTag = "0.8.1"
 
 	// ImagePullPolicy is the pull policy used for all containers in Codewind, defaults to Always
 	ImagePullPolicy = corev1.PullAlways
