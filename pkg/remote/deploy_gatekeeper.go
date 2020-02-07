@@ -168,12 +168,12 @@ func generateIngressGatekeeper(codewind Codewind) extensionsv1.Ingress {
 
 	annotations := map[string]string{
 		"nginx.ingress.kubernetes.io/rewrite-target":     "/",
+		"ingress.bluemix.net/redirect-to-https":          "True",
+		"ingress.bluemix.net/ssl-services":               "ssl-service=" + GatekeeperPrefix + "-" + codewind.WorkspaceID,
 		"nginx.ingress.kubernetes.io/backend-protocol":   "HTTPS",
 		"kubernetes.io/ingress.class":                    "nginx",
 		"nginx.ingress.kubernetes.io/force-ssl-redirect": "true",
 	}
-	// blockOwnerDeletion := true
-	// controller := true
 
 	return extensionsv1.Ingress{
 		TypeMeta: metav1.TypeMeta{

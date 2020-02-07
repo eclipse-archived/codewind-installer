@@ -153,9 +153,6 @@ func generateIngressKeycloak(codewind Codewind) extensionsv1.Ingress {
 		"kubernetes.io/ingress.class":                    "nginx",
 	}
 
-	// blockOwnerDeletion := true
-	// controller := true
-
 	return extensionsv1.Ingress{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "extensions/v1beta1",
