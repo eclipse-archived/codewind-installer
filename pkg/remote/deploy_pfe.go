@@ -31,9 +31,7 @@ func DeployPFE(config *restclient.Config, clientset *kubernetes.Clientset, codew
 	codewindRoles := CreateCodewindRoles(deployOptions)
 	codewindRoleBindings := CreateCodewindRoleBindings(codewindInstance, deployOptions, codewindRoleBindingName)
 
-	codewindTektonClusterRoleBindingName := CodewindTektonClusterRoleBindingName
-	codewindTektonClusterRolesName := CodewindTektonClusterRolesName
-
+	codewindTektonClusterRoleBindingName := CodewindTektonClusterRoleBindingName + "-" + codewindInstance.WorkspaceID
 	codewindTektonRoles := CreateCodewindTektonClusterRoles(deployOptions)
 	codewindTektonRoleBindings := CreateCodewindTektonClusterRoleBindings(codewindInstance, deployOptions, codewindTektonClusterRoleBindingName)
 
@@ -59,25 +57,6 @@ func DeployPFE(config *restclient.Config, clientset *kubernetes.Clientset, codew
 		}
 	}
 
-	logr.Infof("Checking if '%v' tekton cluster access roles are installed\n", codewindTektonClusterRolesName)
-	tektonclusterRole, err := clientset.RbacV1().ClusterRoles().Get(codewindTektonClusterRolesName, metav1.GetOptions{})
-	if tektonclusterRole != nil && err == nil {
-		logr.Infof("Cluster roles '%v' already installed - updating\n", codewindTektonClusterRolesName)
-		_, err = clientset.RbacV1().ClusterRoles().Update(&codewindTektonRoles)
-		if err != nil {
-			logr.Errorf("Unable to update `%v` tekton cluster access roles: %v\n", codewindTektonClusterRolesName, err)
-			return err
-		}
-		logr.Infof("Cluster roles '%v' updated complete\n", codewindTektonClusterRolesName)
-	} else {
-		logr.Infof("Adding new '%v' cluster access roles\n", codewindTektonClusterRolesName)
-		_, err = clientset.RbacV1().ClusterRoles().Create(&codewindTektonRoles)
-		if err != nil {
-			logr.Errorf("Unable to add %v tekton cluster access roles: %v\n", codewindTektonClusterRolesName, err)
-			return err
-		}
-	}
-
 	logr.Infof("Checking if '%v' role bindings exist\n", codewindRoleBindingName)
 	rolebindings, err := clientset.RbacV1().RoleBindings(codewindInstance.Namespace).Get(codewindRoleBindingName, metav1.GetOptions{})
 	if rolebindings != nil && err == nil {
@@ -91,19 +70,37 @@ func DeployPFE(config *restclient.Config, clientset *kubernetes.Clientset, codew
 		}
 	}
 
-	logr.Infof("Checking if '%v' cluster role bindings exist\n", codewindTektonClusterRoleBindingName)
+	logr.Infof("Checking if '%v' Tekton cluster access roles are installed\n", CodewindTektonClusterRolesName)
+	tektonclusterRole, err := clientset.RbacV1().ClusterRoles().Get(CodewindTektonClusterRolesName, metav1.GetOptions{})
+	if tektonclusterRole != nil && err == nil {
+		logr.Infof("Cluster roles '%v' already installed - updating\n", CodewindTektonClusterRolesName)
+		_, err = clientset.RbacV1().ClusterRoles().Update(&codewindTektonRoles)
+		if err != nil {
+			logr.Errorf("Unable to update `%v` Tekton cluster access roles: %v\n", CodewindTektonClusterRolesName, err)
+			return err
+		}
+		logr.Infof("Cluster roles '%v' updated complete\n", CodewindTektonClusterRolesName)
+	} else {
+		logr.Infof("Adding new '%v' cluster access roles\n", CodewindTektonClusterRolesName)
+		_, err = clientset.RbacV1().ClusterRoles().Create(&codewindTektonRoles)
+		if err != nil {
+			logr.Errorf("Unable to add %v Tekton cluster access roles: %v\n", CodewindTektonClusterRolesName, err)
+			return err
+		}
+	}
+
+	logr.Infof("Checking if '%v' role bindings exist\n", codewindTektonClusterRoleBindingName)
 	clusterrolebindings, err := clientset.RbacV1().ClusterRoleBindings().Get(codewindTektonClusterRoleBindingName, metav1.GetOptions{})
 	if clusterrolebindings != nil && err == nil {
 		logr.Warnf("Cluster Role binding '%v' already exist.\n", codewindTektonClusterRoleBindingName)
 	} else {
-		logr.Infof("Adding '%v' cluster role binding\n", codewindTektonClusterRoleBindingName)
+		logr.Infof("Adding '%v' role binding\n", codewindTektonClusterRoleBindingName)
 		_, err = clientset.RbacV1().ClusterRoleBindings().Create(&codewindTektonRoleBindings)
 		if err != nil {
 			logr.Errorf("Unable to add '%v' access roles: %v\n", codewindTektonClusterRoleBindingName, err)
 			return err
 		}
 	}
-
 
 	// Determine if we're running on OpenShift on IKS (and thus need to use the ibm-file-bronze storage class)
 	storageClass := ""
