@@ -121,8 +121,7 @@ func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemIn
 	}
 
 	logr.Infof("Using namespace : %v\n", namespace)
-
-	pfeImage, performanceImage, keycloakImage, gatekeeperImage := GetImages(RealOsEnv{})
+	pfeImage, performanceImage, keycloakImage, gatekeeperImage := GetImages()
 
 	logr.Infoln("Container images : ")
 	logr.Infoln(pfeImage)

@@ -31,48 +31,35 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// OsEnv describes the functions called on the os package
-type OsEnv interface {
-	Getenv(key string) string
-}
-
-// RealOsEnv is the actual OS package used in production
-type RealOsEnv struct{}
-
-// Getenv gets the environment variable for the given key
-func (RealOsEnv) Getenv(key string) string {
-	return os.Getenv(key)
-}
-
 // GetImages returns the images that are to be used for PFE and the Performance dashboard in Codewind
 // If environment vars are set (such as $PFE_IMAGE, $PFE_TAG, $PERFORMANCE_IMAGE, or $PERFORMANCE_TAG), it will use those,
 // otherwise it defaults to the constants defined in constants/default.go
-func GetImages(osEnv OsEnv) (string, string, string, string) {
+func GetImages() (string, string, string, string) {
 	var pfeImage, performanceImage, keycloakImage, gatekeeperImage string
 	var pfeTag, performanceTag, keycloakTag, gatekeeperTag string
 
-	if pfeImage = osEnv.Getenv("PFE_IMAGE"); pfeImage == "" {
+	if pfeImage = os.Getenv("PFE_IMAGE"); pfeImage == "" {
 		pfeImage = PFEImage
 	}
-	if performanceImage = osEnv.Getenv("PERFORMANCE_IMAGE"); performanceImage == "" {
+	if performanceImage = os.Getenv("PERFORMANCE_IMAGE"); performanceImage == "" {
 		performanceImage = PerformanceImage
 	}
-	if keycloakImage = osEnv.Getenv("KEYCLOAK_IMAGE"); keycloakImage == "" {
+	if keycloakImage = os.Getenv("KEYCLOAK_IMAGE"); keycloakImage == "" {
 		keycloakImage = KeycloakImage
 	}
-	if gatekeeperImage = osEnv.Getenv("GATEKEEPER_IMAGE"); gatekeeperImage == "" {
+	if gatekeeperImage = os.Getenv("GATEKEEPER_IMAGE"); gatekeeperImage == "" {
 		gatekeeperImage = GatekeeperImage
 	}
-	if pfeTag = osEnv.Getenv("PFE_TAG"); pfeTag == "" {
+	if pfeTag = os.Getenv("PFE_TAG"); pfeTag == "" {
 		pfeTag = PFEImageTag
 	}
-	if performanceTag = osEnv.Getenv("PERFORMANCE_TAG"); performanceTag == "" {
+	if performanceTag = os.Getenv("PERFORMANCE_TAG"); performanceTag == "" {
 		performanceTag = PerformanceTag
 	}
-	if keycloakTag = osEnv.Getenv("KEYCLOAK_TAG"); keycloakTag == "" {
+	if keycloakTag = os.Getenv("KEYCLOAK_TAG"); keycloakTag == "" {
 		keycloakTag = KeycloakImageTag
 	}
-	if gatekeeperTag = osEnv.Getenv("GATEKEEPER_TAG"); gatekeeperTag == "" {
+	if gatekeeperTag = os.Getenv("GATEKEEPER_TAG"); gatekeeperTag == "" {
 		gatekeeperTag = GatekeeperImageTag
 	}
 	return pfeImage + ":" + pfeTag, performanceImage + ":" + performanceTag, keycloakImage + ":" + keycloakTag, gatekeeperImage + ":" + gatekeeperTag
@@ -271,7 +258,7 @@ func WaitForPodReady(clientset *kubernetes.Clientset, codewindInstance Codewind,
 	var waitTime int64 = 30
 
 	watcher, err := clientset.CoreV1().Pods(codewindInstance.Namespace).Watch(metav1.ListOptions{
-		LabelSelector:  labelSelector,
+		LabelSelector: labelSelector,
 		TimeoutSeconds: &waitTime,
 	})
 	if err != nil {
@@ -282,10 +269,10 @@ func WaitForPodReady(clientset *kubernetes.Clientset, codewindInstance Codewind,
 	lastReason := ""
 	changeEvent := watcher.ResultChan()
 	for {
-		event, channelOk := <-changeEvent
+		event, channelOk := <- changeEvent
 		if !channelOk {
 			// Channel closed, no event value. (Watch probably timed out.)
-			logr.Warnf("Watch for Pod %v ended. Timeout or connection error.", podName)
+			logr.Warnf("Watch for Pod %v ended. Timeout or connection error.", podName);
 			return false
 		}
 		foundPod, castOk := event.Object.(*corev1.Pod)
