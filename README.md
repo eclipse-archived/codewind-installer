@@ -151,7 +151,7 @@ This is the same as `go test ./...`, but outputs test coverage scores for each f
 | stop-all    |       | 'Stop all of the Codewind and project containers'                   |
 | remove      | `rm`  | 'Remove Codewind and Project docker images'                         |
 | templates   |       | 'Manage project templates'                                          |
-| version     |       | 'Print the versions of Codewind containers, for a given container'  |
+| version     |       | 'Print the versions of Codewind containers, for a given connection' |
 | sectoken    | `st`  | 'Authenticate with username and password to obtain an access_token' |
 | secrole     | `sl`  | 'Manage realm based ACCESS roles'                                   |
 | secrealm    | `sr`  | 'Manage new or existing REALM configurations'                       |
@@ -199,6 +199,17 @@ Subcommands:</br>
 > --path,-p value Project Path
 > --id,-i value Project ID
 > --time,-t value Time of last project sync
+
+`list` - List projects bound to a Codewind deployment
+> **Flags**
+> --conid value                 Connection ID
+
+`get` - Get a single project, requires either the project ID or name
+When using a project ID the CLI will automatically detect which connection it relates to
+> **Flags**
+> --id value                    Project ID
+> --name                        Project name
+> --conid                       Connection ID
 
 `connection/con` - Manage the connection targets for a project
 
@@ -275,6 +286,7 @@ Subcommands:</br>
 
 > **Flags:**
 > --conid value Connection ID (see the connections cmd)
+> --all - Show Container versions for all Codewind connections
 
 ## sectoken
 

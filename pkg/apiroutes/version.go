@@ -16,19 +16,27 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/eclipse/codewind-installer/pkg/appconstants"
+	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/sechttp"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 )
 
 type (
+	// ContainerVersionsList : The versions of the Codewind containers that are running on all connections
+	// Adds errors into the struct in order to report as many correct versions as possible
+	ContainerVersionsList struct {
+		CwctlVersion     string                       `json:"cwctlVersion"`
+		Connections      map[string]ContainerVersions `json:"connections"`
+		ConnectionErrors map[string]error             `json:"errors"`
+	}
+
 	// ContainerVersions : The versions of the Codewind containers that are running
 	ContainerVersions struct {
-		CwctlVersion       string
-		PerformanceVersion string
-		GatekeeperVersion  string
-		PFEVersion         string
+		CwctlVersion       string `json:"cwctlVersion,omitempty"`
+		PerformanceVersion string `json:"performanceVersion"`
+		GatekeeperVersion  string `json:"gatekeeperVersion,omitempty"`
+		PFEVersion         string `json:"PFEVersion"`
 	}
 
 	// EnvResponse : The relevant response fields from the remote environment API
@@ -38,41 +46,70 @@ type (
 	}
 )
 
+// GetAllContainerVersions : Get the versions of each Codewind container for each given connection ID
+func GetAllContainerVersions(connectionsList []connections.Connection, cwctlVersion string, httpClient utils.HTTPClient) (ContainerVersionsList, error) {
+	var containerVersionsList ContainerVersionsList
+	var connectionVersions = make(map[string]ContainerVersions)
+	var connectionVersionsErrors = make(map[string]error)
+
+	containerVersionsList.CwctlVersion = cwctlVersion
+
+	for _, connection := range connectionsList {
+		conID := connection.ID
+		conURL, conErr := config.PFEOriginFromConnection(&connection)
+		if conErr != nil {
+			connectionVersionsErrors[conID] = conErr
+			continue
+		}
+
+		containerVersion, containerVersionErr := GetContainerVersions(conURL, "", &connection, httpClient)
+		if containerVersionErr != nil {
+			connectionVersionsErrors[conID] = containerVersionErr
+			continue
+		}
+		connectionVersions[conID] = containerVersion
+	}
+	containerVersionsList.Connections = connectionVersions
+	containerVersionsList.ConnectionErrors = connectionVersionsErrors
+
+	return containerVersionsList, nil
+}
+
 // GetContainerVersions : Get the versions of each Codewind container, for a given connection ID
-func GetContainerVersions(conID string, httpClient utils.HTTPClient) (ContainerVersions, error) {
-	conInfo, conInfoErr := connections.GetConnectionByID(conID)
-	if conInfoErr != nil {
-		return ContainerVersions{}, conInfoErr.Err
-	}
-
+func GetContainerVersions(conURL, cwctlVersion string, connection *connections.Connection, httpClient utils.HTTPClient) (ContainerVersions, error) {
 	var containerVersions ContainerVersions
-	PFEVersion, err := GetPFEVersionFromConnection(conInfo, http.DefaultClient)
-	if err != nil {
-		return ContainerVersions{}, err
+	PFEVersion, PFEVersionErr := GetPFEVersionFromConnection(connection, conURL, httpClient)
+	if PFEVersionErr != nil {
+		return ContainerVersions{}, PFEVersionErr
 	}
 
-	GatekeeperVersion, err := GetGatekeeperVersionFromConnection(conInfo, http.DefaultClient)
-	if err != nil {
-		return ContainerVersions{}, err
+	PerformanceVersion, PerformanceVersionErr := GetPerformanceVersionFromConnection(connection, conURL, httpClient)
+	if PerformanceVersionErr != nil {
+		return ContainerVersions{}, PerformanceVersionErr
 	}
 
-	PerformanceVersion, err := GetPerformanceVersionFromConnection(conInfo, http.DefaultClient)
-	if err != nil {
-		return ContainerVersions{}, err
+	// Add cwctlVersion if it is passed in
+	if cwctlVersion != "" {
+		containerVersions.CwctlVersion = cwctlVersion
 	}
 
-	// Get cwctl version from inside the code
-	containerVersions.CwctlVersion = appconstants.VersionNum
 	containerVersions.PFEVersion = PFEVersion
-	containerVersions.GatekeeperVersion = GatekeeperVersion
 	containerVersions.PerformanceVersion = PerformanceVersion
+
+	if connection.ID != "local" {
+		GatekeeperVersion, GatekeeperVersionErr := GetGatekeeperVersionFromConnection(connection, conURL, httpClient)
+		if GatekeeperVersionErr != nil {
+			return ContainerVersions{}, GatekeeperVersionErr
+		}
+		containerVersions.GatekeeperVersion = GatekeeperVersion
+	}
 
 	return containerVersions, nil
 }
 
 // GetPFEVersionFromConnection : Get the version of the PFE container, deployed to the connection with the given ID
-func GetPFEVersionFromConnection(connection *connections.Connection, HTTPClient utils.HTTPClient) (string, error) {
-	req, err := http.NewRequest("GET", connection.URL+"/api/v1/environment", nil)
+func GetPFEVersionFromConnection(connection *connections.Connection, conURL string, HTTPClient utils.HTTPClient) (string, error) {
+	req, err := http.NewRequest("GET", conURL+"/api/v1/environment", nil)
 	if err != nil {
 		return "", err
 	}
@@ -85,8 +122,8 @@ func GetPFEVersionFromConnection(connection *connections.Connection, HTTPClient 
 }
 
 // GetGatekeeperVersionFromConnection : Get the version of the Gatekeeper container, deployed to the connection with the given ID
-func GetGatekeeperVersionFromConnection(connection *connections.Connection, HTTPClient utils.HTTPClient) (string, error) {
-	req, err := http.NewRequest("GET", connection.URL+"/api/v1/gatekeeper/environment", nil)
+func GetGatekeeperVersionFromConnection(connection *connections.Connection, url string, HTTPClient utils.HTTPClient) (string, error) {
+	req, err := http.NewRequest("GET", url+"/api/v1/gatekeeper/environment", nil)
 	if err != nil {
 		return "", err
 	}
@@ -99,8 +136,8 @@ func GetGatekeeperVersionFromConnection(connection *connections.Connection, HTTP
 }
 
 // GetPerformanceVersionFromConnection : Get the version of the Performance container, deployed to the connection with the given ID
-func GetPerformanceVersionFromConnection(connection *connections.Connection, HTTPClient utils.HTTPClient) (string, error) {
-	req, err := http.NewRequest("GET", connection.URL+"/performance/api/v1/environment", nil)
+func GetPerformanceVersionFromConnection(connection *connections.Connection, url string, HTTPClient utils.HTTPClient) (string, error) {
+	req, err := http.NewRequest("GET", url+"/performance/api/v1/environment", nil)
 	if err != nil {
 		return "", err
 	}
