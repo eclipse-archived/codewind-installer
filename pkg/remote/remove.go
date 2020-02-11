@@ -73,7 +73,7 @@ type RemovalResult struct {
 	StatusServiceAccount int
 
 	// Role bindings
-	StatusRoleBindings int
+	StatusRoleBindings       int
 	StatusTektonRoleBindings int
 
 	// Persistent volume claims
@@ -166,8 +166,8 @@ func RemoveRemote(remoteRemovalOptions *RemoveDeploymentOptions) (*RemovalResult
 	status, err = deleteRoleBindings(remoteRemovalOptions, clientset, "codewindWorkspace="+remoteRemovalOptions.WorkspaceID)
 	removalStatus.StatusRoleBindings = status
 
-	logr.Trace("Removing Codewind tekton role bindings")
-	status, err = deleteTektonRoleBindings(remoteRemovalOptions, clientset, "codewindWorkspace="+remoteRemovalOptions.WorkspaceID)
+	logr.Trace("Removing Codewind Tekton role bindings")
+	status, err = deleteTektonClusterRoleBindings(remoteRemovalOptions, clientset, "app="+CodewindTektonClusterRoleBindingName+",codewindWorkspace="+remoteRemovalOptions.WorkspaceID)
 	removalStatus.StatusTektonRoleBindings = status
 
 	logr.Trace("Removing Codewind service account")
@@ -194,6 +194,7 @@ func RemoveRemote(remoteRemovalOptions *RemoveDeploymentOptions) (*RemovalResult
 	logr.Infof("Codewind Gatekeeper Service: %v", getStatus(removalStatus.StatusServiceGatekeeper))
 	logr.Infof("Codewind Gatekeeper Ingress: %v", getStatus(removalStatus.StatusIngressGatekeeper))
 	logr.Infof("Codewind Role Bindings: %v", getStatus(removalStatus.StatusRoleBindings))
+	logr.Infof("Codewind Tekton Role Bindings: %v", getStatus(removalStatus.StatusTektonRoleBindings))
 	logr.Infof("Codewind Service Account: %v", getStatus(removalStatus.StatusServiceAccount))
 	logr.Infof("Kubernetes namespace: CWCTL will not remove the namespace automatically, use 'kubectl delete namespace %s' if you would like to remove it", remoteRemovalOptions.Namespace)
 
@@ -467,7 +468,7 @@ func deleteRoleBindings(remoteRemovalOptions *RemoveDeploymentOptions, clientset
 	return phase, nil
 }
 
-func deleteTektonRoleBindings(remoteRemovalOptions *RemoveDeploymentOptions, clientset *kubernetes.Clientset, labelSelector string) (int, error) {
+func deleteTektonClusterRoleBindings(remoteRemovalOptions *RemoveDeploymentOptions, clientset *kubernetes.Clientset, labelSelector string) (int, error) {
 	phase := ResourceNotFound
 	resourceList, err := clientset.RbacV1().ClusterRoleBindings().List(
 		v1.ListOptions{LabelSelector: labelSelector},
@@ -477,11 +478,13 @@ func deleteTektonRoleBindings(remoteRemovalOptions *RemoveDeploymentOptions, cli
 	}
 	if resourceList != nil && resourceList.Items != nil && len(resourceList.Items) > 0 {
 		phase = ResourceFound
-		err := clientset.RbacV1().ClusterRoleBindings().Delete(CodewindTektonClusterRoleBindingName, nil)
-		if err != nil {
-			phase = ResourceRemoveFailed
-		} else {
-			phase = ResourceRemoved
+		for _, resource := range resourceList.Items {
+			err := clientset.RbacV1().ClusterRoleBindings().Delete(resource.GetObjectMeta().GetName(), nil)
+			if err != nil {
+				phase = ResourceRemoveFailed
+			} else {
+				phase = ResourceRemoved
+			}
 		}
 	} else {
 		phase = ResourceNotFound
