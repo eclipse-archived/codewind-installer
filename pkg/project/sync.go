@@ -374,6 +374,9 @@ func ignoreFileOrDirectory(name string, isDir bool, cwSettingsIgnoredPathsList [
 		".build-ubuntu",
 		".yo-rc.json",
 		"*.iml",
+		".project",
+		".classpath",
+		".options",
 	}
 
 	// List of directories that will not be sent to PFE
@@ -392,6 +395,7 @@ func ignoreFileOrDirectory(name string, isDir bool, cwSettingsIgnoredPathsList [
 		"terraform",
 		".build-ubuntu",
 		".idea",
+		".vscode",
 	}
 
 	ignoredList := ignoredFiles
