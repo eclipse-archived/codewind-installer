@@ -32,8 +32,7 @@ func CreateCodewindTektonClusterRoles(deployOptions *DeployOptions) rbacv1.Clust
 			Kind:       "ClusterRole",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: deployOptions.Namespace,
-			Name:      CodewindTektonClusterRoleBindingName,
+			Name: CodewindTektonClusterRolesName,
 		},
 		Rules: ourRoles,
 	}
@@ -156,8 +155,9 @@ func CreateCodewindRoleBindings(codewindInstance Codewind, deployOptions *Deploy
 }
 
 //CreateCodewindTektonClusterRoleBindings : create Codewind tekton cluster role bindings
-func CreateCodewindTektonClusterRoleBindings(codewindInstance Codewind, deployOptions *DeployOptions, codewindRoleBindingName string) rbacv1.ClusterRoleBinding {
+func CreateCodewindTektonClusterRoleBindings(codewindInstance Codewind, deployOptions *DeployOptions, roleBindingName string) rbacv1.ClusterRoleBinding {
 	labels := map[string]string{
+		"app":               CodewindTektonClusterRoleBindingName,
 		"codewindWorkspace": codewindInstance.WorkspaceID,
 	}
 	return rbacv1.ClusterRoleBinding{
@@ -166,7 +166,7 @@ func CreateCodewindTektonClusterRoleBindings(codewindInstance Codewind, deployOp
 			Kind:       "ClusterRoleBinding",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   CodewindTektonClusterRoleBindingName,
+			Name:   roleBindingName,
 			Labels: labels,
 		},
 		Subjects: []rbacv1.Subject{
