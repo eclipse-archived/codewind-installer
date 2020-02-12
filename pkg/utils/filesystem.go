@@ -101,7 +101,13 @@ func DeleteTempFile(filePath string) (bool, error) {
 func PingHealth(healthEndpoint string) (bool, *DockerError) {
 	var started = false
 	fmt.Println("Waiting for Codewind to start")
-	hostname, port, err := GetPFEHostAndPort()
+
+	dockerClient, err := NewDockerClient()
+	if err != nil {
+		return false, err
+	}
+
+	hostname, port, err := GetPFEHostAndPort(dockerClient)
 	if err != nil {
 		return false, err
 	}

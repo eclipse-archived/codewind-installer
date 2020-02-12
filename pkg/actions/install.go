@@ -36,9 +36,17 @@ func InstallCommand(c *cli.Context) {
 		"docker.io/eclipse/codewind-pfe-amd64:" + tag,
 		"docker.io/eclipse/codewind-performance-amd64:" + tag,
 	}
+
+	// creates a new docker client, which is passed into the functions that interact with the docker API
+	dockerClient, dockerErr := utils.NewDockerClient()
+	if dockerErr != nil {
+		HandleDockerError(dockerErr)
+		os.Exit(1)
+	}
+
 	for i := 0; i < len(imageArr); i++ {
-		utils.PullImage(imageArr[i], printAsJSON)
-		imageID, dockerError := utils.ValidateImageDigest(imageArr[i])
+		utils.PullImage(dockerClient, imageArr[i], printAsJSON)
+		imageID, dockerError := utils.ValidateImageDigest(dockerClient, imageArr[i])
 
 		if dockerError != nil {
 			logr.Tracef("%v checksum validation failed. Trying to pull image again", imageArr[i])
@@ -46,10 +54,10 @@ func InstallCommand(c *cli.Context) {
 			utils.RemoveImage(imageID)
 
 			// pull image again
-			utils.PullImage(imageArr[i], printAsJSON)
+			utils.PullImage(dockerClient, imageArr[i], printAsJSON)
 
 			// validate the new image
-			_, dockerError = utils.ValidateImageDigest(imageArr[i])
+			_, dockerError = utils.ValidateImageDigest(dockerClient, imageArr[i])
 
 			if dockerError != nil {
 				if printAsJSON {

@@ -22,7 +22,6 @@ import (
 	"testing"
 
 	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/client"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -34,13 +33,21 @@ func TestToggleDebug(t *testing.T) {
 
 func TestRemoveImage(t *testing.T) {
 	performanceImage := "docker.io/eclipse/codewind-performance-amd64"
-	PullImage(performanceImage, false)
+	dockerClient, err := NewDockerClient()
+	if err != nil {
+		t.Fail()
+	}
+	PullImage(dockerClient, performanceImage, false)
 	RemoveImage(performanceImage)
 }
 func TestCheckImageStatusFalse(t *testing.T) {
 	// Test checks that image list can be searched
 	// False return as no images have been installed for this test
-	result, err := CheckImageStatus()
+	dockerClient, err := NewDockerClient()
+	if err != nil {
+		t.Fail()
+	}
+	result, err := CheckImageStatus(dockerClient)
 	if err != nil {
 		t.Fail()
 	}
@@ -50,7 +57,12 @@ func TestCheckImageStatusFalse(t *testing.T) {
 func TestCheckContainerStatusFalse(t *testing.T) {
 	// Test checks that container list can be searched
 	// False return as no containers have been started for this test
-	result, err := CheckContainerStatus()
+	client, err := NewDockerClient()
+	if err != nil {
+		t.Fail()
+	}
+	result, err := CheckContainerStatus(client)
+
 	if err != nil {
 		t.Fail()
 	}
@@ -60,12 +72,14 @@ func TestCheckContainerStatusFalse(t *testing.T) {
 func TestPullDockerImage(t *testing.T) {
 	performanceImage := "docker.io/eclipse/codewind-performance-amd64"
 	performanceImageTarget := "codewind-performance-amd64:latest"
-	PullImage(performanceImage, false)
-	TagImage(performanceImage, performanceImageTarget)
+	client, dockerErr := NewDockerClient()
+	if dockerErr != nil {
+		t.Fail()
+	}
+	PullImage(client, performanceImage, false)
 
 	ctx := context.Background()
-	cli, _ := client.NewEnvClient()
-	images, _ := cli.ImageList(ctx, types.ImageListOptions{})
+	images, _ := client.ImageList(ctx, types.ImageListOptions{})
 	imageStatus := false
 	for _, image := range images {
 		imageRepo := strings.Join(image.RepoDigests, " ")
@@ -102,49 +116,5 @@ func TestRemoveDuplicateEntries(t *testing.T) {
 	result = RemoveDuplicateEntries(dupArr)
 	if len(result) != 0 {
 		log.Fatal("Test 3: Failed to identify empty array values")
-	}
-}
-
-func Test_GetContainersToRemove(t *testing.T) {
-	tests := map[string]struct {
-		containerList      []types.Container
-		expectedContainers []string
-	}{
-		"Returns project containers (cw-)": {
-			containerList: []types.Container{
-				types.Container{
-					Names: []string{"/cw-nodejsexpress"},
-				},
-				types.Container{
-					Names: []string{"/cw-springboot"},
-				},
-			},
-			expectedContainers: []string{
-				"/cw-nodejsexpress",
-				"/cw-springboot",
-			},
-		},
-		"Ignores a non-codewind container": {
-			containerList: []types.Container{
-				types.Container{
-					Names: []string{"/cw-valid-container"},
-				},
-				types.Container{
-					Names: []string{"invalid-container"},
-				},
-			},
-			expectedContainers: []string{
-				"/cw-valid-container",
-			},
-		},
-	}
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			containersToRemove := GetContainersToRemove(test.containerList)
-			assert.Equal(t, len(test.expectedContainers), len(containersToRemove))
-			for _, container := range containersToRemove {
-				assert.Contains(t, test.expectedContainers, container.Names[0])
-			}
-		})
 	}
 }

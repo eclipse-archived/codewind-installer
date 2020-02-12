@@ -787,10 +787,13 @@
   analyzer-version = 1
   input-imports = [
     "github.com/docker/docker/api/types",
+    "github.com/docker/docker/api/types/container",
+    "github.com/docker/docker/api/types/registry",
     "github.com/docker/docker/client",
     "github.com/docker/docker/pkg/jsonmessage",
     "github.com/docker/docker/pkg/term",
     "github.com/google/go-github/github",
+    "github.com/opencontainers/image-spec/specs-go/v1",
     "github.com/openshift/api/route/v1",
     "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1",
     "github.com/sirupsen/logrus",

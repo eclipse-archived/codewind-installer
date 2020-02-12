@@ -32,8 +32,13 @@ func RemoveCommand(c *cli.Context, dockerComposeFile string) {
 		"cw-",
 	}
 
-	images, err := utils.GetImageList()
+	dockerClient, dockerErr := utils.NewDockerClient()
+	if dockerErr != nil {
+		HandleDockerError(dockerErr)
+		os.Exit(1)
+	}
 
+	images, err := utils.GetImageList(dockerClient)
 	if err != nil {
 		HandleDockerError(err)
 		os.Exit(1)
@@ -56,7 +61,7 @@ func RemoveCommand(c *cli.Context, dockerComposeFile string) {
 		}
 	}
 
-	dockerErr := utils.DockerComposeRemove(dockerComposeFile, tag)
+	dockerErr = utils.DockerComposeRemove(dockerComposeFile, tag)
 	if dockerErr != nil {
 		HandleDockerError(dockerErr)
 		os.Exit(1)

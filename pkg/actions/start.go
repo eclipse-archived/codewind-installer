@@ -21,7 +21,13 @@ import (
 
 // StartCommand : start the codewind containers
 func StartCommand(c *cli.Context, dockerComposeFile string, healthEndpoint string) {
-	status, err := utils.CheckContainerStatus()
+	dockerClient, dockerErr := utils.NewDockerClient()
+	if dockerErr != nil {
+		HandleDockerError(dockerErr)
+		os.Exit(1)
+	}
+
+	status, err := utils.CheckContainerStatus(dockerClient)
 	if err != nil {
 		HandleDockerError(err)
 		os.Exit(1)
