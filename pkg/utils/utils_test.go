@@ -84,36 +84,6 @@ func TestPullDockerImage(t *testing.T) {
 	}
 }
 
-func TestCreateTempFile(t *testing.T) {
-	file := CreateTempFile("TestFile.yaml")
-	assert.Equal(t, file, true, "should return true: should create a temp file")
-	os.Remove("./TestFile.yaml")
-}
-
-func TestWriteToComposeFile(t *testing.T) {
-	os.Create("TestFile.yaml")
-	got := WriteToComposeFile("TestFile.yaml", false)
-	assert.Equal(t, got, true, "should return true: should write data to a temp file")
-	os.Remove("TestFile.yaml")
-}
-
-func TestWriteToComposeFileFail(t *testing.T) {
-	writeToFile := WriteToComposeFile("", false)
-	assert.Equal(t, writeToFile, false, "should return false: should fail to write data")
-}
-
-func TestDeleteTempFile(t *testing.T) {
-	os.Create("TestFile.yaml")
-	removeFile, _ := DeleteTempFile("TestFile.yaml")
-	assert.Equal(t, removeFile, true, "should return true: should delete the temp file")
-}
-
-func TestDeleteTempFileFail(t *testing.T) {
-	errString := "stat TestFile.yaml: no such file or directory"
-	_, err := DeleteTempFile("TestFile.yaml")
-	assert.EqualError(t, err, errString)
-}
-
 func TestRemoveDuplicateEntries(t *testing.T) {
 	dupArr := []string{"test", "test", "test"}
 	result := RemoveDuplicateEntries(dupArr)
