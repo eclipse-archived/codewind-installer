@@ -302,6 +302,7 @@ func Commands() {
 			Aliases: []string{"rm"},
 			Usage:   "Remove an instance of Codewind",
 			Action: func(c *cli.Context) error {
+				cli.ShowCommandHelp(c, "")
 				return nil
 			},
 			Subcommands: []cli.Command{
