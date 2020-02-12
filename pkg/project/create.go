@@ -189,13 +189,23 @@ func writeCwSettingsIfNotInProject(conID string, projectPath string, BuildType s
 	pathToCwSettings := path.Join(projectPath, ".cw-settings")
 	pathToLegacySettings := path.Join(projectPath, ".mc-settings")
 
+	connection, conErr := connections.GetConnectionByID(conID)
+	if conErr != nil {
+		return &ProjectError{errOpCreateProject, conErr, conErr.Desc}
+	}
+
+	conURL, configErr := config.PFEOriginFromConnection(connection)
+	if configErr != nil {
+		return &ProjectError{errOpCreateProject, conErr, configErr.Desc}
+	}
+
 	if _, err := os.Stat(pathToLegacySettings); os.IsExist(err) {
 		projErr := renameLegacySettings(pathToLegacySettings, pathToCwSettings)
 		if projErr != nil {
 			return projErr
 		}
 	} else if _, err := os.Stat(pathToCwSettings); os.IsNotExist(err) {
-		projErr := writeNewCwSettings(conID, pathToCwSettings, BuildType)
+		projErr := writeNewCwSettings(&http.Client{}, connection, conURL, pathToCwSettings, BuildType)
 		if projErr != nil {
 			return projErr
 		}
@@ -311,39 +321,35 @@ func renameLegacySettings(pathToLegacySettings string, pathToCwSettings string) 
 
 // writeNewCwSettings writes a default .cw-settings file to the given path,
 // dependant on the build type of the project
-func writeNewCwSettings(conID string, pathToCwSettings string, BuildType string) *ProjectError {
-	defaultCwSettings, projErr := getDefaultCwSettings(conID, BuildType)
+func writeNewCwSettings(httpClient utils.HTTPClient, connection *connections.Connection, conURL string, pathToCwSettings string, BuildType string) *ProjectError {
+
+	defaultCwSettings, projErr := getDefaultCwSettings(httpClient, connection, conURL, BuildType)
 	if projErr != nil {
 		return projErr
 	}
+
 	cwSettings := addNonDefaultFieldsToCwSettings(defaultCwSettings, BuildType)
 	settings, err := json.MarshalIndent(cwSettings, "", "  ")
 	if err != nil {
 		return &ProjectError{errOpCreateProject, err, err.Error()}
 	}
+
 	// File permission 0644 grants read and write access to the owner
 	err = ioutil.WriteFile(pathToCwSettings, settings, 0644)
+	if err != nil {
+		return &ProjectError{errOpCreateProject, err, err.Error()}
+	}
 	return nil
 }
 
-func getDefaultCwSettings(conID string, BuildType string) (CWSettings, *ProjectError) {
-	client := &http.Client{}
+func getDefaultCwSettings(httpClient utils.HTTPClient, connection *connections.Connection, conURL string, BuildType string) (CWSettings, *ProjectError) {
 
-	connection, conErr := connections.GetConnectionByID(conID)
-	if conErr != nil {
-		return CWSettings{}, &ProjectError{errOpCreateProject, conErr, conErr.Desc}
-	}
-
-	conURL, configErr := config.PFEOriginFromConnection(connection)
-	if configErr != nil {
-		return CWSettings{}, &ProjectError{errOpCreateProject, conErr, configErr.Desc}
-	}
-
-	IgnoredPaths, err := apiroutes.GetIgnoredPaths(client, connection, BuildType, conURL)
+	IgnoredPaths, err := apiroutes.GetIgnoredPaths(httpClient, connection, BuildType, conURL)
 	if err != nil {
 		// If error getting the default ignoredPaths, set as empty slice
 		IgnoredPaths = []string{}
 	}
+
 	return CWSettings{
 		ContextRoot:       "",
 		InternalPort:      "",
