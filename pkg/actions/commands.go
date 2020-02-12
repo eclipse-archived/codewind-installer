@@ -13,6 +13,7 @@ package actions
 
 import (
 	"crypto/tls"
+	"fmt"
 	"net/http"
 	"os"
 
@@ -308,6 +309,10 @@ func Commands() {
 			},
 			Usage: "Remove Codewind and Project docker images",
 			Action: func(c *cli.Context) error {
+				if len(c.Args()) > 0 {
+					fmt.Println("error")
+					return nil
+				}
 				RemoveCommand(c, dockerComposeFile)
 				return nil
 			},
