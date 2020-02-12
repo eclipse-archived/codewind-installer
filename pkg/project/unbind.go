@@ -12,6 +12,7 @@
 package project
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/eclipse/codewind-installer/pkg/connections"
@@ -20,18 +21,23 @@ import (
 )
 
 // Unbind a project from Codewind
-func Unbind(httpClient utils.HTTPClient, connection *connections.Connection, url, projectID string) error {
+func Unbind(httpClient utils.HTTPClient, connection *connections.Connection, url, projectID string) *ProjectError {
 	req, err := http.NewRequest("POST", url+"/api/v1/projects/"+projectID+"/unbind", nil)
 	if err != nil {
-		return err
+		return &ProjectError{errOpUnbind, err, err.Error()}
 	}
 
-	// send request
 	res, httpSecError := sechttp.DispatchHTTPRequest(httpClient, req, connection)
 	if httpSecError != nil {
-		return httpSecError
+		return &ProjectError{errOpUnbind, httpSecError, httpSecError.Desc}
 	}
 
 	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		err := fmt.Errorf("Project unbind failed with status code %s", string(res.StatusCode))
+		return &ProjectError{errOpUnbind, err, err.Error()}
+	}
+
 	return nil
 }
