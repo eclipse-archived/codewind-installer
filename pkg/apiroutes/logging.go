@@ -18,14 +18,13 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/sechttp"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 )
 
 type (
-	// LogLevels : The logging level information
+	// LoggingResponse : The logging level information
 	LoggingResponse struct {
 		CurrentLevel string   `json:"currentLevel"`
 		DefaultLevel string   `json:"defaultLevel"`
@@ -39,16 +38,7 @@ type (
 )
 
 // GetLogLevel : Get the current log level for the PFE container
-func GetLogLevels(conID string, httpClient utils.HTTPClient) (LoggingResponse, error) {
-	conInfo, conInfoErr := connections.GetConnectionByID(conID)
-	if conInfoErr != nil {
-		return LoggingResponse{}, conInfoErr.Err
-	}
-	conURL, conErr := config.PFEOriginFromConnection(conInfo)
-	if conErr != nil {
-		return LoggingResponse{}, conErr.Err
-	}
-
+func GetLogLevel(conInfo *connections.Connection, conURL string, httpClient utils.HTTPClient) (LoggingResponse, error) {
 	req, err := http.NewRequest("GET", conURL+"/api/v1/logging", nil)
 	if err != nil {
 		return LoggingResponse{}, err
@@ -79,16 +69,7 @@ func GetLogLevels(conID string, httpClient utils.HTTPClient) (LoggingResponse, e
 }
 
 // SetLogLevel : Set the current log level for the PFE container
-func SetLogLevel(conID string, httpClient utils.HTTPClient, newLogLevel string) error {
-	conInfo, conInfoErr := connections.GetConnectionByID(conID)
-	if conInfoErr != nil {
-		return conInfoErr.Err
-	}
-	conURL, conErr := config.PFEOriginFromConnection(conInfo)
-	if conErr != nil {
-		return conErr.Err
-	}
-
+func SetLogLevel(conInfo *connections.Connection, conURL string, httpClient utils.HTTPClient, newLogLevel string) error {
 	// Send the new logging level.
 	logLevel := &LogParameter{Level: newLogLevel}
 	jsonPayload, _ := json.Marshal(logLevel)
