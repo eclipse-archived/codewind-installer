@@ -17,10 +17,10 @@ spec:
     - cat
     resources:
       limits:
-        memory: "2Gi"
+        memory: "4Gi"
         cpu: "1"
       requests:
-        memory: "2Gi"
+        memory: "4Gi"
         cpu: "1"
 """
         }
