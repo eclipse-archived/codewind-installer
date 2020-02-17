@@ -40,6 +40,9 @@ func (c *ClientMockServerConfig) Do(req *http.Request) (*http.Response, error) {
 // Test_SchemaUpgrade01 :  Upgrade schema tests from Version 0 to Version 1
 func Test_SchemaUpgrade0to1(t *testing.T) {
 	// create a v1 file :
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
 	v1File := "{\"connections\": [{\"name\":\"testlocal\",\"label\": \"Codewind local test connection\",\"url\": \"\"}]}"
 	ioutil.WriteFile(GetConnectionConfigFilename(), []byte(v1File), 0644)
 	t.Run("Asserts schema updated to v1 with a local target", func(t *testing.T) {
@@ -55,6 +58,9 @@ func Test_SchemaUpgrade0to1(t *testing.T) {
 }
 
 func Test_GetConnectionsConfig(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
 	t.Run("Asserts there is only one connection", func(t *testing.T) {
 		ResetConnectionsFile()
 		result, err := GetConnectionsConfig()
@@ -66,6 +72,9 @@ func Test_GetConnectionsConfig(t *testing.T) {
 }
 
 func Test_GetAllConnections(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
 	t.Run("Asserts there is only one connection and ensures it has an ID", func(t *testing.T) {
 		ResetConnectionsFile()
 		result, err := GetAllConnections()
@@ -79,6 +88,9 @@ func Test_GetAllConnections(t *testing.T) {
 
 // Test_CreateNewConnection :  Adds a new connection to the list called remoteserver
 func Test_CreateNewConnection(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
 	set := flag.NewFlagSet("tests", 0)
 	set.String("label", "MyRemoteServer", "just a label")
 	set.String("url", "https://codewind.server.remote", "Codewind URL")
@@ -105,6 +117,9 @@ func Test_CreateNewConnection(t *testing.T) {
 
 // Test_UpdateConnection :  Updates an existing connection
 func Test_UpdateConnection(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
 
 	// retrieve connectionID we want to update
 	result, err := GetConnectionsConfig()
@@ -148,6 +163,9 @@ func Test_UpdateConnection(t *testing.T) {
 
 // Test_RemoveConnectionFromList : Adds a new connection to the stored list
 func Test_RemoveConnectionFromList(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
 	set := flag.NewFlagSet("tests", 0)
 
 	allConnections, err := GetAllConnections()

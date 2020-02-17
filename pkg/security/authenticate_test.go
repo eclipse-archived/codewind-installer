@@ -26,6 +26,9 @@ import (
 )
 
 func Test_Authenticate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
 
 	const accessToken = "1234512345123451234512345"
 	const refreshToken = "55555351513513513513513513513"

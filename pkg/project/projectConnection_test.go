@@ -63,6 +63,10 @@ func WriteNewConfigFile() error {
 func Test_ProjectConnection(t *testing.T) {
 	WriteNewConfigFile()
 
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+
 	t.Run("Asserts project connection file doesn't exist", func(t *testing.T) {
 		connectionExists := ConnectionFileExists(testProjectID)
 		assert.Equal(t, false, connectionExists)
