@@ -24,6 +24,9 @@ const testPasswordUpdated = "pAss%-w0rd-&'cha*s-with_more_chars"
 
 func Test_Keychain(t *testing.T) {
 
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
 	// remove test key if one exists
 	keyring.Delete(strings.ToLower(KeyringServiceName+"."+testConnection), testUsername)
 

@@ -21,6 +21,9 @@ import (
 )
 
 func Test_GetAllContainerVersions(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
 	t.Run("Asserts PFE ready", func(t *testing.T) {
 		pfeBody1 := CreateMockResponseBody(EnvResponse{Version: "x.x.dev", ImageBuildTime: "1"})
 		performanceBody1 := CreateMockResponseBody(EnvResponse{Version: "x.x.dev", ImageBuildTime: "2"})
