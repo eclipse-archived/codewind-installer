@@ -17,6 +17,7 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
+	"log"
 	"testing"
 	"time"
 
@@ -27,7 +28,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var mockImageSummary = []types.ImageSummary{
+var mockImageSummaryWithCwImages = []types.ImageSummary{
 	types.ImageSummary{
 		ID:          "pfe",
 		RepoDigests: []string{"eclipse/codewind-pfe", "sha256:7173b809", "test:0.0.9"},
@@ -40,7 +41,7 @@ var mockImageSummary = []types.ImageSummary{
 	},
 }
 
-var mockContainerList = []types.Container{
+var mockContainerListWithCwContainers = []types.Container{
 	types.Container{
 		Names: []string{"/codewind-pfe"},
 		ID:    "pfe",
@@ -51,31 +52,54 @@ var mockContainerList = []types.Container{
 		Image: "eclipse/codewind-performance:0.0.9"},
 }
 
-type mockDockerClient struct {
+var mockImageSummaryWithoutCwImages = []types.ImageSummary{
+	types.ImageSummary{
+		ID:       "golang",
+		RepoTags: []string{"golang:0.0.9"},
+	},
+	types.ImageSummary{
+		ID:       "registry",
+		RepoTags: []string{"registry:0.0.9"},
+	},
 }
 
-func (m *mockDockerClient) ImagePull(ctx context.Context, image string, imagePullOptions types.ImagePullOptions) (io.ReadCloser, error) {
+var mockContainerListWithoutCwContainers = []types.Container{
+	types.Container{
+		Names: []string{"/registry"},
+		Image: "registry",
+	},
+	types.Container{
+		Names: []string{"/go-test"},
+		Image: "golang",
+	},
+}
+
+// This mock client will return container and images lists, with Codewind items included
+type mockDockerClientWithCw struct {
+}
+
+func (m *mockDockerClientWithCw) ImagePull(ctx context.Context, image string, imagePullOptions types.ImagePullOptions) (io.ReadCloser, error) {
 	r := ioutil.NopCloser(bytes.NewReader([]byte("")))
 	return r, nil
 }
 
-func (m *mockDockerClient) ImageList(ctx context.Context, imageListOptions types.ImageListOptions) ([]types.ImageSummary, error) {
-	return mockImageSummary, nil
+func (m *mockDockerClientWithCw) ImageList(ctx context.Context, imageListOptions types.ImageListOptions) ([]types.ImageSummary, error) {
+	return mockImageSummaryWithCwImages, nil
 }
 
-func (m *mockDockerClient) ContainerList(ctx context.Context, containerListOptions types.ContainerListOptions) ([]types.Container, error) {
-	return mockContainerList, nil
+func (m *mockDockerClientWithCw) ContainerList(ctx context.Context, containerListOptions types.ContainerListOptions) ([]types.Container, error) {
+	return mockContainerListWithCwContainers, nil
 }
 
-func (m *mockDockerClient) ContainerStop(ctx context.Context, containerID string, timeout *time.Duration) error {
+func (m *mockDockerClientWithCw) ContainerStop(ctx context.Context, containerID string, timeout *time.Duration) error {
 	return nil
 }
 
-func (m *mockDockerClient) ContainerRemove(ctx context.Context, containerID string, options types.ContainerRemoveOptions) error {
+func (m *mockDockerClientWithCw) ContainerRemove(ctx context.Context, containerID string, options types.ContainerRemoveOptions) error {
 	return nil
 }
 
-func (m *mockDockerClient) ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error) {
+func (m *mockDockerClientWithCw) ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error) {
 	return types.ContainerJSON{
 		ContainerJSONBase: &types.ContainerJSONBase{
 			HostConfig: &container.HostConfig{
@@ -85,7 +109,7 @@ func (m *mockDockerClient) ContainerInspect(ctx context.Context, containerID str
 	}, nil
 }
 
-func (m *mockDockerClient) DistributionInspect(ctx context.Context, image, encodedRegistryAuth string) (registry.DistributionInspect, error) {
+func (m *mockDockerClientWithCw) DistributionInspect(ctx context.Context, image, encodedRegistryAuth string) (registry.DistributionInspect, error) {
 	return registry.DistributionInspect{
 		Descriptor: v1.Descriptor{
 			Digest: "sha256:7173b809",
@@ -93,6 +117,50 @@ func (m *mockDockerClient) DistributionInspect(ctx context.Context, image, encod
 	}, nil
 }
 
+// This mock client will return valid image and containers lists, without Codewind items
+type mockDockerClientWithoutCw struct {
+}
+
+func (m *mockDockerClientWithoutCw) ImagePull(ctx context.Context, image string, imagePullOptions types.ImagePullOptions) (io.ReadCloser, error) {
+	r := ioutil.NopCloser(bytes.NewReader([]byte("")))
+	return r, nil
+}
+
+func (m *mockDockerClientWithoutCw) ImageList(ctx context.Context, imageListOptions types.ImageListOptions) ([]types.ImageSummary, error) {
+	return mockImageSummaryWithoutCwImages, nil
+}
+
+func (m *mockDockerClientWithoutCw) ContainerList(ctx context.Context, containerListOptions types.ContainerListOptions) ([]types.Container, error) {
+	return mockContainerListWithoutCwContainers, nil
+}
+
+func (m *mockDockerClientWithoutCw) ContainerStop(ctx context.Context, containerID string, timeout *time.Duration) error {
+	return nil
+}
+
+func (m *mockDockerClientWithoutCw) ContainerRemove(ctx context.Context, containerID string, options types.ContainerRemoveOptions) error {
+	return nil
+}
+
+func (m *mockDockerClientWithoutCw) ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error) {
+	return types.ContainerJSON{
+		ContainerJSONBase: &types.ContainerJSONBase{
+			HostConfig: &container.HostConfig{
+				AutoRemove: true,
+			},
+		},
+	}, nil
+}
+
+func (m *mockDockerClientWithoutCw) DistributionInspect(ctx context.Context, image, encodedRegistryAuth string) (registry.DistributionInspect, error) {
+	return registry.DistributionInspect{
+		Descriptor: v1.Descriptor{
+			Digest: "sha256:7173b809",
+		},
+	}, nil
+}
+
+// This mock client will return errors for each call to a docker function
 type mockDockerErrorClient struct {
 }
 
@@ -135,7 +203,7 @@ func (m *mockDockerErrorClient) DistributionInspect(ctx context.Context, image, 
 
 func TestPullImage(t *testing.T) {
 	t.Run("does not error when docker ImagePull succeeds", func(t *testing.T) {
-		client := &mockDockerClient{}
+		client := &mockDockerClientWithCw{}
 		err := PullImage(client, "dummyImage", true)
 		assert.Nil(t, err)
 	})
@@ -150,11 +218,11 @@ func TestPullImage(t *testing.T) {
 
 func TestGetImageList(t *testing.T) {
 	t.Run("gets the image list that is returned by the docker client", func(t *testing.T) {
-		client := &mockDockerClient{}
+		client := &mockDockerClientWithCw{}
 
 		imageList, err := GetImageList(client)
 		assert.Nil(t, err)
-		assert.Equal(t, imageList, mockImageSummary)
+		assert.Equal(t, imageList, mockImageSummaryWithCwImages)
 	})
 
 	t.Run("returns DockerError when docker ImageList errors", func(t *testing.T) {
@@ -167,11 +235,11 @@ func TestGetImageList(t *testing.T) {
 
 func TestGetContainerList(t *testing.T) {
 	t.Run("gets the container list that is returned by the docker client", func(t *testing.T) {
-		client := &mockDockerClient{}
+		client := &mockDockerClientWithCw{}
 
 		containerList, err := GetContainerList(client)
 		assert.Nil(t, err)
-		assert.Equal(t, containerList, mockContainerList)
+		assert.Equal(t, containerList, mockContainerListWithCwContainers)
 	})
 
 	t.Run("returns error when docker ContainerList returns error", func(t *testing.T) {
@@ -184,11 +252,19 @@ func TestGetContainerList(t *testing.T) {
 
 func TestCheckImageStatus(t *testing.T) {
 	t.Run("returns true when correct images are returned by the docker client", func(t *testing.T) {
-		client := &mockDockerClient{}
+		client := &mockDockerClientWithCw{}
 
 		imageStatus, err := CheckImageStatus(client)
 		assert.Nil(t, err)
 		assert.True(t, imageStatus)
+	})
+
+	t.Run("returns false when codewind images are not returned by the docker client", func(t *testing.T) {
+		client := &mockDockerClientWithoutCw{}
+
+		imageStatus, err := CheckImageStatus(client)
+		assert.Nil(t, err)
+		assert.False(t, imageStatus)
 	})
 
 	t.Run("returns DockerError when docker ImageList errors", func(t *testing.T) {
@@ -201,11 +277,19 @@ func TestCheckImageStatus(t *testing.T) {
 
 func TestCheckContainerStatus(t *testing.T) {
 	t.Run("returns true when correct containers are returned by the docker client", func(t *testing.T) {
-		client := &mockDockerClient{}
+		client := &mockDockerClientWithCw{}
 
 		containerStatus, err := CheckContainerStatus(client)
 		assert.Nil(t, err)
 		assert.True(t, containerStatus)
+	})
+
+	t.Run("returns false when correct codewind containers are not returned by the docker client", func(t *testing.T) {
+		client := &mockDockerClientWithoutCw{}
+
+		containerStatus, err := CheckContainerStatus(client)
+		assert.Nil(t, err)
+		assert.False(t, containerStatus)
 	})
 
 	t.Run("returns DockerError when docker ContainerList errors", func(t *testing.T) {
@@ -218,7 +302,7 @@ func TestCheckContainerStatus(t *testing.T) {
 
 func TestGetImageTags(t *testing.T) {
 	t.Run("returns the image tags set in the ImageList mock", func(t *testing.T) {
-		client := &mockDockerClient{}
+		client := &mockDockerClientWithCw{}
 
 		imageTags, err := GetImageTags(client)
 		assert.Nil(t, err)
@@ -235,7 +319,7 @@ func TestGetImageTags(t *testing.T) {
 
 func TestGetContainerTags(t *testing.T) {
 	t.Run("returns the container tags set in the ContainerList mock", func(t *testing.T) {
-		client := &mockDockerClient{}
+		client := &mockDockerClientWithCw{}
 
 		imageTags, err := GetContainerTags(client)
 		assert.Nil(t, err)
@@ -252,7 +336,7 @@ func TestGetContainerTags(t *testing.T) {
 
 func TestGetPFEHostAndPort(t *testing.T) {
 	t.Run("returns the PFE host and port set in the ContainerList mock", func(t *testing.T) {
-		client := &mockDockerClient{}
+		client := &mockDockerClientWithCw{}
 
 		host, port, err := GetPFEHostAndPort(client)
 		assert.Nil(t, err)
@@ -270,7 +354,7 @@ func TestGetPFEHostAndPort(t *testing.T) {
 
 func TestValidateImageDigest(t *testing.T) {
 	t.Run("no error returned when image digests match those from dockerhub", func(t *testing.T) {
-		client := &mockDockerClient{}
+		client := &mockDockerClientWithCw{}
 		_, err := ValidateImageDigest(client, "test:0.0.9")
 		assert.Nil(t, err)
 	})
@@ -285,7 +369,7 @@ func TestValidateImageDigest(t *testing.T) {
 
 func TestGetAutoRemovePolicy(t *testing.T) {
 	t.Run("no error returned when image digests match those from dockerhub", func(t *testing.T) {
-		client := &mockDockerClient{}
+		client := &mockDockerClientWithCw{}
 		autoremovePolicy, err := getContainerAutoRemovePolicy(client, "pfe")
 		assert.Nil(t, err)
 		assert.True(t, autoremovePolicy)
@@ -301,7 +385,7 @@ func TestGetAutoRemovePolicy(t *testing.T) {
 
 func TestStopContainer(t *testing.T) {
 	t.Run("no error returned when container is stopped", func(t *testing.T) {
-		client := &mockDockerClient{}
+		client := &mockDockerClientWithCw{}
 		err := StopContainer(client, types.Container{
 			Names: []string{"/codewind-pfe"},
 			ID:    "pfe",
@@ -360,5 +444,26 @@ func TestGetContainersToRemove(t *testing.T) {
 				assert.Contains(t, test.expectedContainers, container.Names[0])
 			}
 		})
+	}
+}
+
+func TestRemoveDuplicateEntries(t *testing.T) {
+	dupArr := []string{"test", "test", "test"}
+	result := RemoveDuplicateEntries(dupArr)
+
+	if len(result) != 1 {
+		log.Fatal("Test 1: Failed to delete duplicate array index")
+	}
+
+	dupArr = []string{"", "test", "test"}
+	result = RemoveDuplicateEntries(dupArr)
+	if len(result) != 1 {
+		log.Fatal("Test 2: Failed to delete duplicate array index")
+	}
+
+	dupArr = []string{"", "", ""}
+	result = RemoveDuplicateEntries(dupArr)
+	if len(result) != 0 {
+		log.Fatal("Test 3: Failed to identify empty array values")
 	}
 }

@@ -113,8 +113,8 @@ spec:
             }
 
             options {
-                timeout(time: 10, unit: 'MINUTES') 
-                retry(3) 
+                timeout(time: 10, unit: 'MINUTES')
+                retry(3)
             }
 
             steps {
@@ -123,7 +123,7 @@ spec:
                 container('go') {
                     sh '''
                         export GOPATH=/go:/home/jenkins/agent
-                        
+
                         # go cache setup
                         mkdir .cache
                         cd .cache
@@ -132,13 +132,7 @@ spec:
                         export GOCACHE=/home/jenkins/agent/$CODE_DIRECTORY_FOR_GO/.cache/go-build
 
                         cd ../../$CODE_DIRECTORY_FOR_GO
-                        cd pkg/config
-                        go test -v
-                        cd ../gatekeeper
-                        go test -v
-                        cd ../desktop_utils
-                        go test -v
-                        cd ../../
+                        go test ./... -short
 
                         # clean up the cache directory
                         rm -rf .cache
@@ -207,8 +201,8 @@ spec:
             }
 
             options {
-                timeout(time: 120, unit: 'MINUTES') 
-                retry(3) 
+                timeout(time: 120, unit: 'MINUTES')
+                retry(3)
             }
 
             agent any
@@ -225,7 +219,7 @@ spec:
                 dir ('codewind-installer') {
                     unstash 'EXECUTABLES'
                 }
-                
+
                 sh '''
                     export REPO_NAME="codewind-installer"
                     export OUTPUT_DIR="$WORKSPACE/dev/ant_build/artifacts"
@@ -238,14 +232,14 @@ spec:
                     export CWCTL_PPC64LE="cwctl-ppc64le"
                     export CWCTL_MACOS="cwctl-macos"
                     export CWCTL_WIN="cwctl-win"
-                    
+
                     WORKSPACE=$PWD
-   
+
                     ls -la ${WORKSPACE}/$REPO_NAME/*
-                    
+
                     UPLOAD_DIR="$GIT_BRANCH/$BUILD_ID"
                     BUILD_URL="$DOWNLOAD_AREA_URL/$UPLOAD_DIR"
-                    
+
                     ssh $sshHost rm -rf $deployDir/${UPLOAD_DIR}
                     ssh $sshHost mkdir -p $deployDir/${UPLOAD_DIR}
 
@@ -258,7 +252,7 @@ spec:
                     mv ${WORKSPACE}/$REPO_NAME/$CWCTL_PPC64LE-* ${WORKSPACE}/$REPO_NAME/$CWCTL_PPC64LE
                     mv ${WORKSPACE}/$REPO_NAME/$CWCTL_MACOS-* ${WORKSPACE}/$REPO_NAME/$CWCTL_MACOS
                     mv ${WORKSPACE}/$REPO_NAME/$CWCTL_WIN-* ${WORKSPACE}/$REPO_NAME/$CWCTL_WIN.exe
-                    
+
                     echo "# Build date: $(date +%F-%T)" >> ${WORKSPACE}/$REPO_NAME/$BUILD_INFO
                     echo "build_info.url=$BUILD_URL" >> ${WORKSPACE}/$REPO_NAME/$BUILD_INFO
                     SHA1_LINUX=$(sha1sum ${WORKSPACE}/$REPO_NAME/$CWCTL_LINUX | cut -d ' ' -f 1)

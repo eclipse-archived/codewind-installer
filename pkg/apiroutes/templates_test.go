@@ -38,6 +38,9 @@ var URLOfUnknownRepo = "https://raw.githubusercontent.com/UNKNOWN"
 var URLOfUnknownRepo2 = "https://raw.githubusercontent.com/UNKNOWN_2"
 
 func TestGetTemplates(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
 	tests := map[string]struct {
 		inProjectStyle    string
 		inShowEnabledOnly bool
@@ -91,6 +94,9 @@ func TestGetTemplates(t *testing.T) {
 }
 
 func TestGetTemplateStyles(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
 	tests := map[string]struct {
 		want      []string
 		wantedErr error
@@ -110,6 +116,9 @@ func TestGetTemplateStyles(t *testing.T) {
 }
 
 func TestGetTemplateRepos(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
 	tests := map[string]struct {
 		wantedType   []utils.TemplateRepo
 		wantedLength int
@@ -132,6 +141,9 @@ func TestGetTemplateRepos(t *testing.T) {
 }
 
 func TestFailuresAddTemplateRepo(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
 	tests := map[string]struct {
 		inURL         string
 		inDescription string
@@ -161,6 +173,9 @@ func TestFailuresAddTemplateRepo(t *testing.T) {
 }
 
 func TestFailuresDeleteTemplateRepo(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
 	tests := map[string]struct {
 		inURL      string
 		wantedType []utils.TemplateRepo
@@ -182,6 +197,9 @@ func TestFailuresDeleteTemplateRepo(t *testing.T) {
 }
 
 func TestSuccessfulAddAndDeleteTemplateRepo(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
 	testRepoURL := URLOfNewRepo
 
 	originalRepos, err := GetTemplateRepos("local")
@@ -214,6 +232,9 @@ func TestSuccessfulAddAndDeleteTemplateRepo(t *testing.T) {
 }
 
 func TestFailuresEnableTemplateRepos(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
 	tests := map[string]struct {
 		in         []string
 		wantedType []utils.TemplateRepo
@@ -250,6 +271,9 @@ func TestFailuresEnableTemplateRepos(t *testing.T) {
 }
 
 func TestFailuresDisableTemplateRepos(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
 	tests := map[string]struct {
 		in         []string
 		wantedType []utils.TemplateRepo
@@ -286,6 +310,9 @@ func TestFailuresDisableTemplateRepos(t *testing.T) {
 }
 
 func TestSuccessfulEnableAndDisableTemplateRepos(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
 	testRepoURL := URLOfExistingRepo
 
 	t.Run("Successfully disable 1 template repo", func(t *testing.T) {
@@ -316,6 +343,9 @@ func TestSuccessfulEnableAndDisableTemplateRepos(t *testing.T) {
 }
 
 func TestBatchPatchTemplateRepos(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
 	tests := map[string]struct {
 		in        []RepoOperation
 		want      []SubResponseFromBatchOperation
