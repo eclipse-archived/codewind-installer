@@ -1,30 +1,16 @@
-# Description of pull request
+## What type of PR is this ? 
 
-Fixes # (issue)
+- [ ] Bug fix
+- [ ] Enhancement
 
-## Solution
-<!-- Please include a summary of the change and how it addresses the issue -->
+## What does this PR do ?
 
-## Type of change
 
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] This change requires a documentation update
+## Which issue(s) does this PR fix ?
 
-## Testing undertaken
-<!-- Please describe the tests that you ran to verify your changes. Please also list any relevant information of your test configuration or test you have added to support this change -->
+#### Link to the [Codewind repository](https://github.com/eclipse/codewind/issues) issue(s) this PR fixes or references:
 
-## Checklist
+## Does this PR require a documentation change ?
 
-- [ ] I have commented my code where needed
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes do not generate any new warnings/linter errors
-- [ ] If necessary, I have added tests that prove my fix is effective
-- [ ] New and existing unit tests pass locally with my changes
-- [ ] There are no typos in the code comments or this pull request
-- [ ] I have signed my commits and conformed with the Eclipse commit record guidelines
 
-## Extra
-<!-- Please add anything extra you feel is worth mentioning regarding this pull request -->
-Eclipse commit record guidelines followed <https://wiki.eclipse.org/Development_Resources/Contributing_via_Git#The_Commit_Record>
+## Any special notes for your reviewer ?
