@@ -300,18 +300,25 @@ func Commands() {
 		{
 			Name:    "remove",
 			Aliases: []string{"rm"},
-			Flags: []cli.Flag{
-				cli.StringFlag{
-					Name:  "tag, t",
-					Usage: "dockerhub image tag",
-				},
-			},
-			Usage: "Remove Codewind and Project docker images",
+			Usage:   "Remove an instance of Codewind",
 			Action: func(c *cli.Context) error {
-				RemoveCommand(c, dockerComposeFile)
+				cli.ShowCommandHelp(c, "")
 				return nil
 			},
 			Subcommands: []cli.Command{
+				{
+					Name:    "local",
+					Aliases: []string{"l"},
+					Usage:   "Removes and deletes a Codewind local deployment",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "tag, t", Usage: "dockerhub image tag"},
+					},
+
+					Action: func(c *cli.Context) error {
+						RemoveCommand(c, dockerComposeFile)
+						return nil
+					},
+				},
 				{
 					Name:    "remote",
 					Aliases: []string{"r"},

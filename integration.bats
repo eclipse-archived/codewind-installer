@@ -36,7 +36,7 @@
 
 @test "invoke remove command - remove all dockerhub images" {
   cd cmd/cli/
-  run go run main.go remove
+  run go run main.go remove local
   echo "status = ${status}"
   echo "output trace = ${output}"
   [ "$status" -eq 0 ]

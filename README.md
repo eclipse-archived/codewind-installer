@@ -272,7 +272,23 @@ Subcommands:</br>
 ### remove
 
 `--tag/-t <value>` - Dockerhub image tag.</br>
-**Note:** Failing to specify a `--tag`, will remove all Codewind images on the host machine.
+> **Note:** Failing to specify a `--tag`, will result in an attempt to remove the default `latest` tagged Codewind images on the host machine.
+
+Subcommands:</br>
+
+`local/l` - Removes and deletes a Codewind local deployment
+> **Flags:**
+> --tag - Docker hub image tag
+
+`remote/r` - Removes and deletes a Codewind remote deployment from Kubernetes
+> **Flags:**
+> --namespace - Kubernetes namespace
+> --workspace - Codewind workspace ID
+
+`keycloak/k` - Removes and deletes a Keycloak deployment from Kubernetes
+> **Flags:**
+> --namespace - Kubernetes namespace
+> --workspace - Keycloak workspace ID
 
 ### templates
 
