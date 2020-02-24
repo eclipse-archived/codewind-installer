@@ -66,7 +66,7 @@ func CreateCodewindRoles(deployOptions *DeployOptions) rbacv1.ClusterRole {
 		},
 		rbacv1.PolicyRule{
 			APIGroups: []string{"apps", "extensions"},
-			Resources: []string{"deployments"},
+			Resources: []string{"deployments", "deployments/finalizers"},
 			Verbs:     []string{"watch", "get", "list", "create", "update", "delete", "patch"},
 		},
 		rbacv1.PolicyRule{
