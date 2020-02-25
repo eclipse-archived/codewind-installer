@@ -14,8 +14,6 @@ package remote
 import (
 	"errors"
 	"os"
-	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 
@@ -29,8 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth" // Required for Kube clusters which use auth plugins
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 // DeployOptions : Keycloak initial config
@@ -63,25 +59,10 @@ type DeploymentResult struct {
 
 // DeployRemote : InstallRemote
 func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemInstError) {
-
-	homeDir := ""
-	const GOOS string = runtime.GOOS
-	if GOOS == "windows" {
-		homeDir = os.Getenv("USERPROFILE")
-	} else {
-		homeDir = os.Getenv("HOME")
-	}
-
-	// See if we're running on Kube and try to retrieve the Kube config from it
-	config, err := rest.InClusterConfig()
+	config, err := getKubeConfig()
 	if err != nil {
-		// Not running on Kube, so try to grab the kubeconfig under ~/.kube
-		kubeconfig := filepath.Join(homeDir, ".kube", "config")
-		config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
-		if err != nil {
-			logr.Infof("Unable to retrieve Kubernetes Config %v\n", err)
-			return nil, &RemInstError{errOpNotFound, err, err.Error()}
-		}
+		logr.Infof("Unable to retrieve Kubernetes Config %v\n", err)
+		return nil, &RemInstError{errOpNotFound, err, err.Error()}
 	}
 
 	clientset, err := kubernetes.NewForConfig(config)
