@@ -12,12 +12,11 @@
 package remote
 
 import (
-	"path/filepath"
 	"time"
 
+	logr "github.com/sirupsen/logrus"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 // ExistingDeployment describes a remote installation of Codewind
@@ -37,9 +36,9 @@ type K8sAPI struct {
 
 // GetExistingDeployments returns information about the remote installations of codewind, across all namespaces by default
 func GetExistingDeployments(namespace string) ([]ExistingDeployment, *RemInstError) {
-	kubeconfig := filepath.Join(getHomeDir(), ".kube", "config")
-	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	config, err := getKubeConfig()
 	if err != nil {
+		logr.Infof("Unable to retrieve Kubernetes Config %v\n", err)
 		return nil, &RemInstError{errOpNotFound, err, err.Error()}
 	}
 
