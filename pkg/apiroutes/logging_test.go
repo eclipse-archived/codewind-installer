@@ -46,7 +46,7 @@ func Test_GetLogLevels(t *testing.T) {
 	})
 	t.Run("error case - returns error when PFE status code non 200", func(t *testing.T) {
 		mockClientFalse := &security.ClientMockAuthenticate{StatusCode: http.StatusNotFound, Body: nil}
-		_, err := GetIgnoredPaths(mockClientFalse, &mockConnection, "nodejs", "dummyurl")
+		_, err := GetLogLevel(&mockConnection, "mockURL", mockClientFalse)
 		assert.Error(t, err)
 	})
 }
@@ -61,7 +61,7 @@ func Test_SetLogLevels(t *testing.T) {
 	t.Run("error case - returns error when PFE status code non 200", func(t *testing.T) {
 		mockConnection := connections.Connection{ID: "local"}
 		mockClientFalse := &security.ClientMockAuthenticate{StatusCode: http.StatusNotFound, Body: nil}
-		_, err := GetIgnoredPaths(mockClientFalse, &mockConnection, "nodejs", "dummyurl")
+		err := SetLogLevel(&mockConnection, "mockURL", mockClientFalse, "debug")
 		assert.Error(t, err)
 	})
 }
