@@ -86,7 +86,7 @@ func getKubeConfig() (*rest.Config, error) {
 
 	homeDir := getHomeDir()
 
-	kubeconfig := filepath.Join(homeDir, ".kube", "config")
+	kubeconfig = filepath.Join(homeDir, ".kube", "config")
 	config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		inClusterConfig, inClusterConfigErr := rest.InClusterConfig()
