@@ -132,7 +132,7 @@ spec:
                         export GOCACHE=/home/jenkins/agent/$CODE_DIRECTORY_FOR_GO/.cache/go-build
 
                         cd ../../$CODE_DIRECTORY_FOR_GO
-                        go test ./... -short
+                        go test ./... -short -cover
 
                         # clean up the cache directory
                         rm -rf .cache
