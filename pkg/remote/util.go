@@ -76,6 +76,7 @@ func getKubeConfig() (*rest.Config, error) {
 	// Use KUBECONFIG environment variable if set
 	kubeconfig, ok := os.LookupEnv("KUBECONFIG")
 	if ok {
+	if ok {
 		config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
 		if err != nil {
 			logr.Infof("Unable to retrieve Kubernetes Config %v\n", err)
