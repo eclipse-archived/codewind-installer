@@ -18,6 +18,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
@@ -78,7 +79,8 @@ func GetTemplates(conID, projectStyle string, showEnabledOnly bool) ([]Template,
 	}
 	req.URL.RawQuery = query.Encode()
 	client := &http.Client{}
-	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo)
+
+	resp, httpSecError := HTTPRequestWithRetryOnLock(client, req, conInfo)
 	if httpSecError != nil {
 		return nil, httpSecError
 	}
@@ -110,7 +112,7 @@ func GetTemplateStyles(conID string) ([]string, error) {
 		return nil, err
 	}
 	client := &http.Client{}
-	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo)
+	resp, httpSecError := HTTPRequestWithRetryOnLock(client, req, conInfo)
 	if httpSecError != nil {
 		return nil, httpSecError
 	}
@@ -142,7 +144,7 @@ func GetTemplateRepos(conID string) ([]utils.TemplateRepo, error) {
 		return nil, err
 	}
 	client := &http.Client{}
-	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo)
+	resp, httpSecError := HTTPRequestWithRetryOnLock(client, req, conInfo)
 	if httpSecError != nil {
 		return nil, httpSecError
 	}
@@ -189,7 +191,7 @@ func AddTemplateRepo(conID, URL, description, name string) ([]utils.TemplateRepo
 		return nil, err
 	}
 	client := &http.Client{}
-	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo)
+	resp, httpSecError := HTTPRequestWithRetryOnLock(client, req, conInfo)
 	if httpSecError != nil {
 		return nil, httpSecError
 	}
@@ -232,7 +234,7 @@ func DeleteTemplateRepo(conID, URL string) ([]utils.TemplateRepo, error) {
 	req, _ := http.NewRequest("DELETE", conURL+"/api/v1/templates/repositories", bytes.NewBuffer(jsonValue))
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}
-	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo)
+	resp, httpSecError := HTTPRequestWithRetryOnLock(client, req, conInfo)
 	if httpSecError != nil {
 		return nil, httpSecError
 	}
@@ -335,7 +337,7 @@ func BatchPatchTemplateRepos(conID string, operations []RepoOperation) ([]SubRes
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
-	resp, httpSecError := sechttp.DispatchHTTPRequest(client, req, conInfo)
+	resp, httpSecError := HTTPRequestWithRetryOnLock(client, req, conInfo)
 	if httpSecError != nil {
 		return nil, httpSecError
 	}
@@ -354,4 +356,23 @@ func BatchPatchTemplateRepos(conID string, operations []RepoOperation) ([]SubRes
 	json.Unmarshal(byteArray, &subResponsesFromBatchOperation)
 
 	return subResponsesFromBatchOperation, nil
+}
+
+// HTTPRequestWithRetryOnLock : Retries a request until either the maxHTTPRetries limit has been hit or the response status code is not equal to 423 (templates locked HTTP code)
+func HTTPRequestWithRetryOnLock(httpClient utils.HTTPClient, originalRequest *http.Request, connection *connections.Connection) (*http.Response, *sechttp.HTTPSecError) {
+	var maxHTTPRetries int = 5
+	var templatesLockedHTTPStatusCode = 423
+	var response *http.Response
+	for i := 0; i < maxHTTPRetries; i++ {
+		resp, httpSecError := sechttp.DispatchHTTPRequest(httpClient, originalRequest, connection)
+		if httpSecError != nil {
+			return nil, httpSecError
+		} else if resp.StatusCode != templatesLockedHTTPStatusCode || i+1 == maxHTTPRetries {
+			response = resp
+			break
+		} else {
+			time.Sleep(time.Second)
+		}
+	}
+	return response, nil
 }
