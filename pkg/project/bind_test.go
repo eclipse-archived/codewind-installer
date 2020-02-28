@@ -44,6 +44,8 @@ func TestBindToPFE(t *testing.T) {
 		StatusCode:    http.StatusOK,
 	}
 
+	exampleBadJSON := "<This is not JSON>"
+
 	successTests := map[string]struct {
 		bindRequest  BindRequest
 		bindResponse BindResponse
@@ -101,6 +103,16 @@ func TestBindToPFE(t *testing.T) {
 			assert.Equal(t, test.wantedError, *projErr)
 		})
 	}
+
+	t.Run("badJSONResponse", func(t *testing.T) {
+		body := ioutil.NopCloser(bytes.NewReader([]byte(exampleBadJSON)))
+		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusOK, Body: body}
+		mockConnection := connections.Connection{ID: "local"}
+		_, projErr := bindToPFE(mockClient, exampleBindRequest, &mockConnection, "dummyurl")
+		var projectInfo *BindResponse
+		expectedError := json.Unmarshal([]byte(exampleBadJSON), &projectInfo)
+		assert.Equal(t, ProjectError{errOpResponse, expectedError, "invalid character '\u003c' looking for beginning of value"}, *projErr)
+	})
 }
 
 func TestCompleteBind(t *testing.T) {
