@@ -31,19 +31,19 @@ type (
 		Username string `json:"username"`
 	}
 
-	// Registry details: The request structure to set the log level
+	// RegistryParameters : The request structure to set the log level
 	RegistryParameters struct {
 		Address     string `json:"address"`
 		Credentials string `json:"credentials"`
 	}
 
-	// Credentials structure. Sent as a base64 encoded string.
+	// Credentials : Sent as a base64 encoded string.
 	Credentials struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
 	}
 
-	// Address parameter, used when removing credentials.
+	// AddressParameter : Used when removing credentials.
 	AddressParameter struct {
 		Address string `json:"address"`
 	}
@@ -59,7 +59,7 @@ func GetRegistrySecrets(conInfo *connections.Connection, conURL string, httpClie
 	return handleRegistrySecretsResponse(req, conInfo, httpClient, http.StatusOK)
 }
 
-// AddRegistrySecrets : Set a registry secret in the PFE container
+// AddRegistrySecret : Set a registry secret in the PFE container
 func AddRegistrySecret(conInfo *connections.Connection, conURL string, httpClient utils.HTTPClient, address string, username string, password string) ([]RegistryResponse, error) {
 
 	// The username and password are sent inside a base64 encoded field in the jsonPayload.

@@ -46,7 +46,6 @@ func Test_GetRegistrySecrets(t *testing.T) {
 }
 
 func Test_AddRegistrySecret(t *testing.T) {
-
 	t.Run("success case - returns nil error when PFE status code 201", func(t *testing.T) {
 		expectedRegistrySecrets := []RegistryResponse{RegistryResponse{Address: "testdockerregistry", Username: "testuser"}}
 		jsonResponse, err := json.Marshal(expectedRegistrySecrets)

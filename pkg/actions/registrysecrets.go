@@ -24,21 +24,9 @@ import (
 	"github.com/urfave/cli"
 )
 
-// GetRegistrySecrets : Optionally set retrieve docker registry secrets.
+// GetRegistrySecrets : Retrieve docker registry secrets.
 func GetRegistrySecrets(c *cli.Context) {
-	connectionID := strings.TrimSpace(strings.ToLower(c.String("conid")))
-
-	conInfo, conInfoErr := connections.GetConnectionByID(connectionID)
-	if conInfoErr != nil {
-		fmt.Println(conInfoErr.Err)
-		os.Exit(1)
-	}
-
-	conURL, conErr := config.PFEOriginFromConnection(conInfo)
-	if conErr != nil {
-		fmt.Println(conErr.Err)
-		os.Exit(1)
-	}
+	conInfo, conURL := getConnectionDetailsOrExit(c)
 
 	registrySecrets, err := apiroutes.GetRegistrySecrets(conInfo, conURL, http.DefaultClient)
 	if err != nil {
@@ -48,20 +36,9 @@ func GetRegistrySecrets(c *cli.Context) {
 	utils.PrettyPrintJSON(registrySecrets)
 }
 
+// AddRegistrySecret : Set a docker registry secret.
 func AddRegistrySecret(c *cli.Context) {
-	connectionID := strings.TrimSpace(strings.ToLower(c.String("conid")))
-
-	conInfo, conInfoErr := connections.GetConnectionByID(connectionID)
-	if conInfoErr != nil {
-		fmt.Println(conInfoErr.Err)
-		os.Exit(1)
-	}
-
-	conURL, conErr := config.PFEOriginFromConnection(conInfo)
-	if conErr != nil {
-		fmt.Println(conErr.Err)
-		os.Exit(1)
-	}
+	conInfo, conURL := getConnectionDetailsOrExit(c)
 
 	address := strings.TrimSpace(c.String("address"))
 	username := strings.TrimSpace(c.String("username"))
@@ -75,20 +52,9 @@ func AddRegistrySecret(c *cli.Context) {
 	utils.PrettyPrintJSON(registrySecrets)
 }
 
+// RemoveRegistrySecret : Delete a docker registry secret.
 func RemoveRegistrySecret(c *cli.Context) {
-	connectionID := strings.TrimSpace(strings.ToLower(c.String("conid")))
-
-	conInfo, conInfoErr := connections.GetConnectionByID(connectionID)
-	if conInfoErr != nil {
-		fmt.Println(conInfoErr.Err)
-		os.Exit(1)
-	}
-
-	conURL, conErr := config.PFEOriginFromConnection(conInfo)
-	if conErr != nil {
-		fmt.Println(conErr.Err)
-		os.Exit(1)
-	}
+	conInfo, conURL := getConnectionDetailsOrExit(c)
 
 	address := strings.TrimSpace(c.String("address"))
 
@@ -98,4 +64,21 @@ func RemoveRegistrySecret(c *cli.Context) {
 		os.Exit(1)
 	}
 	utils.PrettyPrintJSON(registrySecrets)
+}
+
+func getConnectionDetailsOrExit(c *cli.Context) (*connections.Connection, string) {
+	connectionID := strings.TrimSpace(strings.ToLower(c.String("conid")))
+
+	conInfo, conInfoErr := connections.GetConnectionByID(connectionID)
+	if conInfoErr != nil {
+		HandleConnectionError(conInfoErr)
+		os.Exit(1)
+	}
+
+	conURL, conErr := config.PFEOriginFromConnection(conInfo)
+	if conErr != nil {
+		fmt.Println(conErr.Err)
+		os.Exit(1)
+	}
+	return conInfo, conURL
 }
