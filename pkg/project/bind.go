@@ -158,8 +158,10 @@ func bindToPFE(client utils.HTTPClient, bindRequest BindRequest, conInfo *connec
 	}
 
 	var projectInfo *BindResponse
-	if err := json.Unmarshal(bodyBytes, &projectInfo); err != nil {
+	err = json.Unmarshal(bodyBytes, &projectInfo)
+	if err != nil {
 		logr.Errorln(err)
+		return nil, &ProjectError{errOpResponse, err, err.Error()}
 	}
 
 	return projectInfo, nil
