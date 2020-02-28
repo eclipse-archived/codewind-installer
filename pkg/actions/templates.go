@@ -12,7 +12,6 @@
 package actions
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -34,7 +33,7 @@ func ListTemplates(c *cli.Context) {
 		return
 	}
 	if len(templates) > 0 {
-		PrettyPrintJSON(templates)
+		utils.PrettyPrintJSON(templates)
 	} else {
 		fmt.Println(templates)
 	}
@@ -49,7 +48,7 @@ func ListTemplateStyles(c *cli.Context) {
 		HandleTemplateError(templateErr)
 		return
 	}
-	PrettyPrintJSON(styles)
+	utils.PrettyPrintJSON(styles)
 }
 
 // ListTemplateRepos lists all template repos of which Codewind is aware.
@@ -61,7 +60,7 @@ func ListTemplateRepos(c *cli.Context) {
 		HandleTemplateError(templateErr)
 		return
 	}
-	PrettyPrintJSON(repos)
+	utils.PrettyPrintJSON(repos)
 }
 
 // AddTemplateRepo adds the provided template repo to PFE.
@@ -80,7 +79,7 @@ func AddTemplateRepo(c *cli.Context) {
 	if err == nil {
 		utils.OnAddTemplateRepo(extensions, url, repos)
 	}
-	PrettyPrintJSON(repos)
+	utils.PrettyPrintJSON(repos)
 }
 
 // DeleteTemplateRepo deletes the provided template repo from PFE.
@@ -100,7 +99,7 @@ func DeleteTemplateRepo(c *cli.Context) {
 		HandleTemplateError(templateErr)
 		return
 	}
-	PrettyPrintJSON(repos)
+	utils.PrettyPrintJSON(repos)
 }
 
 // EnableTemplateRepos enables templates repo of which Codewind is aware.
@@ -112,7 +111,7 @@ func EnableTemplateRepos(c *cli.Context) {
 		HandleTemplateError(templateErr)
 		return
 	}
-	PrettyPrintJSON(repos)
+	utils.PrettyPrintJSON(repos)
 }
 
 // DisableTemplateRepos disables templates repo of which Codewind is aware.
@@ -124,11 +123,5 @@ func DisableTemplateRepos(c *cli.Context) {
 		HandleTemplateError(templateErr)
 		return
 	}
-	PrettyPrintJSON(repos)
-}
-
-// PrettyPrintJSON prints JSON prettily.
-func PrettyPrintJSON(i interface{}) {
-	s, _ := json.MarshalIndent(i, "", "\t")
-	fmt.Println(string(s))
+	utils.PrettyPrintJSON(repos)
 }

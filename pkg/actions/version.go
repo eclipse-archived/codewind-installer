@@ -20,6 +20,7 @@ import (
 	"github.com/eclipse/codewind-installer/pkg/appconstants"
 	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
+	"github.com/eclipse/codewind-installer/pkg/utils"
 
 	"github.com/eclipse/codewind-installer/pkg/apiroutes"
 	"github.com/eclipse/codewind-installer/pkg/remote"
@@ -58,7 +59,7 @@ func GetSingleConnectionVersion(c *cli.Context) {
 	}
 
 	if printAsJSON {
-		PrettyPrintJSON(containerVersions)
+		utils.PrettyPrintJSON(containerVersions)
 	} else {
 		var tableContent []string
 		tableContent = append(tableContent, "CWCTL VERSION: "+containerVersions.CwctlVersion+"\n")
@@ -84,7 +85,7 @@ func GetAllConnectionVersions() {
 	}
 
 	if printAsJSON {
-		PrettyPrintJSON(containerVersionsList)
+		utils.PrettyPrintJSON(containerVersionsList)
 	} else {
 		var tableContent []string
 		tableContent = append(tableContent, "CWCTL VERSION: "+containerVersionsList.CwctlVersion+"\n")
@@ -113,7 +114,7 @@ func RemoteListAll(c *cli.Context) {
 		os.Exit(1)
 	}
 	if printAsJSON {
-		PrettyPrintJSON(remoteInstalls)
+		utils.PrettyPrintJSON(remoteInstalls)
 	} else {
 		var tableContent []string
 		tableContent = append(tableContent, "Workspace ID \tNamespace \tVersion \tInstall Date \tAuth Realm \tURL")
