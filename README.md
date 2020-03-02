@@ -493,7 +493,7 @@ Subcommands:</br>
 > --conid value Connection ID (see the connections cmd). Defaults to `local`.
 > --address value The address of the docker registry
 > --username value The username for the docker registry
-> --password value The the password for the docker registry
+> --password value The password for the docker registry
 
 `list/ls` - List the docker registries and usernames
 

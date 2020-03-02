@@ -37,7 +37,7 @@ type (
 		Credentials string `json:"credentials"`
 	}
 
-	// Credentials : Sent as a base64 encoded string.
+	// Credentials : The registry credentials, sent as a base64 encoded string.
 	Credentials struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
@@ -50,7 +50,7 @@ type (
 )
 
 // GetRegistrySecrets : Get the current registry secrets for the PFE container
-func GetRegistrySecrets(conInfo *connections.Connection, conURL string, httpClient utils.HTTPClient) ([]RegistryResponse, error) {
+func GetRegistrySecrets(conInfo *connections.Connection, conURL string, httpClient utils.HTTPClient) (*[]RegistryResponse, error) {
 	req, err := http.NewRequest("GET", conURL+"/api/v1/registrysecrets", nil)
 	if err != nil {
 		return nil, err
@@ -60,7 +60,7 @@ func GetRegistrySecrets(conInfo *connections.Connection, conURL string, httpClie
 }
 
 // AddRegistrySecret : Set a registry secret in the PFE container
-func AddRegistrySecret(conInfo *connections.Connection, conURL string, httpClient utils.HTTPClient, address string, username string, password string) ([]RegistryResponse, error) {
+func AddRegistrySecret(conInfo *connections.Connection, conURL string, httpClient utils.HTTPClient, address string, username string, password string) (*[]RegistryResponse, error) {
 
 	// The username and password are sent inside a base64 encoded field in the jsonPayload.
 	credentials := &Credentials{Username: username, Password: password}
@@ -79,7 +79,7 @@ func AddRegistrySecret(conInfo *connections.Connection, conURL string, httpClien
 }
 
 // RemoveRegistrySecret : Remove a registry secret from the PFE container
-func RemoveRegistrySecret(conInfo *connections.Connection, conURL string, httpClient utils.HTTPClient, address string) ([]RegistryResponse, error) {
+func RemoveRegistrySecret(conInfo *connections.Connection, conURL string, httpClient utils.HTTPClient, address string) (*[]RegistryResponse, error) {
 
 	// The username and password are sent inside a base64 encoded field in the jsonPayload.
 	addressParameter := &AddressParameter{Address: address}
@@ -95,7 +95,7 @@ func RemoveRegistrySecret(conInfo *connections.Connection, conURL string, httpCl
 }
 
 // All three API calls (GET, POST and DELETE) return the same response.
-func handleRegistrySecretsResponse(req *http.Request, conInfo *connections.Connection, httpClient utils.HTTPClient, successCode int) ([]RegistryResponse, error) {
+func handleRegistrySecretsResponse(req *http.Request, conInfo *connections.Connection, httpClient utils.HTTPClient, successCode int) (*[]RegistryResponse, error) {
 	resp, httpSecError := sechttp.DispatchHTTPRequest(httpClient, req, conInfo)
 	if httpSecError != nil {
 		return nil, httpSecError
@@ -117,5 +117,5 @@ func handleRegistrySecretsResponse(req *http.Request, conInfo *connections.Conne
 		return nil, err
 	}
 
-	return registrySecrets, nil
+	return &registrySecrets, nil
 }
