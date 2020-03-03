@@ -875,12 +875,12 @@ func Commands() {
 				{
 					Name:    "add",
 					Aliases: []string{"a"},
-					Usage:   "Add a new docker registry secret",
+					Usage:   "Add a new docker registry secret and return the updated list of secrets",
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "conid", Value: "local", Usage: "Connection ID", Required: false},
-						cli.StringFlag{Name: "address,a", Value: "local", Usage: "Registry address", Required: true},
-						cli.StringFlag{Name: "username,u", Value: "local", Usage: "Registry username", Required: true},
-						cli.StringFlag{Name: "password,p", Value: "local", Usage: "Registry password", Required: true},
+						cli.StringFlag{Name: "address,a", Usage: "Registry address", Required: true},
+						cli.StringFlag{Name: "username,u", Usage: "Registry username", Required: true},
+						cli.StringFlag{Name: "password,p", Usage: "Registry password", Required: true},
 					},
 					Action: func(c *cli.Context) error {
 						AddRegistrySecret(c)
@@ -890,7 +890,7 @@ func Commands() {
 				{
 					Name:    "list",
 					Aliases: []string{"ls"},
-					Usage:   "List docker registries and usernames",
+					Usage:   "List the docker secrets (registries and usernames)",
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "conid", Value: "local", Usage: "Connection ID", Required: false},
 					},
@@ -902,10 +902,10 @@ func Commands() {
 				{
 					Name:    "remove",
 					Aliases: []string{"rm"},
-					Usage:   "Remove a docker registry secret",
+					Usage:   "Remove a docker registry secret and return the updated list of secrets",
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "conid", Value: "local", Usage: "Connection ID", Required: false},
-						cli.StringFlag{Name: "address,a", Value: "local", Usage: "Registry address", Required: true},
+						cli.StringFlag{Name: "address,a", Usage: "Registry address", Required: true},
 					},
 					Action: func(c *cli.Context) error {
 						RemoveRegistrySecret(c)

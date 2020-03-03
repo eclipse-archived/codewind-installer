@@ -16,6 +16,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -101,14 +102,14 @@ func handleRegistrySecretsResponse(req *http.Request, conInfo *connections.Conne
 		return nil, httpSecError
 	}
 
-	if resp.StatusCode != successCode {
-		return nil, errors.New(http.StatusText(resp.StatusCode))
-	}
-
 	defer resp.Body.Close()
 	byteArray, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
+	}
+
+	if resp.StatusCode != successCode {
+		return nil, errors.New(fmt.Sprintf("%s - %s\n", http.StatusText(resp.StatusCode), string(byteArray)))
 	}
 
 	var registrySecrets []RegistryResponse

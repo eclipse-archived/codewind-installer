@@ -487,7 +487,7 @@ Subcommands:</br>
 
 Subcommands:</br>
 
-`add/a` - Add a new docker registry secret
+`add/a` - Add a new docker registry secret and return the updated list of secrets
 
 > **Flags:**
 > --conid value Connection ID (see the connections cmd). Defaults to `local`.
@@ -495,12 +495,12 @@ Subcommands:</br>
 > --username value The username for the docker registry
 > --password value The password for the docker registry
 
-`list/ls` - List the docker registries and usernames
+`list/ls` - List the docker secrets (registries and usernames)
 
 > **Flags:**
 > --conid value Connection ID (see the connections cmd). Defaults to `local`.
 
-`remove/rm` - Remove a docker registry secret
+`remove/rm` - Remove a docker registry secret and return the updated list of secrets
 
 > **Flags:**
 > --conid value Connection ID (see the connections cmd). Defaults to `local`.
