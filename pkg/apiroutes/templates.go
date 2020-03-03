@@ -80,7 +80,7 @@ func GetTemplates(conID, projectStyle string, showEnabledOnly bool) ([]Template,
 	req.URL.RawQuery = query.Encode()
 	client := &http.Client{}
 
-	resp, httpSecError := httpRequestWithRetryOnLock(client, req, conInfo)
+	resp, httpSecError := HTTPRequestWithRetryOnLock(client, req, conInfo)
 	if httpSecError != nil {
 		return nil, httpSecError
 	}
@@ -112,7 +112,7 @@ func GetTemplateStyles(conID string) ([]string, error) {
 		return nil, err
 	}
 	client := &http.Client{}
-	resp, httpSecError := httpRequestWithRetryOnLock(client, req, conInfo)
+	resp, httpSecError := HTTPRequestWithRetryOnLock(client, req, conInfo)
 	if httpSecError != nil {
 		return nil, httpSecError
 	}
@@ -144,7 +144,7 @@ func GetTemplateRepos(conID string) ([]utils.TemplateRepo, error) {
 		return nil, err
 	}
 	client := &http.Client{}
-	resp, httpSecError := httpRequestWithRetryOnLock(client, req, conInfo)
+	resp, httpSecError := HTTPRequestWithRetryOnLock(client, req, conInfo)
 	if httpSecError != nil {
 		return nil, httpSecError
 	}
@@ -191,7 +191,7 @@ func AddTemplateRepo(conID, URL, description, name string) ([]utils.TemplateRepo
 		return nil, err
 	}
 	client := &http.Client{}
-	resp, httpSecError := httpRequestWithRetryOnLock(client, req, conInfo)
+	resp, httpSecError := HTTPRequestWithRetryOnLock(client, req, conInfo)
 	if httpSecError != nil {
 		return nil, httpSecError
 	}
@@ -234,7 +234,7 @@ func DeleteTemplateRepo(conID, URL string) ([]utils.TemplateRepo, error) {
 	req, _ := http.NewRequest("DELETE", conURL+"/api/v1/templates/repositories", bytes.NewBuffer(jsonValue))
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}
-	resp, httpSecError := httpRequestWithRetryOnLock(client, req, conInfo)
+	resp, httpSecError := HTTPRequestWithRetryOnLock(client, req, conInfo)
 	if httpSecError != nil {
 		return nil, httpSecError
 	}
@@ -337,7 +337,7 @@ func BatchPatchTemplateRepos(conID string, operations []RepoOperation) ([]SubRes
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
-	resp, httpSecError := httpRequestWithRetryOnLock(client, req, conInfo)
+	resp, httpSecError := HTTPRequestWithRetryOnLock(client, req, conInfo)
 	if httpSecError != nil {
 		return nil, httpSecError
 	}
@@ -358,16 +358,17 @@ func BatchPatchTemplateRepos(conID string, operations []RepoOperation) ([]SubRes
 	return subResponsesFromBatchOperation, nil
 }
 
-// httpRequestWithRetryOnLock : Retries a request until either the maxHTTPRetries limit has been hit or the response status code is not equal to 423 (templates locked HTTP code)
-func httpRequestWithRetryOnLock(httpClient utils.HTTPClient, originalRequest *http.Request, connection *connections.Connection) (*http.Response, *sechttp.HTTPSecError) {
-	var maxHTTPRetries int = 5
-	var templatesLockedHTTPStatusCode = 423
+// HTTPRequestWithRetryOnLock : Retries a request until either the maxHTTPRetries limit has been hit or the response status code is not equal to 423 (templates locked HTTP code)
+func HTTPRequestWithRetryOnLock(httpClient utils.HTTPClient, originalRequest *http.Request, connection *connections.Connection) (*http.Response, *sechttp.HTTPSecError) {
+	// maxHTTPRequests is the total number of requests, 1 for the intial and the rest are retries
+	var maxHTTPRequests = 5
+	var templatesLockedHTTPStatusCode = http.StatusLocked
 	var response *http.Response
-	for i := 0; i < maxHTTPRetries; i++ {
+	for i := 0; i < maxHTTPRequests; i++ {
 		resp, httpSecError := sechttp.DispatchHTTPRequest(httpClient, originalRequest, connection)
 		if httpSecError != nil {
 			return nil, httpSecError
-		} else if resp.StatusCode != templatesLockedHTTPStatusCode || i+1 == maxHTTPRetries {
+		} else if resp.StatusCode != templatesLockedHTTPStatusCode || i+1 == maxHTTPRequests {
 			response = resp
 			break
 		} else {
