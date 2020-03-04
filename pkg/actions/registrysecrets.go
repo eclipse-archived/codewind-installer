@@ -12,7 +12,6 @@
 package actions
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -30,7 +29,8 @@ func GetRegistrySecrets(c *cli.Context) {
 
 	registrySecrets, err := apiroutes.GetRegistrySecrets(conInfo, conURL, http.DefaultClient)
 	if err != nil {
-		fmt.Println(err.Error())
+		registryErr := &RegistryError{errOpListRegistries, err, err.Error()}
+		HandleRegistryError(registryErr)
 		os.Exit(1)
 	}
 	utils.PrettyPrintJSON(registrySecrets)
@@ -46,7 +46,8 @@ func AddRegistrySecret(c *cli.Context) {
 
 	registrySecrets, err := apiroutes.AddRegistrySecret(conInfo, conURL, http.DefaultClient, address, username, password)
 	if err != nil {
-		fmt.Println(err.Error())
+		registryErr := &RegistryError{errOpAddRegistry, err, err.Error()}
+		HandleRegistryError(registryErr)
 		os.Exit(1)
 	}
 	utils.PrettyPrintJSON(registrySecrets)
@@ -60,7 +61,8 @@ func RemoveRegistrySecret(c *cli.Context) {
 
 	registrySecrets, err := apiroutes.RemoveRegistrySecret(conInfo, conURL, http.DefaultClient, address)
 	if err != nil {
-		fmt.Println(err.Error())
+		registryErr := &RegistryError{errOpRemoveRegistry, err, err.Error()}
+		HandleRegistryError(registryErr)
 		os.Exit(1)
 	}
 	utils.PrettyPrintJSON(registrySecrets)
@@ -77,7 +79,7 @@ func getConnectionDetailsOrExit(c *cli.Context) (*connections.Connection, string
 
 	conURL, conErr := config.PFEOriginFromConnection(conInfo)
 	if conErr != nil {
-		fmt.Println(conErr.Err)
+		HandleConfigError(conErr)
 		os.Exit(1)
 	}
 	return conInfo, conURL
