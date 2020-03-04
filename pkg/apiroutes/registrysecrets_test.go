@@ -38,7 +38,8 @@ func Test_GetRegistrySecrets(t *testing.T) {
 		assert.Equal(t, expectedRegistrySecrets, *actualRegistrySecrets)
 	})
 	t.Run("error case - returns error when PFE status code non 200", func(t *testing.T) {
-		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusBadRequest, Body: nil}
+		emptyBody := ioutil.NopCloser(bytes.NewReader([]byte{}))
+		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusBadRequest, Body: emptyBody}
 		mockConnection := connections.Connection{ID: "local"}
 		_, err := GetRegistrySecrets(&mockConnection, "mockURL", mockClient)
 		assert.Error(t, err)
@@ -67,7 +68,8 @@ func Test_AddRegistrySecret(t *testing.T) {
 		assert.Equal(t, expectedRegistrySecrets, *actualRegistrySecrets)
 	})
 	t.Run("error case - returns error when PFE status code non 201", func(t *testing.T) {
-		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusBadRequest, Body: nil}
+		emptyBody := ioutil.NopCloser(bytes.NewReader([]byte{}))
+		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusBadRequest, Body: emptyBody}
 		mockConnection := connections.Connection{ID: "local"}
 		_, err := AddRegistrySecret(&mockConnection, "mockURL", mockClient, "testdockerregistry", "testuser", "testpassword")
 		assert.Error(t, err)
@@ -96,7 +98,8 @@ func Test_DeleteRegistrySecret(t *testing.T) {
 		assert.Equal(t, expectedRegistrySecrets, *actualRegistrySecrets)
 	})
 	t.Run("error case - returns error when PFE status code non 200", func(t *testing.T) {
-		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusBadRequest, Body: nil}
+		emptyBody := ioutil.NopCloser(bytes.NewReader([]byte{}))
+		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusBadRequest, Body: emptyBody}
 		mockConnection := connections.Connection{ID: "local"}
 		_, err := RemoveRegistrySecret(&mockConnection, "mockURL", mockClient, "afakeregistry")
 		assert.Error(t, err)
