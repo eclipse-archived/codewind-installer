@@ -80,6 +80,16 @@ func HandleRemInstError(err *remote.RemInstError) {
 	}
 }
 
+// HandleRegistryError prints a Registry error, in JSON format if the global flag is set, and as a string if not
+func HandleRegistryError(err *RegistryError) {
+	// printAsJSON is a global variable, set in commands.go
+	if printAsJSON {
+		fmt.Println(err.Error())
+	} else {
+		logr.Error(err.Desc)
+	}
+}
+
 // PrintTable prints a formatted table into the terminal
 func PrintTable(content []string) {
 	w := new(tabwriter.Writer)

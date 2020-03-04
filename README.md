@@ -141,26 +141,27 @@ This is the same as `go test ./...`, but outputs test coverage scores for each f
 
 ### CLI Commands
 
-| Command     | Alias | Usage                                                               |
-| ----------- | ----- | ------------------------------------------------------------------- |
-| project     |       | 'Manage Codewind projects'                                          |
-| install     | `in`  | 'Pull pfe & performance images from dockerhub'                      |
-| start       |       | 'Start the Codewind containers'                                     |
-| status      |       | 'Print the installation status of Codewind'                         |
-| stop        |       | 'Stop the running Codewind containers'                              |
-| stop-all    |       | 'Stop all of the Codewind and project containers'                   |
-| remove      | `rm`  | 'Remove Codewind and Project docker images'                         |
-| templates   |       | 'Manage project templates'                                          |
-| version     |       | 'Print the versions of Codewind containers, for a given connection' |
-| sectoken    | `st`  | 'Authenticate with username and password to obtain an access_token' |
-| secrole     | `sl`  | 'Manage realm based ACCESS roles'                                   |
-| secrealm    | `sr`  | 'Manage new or existing REALM configurations'                       |
-| secclient   | `sc`  | 'Manage new or existing APPLICATION access configurations'          |
-| seckeyring  | `sk`  | 'Manage Codewind keys in the desktop keyring'                       |
-| secuser     | `su`  | 'Manage new or existing USER access configurations'                 |
-| connections | `con` | 'Manage connections configuration list'                             |
-| loglevels   | `log` | 'Get or set logging levels for Codewind containers'                 |
-| help        | `h`   | 'Shows a list of commands or help for one command'                  |
+| Command         | Alias | Usage                                                               |
+| ----------------| ----- | ------------------------------------------------------------------- |
+| project         |       | 'Manage Codewind projects'                                          |
+| install         | `in`  | 'Pull pfe & performance images from dockerhub'                      |
+| start           |       | 'Start the Codewind containers'                                     |
+| status          |       | 'Print the installation status of Codewind'                         |
+| stop            |       | 'Stop the running Codewind containers'                              |
+| stop-all        |       | 'Stop all of the Codewind and project containers'                   |
+| remove          | `rm`  | 'Remove Codewind and Project docker images'                         |
+| templates       |       | 'Manage project templates'                                          |
+| version         |       | 'Print the versions of Codewind containers, for a given connection' |
+| sectoken        | `st`  | 'Authenticate with username and password to obtain an access_token' |
+| secrole         | `sl`  | 'Manage realm based ACCESS roles'                                   |
+| secrealm        | `sr`  | 'Manage new or existing REALM configurations'                       |
+| secclient       | `sc`  | 'Manage new or existing APPLICATION access configurations'          |
+| seckeyring      | `sk`  | 'Manage Codewind keys in the desktop keyring'                       |
+| secuser         | `su`  | 'Manage new or existing USER access configurations'                 |
+| connections     | `con` | 'Manage connections configuration list'                             |
+| loglevels       | `log` | 'Get or set logging levels for Codewind containers'                 |
+| registrysecrets | `rs`  | 'Manage docker registry secrets'                                    |
+| help            | `h`   | 'Shows a list of commands or help for one command'                  |
 
 ### Command Options:
 
@@ -481,6 +482,29 @@ Subcommands:</br>
 
 > **Flags:**
 > --namespace value The namespace to check (defaults to all)
+
+## registrysecrets
+
+Subcommands:</br>
+
+`add/a` - Add a new docker registry secret and return the updated list of secrets
+
+> **Flags:**
+> --conid value Connection ID (see the connections cmd). Defaults to `local`.
+> --address value The address of the docker registry
+> --username value The username for the docker registry
+> --password value The password for the docker registry
+
+`list/ls` - List the docker secrets (registries and usernames)
+
+> **Flags:**
+> --conid value Connection ID (see the connections cmd). Defaults to `local`.
+
+`remove/rm` - Remove a docker registry secret and return the updated list of secrets
+
+> **Flags:**
+> --conid value Connection ID (see the connections cmd). Defaults to `local`.
+> --address value The address of the docker registry to remove
 
 ## help
 
