@@ -14,8 +14,10 @@ package apiroutes
 import (
 	"errors"
 	"log"
+	"net/http"
 	"testing"
 
+	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/stretchr/testify/assert"
 )
@@ -477,4 +479,39 @@ func TestBatchPatchTemplateRepos(t *testing.T) {
 	}
 
 	// This test block cleans up after itself, assuming that the template repo tested was initially enabled. (This test block resets it to 'enabled')
+}
+
+func TestHTTPRequestWithRetryOnLock(t *testing.T) {
+	t.Run("Checks 423 is returned if the response StatusCode is always 423", func(t *testing.T) {
+		mockClient := &MockResponse{StatusCode: http.StatusLocked}
+		mockConnection := connections.Connection{ID: "local"}
+		mockReq, _ := http.NewRequest("", "", nil)
+
+		resp, httpSecError := HTTPRequestWithRetryOnLock(mockClient, mockReq, &mockConnection)
+		expectedResp := &http.Response{
+			StatusCode: http.StatusLocked,
+		}
+		assert.Equal(t, expectedResp, resp)
+		assert.Nil(t, httpSecError)
+	})
+	t.Run("Checks that a non 423 StatusCode can be returned", func(t *testing.T) {
+		mockClient := &MockResponse{StatusCode: http.StatusInternalServerError}
+		mockConnection := connections.Connection{ID: "local"}
+		mockReq, _ := http.NewRequest("", "", nil)
+
+		resp, httpSecError := HTTPRequestWithRetryOnLock(mockClient, mockReq, &mockConnection)
+		expectedResp := &http.Response{
+			StatusCode: http.StatusInternalServerError,
+		}
+		assert.Equal(t, expectedResp, resp)
+		assert.Nil(t, httpSecError)
+	})
+	t.Run("Checks secError is returned by not using a mocked client (URL doesn't exist)", func(t *testing.T) {
+		mockConnection := connections.Connection{ID: "local"}
+		req, _ := http.NewRequest("GET", "nonexistanturl", nil)
+
+		resp, httpSecError := HTTPRequestWithRetryOnLock(http.DefaultClient, req, &mockConnection)
+		assert.Nil(t, resp)
+		assert.Equal(t, "tx_connection", httpSecError.Op)
+	})
 }
