@@ -22,6 +22,7 @@ import (
 	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/project"
+	"github.com/eclipse/codewind-installer/pkg/utils"
 	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
@@ -109,7 +110,7 @@ func UpgradeProjects(c *cli.Context) {
 		HandleProjectError(err)
 		os.Exit(1)
 	}
-	PrettyPrintJSON(response)
+	utils.PrettyPrintJSON(response)
 	os.Exit(0)
 }
 

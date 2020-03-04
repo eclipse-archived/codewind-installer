@@ -53,13 +53,13 @@ func RemoveProject(c *cli.Context) *ProjectError {
 	}
 
 	// Unbind the project from codewind
-	err := Unbind(http.DefaultClient, conInfo, conURL, projectID)
-	if err != nil {
-		return &ProjectError{errOpUnbind, err, err.Error()}
+	projError := Unbind(http.DefaultClient, conInfo, conURL, projectID)
+	if projError != nil {
+		return projError
 	}
 
 	// Delete the associated connection file
-	projError := RemoveConnectionFile(projectID)
+	projError = RemoveConnectionFile(projectID)
 	if projError != nil {
 		return projError
 	}
