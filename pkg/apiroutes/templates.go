@@ -360,20 +360,20 @@ func BatchPatchTemplateRepos(conID string, operations []RepoOperation) ([]SubRes
 
 // HTTPRequestWithRetryOnLock : Retries a request until either the maxHTTPRetries limit has been hit or the response status code is not equal to 423 (templates locked HTTP code)
 func HTTPRequestWithRetryOnLock(httpClient utils.HTTPClient, originalRequest *http.Request, connection *connections.Connection) (*http.Response, *sechttp.HTTPSecError) {
-	// maxHTTPRequests is the total number of requests, 1 for the intial and the rest are retries
+	// maxHTTPRequests is the total number of requests, 1 for the initial and the rest are retries
 	var maxHTTPRequests = 5
 	var templatesLockedHTTPStatusCode = http.StatusLocked
-	var response *http.Response
 	for i := 0; i < maxHTTPRequests; i++ {
 		resp, httpSecError := sechttp.DispatchHTTPRequest(httpClient, originalRequest, connection)
 		if httpSecError != nil {
 			return nil, httpSecError
-		} else if resp.StatusCode != templatesLockedHTTPStatusCode || i+1 == maxHTTPRequests {
-			response = resp
-			break
-		} else {
-			time.Sleep(time.Second)
 		}
+
+		if resp.StatusCode != templatesLockedHTTPStatusCode || i+1 == maxHTTPRequests {
+			return resp, nil
+		}
+
+		time.Sleep(time.Second)
 	}
-	return response, nil
+	return nil, nil
 }

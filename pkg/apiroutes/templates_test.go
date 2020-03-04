@@ -481,8 +481,8 @@ func TestBatchPatchTemplateRepos(t *testing.T) {
 	// This test block cleans up after itself, assuming that the template repo tested was initially enabled. (This test block resets it to 'enabled')
 }
 
-func Test_HTTPRequestWithRetryOnLock(t *testing.T) {
-	t.Run("Checks that the 423 is returned if the response StatusCode is always 423", func(t *testing.T) {
+func TestHTTPRequestWithRetryOnLock(t *testing.T) {
+	t.Run("Checks 423 is returned if the response StatusCode is always 423", func(t *testing.T) {
 		mockClient := &MockResponse{StatusCode: http.StatusLocked}
 		mockConnection := connections.Connection{ID: "local"}
 		mockReq, _ := http.NewRequest("", "", nil)
@@ -494,7 +494,7 @@ func Test_HTTPRequestWithRetryOnLock(t *testing.T) {
 		assert.Equal(t, expectedResp, resp)
 		assert.Nil(t, httpSecError)
 	})
-	t.Run("Checks that a non 423 status code can be returned", func(t *testing.T) {
+	t.Run("Checks that a non 423 StatusCode can be returned", func(t *testing.T) {
 		mockClient := &MockResponse{StatusCode: http.StatusInternalServerError}
 		mockConnection := connections.Connection{ID: "local"}
 		mockReq, _ := http.NewRequest("", "", nil)
