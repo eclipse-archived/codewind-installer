@@ -132,7 +132,11 @@ spec:
                         export GOCACHE=/home/jenkins/agent/$CODE_DIRECTORY_FOR_GO/.cache/go-build
 
                         cd ../../$CODE_DIRECTORY_FOR_GO
-                        go test ./... -short -cover
+                        go test ./... -short -cover -coverprofile=coverage.txt -covermode=count
+
+                        # Report coverage
+                        # Picks up API key from env
+                        bash <(curl -s https://codecov.io/bash) -f ./coverage.txt
 
                         # clean up the cache directory
                         rm -rf .cache
