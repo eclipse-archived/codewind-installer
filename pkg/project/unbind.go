@@ -35,7 +35,7 @@ func Unbind(httpClient utils.HTTPClient, connection *connections.Connection, url
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		err := fmt.Errorf("Project unbind failed with status code %s", string(res.StatusCode))
+		err := fmt.Errorf("Project unbind failed with status code %d", res.StatusCode)
 		return &ProjectError{errOpUnbind, err, err.Error()}
 	}
 
