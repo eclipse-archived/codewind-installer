@@ -34,6 +34,7 @@ spec:
     environment {
         CODE_DIRECTORY_FOR_GO = 'src/github.com/eclipse/codewind-installer'
         DEFAULT_WORKSPACE_DIR_FILE = 'temp_default_dir'
+        CODECOV_TOKEN = credentials('codecov-token')
     }
 
     stages {
