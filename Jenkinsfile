@@ -139,8 +139,6 @@ spec:
                         cd ../../$CODE_DIRECTORY_FOR_GO
                         go test ./... -short -cover -coverprofile=coverage.txt -covermode=count
 
-                        echo $PWD
-                        cd $DEFAULT_CODE_DIRECTORY
                         ls
                         echo "ENVVVSSS"
                         printenv
