@@ -121,7 +121,7 @@ spec:
                 echo 'Starting tests'
 
                 container('go') {
-                   bash '''
+                   sh '''#!/bin/bash
                         export GOPATH=/go:/home/jenkins/agent
 
                         # go cache setup
