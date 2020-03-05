@@ -30,28 +30,28 @@ const (
 	GatekeeperPrefix = "codewind-gatekeeper"
 
 	// PFEImage is the docker image that will be used in the Codewind-PFE pod
-	PFEImage = "tobespc/codewind-pfe-amd64"
+	PFEImage = "eclipse/codewind-pfe-amd64"
 
 	// PerformanceImage is the docker image that will be used in the Performance dashboard pod
-	PerformanceImage = "tobespc/codewind-performance-amd64"
+	PerformanceImage = "eclipse/codewind-performance-amd64"
 
 	// KeycloakImage is the docker image that will be used in the Codewind-Keycloak pod
-	KeycloakImage = "tobespc/codewind-keycloak-amd64"
+	KeycloakImage = "eclipse/codewind-keycloak-amd64"
 
 	// GatekeeperImage is the docker image that will be used in the Codewind-Gatekeeper pod
-	GatekeeperImage = "tobespc/codewind-gatekeeper-amd64"
+	GatekeeperImage = "eclipse/codewind-gatekeeper-amd64"
 
 	// PFEImageTag is the image tag associated with the docker image that's used for Codewind-PFE
-	PFEImageTag = "latest"
+	PFEImageTag = "0.10.0"
 
 	// PerformanceTag is the image tag associated with the docker image that's used for the Performance dashboard
-	PerformanceTag = "latest"
+	PerformanceTag = "0.10.0"
 
 	// KeycloakImageTag is the image tag associated with the docker image that's used for Codewind-Keycloak
-	KeycloakImageTag = "latest"
+	KeycloakImageTag = "0.10.0"
 
 	// GatekeeperImageTag is the image tag associated with the docker image that's used for Codewind-Gatekeeper
-	GatekeeperImageTag = "latest"
+	GatekeeperImageTag = "0.10.0"
 
 	// ImagePullPolicy is the pull policy used for all containers in Codewind, defaults to Always
 	ImagePullPolicy = corev1.PullAlways
