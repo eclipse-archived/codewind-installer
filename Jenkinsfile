@@ -50,7 +50,10 @@ spec:
 
             steps {
                 container('go') {
-                    sh '''
+                    sh '''#!/bin/bash
+                        thing=$(git show --no-patch --format="%P")
+                        echo $thing
+                        exit 23
                         echo "starting preInstall.....: GOPATH=$GOPATH"
 
                         # add the base directory to the gopath
