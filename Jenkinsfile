@@ -139,6 +139,8 @@ spec:
                         ls
                         echo "ENVVVSSS"
                         printenv
+                        echo "thing from online"
+                        git rev-parse HEAD
                         # Report coverage
                         if [ -n "$CODECOV_TOKEN" ]; then
                             echo "Reporting coverage to codecov"
