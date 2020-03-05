@@ -35,6 +35,7 @@ spec:
         CODE_DIRECTORY_FOR_GO = 'src/github.com/eclipse/codewind-installer'
         DEFAULT_WORKSPACE_DIR_FILE = 'temp_default_dir'
         CODECOV_TOKEN = credentials('codecov-token')
+        COMMIT_ID_FOR_CODECOV = ''
     }
 
     stages {
@@ -51,11 +52,8 @@ spec:
             steps {
                 container('go') {
                     sh '''#!/bin/bash
-                        revparse=$(git rev-parse HEAD)
-                        echo $revparse
-                        thing=$(git show --no-patch --format="%P")
-                        echo $thing
-                        exit 23
+                        COMMIT_ID_FOR_CODECOV=$(git rev-parse HEAD)
+
                         echo "starting preInstall.....: GOPATH=$GOPATH"
 
                         # add the base directory to the gopath
@@ -129,6 +127,7 @@ spec:
                 container('go') {
                    sh '''#!/bin/bash
                         export GOPATH=/go:/home/jenkins/agent
+                        DEFAULT_CODE_DIRECTORY=$PWD
 
                         # go cache setup
                         mkdir .cache
@@ -141,15 +140,17 @@ spec:
                         go test ./... -short -cover -coverprofile=coverage.txt -covermode=count
 
                         echo $PWD
+                        cd $DEFAULT_CODE_DIRECTORY
                         ls
                         echo "ENVVVSSS"
                         printenv
-                        echo "thing from online"
-                        git rev-parse HEAD
+                        
+                        
                         # Report coverage
                         if [ -n "$CODECOV_TOKEN" ]; then
+                            echo "commit for codecov = $COMMIT_ID_FOR_CODECOV"
                             echo "Reporting coverage to codecov"
-                            bash <(curl -s https://codecov.io/bash) -f ./coverage.txt
+                            bash <(curl -s https://codecov.io/bash) -f ./coverage.txt -C $COMMIT_ID_FOR_CODECOV
                         else
                             echo "CODECOV_TOKEN not set, not reporting coverage"
                         fi
