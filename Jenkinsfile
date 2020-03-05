@@ -121,7 +121,7 @@ spec:
                 echo 'Starting tests'
 
                 container('go') {
-                   sh '''
+                   sh '''#!/bin/bash
                         export GOPATH=/go:/home/jenkins/agent
 
                         # go cache setup
@@ -134,16 +134,10 @@ spec:
                         cd ../../$CODE_DIRECTORY_FOR_GO
                         go test ./... -short -cover -coverprofile=coverage.txt -covermode=count
 
-                        # clean up the cache directory
-                        rm -rf .cache
-                    '''
-                }
-                echo 'End of test stage'
-                
-                script {
-                    sh '''#!/bin/bash
                         echo $PWD
                         ls
+                        echo "ENVVVSSS"
+                        printenv
                         # Report coverage
                         # Picks up API key from env
                         if [ -n "$CODECOV_TOKEN" ]; then
@@ -152,8 +146,12 @@ spec:
                         else
                             echo "CODECOV_TOKEN not set, not reporting coverage"
                         fi
+
+                        # clean up the cache directory
+                        rm -rf .cache
                     '''
                 }
+                echo 'End of test stage'
             }
         }
 
