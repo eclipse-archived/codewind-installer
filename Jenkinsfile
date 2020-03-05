@@ -51,6 +51,8 @@ spec:
             steps {
                 container('go') {
                     sh '''#!/bin/bash
+                        revparse=$(git rev-parse HEAD)
+                        echo $revparse
                         thing=$(git show --no-patch --format="%P")
                         echo $thing
                         exit 23
