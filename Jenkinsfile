@@ -140,7 +140,6 @@ spec:
                         echo "ENVVVSSS"
                         printenv
                         # Report coverage
-                        # Picks up API key from env
                         if [ -n "$CODECOV_TOKEN" ]; then
                             echo "Reporting coverage to codecov"
                             bash <(curl -s https://codecov.io/bash) -f ./coverage.txt
