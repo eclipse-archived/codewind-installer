@@ -7,6 +7,7 @@ Prebuilt binary files are available for download [on Eclipse](https://download.e
 [![Build Status](https://ci.eclipse.org/codewind/buildStatus/icon?job=Codewind%2Fcodewind-installer%2Fmaster)](https://ci.eclipse.org/codewind/job/Codewind/job/codewind-installer/job/master/)
 [![Chat](https://img.shields.io/static/v1.svg?label=chat&message=mattermost&color=145dbf)](https://mattermost.eclipse.org/eclipse/channels/eclipse-codewind)
 [![Go Report Card](https://goreportcard.com/badge/github.com/eclipse/codewind-installer)](https://goreportcard.com/report/github.com/eclipse/codewind-installer)
+[![codecov](https://codecov.io/gh/eclipse/codewind-installer/branch/master/graph/badge.svg)](https://codecov.io/gh/eclipse/codewind-installer)
 
 ## Table of Contents
 
