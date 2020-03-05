@@ -17,6 +17,8 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	goErr "errors"
 	"fmt"
 	"io"
@@ -58,6 +60,7 @@ func WriteToComposeFile(dockerComposeFile string, debug bool) bool {
 		return false
 	}
 
+	writeDockerConfigSecretFile()
 	dataStruct := Compose{}
 
 	unmarshDataErr := yaml.Unmarshal([]byte(data), &dataStruct)
@@ -81,6 +84,24 @@ func WriteToComposeFile(dockerComposeFile string, debug bool) bool {
 	err = ioutil.WriteFile(dockerComposeFile, marshalledData, 0644)
 	errors.CheckErr(err, 204, "")
 	return true
+}
+
+func writeDockerConfigSecretFile() {
+	dockerConfig := getDockerCredentials("local")
+	dockerConfigBytes, jsonErr := json.MarshalIndent(dockerConfig, "", "  ")
+	if jsonErr != nil {
+		errors.CheckErr(jsonErr, 208, "")
+	}
+	encoded := base64.StdEncoding.EncodeToString(dockerConfigBytes)
+	err := ioutil.WriteFile(dockerConfigSecretFile, []byte(encoded), 0600)
+	errors.CheckErr(err, 204, "")
+}
+
+// ClearDockerConfigSecret We erase the contents rather than deleting
+// the file as the docker-compose file expects the secret to be present.
+func ClearDockerConfigSecret() {
+	err := ioutil.WriteFile(dockerConfigSecretFile, []byte{}, 0600)
+	errors.CheckErr(err, 204, "")
 }
 
 // DeleteTempFile once the the Codewind environment has been created
