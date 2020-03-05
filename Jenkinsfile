@@ -136,7 +136,11 @@ spec:
 
                         # Report coverage
                         # Picks up API key from env
-                        bash <(curl -s https://codecov.io/bash) -f ./coverage.txt
+
+                        if [ -n "$CODECOV_TOKEN" ]; then
+                            echo "Reporting coverage"
+                            bash <(curl -s https://codecov.io/bash) -f ./coverage.txt
+                        fi
 
                         # clean up the cache directory
                         rm -rf .cache
