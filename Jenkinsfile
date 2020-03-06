@@ -34,6 +34,7 @@ spec:
     environment {
         CODE_DIRECTORY_FOR_GO = 'src/github.com/eclipse/codewind-installer'
         DEFAULT_WORKSPACE_DIR_FILE = 'temp_default_dir'
+        CODECOV_TOKEN = credentials('codecov-token')
     }
 
     stages {
@@ -49,7 +50,8 @@ spec:
 
             steps {
                 container('go') {
-                    sh '''
+                    sh '''#!/bin/bash
+
                         echo "starting preInstall.....: GOPATH=$GOPATH"
 
                         # add the base directory to the gopath
@@ -121,7 +123,7 @@ spec:
                 echo 'Starting tests'
 
                 container('go') {
-                    sh '''
+                   sh '''#!/bin/bash
                         export GOPATH=/go:/home/jenkins/agent
 
                         # go cache setup
@@ -132,7 +134,15 @@ spec:
                         export GOCACHE=/home/jenkins/agent/$CODE_DIRECTORY_FOR_GO/.cache/go-build
 
                         cd ../../$CODE_DIRECTORY_FOR_GO
-                        go test ./... -short -cover
+                        go test ./... -short -coverprofile=coverage.txt -covermode=count
+
+                        # Report coverage
+                        if [ -n "$CODECOV_TOKEN" ]; then
+                            echo "Reporting coverage to codecov"
+                            bash <(curl -s https://codecov.io/bash) -f ./coverage.txt
+                        else
+                            echo "CODECOV_TOKEN not set, not reporting coverage"
+                        fi
 
                         # clean up the cache directory
                         rm -rf .cache
