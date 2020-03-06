@@ -22,6 +22,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 
 	logr "github.com/sirupsen/logrus"
@@ -75,7 +76,9 @@ func getKubeConfig() (*rest.Config, error) {
 
 	// Use KUBECONFIG environment variable if set
 	kubeconfig, ok := os.LookupEnv("KUBECONFIG")
-	if ok {
+	if ok && kubeconfig != "" {
+		// If multiple files provided choose first.
+		kubeconfig = strings.SplitN(kubeconfig, ":", -1)[0]
 		config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
 		if err != nil {
 			logr.Infof("Unable to retrieve Kubernetes Config %v\n", err)
