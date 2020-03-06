@@ -868,6 +868,53 @@ func Commands() {
 			},
 		},
 		{
+			Name:    "registrysecrets",
+			Aliases: []string{"rs"},
+			Usage:   "List, add or remove docker registry secrets for Codewind containers",
+			Subcommands: []cli.Command{
+				{
+					Name:    "add",
+					Aliases: []string{"a"},
+					Usage:   "Add a new docker registry secret and return the updated list of secrets",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "conid", Value: "local", Usage: "Connection ID", Required: false},
+						cli.StringFlag{Name: "address,a", Usage: "Registry address", Required: true},
+						cli.StringFlag{Name: "username,u", Usage: "Registry username", Required: true},
+						cli.StringFlag{Name: "password,p", Usage: "Registry password", Required: true},
+					},
+					Action: func(c *cli.Context) error {
+						AddRegistrySecret(c)
+						return nil
+					},
+				},
+				{
+					Name:    "list",
+					Aliases: []string{"ls"},
+					Usage:   "List the docker secrets (registries and usernames)",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "conid", Value: "local", Usage: "Connection ID", Required: false},
+					},
+					Action: func(c *cli.Context) error {
+						GetRegistrySecrets(c)
+						return nil
+					},
+				},
+				{
+					Name:    "remove",
+					Aliases: []string{"rm"},
+					Usage:   "Remove a docker registry secret and return the updated list of secrets",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "conid", Value: "local", Usage: "Connection ID", Required: false},
+						cli.StringFlag{Name: "address,a", Usage: "Registry address", Required: true},
+					},
+					Action: func(c *cli.Context) error {
+						RemoveRegistrySecret(c)
+						return nil
+					},
+				},
+			},
+		},
+		{
 			Name:    "version",
 			Aliases: []string{"v"},
 			Usage:   "Get versions of deployed Codewind containers",
