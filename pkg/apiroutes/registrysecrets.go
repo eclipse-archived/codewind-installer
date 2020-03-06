@@ -15,7 +15,6 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -71,10 +70,10 @@ func AddRegistrySecret(conInfo *connections.Connection, conURL string, httpClien
 	jsonPayload, _ := json.Marshal(registryParameters)
 
 	req, err := http.NewRequest("POST", conURL+"/api/v1/registrysecrets", bytes.NewBuffer(jsonPayload))
-	req.Header.Set("Content-Type", "application/json")
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set("Content-Type", "application/json")
 
 	return handleRegistrySecretsResponse(req, conInfo, httpClient, http.StatusCreated)
 }
@@ -87,10 +86,10 @@ func RemoveRegistrySecret(conInfo *connections.Connection, conURL string, httpCl
 	jsonPayload, _ := json.Marshal(addressParameter)
 
 	req, err := http.NewRequest("DELETE", conURL+"/api/v1/registrysecrets", bytes.NewBuffer(jsonPayload))
-	req.Header.Set("Content-Type", "application/json")
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set("Content-Type", "application/json")
 
 	return handleRegistrySecretsResponse(req, conInfo, httpClient, http.StatusOK)
 }
@@ -109,7 +108,7 @@ func handleRegistrySecretsResponse(req *http.Request, conInfo *connections.Conne
 	}
 
 	if resp.StatusCode != successCode {
-		return nil, errors.New(fmt.Sprintf("%s - %s\n", http.StatusText(resp.StatusCode), string(byteArray)))
+		return nil, fmt.Errorf("%s - %s", http.StatusText(resp.StatusCode), string(byteArray))
 	}
 
 	var registrySecrets []RegistryResponse
