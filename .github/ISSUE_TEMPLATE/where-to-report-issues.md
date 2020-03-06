@@ -9,7 +9,7 @@ assignees: ''
 
 ## Where to report issues
 
-This repository is not used for issue tracking of the Codewind plugin for VSCode
+This repository is not used for issue tracking of the Codewind CLI
 
 🚨 Please don't submit new issues here. 🚨
 
