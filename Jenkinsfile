@@ -139,7 +139,7 @@ spec:
                         # Report coverage
                         if [ -n "$CODECOV_TOKEN" ]; then
                             echo "Reporting coverage to codecov"
-                            bash <(curl -s https://codecov.io/bash) -f ./coverage.txt
+                            bash <(curl -s https://codecov.io/bash) -f ./coverage.txt -X fix
                         else
                             echo "CODECOV_TOKEN not set, not reporting coverage"
                         fi
