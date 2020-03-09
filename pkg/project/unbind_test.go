@@ -27,14 +27,14 @@ func TestUnbind(t *testing.T) {
 
 	body := ioutil.NopCloser(bytes.NewReader([]byte("")))
 	t.Run("Expect success - project unbinds", func(t *testing.T) {
-		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusOK, Body: body}
+		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusAccepted, Body: body}
 		err := Unbind(mockClient, &mockConnection, "dummyurl", "mockID")
 		if err != nil {
 			t.Errorf("Unbind() failed with error %s", err)
 		}
 	})
 
-	t.Run("Expect failure - pfe returns non 200 status", func(t *testing.T) {
+	t.Run("Expect failure - pfe returns non 202 status", func(t *testing.T) {
 		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusBadRequest, Body: body}
 		err := Unbind(mockClient, &mockConnection, "dummyurl", "mockID")
 		assert.Error(t, err)
