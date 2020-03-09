@@ -12,15 +12,12 @@
 package remote
 
 import (
-	"path/filepath"
-
 	"github.com/eclipse/codewind-installer/pkg/remote/kube"
 	routev1 "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
 	logr "github.com/sirupsen/logrus"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 // RemoveDeploymentOptions : Deployment removal options
@@ -87,10 +84,8 @@ type RemovalResult struct {
 
 // RemoveRemote : Remove remote install from Kube
 func RemoveRemote(remoteRemovalOptions *RemoveDeploymentOptions) (*RemovalResult, *RemInstError) {
-
-	kubeconfig := filepath.Join(getHomeDir(), ".kube", "config")
 	namespace := remoteRemovalOptions.Namespace
-	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	config, err := getKubeConfig()
 	if err != nil {
 		logr.Infof("Unable to retrieve Kubernetes Config %v\n", err)
 		return nil, &RemInstError{errOpNotFound, err, err.Error()}
@@ -203,10 +198,8 @@ func RemoveRemote(remoteRemovalOptions *RemoveDeploymentOptions) (*RemovalResult
 
 // RemoveRemoteKeycloak : Remove remote keycloak install from Kube
 func RemoveRemoteKeycloak(remoteRemovalOptions *RemoveDeploymentOptions) (*RemovalResult, *RemInstError) {
-
-	kubeconfig := filepath.Join(getHomeDir(), ".kube", "config")
 	namespace := remoteRemovalOptions.Namespace
-	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	config, err := getKubeConfig()
 	if err != nil {
 		logr.Infof("Unable to retrieve Kubernetes Config %v\n", err)
 		return nil, &RemInstError{errOpNotFound, err, err.Error()}
