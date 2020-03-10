@@ -495,11 +495,11 @@ func TestAddAndRemoveDockerCredentials(t *testing.T) {
 	auth2Str := fmt.Sprintf("%s:%s", username2, password2)
 	auth2Encoded := base64.StdEncoding.EncodeToString([]byte(auth2Str))
 
-	beforeCredentials := getDockerCredentials("test")
+	beforeCredentials, _ := getDockerCredentials("test")
 
 	// Add the first credential.
 	AddDockerCredential("test", address1, username1, password1)
-	afterAddCredentials1 := getDockerCredentials("test")
+	afterAddCredentials1, _ := getDockerCredentials("test")
 	assert.Equal(t, len(beforeCredentials.Auths)+1, len(afterAddCredentials1.Auths))
 	assert.Equal(t, username1, afterAddCredentials1.Auths[address1].Username)
 	assert.Equal(t, password1, afterAddCredentials1.Auths[address1].Password)
@@ -507,7 +507,7 @@ func TestAddAndRemoveDockerCredentials(t *testing.T) {
 
 	// Add the second credential.
 	AddDockerCredential("test", address2, username2, password2)
-	afterAddCredentials2 := getDockerCredentials("test")
+	afterAddCredentials2, _ := getDockerCredentials("test")
 	assert.Equal(t, len(beforeCredentials.Auths)+2, len(afterAddCredentials2.Auths))
 	assert.Equal(t, username2, afterAddCredentials2.Auths[address2].Username)
 	assert.Equal(t, password2, afterAddCredentials2.Auths[address2].Password)
@@ -515,16 +515,15 @@ func TestAddAndRemoveDockerCredentials(t *testing.T) {
 
 	// Remove the *second* credential. Check we are back where we were after the first add.
 	RemoveDockerCredential("test", address2)
-	afterRemoveCredentials1 := getDockerCredentials("test")
+	afterRemoveCredentials1, _ := getDockerCredentials("test")
 	assert.Equal(t, len(beforeCredentials.Auths)+1, len(afterRemoveCredentials1.Auths))
 	assert.Equal(t, afterAddCredentials1, afterRemoveCredentials1)
 	assert.Equal(t, DockerCredential{}, afterRemoveCredentials1.Auths[address2])
 
 	// Remove the *first* credential. Check we are back where we were at the start.
 	RemoveDockerCredential("test", address1)
-	afterRemoveCredentials2 := getDockerCredentials("test")
+	afterRemoveCredentials2, _ := getDockerCredentials("test")
 	assert.Equal(t, len(beforeCredentials.Auths), len(afterRemoveCredentials2.Auths))
 	assert.Equal(t, beforeCredentials, afterRemoveCredentials2)
 	assert.Equal(t, DockerCredential{}, afterRemoveCredentials2.Auths[address2])
-
 }

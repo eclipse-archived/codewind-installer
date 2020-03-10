@@ -170,7 +170,6 @@ type DockerClient interface {
 	ContainerStop(ctx context.Context, containerID string, timeout *time.Duration) error
 	ContainerRemove(ctx context.Context, containerID string, options types.ContainerRemoveOptions) error
 	DistributionInspect(ctx context.Context, image, encodedRegistryAuth string) (registry.DistributionInspect, error)
-	RegistryLogin(ctx context.Context, auth types.AuthConfig) (registry.AuthenticateOKBody, error)
 }
 
 // NewDockerClient creates a new client for the docker API
@@ -636,55 +635,65 @@ func GetContainerTags(dockerClient DockerClient) ([]string, *DockerError) {
 }
 
 // AddDockerCredential : Add (or update) a single docker login in the keychain entry.
-func AddDockerCredential(connectionID string, address string, username string, password string) {
-	dockerConfig := getDockerCredentials(connectionID)
+func AddDockerCredential(connectionID string, address string, username string, password string) *DockerError {
+	dockerConfig, err := getDockerCredentials(connectionID)
+	if err != nil {
+		return &DockerError{errDockerCredential, err, err.Error()}
+	}
 	authStr := fmt.Sprintf("%s:%s", username, password)
 	authEncoded := base64.StdEncoding.EncodeToString([]byte(authStr))
 	newDockerCredential := DockerCredential{Auth: authEncoded, Username: username, Password: password}
 	dockerConfig.Auths[address] = newDockerCredential
-	setDockerCredentials(connectionID, dockerConfig)
+	err = setDockerCredentials(connectionID, dockerConfig)
+	if err != nil {
+		return &DockerError{errDockerCredential, err, err.Error()}
+	}
+	return nil
 }
 
 // RemoveDockerCredential : Remove a single docker login in the keychain entry.
-func RemoveDockerCredential(connectionID string, address string) {
-	dockerConfig := getDockerCredentials(connectionID)
+func RemoveDockerCredential(connectionID string, address string) *DockerError {
+	dockerConfig, err := getDockerCredentials(connectionID)
+	if err != nil {
+		return &DockerError{errDockerCredential, err, err.Error()}
+	}
 	delete(dockerConfig.Auths, address)
-	setDockerCredentials(connectionID, dockerConfig)
+	err = setDockerCredentials(connectionID, dockerConfig)
+	if err != nil {
+		return &DockerError{errDockerCredential, err, err.Error()}
+	}
+	return nil
 }
 
 // getDockerCredentials : Get the existing docker credentials from the keychain.
-func getDockerCredentials(connectionID string) *DockerConfig {
-	secret, error := keyring.Get("org.eclipse.codewind"+"."+connectionID, "docker_credentials")
-	if error != nil {
-		if error == keyring.ErrNotFound {
+func getDockerCredentials(connectionID string) (*DockerConfig, error) {
+	secret, err := keyring.Get("org.eclipse.codewind"+"."+connectionID, "docker_credentials")
+	if err != nil {
+		if err == keyring.ErrNotFound {
 			secret = "{\"auths\": {}}"
 		} else {
-			fmt.Println("Unable to find registry secrets in keychain")
-			os.Exit(1)
+			return nil, err
 		}
 	}
-
 	dockerConfig := DockerConfig{}
-
 	jsonErr := json.Unmarshal([]byte(secret), &dockerConfig)
-
 	if jsonErr != nil {
-		fmt.Printf("Error, invalid json in docker config keychain entry - %s\n", jsonErr)
-		os.Exit(1)
+		return nil, jsonErr
 	}
-
-	return &dockerConfig
+	return &dockerConfig, nil
 }
 
 // setDockerCredentials : Set the docker credentials in the keychain.
-func setDockerCredentials(connectionID string, dockerConfig *DockerConfig) {
+func setDockerCredentials(connectionID string, dockerConfig *DockerConfig) error {
 	newSecretBytes, jsonErr := json.MarshalIndent(dockerConfig, "", "  ")
 	// This shouldn't happen as we don't add anything that can't be encoded to the
 	// structure.
 	if jsonErr != nil {
-		fmt.Printf("Error, invalid json in docker config structure - %s\n", jsonErr)
-		os.Exit(1)
+		return jsonErr
+		// fmt.Printf("Error, invalid json in docker config structure - %s\n", jsonErr)
+		// os.Exit(1)
 	}
 	newSecret := string(newSecretBytes)
-	keyring.Set("org.eclipse.codewind"+"."+connectionID, "docker_credentials", newSecret)
+	err := keyring.Set("org.eclipse.codewind"+"."+connectionID, "docker_credentials", newSecret)
+	return err
 }

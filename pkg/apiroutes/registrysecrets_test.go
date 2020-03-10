@@ -54,7 +54,7 @@ func Test_GetRegistrySecrets(t *testing.T) {
 		_, err := GetRegistrySecrets(&mockConnection, "mockURL", mockClient)
 		assert.Error(t, err)
 	})
-	t.Run("success case - returns error when request fails", func(t *testing.T) {
+	t.Run("error case - returns error when request fails", func(t *testing.T) {
 		mockClient := &security.ClientMockRequestFail{}
 		mockConnection := connections.Connection{ID: "local"}
 		actualRegistrySecrets, err := GetRegistrySecrets(&mockConnection, "mockURL", mockClient)
@@ -68,6 +68,7 @@ func Test_GetRegistrySecrets(t *testing.T) {
 		resBody := ioutil.NopCloser(bytes.NewReader([]byte(jsonResponse)))
 		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusOK, Body: resBody}
 		mockConnection := connections.Connection{ID: "local"}
+		// Use control characters to create an invalid URL and trigger an error from http.NewRequest
 		_, err = GetRegistrySecrets(&mockConnection, "\x00\x01\x02\x03\x04\x05\x06\x05\x7F", mockClient)
 		fmt.Println(err)
 		assert.Error(t, err)
@@ -110,7 +111,7 @@ func Test_AddRegistrySecret(t *testing.T) {
 		_, err := AddRegistrySecret(&mockConnection, "mockURL", mockClient, "testdockerregistry", "testuser", "testpassword")
 		assert.Error(t, err)
 	})
-	t.Run("success case - returns error when request fails", func(t *testing.T) {
+	t.Run("error case - returns error when request fails", func(t *testing.T) {
 		mockClient := &security.ClientMockRequestFail{}
 		mockConnection := connections.Connection{ID: "local"}
 		actualRegistrySecrets, err := AddRegistrySecret(&mockConnection, "mockURL", mockClient, "testdockerregistry", "testuser", "testpassword")
@@ -124,6 +125,7 @@ func Test_AddRegistrySecret(t *testing.T) {
 		resBody := ioutil.NopCloser(bytes.NewReader([]byte(jsonResponse)))
 		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusCreated, Body: resBody}
 		mockConnection := connections.Connection{ID: "local"}
+		// Use control characters to create an invalid URL and trigger an error from http.NewRequest
 		_, err = AddRegistrySecret(&mockConnection, "\x00\x01\x02\x03\x04\x05\x06\x05\x7F", mockClient, "testdockerregistry", "testuser", "testpassword")
 		fmt.Println(err)
 		assert.Error(t, err)
@@ -166,7 +168,7 @@ func Test_DeleteRegistrySecret(t *testing.T) {
 		_, err := RemoveRegistrySecret(&mockConnection, "mockURL", mockClient, "afakeregistry")
 		assert.Error(t, err)
 	})
-	t.Run("success case - returns error when request fails", func(t *testing.T) {
+	t.Run("error case - returns error when request fails", func(t *testing.T) {
 		mockClient := &security.ClientMockRequestFail{}
 		mockConnection := connections.Connection{ID: "local"}
 		actualRegistrySecrets, err := RemoveRegistrySecret(&mockConnection, "mockURL", mockClient, "anothertestdockerregistry")
@@ -180,6 +182,7 @@ func Test_DeleteRegistrySecret(t *testing.T) {
 		resBody := ioutil.NopCloser(bytes.NewReader([]byte(jsonResponse)))
 		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusOK, Body: resBody}
 		mockConnection := connections.Connection{ID: "local"}
+		// Use control characters to create an invalid URL and trigger an error from http.NewRequest
 		_, err = RemoveRegistrySecret(&mockConnection, "\x00\x01\x02\x03\x04\x05\x06\x05\x7F", mockClient, "anothertestdockerregistry")
 		fmt.Println(err)
 		assert.Error(t, err)
