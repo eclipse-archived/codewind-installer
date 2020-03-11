@@ -191,7 +191,8 @@ spec:
                     '''
                     // stash the executables so they are avaialable outside of this agent
                     dir('codewind-installer') {
-                        stash includes: '**', name: 'EXECUTABLES'
+                        sh 'echo "Stashing: $(ls -lA cwctl*)"'
+                        stash includes: 'cwctl*', name: 'EXECUTABLES'
                     }
                 }
             }
@@ -218,34 +219,24 @@ spec:
             agent any
                steps {
                    sshagent ( ['projects-storage.eclipse.org-bot-ssh']) {
+
                 println("Deploying codewind-installer to download area...")
-                sh '''
-                    if [ -d codewind-installer ]; then
-                        rm -rf codewind-installer
-                    fi
-                    mkdir codewind-installer
-                '''
+
                 // get the stashed executables
-                dir ('codewind-installer') {
-                    unstash 'EXECUTABLES'
-                }
+                unstash 'EXECUTABLES'
 
                 sh '''
                     export REPO_NAME="codewind-installer"
-                    export OUTPUT_DIR="$WORKSPACE/dev/ant_build/artifacts"
                     export DOWNLOAD_AREA_URL="https://download.eclipse.org/codewind/$REPO_NAME"
                     export LATEST_DIR="latest"
                     export BUILD_INFO="build_info.properties"
                     export sshHost="genie.codewind@projects-storage.eclipse.org"
                     export deployDir="/home/data/httpd/download.eclipse.org/codewind/$REPO_NAME"
-                    export CWCTL_LINUX="cwctl-linux"
-                    export CWCTL_PPC64LE="cwctl-ppc64le"
-                    export CWCTL_MACOS="cwctl-macos"
-                    export CWCTL_WIN="cwctl-win"
-
-                    WORKSPACE=$PWD
-
-                    ls -la ${WORKSPACE}/$REPO_NAME/*
+                    export CWCTL_BASENAME="cwctl"
+                    export CWCTL_LINUX="${CWCTL_BASENAME}-linux"
+                    export CWCTL_PPC64LE="${CWCTL_BASENAME}-ppc64le"
+                    export CWCTL_MACOS="${CWCTL_BASENAME}-macos"
+                    export CWCTL_WIN="${CWCTL_BASENAME}-win"
 
                     UPLOAD_DIR="$GIT_BRANCH/$BUILD_ID"
                     BUILD_URL="$DOWNLOAD_AREA_URL/$UPLOAD_DIR"
@@ -256,28 +247,51 @@ spec:
                     ssh $sshHost rm -rf $deployDir/$GIT_BRANCH/$LATEST_DIR
                     ssh $sshHost mkdir -p $deployDir/$GIT_BRANCH/$LATEST_DIR
 
-                    scp ${WORKSPACE}/$REPO_NAME/* $sshHost:$deployDir/${UPLOAD_DIR}
+                    ls -lA
 
-                    mv ${WORKSPACE}/$REPO_NAME/$CWCTL_LINUX-* ${WORKSPACE}/$REPO_NAME/$CWCTL_LINUX
-                    mv ${WORKSPACE}/$REPO_NAME/$CWCTL_PPC64LE-* ${WORKSPACE}/$REPO_NAME/$CWCTL_PPC64LE
-                    mv ${WORKSPACE}/$REPO_NAME/$CWCTL_MACOS-* ${WORKSPACE}/$REPO_NAME/$CWCTL_MACOS
-                    mv ${WORKSPACE}/$REPO_NAME/$CWCTL_WIN-* ${WORKSPACE}/$REPO_NAME/$CWCTL_WIN.exe
+                    # Copy artifacts before renaming to the build ID'd directory
+                    scp ${CWCTL_BASENAME}* $sshHost:$deployDir/${UPLOAD_DIR}
 
-                    echo "# Build date: $(date +%F-%T)" >> ${WORKSPACE}/$REPO_NAME/$BUILD_INFO
-                    echo "build_info.url=$BUILD_URL" >> ${WORKSPACE}/$REPO_NAME/$BUILD_INFO
-                    SHA1_LINUX=$(sha1sum ${WORKSPACE}/$REPO_NAME/$CWCTL_LINUX | cut -d ' ' -f 1)
-                    echo "build_info.linux.SHA-1=${SHA1_LINUX}" >> ${WORKSPACE}/$REPO_NAME/$BUILD_INFO
+                    # Now prepare to copy to latest/ directory
 
-                    SHA1_PPC64LE=$(sha1sum ${WORKSPACE}/$REPO_NAME/$CWCTL_PPC64LE | cut -d ' ' -f 1)
-                    echo "build_info.ppc64le.SHA-1=${SHA1_PPC64LE}" >> ${WORKSPACE}/$REPO_NAME/$BUILD_INFO
+                    # Rename to remove timestamps
+                    mv $CWCTL_LINUX-*    $CWCTL_LINUX
+                    mv $CWCTL_PPC64LE-*  $CWCTL_PPC64LE
+                    mv $CWCTL_MACOS-*    $CWCTL_MACOS
+                    mv $CWCTL_WIN-*      $CWCTL_WIN.exe
 
-                    SHA1_MACOS=$(sha1sum ${WORKSPACE}/$REPO_NAME/$CWCTL_MACOS | cut -d ' ' -f 1)
-                    echo "build_info.macos.SHA-1=${SHA1_MACOS}" >> ${WORKSPACE}/$REPO_NAME/$BUILD_INFO
+                    # Make a zipped copy of each build and copy it into zips/
+                    export ZIPS_DIR="zips"
+                    if [ -d ${ZIPS_DIR} ]; then
+                        rm -rf ${ZIPS_DIR}
+                    fi
 
-                    SHA1_WIN=$(sha1sum ${WORKSPACE}/$REPO_NAME/$CWCTL_WIN.exe | cut -d ' ' -f 1)
-                    echo "build_info.win.SHA-1=${SHA1_WIN}" >> ${WORKSPACE}/$REPO_NAME/$BUILD_INFO
+                    mkdir ${ZIPS_DIR}
+                    for f in $(ls ${CWCTL_BASENAME}*); do
+                        export ZIP_NAME="${f}.zip"
+                        zip -r $ZIP_NAME $f
+                        mv $ZIP_NAME ${ZIPS_DIR}
+                    done
 
-                    scp -r ${WORKSPACE}/$REPO_NAME/* $sshHost:$deployDir/$GIT_BRANCH/$LATEST_DIR
+                    # Assemble build_info.properties with build date and shasums
+
+                    echo "# Build date: $(date +%F-%T)" >> $BUILD_INFO
+                    echo "build_info.url=$BUILD_URL" >> $BUILD_INFO
+
+                    SHA1_LINUX=$(sha1sum $CWCTL_LINUX | cut -d ' ' -f 1)
+                    echo "build_info.linux.SHA-1=${SHA1_LINUX}" >> $BUILD_INFO
+
+                    SHA1_PPC64LE=$(sha1sum $CWCTL_PPC64LE | cut -d ' ' -f 1)
+                    echo "build_info.ppc64le.SHA-1=${SHA1_PPC64LE}" >> $BUILD_INFO
+
+                    SHA1_MACOS=$(sha1sum $CWCTL_MACOS | cut -d ' ' -f 1)
+                    echo "build_info.macos.SHA-1=${SHA1_MACOS}" >> $BUILD_INFO
+
+                    SHA1_WIN=$(sha1sum $CWCTL_WIN.exe | cut -d ' ' -f 1)
+                    echo "build_info.win.SHA-1=${SHA1_WIN}" >> $BUILD_INFO
+
+                    # Copy the build.properties, the zips, and the renamed artifacts to the latest/ build directory
+                    scp -r ${BUILD_INFO} ${CWCTL_BASENAME}* zips/ $sshHost:$deployDir/$GIT_BRANCH/$LATEST_DIR
                   '''
                }
            }
