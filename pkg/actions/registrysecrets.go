@@ -50,6 +50,18 @@ func AddRegistrySecret(c *cli.Context) {
 		HandleRegistryError(registryErr)
 		os.Exit(1)
 	}
+
+	// If this is a local connection we need to persist the details in the keychain for
+	// the next time Codewind starts.
+	// (On Kubernetes PFE persists them in a secret inside Kubernetes itself.)
+	if conInfo.ID == "local" {
+		dockerErr := utils.AddDockerCredential(conInfo.ID, address, username, password)
+		if dockerErr != nil {
+			HandleDockerError(dockerErr)
+			os.Exit(1)
+		}
+	}
+
 	utils.PrettyPrintJSON(registrySecrets)
 }
 
@@ -63,6 +75,13 @@ func RemoveRegistrySecret(c *cli.Context) {
 	if err != nil {
 		registryErr := &RegistryError{errOpRemoveRegistry, err, err.Error()}
 		HandleRegistryError(registryErr)
+		os.Exit(1)
+	}
+	// Remove secret from our keychain entry.
+	// (But don't logout of docker locally.)
+	dockerErr := utils.RemoveDockerCredential(conInfo.ID, address)
+	if dockerErr != nil {
+		HandleDockerError(dockerErr)
 		os.Exit(1)
 	}
 	utils.PrettyPrintJSON(registrySecrets)

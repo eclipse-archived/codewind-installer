@@ -15,6 +15,7 @@ import (
 	"crypto/tls"
 	"net/http"
 	"os"
+	"path"
 
 	"github.com/eclipse/codewind-installer/pkg/appconstants"
 	desktoputils "github.com/eclipse/codewind-installer/pkg/desktop_utils"
@@ -24,7 +25,7 @@ import (
 )
 
 var homeDir = desktoputils.GetHomeDir()
-var dockerComposeFile = homeDir + "/.codewind/docker-compose.yaml"
+var dockerComposeFile = path.Join(homeDir, ".codewind", "docker-compose.yaml")
 var printAsJSON = false
 
 const healthEndpoint = "/api/v1/environment"
