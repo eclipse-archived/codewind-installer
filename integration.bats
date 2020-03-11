@@ -128,7 +128,9 @@
 # Keyring command tests #
 #########################
 
-@test "invoke seckeyring update command - create a key" {
+# use system keyring (secure)
+
+@test "invoke seckeyring update command (using secure keyring) - create a key" {
   cd cmd/cli/
   run go run main.go seckeyring update --conid local --username testuser --password seCretphrase
   echo "status = ${status}"
@@ -137,7 +139,7 @@
   [ "$status" -eq 0 ]
 }
 
-@test "invoke seckeyring update command - update a key" {
+@test "invoke seckeyring update command (using secure keyring) - update a key" {
   cd cmd/cli/
   run go run main.go seckeyring update --conid local --username testuser --password new_secretPhrase
   echo "status = ${status}"
@@ -146,7 +148,7 @@
   [ "$status" -eq 0 ]
 }
 
-@test "invoke seckeyring validate command - validate a key" {
+@test "invoke seckeyring validate command (using secure keyring) - validate a key" {
   cd cmd/cli/
   run go run main.go seckeyring validate --conid local --username testuser
   echo "status = ${status}"
@@ -155,7 +157,7 @@
   [ "$status" -eq 0 ]
 }
 
-@test "invoke seckeyring validate command - key not found (incorrect connection)" {
+@test "invoke seckeyring validate command (using secure keyring) - key not found (incorrect connection)" {
   cd cmd/cli/
   run go run main.go seckeyring validate --conid remoteNotKnown --username testuser
   echo "status = ${status}"
@@ -165,7 +167,7 @@
   [ "$status" -eq 1 ]
 }
 
-@test "invoke seckeyring validate command - key not found (incorrect username)"  {
+@test "invoke seckeyring validate command (using secure keyring) - key not found (incorrect username)"  {
   cd cmd/cli/
   run go run main.go seckeyring validate --conid local --username testuser_unknown
   echo "status = ${status}"
@@ -175,3 +177,51 @@
   [ "$status" -eq 1 ]
 }
 
+# use our keyring (insecure)
+
+@test "invoke seckeyring update command (using insecure keyring) - create a key" {
+  cd cmd/cli/
+  run go run main.go --insecureKeyring seckeyring update --conid local --username testuser --password seCretphrase
+  echo "status = ${status}"
+  echo "output trace = ${output}"
+  [ "$output" = '{"status":"OK"}' ]
+  [ "$status" -eq 0 ]
+}
+
+@test "invoke seckeyring update command (using insecure keyring) - update a key" {
+  cd cmd/cli/
+  run go run main.go --insecureKeyring seckeyring update --conid local --username testuser --password new_secretPhrase
+  echo "status = ${status}"
+  echo "output trace = ${output}"
+  [ "$output" = '{"status":"OK"}' ]
+  [ "$status" -eq 0 ]
+}
+
+@test "invoke seckeyring validate command (using insecure keyring) - validate a key" {
+  cd cmd/cli/
+  run go run main.go --insecureKeyring seckeyring validate --conid local --username testuser
+  echo "status = ${status}"
+  echo "output trace = ${output}"
+  [ "$output" = '{"status":"OK"}' ]
+  [ "$status" -eq 0 ]
+}
+
+@test "invoke seckeyring validate command (using insecure keyring) - key not found (incorrect connection)" {
+  cd cmd/cli/
+  run go run main.go --insecureKeyring seckeyring validate --conid remoteNotKnown --username testuser
+  echo "status = ${status}"
+  echo "output trace = ${output}"
+  [ "${lines[0]}" = '{"error":"sec_keyring","error_description":"secret not found in keyring"}' ]
+  [ "${lines[1]}" = "exit status 1" ]
+  [ "$status" -eq 1 ]
+}
+
+@test "invoke seckeyring validate command (using insecure keyring) - key not found (incorrect username)"  {
+  cd cmd/cli/
+  run go run main.go --insecureKeyring seckeyring validate --conid local --username testuser_unknown
+  echo "status = ${status}"
+  echo "output trace = ${output}"
+  [ "${lines[0]}" = '{"error":"sec_keyring","error_description":"secret not found in keyring"}' ]
+  [ "${lines[1]}" = "exit status 1" ]
+  [ "$status" -eq 1 ]
+}
