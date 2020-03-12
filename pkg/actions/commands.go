@@ -942,7 +942,9 @@ func Commands() {
 
 		printAsJSON = c.GlobalBool("json")
 
-		globals.SetUseInsecureKeyring(c.GlobalBool("insecureKeyring"))
+		if c.GlobalBool("insecureKeyring") || os.Getenv("INSECURE_KEYRING") == "true" {
+			globals.SetUseInsecureKeyring(true)
+		}
 
 		// Handle Global log level flag
 		switch loglevel := c.GlobalString("loglevel"); {
