@@ -45,30 +45,22 @@ func (c *MockResponse) Do(req *http.Request) (*http.Response, error) {
 }
 
 func TestDispatchHTTPRequest(t *testing.T) {
+	var originalUseInsecureKeyring = globals.UseInsecureKeyring
 
 	// remove insecureKeychain.json if it already exists
 	os.Remove(security.GetPathToInsecureKeyring())
-
-	tests := map[string]struct {
-		useInsecureKeyring bool
-	}{
-		"use secure keyring":   {useInsecureKeyring: false},
-		"use insecure keyring": {useInsecureKeyring: true},
-	}
-	for name, test := range tests {
-		var originalUseInsecureKeyring = globals.UseInsecureKeyring
-		globals.SetUseInsecureKeyring(test.useInsecureKeyring)
-		t.Run(name, func(t2 *testing.T) {
-			if testing.Short() && !globals.UseInsecureKeyring {
-				t2.Skip("skipping testing in short mode")
-			}
-			testDispatchHTTPRequest(t2)
-		})
-		globals.SetUseInsecureKeyring(originalUseInsecureKeyring)
-	}
-
+	globals.SetUseInsecureKeyring(true)
+	testDispatchHTTPRequest(t)
 	// remove insecureKeychain.json if it still exists
 	os.Remove(security.GetPathToInsecureKeyring())
+
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+	globals.SetUseInsecureKeyring(false)
+	testDispatchHTTPRequest(t)
+
+	globals.SetUseInsecureKeyring(originalUseInsecureKeyring)
 }
 
 func testDispatchHTTPRequest(t *testing.T) {
