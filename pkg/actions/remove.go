@@ -16,8 +16,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/eclipse/codewind-installer/pkg/docker"
 	"github.com/eclipse/codewind-installer/pkg/remote"
-	"github.com/eclipse/codewind-installer/pkg/utils"
 	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
@@ -32,13 +32,13 @@ func RemoveCommand(c *cli.Context, dockerComposeFile string) {
 		"cw-",
 	}
 
-	dockerClient, dockerErr := utils.NewDockerClient()
+	dockerClient, dockerErr := docker.NewDockerClient()
 	if dockerErr != nil {
 		HandleDockerError(dockerErr)
 		os.Exit(1)
 	}
 
-	images, err := utils.GetImageList(dockerClient)
+	images, err := docker.GetImageList(dockerClient)
 	if err != nil {
 		HandleDockerError(err)
 		os.Exit(1)
@@ -56,12 +56,12 @@ func RemoveCommand(c *cli.Context, dockerComposeFile string) {
 				} else {
 					fmt.Println("Deleting Image ", image.ID, "... ")
 				}
-				utils.RemoveImage(image.ID)
+				docker.RemoveImage(image.ID)
 			}
 		}
 	}
 
-	dockerErr = utils.DockerComposeRemove(dockerComposeFile, tag)
+	dockerErr = docker.DockerComposeRemove(dockerComposeFile, tag)
 	if dockerErr != nil {
 		HandleDockerError(dockerErr)
 		os.Exit(1)

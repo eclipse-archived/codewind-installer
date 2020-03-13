@@ -9,7 +9,7 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 
-package utils
+package docker
 
 import (
 	"bytes"
@@ -26,6 +26,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/eclipse/codewind-installer/pkg/utils"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/registry"
@@ -160,25 +162,25 @@ func DockerCompose(dockerComposeFile string, tag string, loglevel string) *Docke
 	if err := cmd.Start(); err != nil { // after 'Start' the program is continued and script is executing in background
 		//print out docker-compose sysout & syserr for error diagnosis
 		fmt.Printf(output.String())
-		DeleteTempFile(dockerComposeFile)
+		utils.DeleteTempFile(dockerComposeFile)
 		return &DockerError{errOpDockerComposeStart, err, err.Error()}
 	}
 	fmt.Printf("Please wait while containers initialize... %s \n", output.String())
 	if err := cmd.Wait(); err != nil {
 		//print out docker-compose sysout & syserr for error diagnosis
 		fmt.Printf(output.String())
-		DeleteTempFile(dockerComposeFile)
+		utils.DeleteTempFile(dockerComposeFile)
 		return &DockerError{errOpDockerComposeStart, err, err.Error()}
 	}
 	fmt.Printf(output.String()) // Wait to finish execution, so we can read all output
 
 	if strings.Contains(output.String(), "ERROR") || strings.Contains(output.String(), "error") {
-		DeleteTempFile(dockerComposeFile)
+		utils.DeleteTempFile(dockerComposeFile)
 		os.Exit(1)
 	}
 
 	if strings.Contains(output.String(), "The image for the service you're trying to recreate has been removed") {
-		DeleteTempFile(dockerComposeFile)
+		utils.DeleteTempFile(dockerComposeFile)
 		os.Exit(1)
 	}
 	return nil
@@ -273,7 +275,7 @@ func setupDockerComposeEnvs(tag, command string, loglevel string) {
 		os.Setenv("PFE_EXTERNAL_PORT", "")
 	} else {
 		fmt.Printf("Attempting to find available port\n")
-		portAvailable, port := IsTCPPortAvailable(minTCPPort, maxTCPPort)
+		portAvailable, port := isTCPPortAvailable(minTCPPort, maxTCPPort)
 		if !portAvailable {
 			fmt.Printf("No available external ports in range, will default to Docker-assigned port")
 		}
@@ -546,12 +548,12 @@ func GetImageTags(dockerClient DockerClient) ([]string, *DockerError) {
 		}
 	}
 
-	tagArr = RemoveDuplicateEntries(tagArr)
+	tagArr = utils.RemoveDuplicateEntries(tagArr)
 	return tagArr, err
 }
 
-// IsTCPPortAvailable checks to find the next available port and returns it
-func IsTCPPortAvailable(minTCPPort int, maxTCPPort int) (bool, string) {
+// isTCPPortAvailable checks to find the next available port and returns it
+func isTCPPortAvailable(minTCPPort int, maxTCPPort int) (bool, string) {
 	var status string
 	for port := minTCPPort; port < maxTCPPort; port++ {
 		conn, err := net.Listen("tcp", "127.0.0.1:"+strconv.Itoa(port))
@@ -569,7 +571,7 @@ func IsTCPPortAvailable(minTCPPort int, maxTCPPort int) (bool, string) {
 
 // DetermineDebugPortForPFE determines a debug port to use for PFE based on the external PFE port
 func DetermineDebugPortForPFE() (pfeDebugPort string) {
-	_, debugPort := IsTCPPortAvailable(minDebugPort, maxDebugPort)
+	_, debugPort := isTCPPortAvailable(minDebugPort, maxDebugPort)
 	return debugPort
 }
 
@@ -591,6 +593,6 @@ func GetContainerTags(dockerClient DockerClient) ([]string, *DockerError) {
 			}
 		}
 	}
-	tagArr = RemoveDuplicateEntries(tagArr)
+	tagArr = utils.RemoveDuplicateEntries(tagArr)
 	return tagArr, nil
 }
