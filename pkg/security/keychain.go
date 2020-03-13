@@ -83,7 +83,7 @@ func StoreSecretInKeyring(connectionID, uName, pass string) *SecError {
 	if globals.UseInsecureKeyring {
 		_, statErr := os.Stat(GetPathToInsecureKeyring())
 		if os.IsNotExist(statErr) {
-			os.MkdirAll(insecureKeyringDir, 0777)
+			os.MkdirAll(insecureKeyringDir, 0600)
 			os.OpenFile(GetPathToInsecureKeyring(), os.O_CREATE, 0666)
 		}
 

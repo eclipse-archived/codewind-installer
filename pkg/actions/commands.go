@@ -45,7 +45,7 @@ func Commands() {
 		},
 		cli.BoolFlag{
 			Name:  "insecureKeyring",
-			Usage: "use our keyring instead of system keyring",
+			Usage: "use insecure keyring instead of system keyring",
 		},
 		cli.BoolFlag{
 			Name:  "json, j",
