@@ -14,9 +14,7 @@ package utils
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -119,10 +117,6 @@ func (m *mockDockerClientWithCw) DistributionInspect(ctx context.Context, image,
 	}, nil
 }
 
-func (m *mockDockerClientWithCw) RegistryLogin(ctx context.Context, auth types.AuthConfig) (registry.AuthenticateOKBody, error) {
-	return registry.AuthenticateOKBody{}, nil
-}
-
 // This mock client will return valid image and containers lists, without Codewind items
 type mockDockerClientWithoutCw struct {
 }
@@ -166,10 +160,6 @@ func (m *mockDockerClientWithoutCw) DistributionInspect(ctx context.Context, ima
 	}, nil
 }
 
-func (m *mockDockerClientWithoutCw) RegistryLogin(ctx context.Context, auth types.AuthConfig) (registry.AuthenticateOKBody, error) {
-	return registry.AuthenticateOKBody{}, nil
-}
-
 // This mock client will return errors for each call to a docker function
 type mockDockerErrorClient struct {
 }
@@ -209,10 +199,6 @@ func (m *mockDockerErrorClient) ContainerInspect(ctx context.Context, containerI
 
 func (m *mockDockerErrorClient) DistributionInspect(ctx context.Context, image, encodedRegistryAuth string) (registry.DistributionInspect, error) {
 	return registry.DistributionInspect{}, errDistributionInspect
-}
-
-func (m *mockDockerErrorClient) RegistryLogin(ctx context.Context, auth types.AuthConfig) (registry.AuthenticateOKBody, error) {
-	return registry.AuthenticateOKBody{}, nil
 }
 
 func TestPullImage(t *testing.T) {
@@ -480,50 +466,4 @@ func TestRemoveDuplicateEntries(t *testing.T) {
 	if len(result) != 0 {
 		log.Fatal("Test 3: Failed to identify empty array values")
 	}
-}
-
-func TestAddAndRemoveDockerCredentials(t *testing.T) {
-	address1 := "myrepository:5000"
-	username1 := "user1"
-	password1 := "obviouspassword"
-	auth1Str := fmt.Sprintf("%s:%s", username1, password1)
-	auth1Encoded := base64.StdEncoding.EncodeToString([]byte(auth1Str))
-
-	address2 := "myrepository2:5000"
-	username2 := "user2"
-	password2 := "obviouspasswordtoo"
-	auth2Str := fmt.Sprintf("%s:%s", username2, password2)
-	auth2Encoded := base64.StdEncoding.EncodeToString([]byte(auth2Str))
-
-	beforeCredentials, _ := getDockerCredentials("test")
-
-	// Add the first credential.
-	AddDockerCredential("test", address1, username1, password1)
-	afterAddCredentials1, _ := getDockerCredentials("test")
-	assert.Equal(t, len(beforeCredentials.Auths)+1, len(afterAddCredentials1.Auths))
-	assert.Equal(t, username1, afterAddCredentials1.Auths[address1].Username)
-	assert.Equal(t, password1, afterAddCredentials1.Auths[address1].Password)
-	assert.Equal(t, auth1Encoded, afterAddCredentials1.Auths[address1].Auth)
-
-	// Add the second credential.
-	AddDockerCredential("test", address2, username2, password2)
-	afterAddCredentials2, _ := getDockerCredentials("test")
-	assert.Equal(t, len(beforeCredentials.Auths)+2, len(afterAddCredentials2.Auths))
-	assert.Equal(t, username2, afterAddCredentials2.Auths[address2].Username)
-	assert.Equal(t, password2, afterAddCredentials2.Auths[address2].Password)
-	assert.Equal(t, auth2Encoded, afterAddCredentials2.Auths[address2].Auth)
-
-	// Remove the *second* credential. Check we are back where we were after the first add.
-	RemoveDockerCredential("test", address2)
-	afterRemoveCredentials1, _ := getDockerCredentials("test")
-	assert.Equal(t, len(beforeCredentials.Auths)+1, len(afterRemoveCredentials1.Auths))
-	assert.Equal(t, afterAddCredentials1, afterRemoveCredentials1)
-	assert.Equal(t, DockerCredential{}, afterRemoveCredentials1.Auths[address2])
-
-	// Remove the *first* credential. Check we are back where we were at the start.
-	RemoveDockerCredential("test", address1)
-	afterRemoveCredentials2, _ := getDockerCredentials("test")
-	assert.Equal(t, len(beforeCredentials.Auths), len(afterRemoveCredentials2.Auths))
-	assert.Equal(t, beforeCredentials, afterRemoveCredentials2)
-	assert.Equal(t, DockerCredential{}, afterRemoveCredentials2.Auths[address2])
 }

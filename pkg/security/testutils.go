@@ -1,7 +1,6 @@
 package security
 
 import (
-	"errors"
 	"io"
 	"net/http"
 )
@@ -21,12 +20,4 @@ func (c *ClientMockAuthenticate) Do(req *http.Request) (*http.Response, error) {
 		StatusCode: c.StatusCode,
 		Body:       c.Body,
 	}, nil
-}
-
-type ClientMockRequestFail struct {
-}
-
-// Do : perform do function
-func (c *ClientMockRequestFail) Do(req *http.Request) (*http.Response, error) {
-	return nil, errors.New("mock http request failure")
 }
