@@ -54,11 +54,10 @@ func TestDispatchHTTPRequest(t *testing.T) {
 	// remove insecureKeychain.json if it still exists
 	os.Remove(security.GetPathToInsecureKeyring())
 
-	if testing.Short() {
-		t.Skip("skipping testing in short mode")
+	if !testing.Short() {
+		globals.SetUseInsecureKeyring(false)
+		testDispatchHTTPRequest(t)
 	}
-	globals.SetUseInsecureKeyring(false)
-	testDispatchHTTPRequest(t)
 
 	globals.SetUseInsecureKeyring(originalUseInsecureKeyring)
 }
