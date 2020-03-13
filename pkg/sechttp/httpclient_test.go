@@ -58,8 +58,11 @@ func TestDispatchHTTPRequest(t *testing.T) {
 	for name, test := range tests {
 		var originalUseInsecureKeyring = globals.UseInsecureKeyring
 		globals.SetUseInsecureKeyring(test.useInsecureKeyring)
-		t.Run(name, func(t *testing.T) {
-			testDispatchHTTPRequest(t)
+		t.Run(name, func(t2 *testing.T) {
+			if testing.Short() && !globals.UseInsecureKeyring {
+				t2.Skip("skipping testing in short mode")
+			}
+			testDispatchHTTPRequest(t2)
 		})
 		globals.SetUseInsecureKeyring(originalUseInsecureKeyring)
 	}
