@@ -15,7 +15,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/eclipse/codewind-installer/pkg/utils"
+	"github.com/eclipse/codewind-installer/pkg/docker"
 	"github.com/urfave/cli"
 )
 
@@ -23,28 +23,28 @@ import (
 func StopAllCommand(c *cli.Context, dockerComposeFile string) {
 	tag := c.String("tag")
 
-	dockerClient, dockerErr := utils.NewDockerClient()
+	dockerClient, dockerErr := docker.NewDockerClient()
 	if dockerErr != nil {
 		HandleDockerError(dockerErr)
 		os.Exit(1)
 	}
 
-	containers, err := utils.GetContainerList(dockerClient)
+	containers, err := docker.GetContainerList(dockerClient)
 	if err != nil {
 		HandleDockerError(err)
 		os.Exit(1)
 	}
 
-	dockerErr = utils.DockerComposeStop(tag, dockerComposeFile)
+	dockerErr = docker.DockerComposeStop(tag, dockerComposeFile)
 	if dockerErr != nil {
 		HandleDockerError(dockerErr)
 		os.Exit(1)
 	}
 
 	fmt.Println("Stopping Project containers")
-	containersToRemove := utils.GetContainersToRemove(containers)
+	containersToRemove := docker.GetContainersToRemove(containers)
 	for _, container := range containersToRemove {
 		fmt.Println("Stopping container ", container.Names[0], "... ")
-		utils.StopContainer(dockerClient, container)
+		docker.StopContainer(dockerClient, container)
 	}
 }

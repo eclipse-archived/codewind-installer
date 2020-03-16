@@ -21,6 +21,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/eclipse/codewind-installer/pkg/docker"
 	"github.com/eclipse/codewind-installer/pkg/project"
 	"github.com/eclipse/codewind-installer/pkg/remote"
 	"github.com/eclipse/codewind-installer/pkg/utils"
@@ -38,26 +39,26 @@ func InstallCommand(c *cli.Context) {
 	}
 
 	// creates a new docker client, which is passed into the functions that interact with the docker API
-	dockerClient, dockerErr := utils.NewDockerClient()
+	dockerClient, dockerErr := docker.NewDockerClient()
 	if dockerErr != nil {
 		HandleDockerError(dockerErr)
 		os.Exit(1)
 	}
 
 	for i := 0; i < len(imageArr); i++ {
-		utils.PullImage(dockerClient, imageArr[i], printAsJSON)
-		imageID, dockerError := utils.ValidateImageDigest(dockerClient, imageArr[i])
+		docker.PullImage(dockerClient, imageArr[i], printAsJSON)
+		imageID, dockerError := docker.ValidateImageDigest(dockerClient, imageArr[i])
 
 		if dockerError != nil {
 			logr.Tracef("%v checksum validation failed. Trying to pull image again", imageArr[i])
 			// remove bad image
-			utils.RemoveImage(imageID)
+			docker.RemoveImage(imageID)
 
 			// pull image again
-			utils.PullImage(dockerClient, imageArr[i], printAsJSON)
+			docker.PullImage(dockerClient, imageArr[i], printAsJSON)
 
 			// validate the new image
-			_, dockerError = utils.ValidateImageDigest(dockerClient, imageArr[i])
+			_, dockerError = docker.ValidateImageDigest(dockerClient, imageArr[i])
 
 			if dockerError != nil {
 				if printAsJSON {
@@ -66,7 +67,7 @@ func InstallCommand(c *cli.Context) {
 					logr.Errorf("Validation of image '%v' checksum failed - Removing image", imageArr[i])
 				}
 				// Clean up the second bad image
-				utils.RemoveImage(imageID)
+				docker.RemoveImage(imageID)
 				os.Exit(1)
 			}
 		}

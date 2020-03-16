@@ -9,7 +9,7 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 
-package utils
+package docker
 
 import (
 	"bytes"
@@ -17,7 +17,6 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
-	"log"
 	"testing"
 	"time"
 
@@ -444,26 +443,5 @@ func TestGetContainersToRemove(t *testing.T) {
 				assert.Contains(t, test.expectedContainers, container.Names[0])
 			}
 		})
-	}
-}
-
-func TestRemoveDuplicateEntries(t *testing.T) {
-	dupArr := []string{"test", "test", "test"}
-	result := RemoveDuplicateEntries(dupArr)
-
-	if len(result) != 1 {
-		log.Fatal("Test 1: Failed to delete duplicate array index")
-	}
-
-	dupArr = []string{"", "test", "test"}
-	result = RemoveDuplicateEntries(dupArr)
-	if len(result) != 1 {
-		log.Fatal("Test 2: Failed to delete duplicate array index")
-	}
-
-	dupArr = []string{"", "", ""}
-	result = RemoveDuplicateEntries(dupArr)
-	if len(result) != 0 {
-		log.Fatal("Test 3: Failed to identify empty array values")
 	}
 }
