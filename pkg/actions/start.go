@@ -15,19 +15,20 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/eclipse/codewind-installer/pkg/docker"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/urfave/cli"
 )
 
 // StartCommand : start the codewind containers
 func StartCommand(c *cli.Context, dockerComposeFile string, healthEndpoint string) {
-	dockerClient, dockerErr := utils.NewDockerClient()
+	dockerClient, dockerErr := docker.NewDockerClient()
 	if dockerErr != nil {
 		HandleDockerError(dockerErr)
 		os.Exit(1)
 	}
 
-	status, err := utils.CheckContainerStatus(dockerClient)
+	status, err := docker.CheckContainerStatus(dockerClient)
 	if err != nil {
 		HandleDockerError(err)
 		os.Exit(1)
@@ -42,15 +43,15 @@ func StartCommand(c *cli.Context, dockerComposeFile string, healthEndpoint strin
 		fmt.Println("Debug:", debug)
 
 		utils.CreateTempFile(dockerComposeFile)
-		utils.WriteToComposeFile(dockerComposeFile, debug)
+		docker.WriteToComposeFile(dockerComposeFile, debug)
 
-		err := utils.DockerCompose(dockerComposeFile, tag, loglevel)
+		err := docker.DockerCompose(dockerComposeFile, tag, loglevel)
 		if err != nil {
 			HandleDockerError(err)
 			os.Exit(1)
 		}
 
-		_, pingHealthErr := utils.PingHealth(healthEndpoint)
+		_, pingHealthErr := docker.PingHealth(healthEndpoint)
 		if pingHealthErr != nil {
 			HandleDockerError(pingHealthErr)
 			os.Exit(1)

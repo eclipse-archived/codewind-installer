@@ -9,7 +9,7 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 
-package utils
+package docker
 
 import "encoding/json"
 

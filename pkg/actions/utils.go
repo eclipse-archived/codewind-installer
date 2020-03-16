@@ -18,14 +18,14 @@ import (
 
 	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
+	"github.com/eclipse/codewind-installer/pkg/docker"
 	"github.com/eclipse/codewind-installer/pkg/project"
 	"github.com/eclipse/codewind-installer/pkg/remote"
-	"github.com/eclipse/codewind-installer/pkg/utils"
 	logr "github.com/sirupsen/logrus"
 )
 
 // HandleDockerError prints a Docker error, in JSON format if the global flag is set and as a string if not
-func HandleDockerError(err *utils.DockerError) {
+func HandleDockerError(err *docker.DockerError) {
 	// printAsJSON is a global variable, set in commands.go
 	if printAsJSON {
 		fmt.Println(err.Error())

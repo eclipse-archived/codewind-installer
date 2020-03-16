@@ -17,7 +17,7 @@ import (
 	"os"
 
 	"github.com/eclipse/codewind-installer/pkg/connections"
-	"github.com/eclipse/codewind-installer/pkg/utils"
+	"github.com/eclipse/codewind-installer/pkg/docker"
 )
 
 // ConfigError : config package errors
@@ -56,7 +56,7 @@ func PFEOriginFromConnection(connection *connections.Connection) (string, *Confi
 }
 
 func getLocalHostnameAndPort() (string, *ConfigError) {
-	dockerClient, err := utils.NewDockerClient()
+	dockerClient, err := docker.NewDockerClient()
 	if err != nil {
 		return "", &ConfigError{errOpConfPFEHostnamePortNotFound, err, err.Error()}
 	}
@@ -66,7 +66,7 @@ func getLocalHostnameAndPort() (string, *ConfigError) {
 		return "https://localhost:9090", nil
 	}
 
-	hostname, port, err := utils.GetPFEHostAndPort(dockerClient)
+	hostname, port, err := docker.GetPFEHostAndPort(dockerClient)
 	if err != nil {
 		return "", &ConfigError{errOpConfPFEHostnamePortNotFound, err, err.Desc}
 	} else if hostname == "" || port == "" {
