@@ -140,6 +140,7 @@ spec:
                         export GOCACHE=/home/jenkins/agent/$CODE_DIRECTORY_FOR_GO/.cache/go-build
 
                         cd ../../$CODE_DIRECTORY_FOR_GO
+                        whoami
                         HOME=pwd
                         echo HOME $HOME
                         go test ./... -short -coverprofile=coverage.txt -covermode=count
