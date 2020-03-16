@@ -20,11 +20,14 @@ import (
 	"encoding/pem"
 	"math/big"
 	"os"
+	"path/filepath"
 	"runtime"
 	"time"
 
 	logr "github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -63,6 +66,40 @@ func GetImages() (string, string, string, string) {
 		gatekeeperTag = GatekeeperImageTag
 	}
 	return pfeImage + ":" + pfeTag, performanceImage + ":" + performanceTag, keycloakImage + ":" + keycloakTag, gatekeeperImage + ":" + gatekeeperTag
+}
+
+// Get kubeconfig
+func getKubeConfig() (*rest.Config, error) {
+	var config *rest.Config
+	var err error
+
+	// Use KUBECONFIG environment variable if set
+	kubeconfig, ok := os.LookupEnv("KUBECONFIG")
+	if ok && kubeconfig != "" {
+		// If multiple files provided choose first.
+		kubeconfig = filepath.SplitList(kubeconfig)[0]
+		config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
+		if err != nil {
+			logr.Infof("Unable to retrieve Kubernetes Config %v\n", err)
+			return nil, &RemInstError{errOpNotFound, err, err.Error()}
+		}
+		return config, nil
+	}
+
+	homeDir := getHomeDir()
+
+	kubeconfig = filepath.Join(homeDir, ".kube", "config")
+	config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
+	if err != nil {
+		inClusterConfig, inClusterConfigErr := rest.InClusterConfig()
+		if inClusterConfigErr != nil {
+			logr.Infof("Unable to retrieve Kubernetes Config %v\n", err)
+			return nil, &RemInstError{errOpNotFound, err, err.Error()}
+		}
+		return inClusterConfig, nil
+	}
+
+	return config, nil
 }
 
 // Get home directory
@@ -258,7 +295,7 @@ func WaitForPodReady(clientset *kubernetes.Clientset, codewindInstance Codewind,
 	var waitTime int64 = 30
 
 	watcher, err := clientset.CoreV1().Pods(codewindInstance.Namespace).Watch(metav1.ListOptions{
-		LabelSelector: labelSelector,
+		LabelSelector:  labelSelector,
 		TimeoutSeconds: &waitTime,
 	})
 	if err != nil {
@@ -269,10 +306,10 @@ func WaitForPodReady(clientset *kubernetes.Clientset, codewindInstance Codewind,
 	lastReason := ""
 	changeEvent := watcher.ResultChan()
 	for {
-		event, channelOk := <- changeEvent
+		event, channelOk := <-changeEvent
 		if !channelOk {
 			// Channel closed, no event value. (Watch probably timed out.)
-			logr.Warnf("Watch for Pod %v ended. Timeout or connection error.", podName);
+			logr.Warnf("Watch for Pod %v ended. Timeout or connection error.", podName)
 			return false
 		}
 		foundPod, castOk := event.Object.(*corev1.Pod)

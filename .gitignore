@@ -8,6 +8,7 @@ vendor
 
 # Compiled output
 main
+cmd/cli/cwctl
 
 # Test output
 profile.cov
