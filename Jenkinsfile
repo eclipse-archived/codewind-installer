@@ -142,10 +142,10 @@ spec:
                         cd ../../$CODE_DIRECTORY_FOR_GO
                         pwd
                         whoami
-                        HOME="pwd"
-                        echo HOMEpwd $HOME
-                        HOME="."
-                        echo HOME. $HOME
+                        HOME="../../$CODE_DIRECTORY_FOR_GO"
+                        echo HOMErelative $HOME
+                        HOME="/home/jenkins/agent/src/github.com/eclipse/codewind-installer"
+                        echo HOMEabsolute $HOME
                         go test ./... -short -coverprofile=coverage.txt -covermode=count
                         TEST_RESULT=$?
                         if [ $TEST_RESULT -ne 0 ]; then
