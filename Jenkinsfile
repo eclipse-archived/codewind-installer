@@ -135,6 +135,10 @@ spec:
 
                         cd ../../$CODE_DIRECTORY_FOR_GO
                         go test ./... -short -coverprofile=coverage.txt -covermode=count
+                        TEST_RESULT=$?
+                        if [ $TEST_RESULT -ne 0 ]; then
+                            exit $TEST_RESULT
+                        fi
 
                         # Report coverage
                         if [ -n "$CODECOV_TOKEN" ]; then
