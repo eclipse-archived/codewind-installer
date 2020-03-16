@@ -37,6 +37,7 @@ spec:
         CODE_DIRECTORY_FOR_GO = 'src/github.com/eclipse/codewind-installer'
         DEFAULT_WORKSPACE_DIR_FILE = 'temp_default_dir'
         CODECOV_TOKEN = credentials('codecov-token')
+        HOME = $WORKSPACE
     }
 
     stages {
@@ -90,6 +91,7 @@ spec:
                         echo JOB_NAME $JOB_NAME
                         printenv
                         export HOME=$WORKSPACE
+                        echo HOME $HOME
                         export GOCACHE=/home/jenkins/agent/$CODE_DIRECTORY_FOR_GO/.cache/go-build
                         export GOARCH=amd64
                         GOOS=darwin go build -ldflags="-s -w" -o cwctl-macos
@@ -131,6 +133,11 @@ spec:
                 container('go') {
                    sh '''#!/bin/bash
                         export GOPATH=/go:/home/jenkins/agent
+                        echo JENKINS_HOME $JENKINS_HOME
+                        echo WORKSPACE $WORKSPACE
+                        echo JOB_NAME $JOB_NAME
+                        echo HOME $HOME
+                        printenv
 
                         # go cache setup
                         mkdir .cache
