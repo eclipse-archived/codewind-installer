@@ -88,7 +88,7 @@ spec:
                         echo JENKINS_HOME $JENKINS_HOME
                         echo WORKSPACE $WORKSPACE
                         echo JOB_NAME $JOB_NAME
-                        sh 'printenv'
+                        printenv
                         export HOME=$WORKSPACE
                         export GOCACHE=/home/jenkins/agent/$CODE_DIRECTORY_FOR_GO/.cache/go-build
                         export GOARCH=amd64
