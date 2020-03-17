@@ -170,6 +170,11 @@ func createTestPathsForIgnoredPathsTests(t *testing.T, testFolder string) testDi
 }
 
 func TestSyncFiles(t *testing.T) {
+	wd, osErr := os.Getwd()
+	fmt.Println("wd")
+	fmt.Println(wd)
+	fmt.Println("osErr")
+	fmt.Println(osErr)
 	testDir := "sync_test_folder_delete_me"
 	os.Mkdir(testDir, 0777)
 	body := ioutil.NopCloser(bytes.NewReader([]byte{}))

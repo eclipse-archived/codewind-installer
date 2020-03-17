@@ -159,7 +159,7 @@ spec:
                         ls -lRd /home/jenkins/agent
                         HOME="$WORKSPACE"
                         echo HOME $HOME
-                        go test ./... -short -coverprofile=coverage.txt -covermode=count
+                        go test ./... -v -short -coverprofile=coverage.txt -covermode=count
                         TEST_RESULT=$?
                         if [ $TEST_RESULT -ne 0 ]; then
                             exit $TEST_RESULT
