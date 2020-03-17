@@ -15,6 +15,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -50,12 +51,16 @@ func SecKeyUpdate(connectionID string, username string, password string) *SecErr
 
 	keyringErr := StoreSecretInKeyring(conID, uName, pass)
 	if keyringErr != nil {
+		fmt.Println("[SecKeyUpdate] keyringErr")
+		fmt.Println(keyringErr)
 		return keyringErr
 	}
 
 	/// check password can be retrieved
 	secret, secErr := SecKeyGetSecret(conID, uName)
 	if secErr != nil {
+		fmt.Println("[SecKeyUpdate] secErr")
+		fmt.Println(secErr)
 		return secErr
 	}
 	if secret != pass {
@@ -83,15 +88,25 @@ func StoreSecretInKeyring(connectionID, uName, pass string) *SecError {
 	if globals.UseInsecureKeyring {
 		_, statErr := os.Stat(GetPathToInsecureKeyring())
 		if os.IsNotExist(statErr) {
-			os.MkdirAll(insecureKeyringDir, 0600)
-			os.OpenFile(GetPathToInsecureKeyring(), os.O_CREATE, 0666)
+			fmt.Println("[StoreSecretInKeyring] statErr")
+			fmt.Println(statErr)
+			mkdirErr := os.MkdirAll(insecureKeyringDir, 0600)
+			fmt.Println("[StoreSecretInKeyring] mkdirErr")
+			fmt.Println(mkdirErr)
+			_, openFileErr := os.OpenFile(GetPathToInsecureKeyring(), os.O_CREATE, 0666)
+			fmt.Println("[StoreSecretInKeyring] openFileErr")
+			fmt.Println(openFileErr)
 		}
 
 		existingSecrets := []KeyringSecret{}
 		file, readErr := ioutil.ReadFile(GetPathToInsecureKeyring())
 		if readErr != nil {
+			fmt.Println("[StoreSecretInKeyring] readErr")
+			fmt.Println(readErr)
 			return &SecError{errOpKeyring, readErr, readErr.Error()}
 		}
+
+		fmt.Println("[StoreSecretInKeyring] fileExists, no read error")
 		if len(file) != 0 {
 			unmarshalErr := json.Unmarshal([]byte(file), &existingSecrets)
 			if unmarshalErr != nil {
