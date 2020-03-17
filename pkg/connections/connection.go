@@ -57,7 +57,11 @@ func InitConfigFileIfRequired() *ConError {
 	fmt.Println(err)
 	if os.IsNotExist(err) {
 		fmt.Println("[os.IsNotExist](err)")
-		os.MkdirAll(GetConnectionConfigDir(), 0777)
+		fmt.Println("GetConnectionConfigDir")
+		fmt.Println(GetConnectionConfigDir())
+		mkdirErr := os.MkdirAll(GetConnectionConfigDir(), 0777)
+		fmt.Println("mkdirErr")
+		fmt.Println(mkdirErr)
 		return ResetConnectionsFile()
 	}
 	return applySchemaUpdates()

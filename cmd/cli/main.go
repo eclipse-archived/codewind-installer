@@ -13,6 +13,7 @@ package main
 
 import (
 	"crypto/tls"
+	"fmt"
 	"net/http"
 	"os"
 
@@ -21,7 +22,9 @@ import (
 )
 
 func main() {
-	connections.InitConfigFileIfRequired()
+	err := connections.InitConfigFileIfRequired()
+	fmt.Println("err")
+	fmt.Println(err)
 	cheInit()
 	actions.Commands()
 }
