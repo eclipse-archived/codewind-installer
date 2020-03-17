@@ -149,12 +149,12 @@ spec:
                         cat /etc/passwd
                         echo cat /etc/shadow
                         cat /etc/shadow
+                        echo whoami
                         whoami
+                        echo groups
                         groups
-                        echo ls /home/jenkins/agent
-                        ls -lr /home/jenkins/agent
-                        HOME="../../$CODE_DIRECTORY_FOR_GO"
-                        echo HOMErelative $HOME
+                        echo ls -lR /home/jenkins/agent
+                        ls -lR /home/jenkins/agent
                         HOME="/home/jenkins/agent/src/github.com/eclipse/codewind-installer"
                         echo HOMEabsolute $HOME
                         go test ./... -short -coverprofile=coverage.txt -covermode=count
@@ -240,7 +240,7 @@ spec:
 
             options {
                 timeout(time: 120, unit: 'MINUTES')
-                retry(3)
+                // retry(1)
             }
 
             agent any
