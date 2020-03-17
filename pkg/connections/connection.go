@@ -327,6 +327,8 @@ func GetConnectionConfigDir() string {
 		fmt.Println("err")
 		fmt.Println(err)
 		homeDir, _ = os.Getwd()
+		fmt.Println("homeDir")
+		fmt.Println(homeDir)
 		// homeDir = "."
 		// homeDir, _ = os.UserHomeDir()
 	}
