@@ -150,6 +150,9 @@ spec:
                         echo cat /etc/shadow
                         cat /etc/shadow
                         whoami
+                        groups
+                        echo ls /home/jenkins/agent
+                        ls -lr /home/jenkins/agent
                         HOME="../../$CODE_DIRECTORY_FOR_GO"
                         echo HOMErelative $HOME
                         HOME="/home/jenkins/agent/src/github.com/eclipse/codewind-installer"
