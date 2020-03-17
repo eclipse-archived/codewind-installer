@@ -20,13 +20,12 @@ import (
 	"path"
 	"strings"
 
+	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/globals"
 	"github.com/zalando/go-keyring"
 )
 
-var insecureKeyringDir = "."
-
-// var insecureKeyringDir = connections.GetConnectionConfigDir()
+var insecureKeyringDir = connections.GetConnectionConfigDir()
 
 // KeyringSecret : Secret
 type KeyringSecret struct {

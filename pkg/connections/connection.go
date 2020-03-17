@@ -318,7 +318,16 @@ func GetConnectionConfigDir() string {
 			panic("CHE_PROJECTS_ROOT not set")
 		}
 	} else {
-		homeDir, _ = os.UserHomeDir()
+		homeDir1 := os.Getenv("HOME")
+		fmt.Println("homeDir1")
+		fmt.Println(homeDir1)
+		homeDir2, err := os.UserHomeDir()
+		fmt.Println("homeDir2")
+		fmt.Println(homeDir2)
+		fmt.Println("err")
+		fmt.Println(err)
+		homeDir = "."
+		// homeDir, _ = os.UserHomeDir()
 	}
 	return path.Join(homeDir, ".codewind", "config")
 }
