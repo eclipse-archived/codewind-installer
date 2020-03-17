@@ -326,7 +326,8 @@ func GetConnectionConfigDir() string {
 		fmt.Println(homeDir2)
 		fmt.Println("err")
 		fmt.Println(err)
-		homeDir = "."
+		homeDir, _ = os.Getwd()
+		// homeDir = "."
 		// homeDir, _ = os.UserHomeDir()
 	}
 	return path.Join(homeDir, ".codewind", "config")
