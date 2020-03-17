@@ -55,6 +55,8 @@ spec:
                     sh '''#!/bin/bash
                         echo cat /etc/passwd
                         cat /etc/passwd
+                        echo cat /etc/shadow
+                        cat /etc/shadow
 
                         echo "starting preInstall.....: GOPATH=$GOPATH"
 
@@ -145,6 +147,8 @@ spec:
                         pwd
                         echo cat /etc/passwd
                         cat /etc/passwd
+                        echo cat /etc/shadow
+                        cat /etc/shadow
                         whoami
                         HOME="../../$CODE_DIRECTORY_FOR_GO"
                         echo HOMErelative $HOME
