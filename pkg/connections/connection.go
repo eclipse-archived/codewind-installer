@@ -14,10 +14,10 @@ package connections
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
-	"runtime"
 	"strconv"
 	"strings"
 
@@ -53,7 +53,10 @@ const actionAddEntry = 0x02
 // InitConfigFileIfRequired : Check the config file exist, if it does not then create a new default configuration
 func InitConfigFileIfRequired() *ConError {
 	_, err := os.Stat(GetConnectionConfigFilename())
+	fmt.Println("[InitConfigFileIfRequired()] err")
+	fmt.Println(err)
 	if os.IsNotExist(err) {
+		fmt.Println("[os.IsNotExist](err)")
 		os.MkdirAll(GetConnectionConfigDir(), 0777)
 		return ResetConnectionsFile()
 	}
@@ -82,7 +85,7 @@ func ResetConnectionsFile() *ConError {
 		return &ConError{errOpFileParse, err, err.Error()}
 	}
 
-	err = ioutil.WriteFile(GetConnectionConfigFilename(), body, 0644)
+	err = ioutil.WriteFile(GetConnectionConfigFilename(), body, 0777)
 	if err != nil {
 		return &ConError{errOpFileWrite, err, err.Error()}
 	}
@@ -210,7 +213,7 @@ func updateConnectionList(action int, httpClient utils.HTTPClient, connectionID 
 		return nil, &ConError{errOpFileParse, err, err.Error()}
 	}
 
-	err = ioutil.WriteFile(GetConnectionConfigFilename(), body, 0644)
+	err = ioutil.WriteFile(GetConnectionConfigFilename(), body, 0777)
 	if err != nil {
 		return nil, &ConError{errOpFileWrite, err, err.Error()}
 	}
@@ -249,7 +252,7 @@ func RemoveConnectionFromList(c *cli.Context) *ConError {
 		return &ConError{errOpFileParse, err, err.Error()}
 	}
 
-	err = ioutil.WriteFile(GetConnectionConfigFilename(), body, 0644)
+	err = ioutil.WriteFile(GetConnectionConfigFilename(), body, 0777)
 	if err != nil {
 		return &ConError{errOpFileWrite, err, err.Error()}
 	}
@@ -291,7 +294,7 @@ func saveConnectionsConfigFile(ConnectionConfig *ConnectionConfig) *ConError {
 	if err != nil {
 		return &ConError{errOpFileParse, err, err.Error()}
 	}
-	conErr := ioutil.WriteFile(GetConnectionConfigFilename(), body, 0644)
+	conErr := ioutil.WriteFile(GetConnectionConfigFilename(), body, 0777)
 	if conErr != nil {
 		return &ConError{errOpFileWrite, conErr, conErr.Error()}
 	}
@@ -311,12 +314,7 @@ func GetConnectionConfigDir() string {
 			panic("CHE_PROJECTS_ROOT not set")
 		}
 	} else {
-		const GOOS string = runtime.GOOS
-		if GOOS == "windows" {
-			homeDir = os.Getenv("USERPROFILE")
-		} else {
-			homeDir = os.Getenv("HOME")
-		}
+		homeDir, _ = os.UserHomeDir()
 	}
 	return path.Join(homeDir, ".codewind", "config")
 }
@@ -384,7 +382,7 @@ func applySchemaUpdates() *ConError {
 			if err != nil {
 				return &ConError{errOpFileParse, err, err.Error()}
 			}
-			err = ioutil.WriteFile(GetConnectionConfigFilename(), body, 0644)
+			err = ioutil.WriteFile(GetConnectionConfigFilename(), body, 0777)
 			if err != nil {
 				return &ConError{errOpFileWrite, err, err.Error()}
 			}

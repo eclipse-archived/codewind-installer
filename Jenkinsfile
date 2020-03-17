@@ -155,8 +155,10 @@ spec:
                         groups
                         echo ls -lR /home/jenkins/agent
                         ls -lR /home/jenkins/agent
-                        HOME="/home/jenkins/agent/src/github.com/eclipse/codewind-installer"
-                        echo HOMEabsolute $HOME
+                        echo ls -lRd /home/jenkins/agent
+                        ls -lRd /home/jenkins/agent
+                        HOME="$WORKSPACE"
+                        echo HOME $HOME
                         go test ./... -short -coverprofile=coverage.txt -covermode=count
                         TEST_RESULT=$?
                         if [ $TEST_RESULT -ne 0 ]; then

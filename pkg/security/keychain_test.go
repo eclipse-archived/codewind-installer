@@ -85,6 +85,9 @@ func Test_Keychain_Insecure(t *testing.T) {
 	os.Remove(GetPathToInsecureKeyring())
 
 	t.Run("Secret cannot be retrieved when keychain file does not exist", func(t *testing.T) {
+		testDir := "keychain_test_folder_delete_me"
+		mkdirErr := os.Mkdir(testDir, 0777)
+		assert.Nil(t, mkdirErr)
 		retrievedSecret, err := SecKeyGetSecret(testConnection, testUsername)
 		assert.NotNil(t, err)
 		assert.Contains(t, err.Desc, "insecureKeychain.json: no such file or directory")

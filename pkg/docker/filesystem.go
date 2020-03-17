@@ -49,7 +49,7 @@ func WriteToComposeFile(dockerComposeFile string, debug bool) bool {
 		fmt.Println("==> environment structure written to " + filepath.ToSlash(dockerComposeFile))
 	}
 
-	err = ioutil.WriteFile(dockerComposeFile, marshalledData, 0644)
+	err = ioutil.WriteFile(dockerComposeFile, marshalledData, 0777)
 	errors.CheckErr(err, 204, "")
 	return true
 }

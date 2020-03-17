@@ -52,7 +52,7 @@ func WriteNewConfigFile() error {
 		return err
 	}
 
-	err = ioutil.WriteFile(connections.GetConnectionConfigFilename(), body, 0644)
+	err = ioutil.WriteFile(connections.GetConnectionConfigFilename(), body, 0777)
 	if err != nil {
 		return err
 	}

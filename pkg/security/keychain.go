@@ -119,7 +119,7 @@ func StoreSecretInKeyring(connectionID, uName, pass string) *SecError {
 		if marshallErr != nil {
 			return &SecError{errOpKeyring, marshallErr, marshallErr.Error()}
 		}
-		writeErr := ioutil.WriteFile(GetPathToInsecureKeyring(), body, 0644)
+		writeErr := ioutil.WriteFile(GetPathToInsecureKeyring(), body, 0777)
 		if writeErr != nil {
 			return &SecError{errOpKeyring, writeErr, writeErr.Error()}
 		}
@@ -195,7 +195,7 @@ func DeleteSecretFromKeyring(connectionID, uName string) *SecError {
 		if marshallErr != nil {
 			return &SecError{errOpKeyring, marshallErr, marshallErr.Error()}
 		}
-		writeErr := ioutil.WriteFile(GetPathToInsecureKeyring(), body, 0644)
+		writeErr := ioutil.WriteFile(GetPathToInsecureKeyring(), body, 0777)
 		if writeErr != nil {
 			return &SecError{errOpKeyring, writeErr, writeErr.Error()}
 		}

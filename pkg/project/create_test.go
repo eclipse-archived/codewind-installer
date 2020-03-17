@@ -264,7 +264,7 @@ func TestRenameLegacySettings(t *testing.T) {
 	os.Mkdir(testFolder, 0777)
 	legacySettingsPath := path.Join(testFolder, ".mc-settings")
 	newSettingsPath := path.Join(testFolder, ".cw-settings")
-	ioutil.WriteFile(legacySettingsPath, []byte{}, 0644)
+	ioutil.WriteFile(legacySettingsPath, []byte{}, 0777)
 
 	t.Run("error case - path to legacy settings does not exist", func(t *testing.T) {
 		err := renameLegacySettings("/not_a_path/.mc-settings", "/not_a_path/.cw-settings")
