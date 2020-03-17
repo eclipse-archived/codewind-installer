@@ -53,6 +53,8 @@ spec:
             steps {
                 container('go') {
                     sh '''#!/bin/bash
+                        echo cat /etc/passwd
+                        cat /etc/passwd
 
                         echo "starting preInstall.....: GOPATH=$GOPATH"
 
@@ -141,6 +143,8 @@ spec:
 
                         cd ../../$CODE_DIRECTORY_FOR_GO
                         pwd
+                        echo cat /etc/passwd
+                        cat /etc/passwd
                         whoami
                         HOME="../../$CODE_DIRECTORY_FOR_GO"
                         echo HOMErelative $HOME
