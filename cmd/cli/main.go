@@ -23,7 +23,7 @@ import (
 
 func main() {
 	err := connections.InitConfigFileIfRequired()
-	fmt.Println("err")
+	fmt.Println("[main] err")
 	fmt.Println(err)
 	cheInit()
 	actions.Commands()
