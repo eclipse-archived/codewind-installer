@@ -163,8 +163,8 @@ func GetSecretFromKeyring(connectionID, uName string) (string, *SecError) {
 	secret, err := keyring.Get(service, uName)
 	if err != nil {
 		if err == keyring.ErrNotFound {
-			err := errors.New(textSecretNotFound)
-			return "", &SecError{errOpKeyring, err, err.Error()}
+			errNotFound := errors.New(textSecretNotFound)
+			return "", &SecError{errOpKeyring, errNotFound, errNotFound.Error()}
 		}
 		return "", &SecError{errOpKeyring, err, err.Error()}
 	}
