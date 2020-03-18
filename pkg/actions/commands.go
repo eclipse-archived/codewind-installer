@@ -19,6 +19,7 @@ import (
 	"github.com/eclipse/codewind-installer/pkg/appconstants"
 	desktoputils "github.com/eclipse/codewind-installer/pkg/desktop_utils"
 	"github.com/eclipse/codewind-installer/pkg/errors"
+	"github.com/eclipse/codewind-installer/pkg/globals"
 	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
@@ -41,6 +42,10 @@ func Commands() {
 		cli.BoolFlag{
 			Name:  "insecure",
 			Usage: "disable certificate checking",
+		},
+		cli.BoolFlag{
+			Name:  "insecureKeyring",
+			Usage: "use insecure keyring instead of system keyring",
 		},
 		cli.BoolFlag{
 			Name:  "json, j",
@@ -937,8 +942,11 @@ func Commands() {
 
 		printAsJSON = c.GlobalBool("json")
 
-		// Handle Global log level flag
+		if c.GlobalBool("insecureKeyring") || os.Getenv("INSECURE_KEYRING") == "true" {
+			globals.SetUseInsecureKeyring(true)
+		}
 
+		// Handle Global log level flag
 		switch loglevel := c.GlobalString("loglevel"); {
 		case loglevel == "trace":
 			logr.SetLevel(logr.TraceLevel)

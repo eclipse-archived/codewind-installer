@@ -23,7 +23,7 @@ type (
 	}
 )
 
-// GetProject : Get project details from Codewind
+// GetProjectFromID : Get project details from Codewind
 func GetProjectFromID(httpClient utils.HTTPClient, connection *connections.Connection, url, projectID string) (*Project, *ProjectError) {
 	req, requestErr := http.NewRequest("GET", url+"/api/v1/projects/"+projectID+"/", nil)
 	if requestErr != nil {

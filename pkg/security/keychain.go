@@ -12,17 +12,26 @@
 package security
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
+	"io/ioutil"
+	"os"
+	"path"
 	"strings"
 
 	"github.com/eclipse/codewind-installer/pkg/connections"
+	"github.com/eclipse/codewind-installer/pkg/globals"
 	"github.com/zalando/go-keyring"
 )
 
+var insecureKeyringDir = connections.GetConnectionConfigDir()
+
 // KeyringSecret : Secret
 type KeyringSecret struct {
-	ID       string `json:"id"`
-	ClientID string `json:"clientId"`
+	Service  []byte `json:"service"`
+	Username []byte `json:"username"`
+	Password []byte `json:"password"`
 }
 
 // SecKeyUpdate : Creates or updates a key in the platforms keyring
@@ -39,14 +48,14 @@ func SecKeyUpdate(connectionID string, username string, password string) *SecErr
 		return &SecError{errOpNotFound, err, conErr.Error()}
 	}
 
-	err := keyring.Set(KeyringServiceName+"."+conID, uName, pass)
-	if err != nil {
-		return &SecError{errOpKeyring, err, err.Error()}
+	keyringErr := StoreSecretInKeyring(conID, uName, pass)
+	if keyringErr != nil {
+		return keyringErr
 	}
 
 	/// check password can be retrieved
 	secret, secErr := SecKeyGetSecret(conID, uName)
-	if err != nil {
+	if secErr != nil {
 		return secErr
 	}
 	if secret != pass {
@@ -58,14 +67,182 @@ func SecKeyUpdate(connectionID string, username string, password string) *SecErr
 }
 
 // SecKeyGetSecret : retrieve secret / credentials from the keyring
-func SecKeyGetSecret(connectionID string, username string) (string, *SecError) {
-
+func SecKeyGetSecret(connectionID, username string) (string, *SecError) {
 	conID := strings.TrimSpace(strings.ToLower(connectionID))
 	uName := strings.TrimSpace(strings.ToLower(username))
+	secret, err := GetSecretFromKeyring(conID, uName)
+	if err != nil {
+		return "", err
+	}
+	return secret, nil
+}
 
-	secret, err := keyring.Get(KeyringServiceName+"."+conID, uName)
+// StoreSecretInKeyring stores the secret in either the system keyring or our insecure keyring.
+func StoreSecretInKeyring(connectionID, uName, pass string) *SecError {
+	service := connectionIDToService(connectionID)
+	if globals.UseInsecureKeyring {
+		_, statErr := os.Stat(GetPathToInsecureKeyring())
+		if os.IsNotExist(statErr) {
+			mkdirErr := os.MkdirAll(insecureKeyringDir, 0600)
+			if mkdirErr != nil {
+				return &SecError{errOpKeyring, mkdirErr, mkdirErr.Error()}
+			}
+			_, openFileErr := os.OpenFile(GetPathToInsecureKeyring(), os.O_CREATE, 0600)
+			if openFileErr != nil {
+				return &SecError{errOpKeyring, openFileErr, openFileErr.Error()}
+			}
+		}
+
+		existingSecrets := []KeyringSecret{}
+		file, readErr := ioutil.ReadFile(GetPathToInsecureKeyring())
+		if readErr != nil {
+			return &SecError{errOpKeyring, readErr, readErr.Error()}
+		}
+		if len(file) != 0 {
+			unmarshalErr := json.Unmarshal([]byte(file), &existingSecrets)
+			if unmarshalErr != nil {
+				return &SecError{errOpKeyring, unmarshalErr, unmarshalErr.Error()}
+			}
+		}
+		newSecret := KeyringSecret{
+			Service:  []byte(service),
+			Username: []byte(uName),
+			Password: []byte(pass),
+		}
+		indexOfSecretToUpdate := -1
+
+		for i, existingSecret := range existingSecrets {
+			if doSecretsMatch(existingSecret, newSecret) {
+				indexOfSecretToUpdate = i
+			}
+		}
+		if indexOfSecretToUpdate > -1 {
+			// remove existing secret
+			existingSecrets = append(existingSecrets[:indexOfSecretToUpdate], existingSecrets[indexOfSecretToUpdate+1:]...)
+		}
+		secrets := append(existingSecrets, newSecret)
+		body, marshallErr := json.MarshalIndent(secrets, "", "\t")
+		if marshallErr != nil {
+			return &SecError{errOpKeyring, marshallErr, marshallErr.Error()}
+		}
+		writeErr := ioutil.WriteFile(GetPathToInsecureKeyring(), body, 0644)
+		if writeErr != nil {
+			return &SecError{errOpKeyring, writeErr, writeErr.Error()}
+		}
+		return nil
+	}
+
+	// else store it in system keyring
+	err := keyring.Set(service, uName, pass)
+	if err != nil {
+		return &SecError{errOpKeyring, err, err.Error()}
+	}
+	return nil
+}
+
+// GetSecretFromKeyring gets the secret from either the system keyring or our insecure keyring.
+func GetSecretFromKeyring(connectionID, uName string) (string, *SecError) {
+	service := connectionIDToService(connectionID)
+	if globals.UseInsecureKeyring {
+		secrets, readErr := readInsecureKeyring()
+		if readErr != nil {
+			return "", readErr
+		}
+		for _, secret := range secrets {
+			sameService := string(secret.Service) == service
+			sameUsername := string(secret.Username) == uName
+			matchingSecret := sameService && sameUsername
+			if matchingSecret {
+				return string(secret.Password), nil
+			}
+		}
+		err := errors.New("secret not found in keyring")
+		return "", &SecError{errOpKeyring, err, err.Error()}
+	}
+	// else get from system keyring
+	secret, err := keyring.Get(service, uName)
 	if err != nil {
 		return "", &SecError{errOpKeyring, err, err.Error()}
 	}
 	return secret, nil
+}
+
+// DeleteSecretFromKeyring deletes the secret from either the system keyring or our insecure keyring.
+func DeleteSecretFromKeyring(connectionID, uName string) *SecError {
+	service := connectionIDToService(connectionID)
+	if globals.UseInsecureKeyring {
+		secrets, readErr := readInsecureKeyring()
+		if readErr != nil {
+			return readErr
+		}
+		indexOfSecretToDelete := -1
+		for i, secret := range secrets {
+			sameService := string(secret.Service) == service
+			sameUsername := string(secret.Username) == uName
+			matchingSecret := sameService && sameUsername
+			if matchingSecret {
+				indexOfSecretToDelete = i
+			}
+		}
+		if indexOfSecretToDelete == -1 {
+			err := errors.New("secret not found in keyring")
+			return &SecError{errOpKeyring, err, err.Error()}
+		}
+		// remove existing secret
+		secrets = append(secrets[:indexOfSecretToDelete], secrets[indexOfSecretToDelete+1:]...)
+		if len(secrets) == 0 {
+			err := os.Remove(GetPathToInsecureKeyring())
+			if err != nil {
+				return &SecError{errOpKeyring, err, err.Error()}
+			}
+			return nil
+		}
+		body, marshallErr := json.MarshalIndent(secrets, "", "\t")
+		if marshallErr != nil {
+			return &SecError{errOpKeyring, marshallErr, marshallErr.Error()}
+		}
+		writeErr := ioutil.WriteFile(GetPathToInsecureKeyring(), body, 0644)
+		if writeErr != nil {
+			return &SecError{errOpKeyring, writeErr, writeErr.Error()}
+		}
+		return nil
+	}
+	// else delete from system keyring
+	err := keyring.Delete(service, uName)
+	if err != nil {
+		return &SecError{errOpKeyring, err, err.Error()}
+	}
+	return nil
+}
+
+func readInsecureKeyring() ([]KeyringSecret, *SecError) {
+	file, readErr := ioutil.ReadFile(GetPathToInsecureKeyring())
+	if readErr != nil {
+		return nil, &SecError{errOpKeyring, readErr, readErr.Error()}
+	}
+	secrets := []KeyringSecret{}
+	if len(file) != 0 {
+		unmarshalErr := json.Unmarshal([]byte(file), &secrets)
+		if unmarshalErr != nil {
+			return nil, &SecError{errOpKeyring, unmarshalErr, unmarshalErr.Error()}
+		}
+	}
+	return secrets, nil
+}
+
+func connectionIDToService(connectionID string) string {
+	conID := strings.TrimSpace(strings.ToLower(connectionID))
+	return KeyringServiceName + "." + conID
+}
+
+// GetPathToInsecureKeyring gets the path to the insecureKeychain.json
+func GetPathToInsecureKeyring() string {
+	return path.Join(insecureKeyringDir, "insecureKeychain.json")
+}
+
+func doSecretsMatch(secret1, secret2 KeyringSecret) bool {
+	sameService := bytes.Compare(secret1.Service, secret2.Service) == 0
+	sameUsername := bytes.Compare(secret1.Username, secret2.Username) == 0
+	matchingSecret := sameService && sameUsername
+	return matchingSecret
 }

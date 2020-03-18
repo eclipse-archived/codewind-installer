@@ -54,7 +54,7 @@ const actionAddEntry = 0x02
 func InitConfigFileIfRequired() *ConError {
 	_, err := os.Stat(GetConnectionConfigFilename())
 	if os.IsNotExist(err) {
-		os.MkdirAll(getConnectionConfigDir(), 0777)
+		os.MkdirAll(GetConnectionConfigDir(), 0777)
 		return ResetConnectionsFile()
 	}
 	return applySchemaUpdates()
@@ -298,8 +298,8 @@ func saveConnectionsConfigFile(ConnectionConfig *ConnectionConfig) *ConError {
 	return nil
 }
 
-// getConnectionConfigDir : get directory path to the connections file
-func getConnectionConfigDir() string {
+// GetConnectionConfigDir : get path to the connections config directory
+func GetConnectionConfigDir() string {
 	val, isSet := os.LookupEnv("CHE_API_EXTERNAL")
 	homeDir := ""
 	if isSet && (val != "") {
@@ -323,7 +323,7 @@ func getConnectionConfigDir() string {
 
 // GetConnectionConfigFilename  : get full file path of connections file
 func GetConnectionConfigFilename() string {
-	return path.Join(getConnectionConfigDir(), "connections.json")
+	return path.Join(GetConnectionConfigDir(), "connections.json")
 }
 
 func loadRawConnectionsFile() ([]byte, *ConError) {

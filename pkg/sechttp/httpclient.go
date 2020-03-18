@@ -22,7 +22,6 @@ import (
 	"github.com/eclipse/codewind-installer/pkg/utils"
 	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
-	"github.com/zalando/go-keyring"
 )
 
 // DispatchHTTPRequest : Perform an HTTP request against PFE with token based authentication
@@ -48,7 +47,7 @@ func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Requ
 	// Get the current access token from the keychain
 	logr.Traceln("Retrieving an access token from the keychain")
 	conID := strings.TrimSpace(strings.ToLower(connection.ID))
-	accessToken, _ := keyring.Get(security.KeyringServiceName+"."+conID, "access_token")
+	accessToken, _ := security.GetSecretFromKeyring(conID, "access_token")
 
 	if accessToken == "" {
 		logr.Traceln("Access token not found in keychain")
@@ -64,12 +63,12 @@ func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Requ
 
 	// Try refreshing the access token with our cached refresh token
 	logr.Tracef("Retrieving a refresh token from the keychain")
-	refreshToken, _ := keyring.Get(security.KeyringServiceName+"."+conID, "refresh_token")
+	refreshToken, _ := security.GetSecretFromKeyring(conID, "refresh_token")
 	if refreshToken == "" {
 		logr.Tracef("Refresh token not found in keychain")
 	} else {
 		logr.Tracef("Try refreshing the access token with our cached refresh token")
-		tokens, secError := security.SecRefreshAccessToken(http.DefaultClient, connection, refreshToken)
+		tokens, secError := security.SecRefreshAccessToken(httpClient, connection, refreshToken)
 		if secError != nil {
 			logr.Tracef("Failed refreshing access token %v : %v\n", secError.Op, secError.Desc)
 		}
@@ -86,7 +85,7 @@ func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Requ
 	}
 
 	logr.Tracef("Re-authenticate using cached credentials from the keychain")
-	password, keyErr := keyring.Get(security.KeyringServiceName+"."+conID, strings.ToLower(connection.Username))
+	password, keyErr := security.GetSecretFromKeyring(conID, strings.ToLower(connection.Username))
 	if keyErr != nil {
 		logr.Tracef("ERROR:  %v\n", keyErr.Error())
 		err := errors.New(errMissingPassword)
@@ -101,7 +100,7 @@ func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Requ
 	set.String("client", connection.ClientID, "doc")
 	set.String("conid", connection.ID, "doc")
 	c := cli.NewContext(nil, set, nil)
-	tokens, secError := security.SecAuthenticate(http.DefaultClient, c, "", "")
+	tokens, secError := security.SecAuthenticate(httpClient, c, "", "")
 	if secError != nil {
 		// Bailing out, user cant authenticate
 		logr.Tracef("Bailing out, user can not authenticate")
