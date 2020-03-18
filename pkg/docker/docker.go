@@ -14,6 +14,7 @@ package docker
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	goErr "errors"
 	"fmt"
@@ -22,6 +23,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"path"
 	"runtime"
 	"strconv"
 	"strings"
@@ -34,7 +36,9 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
+	desktoputils "github.com/eclipse/codewind-installer/pkg/desktop_utils"
 	logr "github.com/sirupsen/logrus"
+	"github.com/zalando/go-keyring"
 )
 
 const pfeImageName = "eclipse/codewind-pfe"
@@ -53,9 +57,12 @@ var containerNames = [...]string{
 	performanceContainerName,
 }
 
+var homeDir = desktoputils.GetHomeDir()
+var dockerConfigSecretFile = path.Join(homeDir, ".codewind", "dockerconfig")
+
 // codewind-docker-compose.yaml data
 var data = `
-version: 2
+version: 3.3
 services:
  ` + pfeContainerName + `:
   image: ${PFE_IMAGE_NAME}${PLATFORM}:${TAG}
@@ -74,6 +81,7 @@ services:
   ports: ["127.0.0.1:${PFE_EXTERNAL_PORT}:9090"]
   volumes: ["/var/run/docker.sock:/var/run/docker.sock","cw-workspace:/codewind-workspace","${WORKSPACE_DIRECTORY}:/mounted-workspace"]
   networks: [network]
+  secrets: [dockerconfig]
  ` + performanceContainerName + `:
   image: ${PERFORMANCE_IMAGE_NAME}${PLATFORM}:${TAG}
   ports: ["127.0.0.1:9095:9095"]
@@ -85,6 +93,9 @@ networks:
     com.docker.network.bridge.host_binding_ipv4: "127.0.0.1"
 volumes:
   cw-workspace:
+secrets:
+  dockerconfig:
+    file: ` + dockerConfigSecretFile + `
 `
 
 // Compose struct for the docker compose yaml file
@@ -100,6 +111,7 @@ type Compose struct {
 			Ports         []string `yaml:"ports"`
 			Volumes       []string `yaml:"volumes"`
 			Networks      []string `yaml:"networks"`
+			Secrets       []string `yaml:"secrets"`
 		} `yaml:"codewind-pfe"`
 		PERFORMANCE struct {
 			Image         string   `yaml:"image"`
@@ -119,7 +131,26 @@ type Compose struct {
 			} `yaml:"driver_opts"`
 		} `yaml:"network"`
 	} `yaml:"networks"`
+	SECRETS struct {
+		DOCKERCONFIG struct {
+			File string `yaml:"file"`
+		} `yaml:"dockerconfig"`
+	} `yaml:"secrets"`
 }
+
+type (
+	// DockerCredential : A single login for a docker registry.
+	DockerCredential struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+		Auth     string `json:"auth"`
+	}
+
+	// DockerConfig : The docker config.json object.
+	DockerConfig struct {
+		Auths map[string]DockerCredential `json:"auths"`
+	}
+)
 
 // constant to identify the internal port of PFE in its container
 const internalPFEPort = 9090
@@ -163,6 +194,7 @@ func DockerCompose(dockerComposeFile string, tag string, loglevel string) *Docke
 		//print out docker-compose sysout & syserr for error diagnosis
 		fmt.Printf(output.String())
 		utils.DeleteTempFile(dockerComposeFile)
+		ClearDockerConfigSecret()
 		return &DockerError{errOpDockerComposeStart, err, err.Error()}
 	}
 	fmt.Printf("Please wait while containers initialize... %s \n", output.String())
@@ -170,17 +202,20 @@ func DockerCompose(dockerComposeFile string, tag string, loglevel string) *Docke
 		//print out docker-compose sysout & syserr for error diagnosis
 		fmt.Printf(output.String())
 		utils.DeleteTempFile(dockerComposeFile)
+		ClearDockerConfigSecret()
 		return &DockerError{errOpDockerComposeStart, err, err.Error()}
 	}
 	fmt.Printf(output.String()) // Wait to finish execution, so we can read all output
 
 	if strings.Contains(output.String(), "ERROR") || strings.Contains(output.String(), "error") {
 		utils.DeleteTempFile(dockerComposeFile)
+		ClearDockerConfigSecret()
 		os.Exit(1)
 	}
 
 	if strings.Contains(output.String(), "The image for the service you're trying to recreate has been removed") {
 		utils.DeleteTempFile(dockerComposeFile)
+		ClearDockerConfigSecret()
 		os.Exit(1)
 	}
 	return nil
@@ -189,6 +224,10 @@ func DockerCompose(dockerComposeFile string, tag string, loglevel string) *Docke
 // DockerComposeStop to stop Codewind containers
 func DockerComposeStop(tag, dockerComposeFile string) *DockerError {
 	setupDockerComposeEnvs(tag, "stop", "")
+
+	// Delete the docker configuration file whether we have a clean shutdown or not.
+	ClearDockerConfigSecret()
+
 	cmd := exec.Command("docker-compose", "-f", dockerComposeFile, "rm", "--stop", "-f")
 	output := new(bytes.Buffer)
 	cmd.Stdout = output
@@ -595,4 +634,68 @@ func GetContainerTags(dockerClient DockerClient) ([]string, *DockerError) {
 	}
 	tagArr = utils.RemoveDuplicateEntries(tagArr)
 	return tagArr, nil
+}
+
+// AddDockerCredential : Add (or update) a single docker login in the keychain entry.
+func AddDockerCredential(connectionID string, address string, username string, password string) *DockerError {
+	dockerConfig, err := getDockerCredentials(connectionID)
+	if err != nil {
+		return &DockerError{errDockerCredential, err, err.Error()}
+	}
+	authStr := fmt.Sprintf("%s:%s", username, password)
+	authEncoded := base64.StdEncoding.EncodeToString([]byte(authStr))
+	newDockerCredential := DockerCredential{Auth: authEncoded, Username: username, Password: password}
+	dockerConfig.Auths[address] = newDockerCredential
+	err = setDockerCredentials(connectionID, dockerConfig)
+	if err != nil {
+		return &DockerError{errDockerCredential, err, err.Error()}
+	}
+	return nil
+}
+
+// RemoveDockerCredential : Remove a single docker login in the keychain entry.
+func RemoveDockerCredential(connectionID string, address string) *DockerError {
+	dockerConfig, err := getDockerCredentials(connectionID)
+	if err != nil {
+		return &DockerError{errDockerCredential, err, err.Error()}
+	}
+	delete(dockerConfig.Auths, address)
+	err = setDockerCredentials(connectionID, dockerConfig)
+	if err != nil {
+		return &DockerError{errDockerCredential, err, err.Error()}
+	}
+	return nil
+}
+
+// getDockerCredentials : Get the existing docker credentials from the keychain.
+func getDockerCredentials(connectionID string) (*DockerConfig, error) {
+	secret, err := keyring.Get("org.eclipse.codewind"+"."+connectionID, "docker_credentials")
+	if err != nil {
+		if err == keyring.ErrNotFound {
+			secret = "{\"auths\": {}}"
+		} else {
+			return nil, err
+		}
+	}
+	dockerConfig := DockerConfig{}
+	jsonErr := json.Unmarshal([]byte(secret), &dockerConfig)
+	if jsonErr != nil {
+		return nil, jsonErr
+	}
+	return &dockerConfig, nil
+}
+
+// setDockerCredentials : Set the docker credentials in the keychain.
+func setDockerCredentials(connectionID string, dockerConfig *DockerConfig) error {
+	newSecretBytes, jsonErr := json.MarshalIndent(dockerConfig, "", "  ")
+	// This shouldn't happen as we don't add anything that can't be encoded to the
+	// structure.
+	if jsonErr != nil {
+		return jsonErr
+		// fmt.Printf("Error, invalid json in docker config structure - %s\n", jsonErr)
+		// os.Exit(1)
+	}
+	newSecret := string(newSecretBytes)
+	err := keyring.Set("org.eclipse.codewind"+"."+connectionID, "docker_credentials", newSecret)
+	return err
 }

@@ -12,6 +12,8 @@
 package docker
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -29,6 +31,8 @@ func WriteToComposeFile(dockerComposeFile string, debug bool) bool {
 		return false
 	}
 
+	secretErr := writeDockerConfigSecretFile()
+	errors.CheckErr(secretErr, 204, "")
 	dataStruct := Compose{}
 
 	unmarshDataErr := yaml.Unmarshal([]byte(data), &dataStruct)
@@ -52,6 +56,27 @@ func WriteToComposeFile(dockerComposeFile string, debug bool) bool {
 	err = ioutil.WriteFile(dockerComposeFile, marshalledData, 0644)
 	errors.CheckErr(err, 204, "")
 	return true
+}
+
+func writeDockerConfigSecretFile() error {
+	dockerConfig, err := getDockerCredentials("local")
+	if err != nil {
+		return err
+	}
+	dockerConfigBytes, jsonErr := json.MarshalIndent(dockerConfig, "", "  ")
+	if jsonErr != nil {
+		return jsonErr
+	}
+	encoded := base64.StdEncoding.EncodeToString(dockerConfigBytes)
+	err = ioutil.WriteFile(dockerConfigSecretFile, []byte(encoded), 0600)
+	return err
+}
+
+// ClearDockerConfigSecret We erase the contents rather than deleting
+// the file as the docker-compose file expects the secret to be present.
+func ClearDockerConfigSecret() error {
+	// Most callers won't handle this error as this shouldn't block shutdown.
+	return ioutil.WriteFile(dockerConfigSecretFile, []byte{}, 0600)
 }
 
 // PingHealth - pings environment api every 15 seconds to check if containers started
