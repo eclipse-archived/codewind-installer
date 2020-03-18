@@ -26,6 +26,10 @@ const cwctlName = "cwctl_test"
 const cwctl = "./" + cwctlName
 
 func TestCwctl(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
+
 	err := exec.Command("go", "build", "-o", cwctlName).Run()
 	require.Nil(t, err)
 

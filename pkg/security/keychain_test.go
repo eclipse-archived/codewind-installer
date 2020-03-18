@@ -24,13 +24,13 @@ const testPassword = "pAss%-w0rd-&'cha*s"
 const testPasswordUpdated = "pAss%-w0rd-&'cha*s-with_more_chars"
 
 func Test_Keychain_Secure(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
 
 	var originalUseInsecureKeyring = globals.UseInsecureKeyring
 	globals.SetUseInsecureKeyring(false)
 
-	if testing.Short() {
-		t.Skip("skipping testing in short mode")
-	}
 	// remove test key if it already exists
 	DeleteSecretFromKeyring(testConnection, testUsername)
 
@@ -77,6 +77,9 @@ func Test_Keychain_Secure(t *testing.T) {
 }
 
 func Test_Keychain_Insecure(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
 
 	var originalUseInsecureKeyring = globals.UseInsecureKeyring
 	globals.SetUseInsecureKeyring(true)

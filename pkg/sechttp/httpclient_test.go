@@ -45,6 +45,9 @@ func (c *MockResponse) Do(req *http.Request) (*http.Response, error) {
 }
 
 func TestDispatchHTTPRequest(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
 
 	// remove insecureKeychain.json if it already exists
 	os.Remove(security.GetPathToInsecureKeyring())
