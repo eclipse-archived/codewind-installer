@@ -12,7 +12,6 @@
 package security
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
@@ -86,11 +85,6 @@ func Test_Keychain_Insecure(t *testing.T) {
 	os.Remove(GetPathToInsecureKeyring())
 
 	t.Run("Secret cannot be retrieved when keychain file does not exist", func(t *testing.T) {
-		wd, osErr := os.Getwd()
-		fmt.Println("wd")
-		fmt.Println(wd)
-		fmt.Println("osErr")
-		fmt.Println(osErr)
 		testDir := "keychain_test_folder_delete_me"
 		mkdirErr := os.Mkdir(testDir, 0777)
 		assert.Nil(t, mkdirErr)

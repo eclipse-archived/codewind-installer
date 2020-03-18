@@ -86,6 +86,11 @@ func SecKeyGetSecret(connectionID, username string) (string, *SecError) {
 func StoreSecretInKeyring(connectionID, uName, pass string) *SecError {
 	service := connectionIDToService(connectionID)
 	if globals.UseInsecureKeyring {
+		wd, osErr := os.Getwd()
+		fmt.Println("wd")
+		fmt.Println(wd)
+		fmt.Println("osErr")
+		fmt.Println(osErr)
 		_, statErr := os.Stat(GetPathToInsecureKeyring())
 		if os.IsNotExist(statErr) {
 			fmt.Println("[StoreSecretInKeyring] statErr")
