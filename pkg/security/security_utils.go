@@ -57,6 +57,7 @@ const (
 	textUnableToParse  = "Unable to parse Keycloak response"
 	textInvalidOptions = "Invalid or missing command line options"
 	textAuthIsDown     = "Authentication service unavailable"
+	textSecretNotFound = "Secret not found in keyring"
 )
 
 // SecError : Error formatted in JSON containing an errorOp and a description from
@@ -94,4 +95,9 @@ func parseKeycloakError(body string, httpCode int) *KeycloakAPIError {
 		keycloakAPIError.ErrorDescription = keycloakAPIError.ErrorMessage
 	}
 	return &keycloakAPIError
+}
+
+// IsSecretNotFoundError : Test whether a secret error is due to the secret not exisiting.
+func IsSecretNotFoundError(se *SecError) bool {
+	return se.Desc == textSecretNotFound
 }

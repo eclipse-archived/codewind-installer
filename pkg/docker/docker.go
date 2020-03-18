@@ -29,6 +29,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/eclipse/codewind-installer/pkg/security"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 
 	"github.com/docker/docker/api/types"
@@ -38,7 +39,6 @@ import (
 	"github.com/docker/docker/pkg/term"
 	desktoputils "github.com/eclipse/codewind-installer/pkg/desktop_utils"
 	logr "github.com/sirupsen/logrus"
-	"github.com/zalando/go-keyring"
 )
 
 const pfeImageName = "eclipse/codewind-pfe"
@@ -669,9 +669,9 @@ func RemoveDockerCredential(connectionID string, address string) *DockerError {
 
 // getDockerCredentials : Get the existing docker credentials from the keychain.
 func getDockerCredentials(connectionID string) (*DockerConfig, error) {
-	secret, err := keyring.Get("org.eclipse.codewind"+"."+connectionID, "docker_credentials")
+	secret, err := security.GetSecretFromKeyring(connectionID, "docker_credentials")
 	if err != nil {
-		if err == keyring.ErrNotFound {
+		if security.IsSecretNotFoundError(err) {
 			secret = "{\"auths\": {}}"
 		} else {
 			return nil, err
@@ -696,6 +696,9 @@ func setDockerCredentials(connectionID string, dockerConfig *DockerConfig) error
 		// os.Exit(1)
 	}
 	newSecret := string(newSecretBytes)
-	err := keyring.Set("org.eclipse.codewind"+"."+connectionID, "docker_credentials", newSecret)
-	return err
+	err := security.StoreSecretInKeyring(connectionID, "docker_credentials", newSecret)
+	if err != nil {
+		return err
+	}
+	return nil
 }
