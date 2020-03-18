@@ -264,7 +264,7 @@ spec:
                     mv $CWCTL_MACOS-*    $CWCTL_MACOS
                     mv $CWCTL_WIN-*      $CWCTL_WIN.exe
 
-                    # Make a zipped copy of each build and copy it into zips/
+                    # Make a targz copy of each build and copy it into zips/
                     export ZIPS_DIR="zips"
                     if [ -d ${ZIPS_DIR} ]; then
                         rm -rf ${ZIPS_DIR}
@@ -275,6 +275,10 @@ spec:
                         export ZIP_NAME="${f}.zip"
                         zip -r $ZIP_NAME $f
                         mv $ZIP_NAME ${ZIPS_DIR}
+
+                        export TARGZ_NAME="${f}.tar.gz"
+                        tar -czvf $TARGZ_NAME $f
+                        mv $TARGZ_NAME ${ZIPS_DIR}
                     done
 
                     # Assemble build_info.properties with build date and shasums
