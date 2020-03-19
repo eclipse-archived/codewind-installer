@@ -156,12 +156,16 @@ func GetSecretFromKeyring(connectionID, uName string) (string, *SecError) {
 				return string(secret.Password), nil
 			}
 		}
-		err := errors.New("secret not found in keyring")
+		err := errors.New(textSecretNotFound)
 		return "", &SecError{errOpKeyring, err, err.Error()}
 	}
 	// else get from system keyring
 	secret, err := keyring.Get(service, uName)
 	if err != nil {
+		if err == keyring.ErrNotFound {
+			errNotFound := errors.New(textSecretNotFound)
+			return "", &SecError{errOpKeyring, errNotFound, errNotFound.Error()}
+		}
 		return "", &SecError{errOpKeyring, err, err.Error()}
 	}
 	return secret, nil
@@ -218,6 +222,10 @@ func DeleteSecretFromKeyring(connectionID, uName string) *SecError {
 func readInsecureKeyring() ([]KeyringSecret, *SecError) {
 	file, readErr := ioutil.ReadFile(GetPathToInsecureKeyring())
 	if readErr != nil {
+		if os.IsNotExist(readErr) {
+			err := errors.New(textSecretNotFound)
+			return nil, &SecError{errOpKeyring, err, err.Error()}
+		}
 		return nil, &SecError{errOpKeyring, readErr, readErr.Error()}
 	}
 	secrets := []KeyringSecret{}

@@ -36,6 +36,7 @@ const (
 	errOpImageDigest         = "IMAGE_DIGEST_ERROR"
 	errOpContainerList       = "CONTAINER_LIST_ERROR"
 	errOpImageList           = "IMAGE_LIST_ERROR"
+	errDockerCredential      = "DOCKER_CREDENTIAL_ERROR"
 )
 
 const (

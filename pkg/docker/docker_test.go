@@ -116,6 +116,10 @@ func (m *mockDockerClientWithCw) DistributionInspect(ctx context.Context, image,
 	}, nil
 }
 
+func (m *mockDockerClientWithCw) RegistryLogin(ctx context.Context, auth types.AuthConfig) (registry.AuthenticateOKBody, error) {
+	return registry.AuthenticateOKBody{}, nil
+}
+
 // This mock client will return valid image and containers lists, without Codewind items
 type mockDockerClientWithoutCw struct {
 }
@@ -159,6 +163,10 @@ func (m *mockDockerClientWithoutCw) DistributionInspect(ctx context.Context, ima
 	}, nil
 }
 
+func (m *mockDockerClientWithoutCw) RegistryLogin(ctx context.Context, auth types.AuthConfig) (registry.AuthenticateOKBody, error) {
+	return registry.AuthenticateOKBody{}, nil
+}
+
 // This mock client will return errors for each call to a docker function
 type mockDockerErrorClient struct {
 }
@@ -198,6 +206,10 @@ func (m *mockDockerErrorClient) ContainerInspect(ctx context.Context, containerI
 
 func (m *mockDockerErrorClient) DistributionInspect(ctx context.Context, image, encodedRegistryAuth string) (registry.DistributionInspect, error) {
 	return registry.DistributionInspect{}, errDistributionInspect
+}
+
+func (m *mockDockerErrorClient) RegistryLogin(ctx context.Context, auth types.AuthConfig) (registry.AuthenticateOKBody, error) {
+	return registry.AuthenticateOKBody{}, nil
 }
 
 func TestPullImage(t *testing.T) {

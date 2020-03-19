@@ -12,10 +12,13 @@
 package docker
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"path"
 	"path/filepath"
 	"time"
 
@@ -29,7 +32,11 @@ func WriteToComposeFile(dockerComposeFile string, debug bool) bool {
 		return false
 	}
 
+	secretFileName, secretErr := writeDockerConfigSecretFile(path.Dir(dockerComposeFile))
+	errors.CheckErr(secretErr, 204, "")
 	dataStruct := Compose{}
+
+	data := fmt.Sprintf(composeTemplate, secretFileName)
 
 	unmarshDataErr := yaml.Unmarshal([]byte(data), &dataStruct)
 	errors.CheckErr(unmarshDataErr, 202, "")
@@ -52,6 +59,29 @@ func WriteToComposeFile(dockerComposeFile string, debug bool) bool {
 	err = ioutil.WriteFile(dockerComposeFile, marshalledData, 0644)
 	errors.CheckErr(err, 204, "")
 	return true
+}
+
+func writeDockerConfigSecretFile(parentPath string) (string, error) {
+	dockerConfig, err := getDockerCredentials("local")
+	if err != nil {
+		return "", err
+	}
+	dockerConfigBytes, jsonErr := json.MarshalIndent(dockerConfig, "", "  ")
+	if jsonErr != nil {
+		return "", jsonErr
+	}
+	encoded := base64.StdEncoding.EncodeToString(dockerConfigBytes)
+	secretFile := path.Join(parentPath, dockerConfigSecretFile)
+	err = ioutil.WriteFile(secretFile, []byte(encoded), 0600)
+	return secretFile, err
+}
+
+// ClearDockerConfigSecret We erase the contents rather than deleting
+// the file as the docker-compose file expects the secret to be present.
+func ClearDockerConfigSecret(parentPath string) error {
+	// Most callers won't handle this error as this shouldn't block shutdown.
+	secretFile := path.Join(parentPath, dockerConfigSecretFile)
+	return ioutil.WriteFile(secretFile, []byte{}, 0600)
 }
 
 // PingHealth - pings environment api every 15 seconds to check if containers started
