@@ -23,6 +23,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"path"
 	"runtime"
 	"strconv"
 	"strings"
@@ -194,7 +195,7 @@ func DockerCompose(dockerComposeFile string, tag string, loglevel string) *Docke
 		//print out docker-compose sysout & syserr for error diagnosis
 		fmt.Printf(output.String())
 		utils.DeleteTempFile(dockerComposeFile)
-		ClearDockerConfigSecret()
+		ClearDockerConfigSecret(path.Dir(dockerComposeFile))
 		return &DockerError{errOpDockerComposeStart, err, err.Error()}
 	}
 	fmt.Printf("Please wait while containers initialize... %s \n", output.String())
@@ -202,20 +203,20 @@ func DockerCompose(dockerComposeFile string, tag string, loglevel string) *Docke
 		//print out docker-compose sysout & syserr for error diagnosis
 		fmt.Printf(output.String())
 		utils.DeleteTempFile(dockerComposeFile)
-		ClearDockerConfigSecret()
+		ClearDockerConfigSecret(path.Dir(dockerComposeFile))
 		return &DockerError{errOpDockerComposeStart, err, err.Error()}
 	}
 	fmt.Printf(output.String()) // Wait to finish execution, so we can read all output
 
 	if strings.Contains(output.String(), "ERROR") || strings.Contains(output.String(), "error") {
 		utils.DeleteTempFile(dockerComposeFile)
-		ClearDockerConfigSecret()
+		ClearDockerConfigSecret(path.Dir(dockerComposeFile))
 		os.Exit(1)
 	}
 
 	if strings.Contains(output.String(), "The image for the service you're trying to recreate has been removed") {
 		utils.DeleteTempFile(dockerComposeFile)
-		ClearDockerConfigSecret()
+		ClearDockerConfigSecret(path.Dir(dockerComposeFile))
 		os.Exit(1)
 	}
 	return nil
@@ -226,7 +227,7 @@ func DockerComposeStop(tag, dockerComposeFile string) *DockerError {
 	setupDockerComposeEnvs(tag, "stop", "")
 
 	// Delete the docker configuration file whether we have a clean shutdown or not.
-	ClearDockerConfigSecret()
+	ClearDockerConfigSecret(path.Dir(dockerComposeFile))
 
 	cmd := exec.Command("docker-compose", "-f", dockerComposeFile, "rm", "--stop", "-f")
 	output := new(bytes.Buffer)

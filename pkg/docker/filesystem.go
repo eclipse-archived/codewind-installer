@@ -78,9 +78,10 @@ func writeDockerConfigSecretFile(parentPath string) (string, error) {
 
 // ClearDockerConfigSecret We erase the contents rather than deleting
 // the file as the docker-compose file expects the secret to be present.
-func ClearDockerConfigSecret() error {
+func ClearDockerConfigSecret(parentPath string) error {
 	// Most callers won't handle this error as this shouldn't block shutdown.
-	return ioutil.WriteFile(dockerConfigSecretFile, []byte{}, 0600)
+	secretFile := path.Join(parentPath, dockerConfigSecretFile)
+	return ioutil.WriteFile(secretFile, []byte{}, 0600)
 }
 
 // PingHealth - pings environment api every 15 seconds to check if containers started
