@@ -15,11 +15,14 @@ import (
 	"os"
 	"testing"
 
+	"github.com/eclipse/codewind-installer/pkg/globals"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestWriteToComposeFile(t *testing.T) {
+	originalUseInsecureKeyring := globals.UseInsecureKeyring
+	globals.SetUseInsecureKeyring(true)
 	t.Run("docker compose should be written to the filepath", func(t *testing.T) {
 		testFile := "TestFile.yaml"
 		os.Create(testFile)
@@ -44,4 +47,5 @@ func TestWriteToComposeFile(t *testing.T) {
 		composeWritten := WriteToComposeFile("", false)
 		assert.False(t, composeWritten)
 	})
+	globals.SetUseInsecureKeyring(originalUseInsecureKeyring)
 }
