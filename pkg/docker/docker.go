@@ -692,8 +692,6 @@ func setDockerCredentials(connectionID string, dockerConfig *DockerConfig) error
 	// structure.
 	if jsonErr != nil {
 		return jsonErr
-		// fmt.Printf("Error, invalid json in docker config structure - %s\n", jsonErr)
-		// os.Exit(1)
 	}
 	newSecret := string(newSecretBytes)
 	err := security.StoreSecretInKeyring(connectionID, "docker_credentials", newSecret)
