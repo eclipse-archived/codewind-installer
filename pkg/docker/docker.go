@@ -23,7 +23,6 @@ import (
 	"net"
 	"os"
 	"os/exec"
-	"path"
 	"runtime"
 	"strconv"
 	"strings"
@@ -58,10 +57,11 @@ var containerNames = [...]string{
 }
 
 var homeDir = desktoputils.GetHomeDir()
-var dockerConfigSecretFile = path.Join(homeDir, ".codewind", "dockerconfig")
+
+var dockerConfigSecretFile = "dockerconfig"
 
 // codewind-docker-compose.yaml data
-var data = `
+var composeTemplate = `
 version: 3.3
 services:
  ` + pfeContainerName + `:
@@ -95,7 +95,7 @@ volumes:
   cw-workspace:
 secrets:
   dockerconfig:
-    file: ` + dockerConfigSecretFile + `
+    file: %s
 `
 
 // Compose struct for the docker compose yaml file

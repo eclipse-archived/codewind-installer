@@ -18,6 +18,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"path"
 	"path/filepath"
 	"time"
 
@@ -31,9 +32,11 @@ func WriteToComposeFile(dockerComposeFile string, debug bool) bool {
 		return false
 	}
 
-	secretErr := writeDockerConfigSecretFile()
+	secretFileName, secretErr := writeDockerConfigSecretFile(path.Dir(dockerComposeFile))
 	errors.CheckErr(secretErr, 204, "")
 	dataStruct := Compose{}
+
+	data := fmt.Sprintf(composeTemplate, secretFileName)
 
 	unmarshDataErr := yaml.Unmarshal([]byte(data), &dataStruct)
 	errors.CheckErr(unmarshDataErr, 202, "")
@@ -58,18 +61,19 @@ func WriteToComposeFile(dockerComposeFile string, debug bool) bool {
 	return true
 }
 
-func writeDockerConfigSecretFile() error {
+func writeDockerConfigSecretFile(parentPath string) (string, error) {
 	dockerConfig, err := getDockerCredentials("local")
 	if err != nil {
-		return err
+		return "", err
 	}
 	dockerConfigBytes, jsonErr := json.MarshalIndent(dockerConfig, "", "  ")
 	if jsonErr != nil {
-		return jsonErr
+		return "", jsonErr
 	}
 	encoded := base64.StdEncoding.EncodeToString(dockerConfigBytes)
-	err = ioutil.WriteFile(dockerConfigSecretFile, []byte(encoded), 0600)
-	return err
+	secretFile := path.Join(parentPath, dockerConfigSecretFile)
+	err = ioutil.WriteFile(secretFile, []byte(encoded), 0600)
+	return secretFile, err
 }
 
 // ClearDockerConfigSecret We erase the contents rather than deleting
