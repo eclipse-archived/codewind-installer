@@ -213,6 +213,12 @@ When using a project ID the CLI will automatically detect which connection it re
 > --name                        Project name
 > --conid                       Connection ID
 
+`restart` - Restart a project
+> **Flags**
+> --id, i                       Project ID
+> --conid                       Connection ID
+> --startMode                   "run" | "debug" | "debugNoInit"
+
 `connection/con` - Manage the connection targets for a project
 
 `set,s` - Sets the connection for a projectID

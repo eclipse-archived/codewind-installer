@@ -204,6 +204,19 @@ func Commands() {
 						return nil
 					},
 				},
+				{
+					Name:  "restart",
+					Usage: "Restart a single project, requires 'id' and 'startMode'",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
+						cli.StringFlag{Name: "startmode, s", Usage: "Start Mode of the project; can be run, debug, or debugNoInit", Required: true},
+						cli.StringFlag{Name: "conid", Value: "local", Usage: "The connection id of the remote deployment to use", Required: false},
+					},
+					Action: func(c *cli.Context) error {
+						ProjectRestart(c)
+						return nil
+					},
+				},
 			},
 		},
 
