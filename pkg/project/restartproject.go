@@ -19,6 +19,7 @@ import (
 	"net/http"
 
 	"github.com/eclipse/codewind-installer/pkg/connections"
+	"github.com/eclipse/codewind-installer/pkg/remote"
 	"github.com/eclipse/codewind-installer/pkg/sechttp"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 )
@@ -32,6 +33,15 @@ type (
 
 // RestartProject calls the restart API on the connected PFE, for the given projectID and startMode
 func RestartProject(httpClient utils.HTTPClient, conInfo *connections.Connection, conURL string, projectID string, startMode string) error {
+	// this will come after the call requesting restart on turbine, however currently an error is returned
+	// when a request to restart a k8s project is sent
+	if conInfo.ID != "local" {
+		err := remote.HandlePortForward(projectID, "")
+		if err != nil {
+			return err
+		}
+		return nil
+	}
 	requestURL := conURL + "/api/v1/projects/" + projectID + "/restart"
 	parameters := RestartParameters{
 		StartMode: startMode,

@@ -68,8 +68,8 @@ func GetImages() (string, string, string, string) {
 	return pfeImage + ":" + pfeTag, performanceImage + ":" + performanceTag, keycloakImage + ":" + keycloakTag, gatekeeperImage + ":" + gatekeeperTag
 }
 
-// Get kubeconfig
-func getKubeConfig() (*rest.Config, error) {
+// GetKubeConfig : Gets kube config
+func GetKubeConfig() (*rest.Config, error) {
 	var config *rest.Config
 	var err error
 

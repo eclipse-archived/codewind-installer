@@ -36,7 +36,7 @@ type K8sAPI struct {
 
 // GetExistingDeployments returns information about the remote installations of codewind, across all namespaces by default
 func GetExistingDeployments(namespace string) ([]ExistingDeployment, *RemInstError) {
-	config, err := getKubeConfig()
+	config, err := GetKubeConfig()
 
 	if err != nil {
 		logr.Infof("Unable to retrieve Kubernetes Config %v\n", err)
