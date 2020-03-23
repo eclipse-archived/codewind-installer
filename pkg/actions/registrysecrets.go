@@ -45,22 +45,33 @@ func AddRegistrySecret(c *cli.Context) {
 	username := strings.TrimSpace(c.String("username"))
 	password := strings.TrimSpace(c.String("password"))
 
+	// If this is a local connection we need to:
+	// - Log in to local docker to support extensions such as appsody.
+	// - Persist the details in the keychain for the next time Codewind starts.
+	//   (On Kubernetes PFE persists them in a secret inside Kubernetes itself.)
+	if conInfo.ID == "local" {
+
+		// Log in with local docker. Do this first as it will validate the credentials.
+		// Otherwise we have to undo everything else if they are wrong.
+		dockerErr := docker.LoginToRegistry(address, username, password)
+		if dockerErr != nil {
+			HandleDockerError(dockerErr)
+			os.Exit(1)
+		}
+
+		// Add the credentials to the local keyring.
+		dockerErr = docker.AddDockerCredential(conInfo.ID, address, username, password)
+		if dockerErr != nil {
+			HandleDockerError(dockerErr)
+			os.Exit(1)
+		}
+	}
+
 	registrySecrets, err := apiroutes.AddRegistrySecret(conInfo, conURL, http.DefaultClient, address, username, password)
 	if err != nil {
 		registryErr := &RegistryError{errOpAddRegistry, err, err.Error()}
 		HandleRegistryError(registryErr)
 		os.Exit(1)
-	}
-
-	// If this is a local connection we need to persist the details in the keychain for
-	// the next time Codewind starts.
-	// (On Kubernetes PFE persists them in a secret inside Kubernetes itself.)
-	if conInfo.ID == "local" {
-		dockerErr := docker.AddDockerCredential(conInfo.ID, address, username, password)
-		if dockerErr != nil {
-			HandleDockerError(dockerErr)
-			os.Exit(1)
-		}
 	}
 
 	utils.PrettyPrintJSON(registrySecrets)

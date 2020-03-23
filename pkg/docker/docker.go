@@ -637,6 +637,29 @@ func GetContainerTags(dockerClient DockerClient) ([]string, *DockerError) {
 	return tagArr, nil
 }
 
+// LoginToRegistry : Log in locally to a docker registry with the supplied credentials.
+func LoginToRegistry(address string, username string, password string) *DockerError {
+	// Pipe the password via stdin.
+	cmd := exec.Command("docker", "login", "--username", username, "--password-stdin", address)
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		return &DockerError{errDockerCredential, err, "Error executing 'docker login'"}
+	}
+
+	// Write to stdin using an asyncrhonous go routine.
+	go func() {
+		defer stdin.Close()
+		io.WriteString(stdin, password)
+	}()
+
+	_, err = cmd.CombinedOutput()
+	if err != nil {
+		return &DockerError{errDockerCredential, err, "Error executing 'docker login'"}
+	}
+
+	return nil
+}
+
 // AddDockerCredential : Add (or update) a single docker login in the keychain entry.
 func AddDockerCredential(connectionID string, address string, username string, password string) *DockerError {
 	dockerConfig, err := getDockerCredentials(connectionID)
