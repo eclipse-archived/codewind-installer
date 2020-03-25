@@ -12,13 +12,13 @@
 package remote
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
 	"strings"
-	"sync"
 	"syscall"
 
 	v1 "k8s.io/api/core/v1"
@@ -30,37 +30,41 @@ import (
 	"k8s.io/client-go/transport/spdy"
 )
 
-// ProjectPod : Relevant properities of a remote deploted project pod
-type ProjectPod struct {
-	Namespace   string
-	ProjectID   string
-	ProjectName string
-}
+type (
+	// ProjectPod : Relevant properities of a remote deployed project pod
+	ProjectPod struct {
+		Namespace   string
+		ProjectID   string
+		ProjectName string
+	}
 
-// PortForwardPodRequest : The request made to forward the port from a remote pod to local
-type PortForwardPodRequest struct {
-	RestConfig *rest.Config
-	Pod        v1.Pod
-	LocalPort  int
-	PodPort    int
-	Streams    genericclioptions.IOStreams
-	StopCh     <-chan struct{}
-	ReadyCh    chan struct{}
-}
+	// PortForwardPodRequest : The request made to forward the port from a remote pod to local
+	PortForwardPodRequest struct {
+		RestConfig *rest.Config
+		Pod        v1.Pod
+		LocalPort  int
+		PodPort    int
+		Streams    genericclioptions.IOStreams
+		StopCh     <-chan struct{}
+		ReadyCh    chan struct{}
+	}
+
+	// PortForwarder : The channels required to create a new k8s port-forwarder
+	PortForwarder struct {
+		StopChannel  chan struct{}
+		ReadyChannel chan struct{}
+	}
+)
 
 // HandlePortForward : Forwards port from remote pod to local
 func HandlePortForward(projectID string, namespace string) error {
-	// wg will wait for goroutines to finish
-	var wg sync.WaitGroup
-	wg.Add(1)
-
-	config, err := GetKubeConfig()
+	kubeConfig, err := GetKubeConfig()
 	if err != nil {
 		return err
 	}
 
 	client := K8sAPI{}
-	client.clientset, err = kubernetes.NewForConfig(config)
+	client.clientset, err = kubernetes.NewForConfig(kubeConfig)
 	if err != nil {
 		return err
 	}
@@ -70,56 +74,43 @@ func HandlePortForward(projectID string, namespace string) error {
 		return err
 	}
 
-	stopCh := make(chan struct{}, 1)
-	readyCh := make(chan struct{})
+	portForwarder := PortForwarder{
+		StopChannel:  make(chan struct{}, 1),
+		ReadyChannel: make(chan struct{}),
+	}
 
-	// stream controls where portforward sends its output,
-	// and where to expect its input from
 	stream := genericclioptions.IOStreams{
 		In:     os.Stdin,
 		Out:    os.Stdout,
 		ErrOut: os.Stderr,
 	}
 
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	// If system interrupt, close the Stop Channel and hence finish port-forward
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
-		sig := <-sigs
-		close(stopCh)
-		fmt.Println(sig)
-		wg.Done()
+		<-signals
+		close(portForwarder.StopChannel)
 	}()
 
-	go func() error {
-		err := PortForwardPod(PortForwardPodRequest{
-			RestConfig: config,
-			Pod: v1.Pod{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      podInfo.ProjectName,
-					Namespace: podInfo.Namespace,
-				},
+	err = PortForwardPod(PortForwardPodRequest{
+		RestConfig: kubeConfig,
+		Pod: v1.Pod{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      podInfo.ProjectName,
+				Namespace: podInfo.Namespace,
 			},
-			LocalPort: 9229,
-			PodPort:   9229,
-			Streams:   stream,
-			StopCh:    stopCh,
-			ReadyCh:   readyCh,
-		})
-		if err != nil {
-			return err
-		}
-		return nil
-	}()
-
-	select {
-	case <-readyCh:
-		break
-	case <-stopCh:
-		println("stopped!")
-		break
+		},
+		LocalPort: 9229,
+		PodPort:   9229,
+		Streams:   stream,
+		StopCh:    portForwarder.StopChannel,
+		ReadyCh:   portForwarder.ReadyChannel,
+	})
+	if err != nil {
+		return err
 	}
-	wg.Wait()
 	return nil
 }
 
@@ -133,6 +124,7 @@ func PortForwardPod(req PortForwardPodRequest) error {
 	if err != nil {
 		return err
 	}
+
 	dialer := spdy.NewDialer(upgrader, &http.Client{Transport: transport}, http.MethodPost, &url.URL{Scheme: "https", Path: path, Host: hostIP})
 	fw, err := portforward.New(dialer, []string{fmt.Sprintf("%d:%d", req.LocalPort, req.PodPort)}, req.StopCh, req.ReadyCh, req.Streams.Out, req.Streams.ErrOut)
 	if err != nil {
@@ -152,7 +144,11 @@ func (client K8sAPI) GetProjectPodFromID(projectID string) (*ProjectPod, error) 
 	}
 
 	if len(podList.Items) == 0 {
-		return nil, err
+		return nil, errors.New("No remote pod with given projectID")
+	}
+
+	if len(podList.Items) > 1 {
+		return nil, errors.New("Multiple remote pods with given projectID")
 	}
 
 	pod := podList.Items[0]

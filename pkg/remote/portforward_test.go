@@ -13,30 +13,41 @@ package remote
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"github.com/stretchr/testify/assert"
 	"k8s.io/client-go/kubernetes/fake"
 )
 
 func TestGetProjectPodFromID(t *testing.T) {
 	k8s := newTestSimpleK8s()
+	testOptions := &ProjectPod{
+		ProjectName: "testpod",
+		Namespace:   "test-ns",
+		ProjectID:   "a-test-project-id",
+	}
 	k8s.clientset = fake.NewSimpleClientset(&corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "test",
-			Namespace: "test-ns",
+			Name:      testOptions.ProjectName,
+			Namespace: testOptions.Namespace,
 			Labels: map[string]string{
-				"projectID": "test",
+				"projectID": testOptions.ProjectID,
 			},
 		},
 	})
 	want := &ProjectPod{
-		ProjectName: "test",
-		Namespace: "test-ns",
-		ProjectID: "test",
-
+		ProjectName: testOptions.ProjectName,
+		Namespace:   testOptions.Namespace,
+		ProjectID:   testOptions.ProjectID,
 	}
-	got, err := k8s.GetProjectPodFromID("test")
-	assert.Nil(t, err)
-	assert.Equal(t, want, got)
+	t.Run("Success case - pod exists with given projectID", func(t *testing.T) {
+		got, err := k8s.GetProjectPodFromID(testOptions.ProjectID)
+		assert.Nil(t, err)
+		assert.Equal(t, want, got)
+	})
+	t.Run("Error case - no pod exists with given projectID", func(t *testing.T) {
+		_, err := k8s.GetProjectPodFromID("notvalidID")
+		assert.NotNil(t, err)
+	})
 }
