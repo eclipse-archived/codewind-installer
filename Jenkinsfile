@@ -272,10 +272,6 @@ spec:
 
                     mkdir ${ZIPS_DIR}
                     for f in $(ls ${CWCTL_BASENAME}*); do
-                        export ZIP_NAME="${f}.zip"
-                        zip -r $ZIP_NAME $f
-                        mv $ZIP_NAME ${ZIPS_DIR}
-
                         export TARGZ_NAME="${f}.tar.gz"
                         tar -czvf $TARGZ_NAME $f
                         mv $TARGZ_NAME ${ZIPS_DIR}
