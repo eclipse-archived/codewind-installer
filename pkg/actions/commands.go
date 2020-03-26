@@ -217,9 +217,20 @@ func Commands() {
 						return nil
 					},
 				},
+				{
+					Name:  "port-forward",
+					Usage: "Forward a port from a remote project to local'",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
+						cli.StringFlag{Name: "port, p", Usage: "Remote port to forward", Required: true},
+					},
+					Action: func(c *cli.Context) error {
+						ProjectPortForward(c)
+						return nil
+					},
+				},
 			},
 		},
-
 		{
 			Name:    "install",
 			Aliases: []string{"in"},

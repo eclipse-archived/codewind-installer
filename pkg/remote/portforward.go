@@ -57,7 +57,7 @@ type (
 )
 
 // HandlePortForward : Forwards port from remote pod to local
-func HandlePortForward(projectID string, namespace string) error {
+func HandlePortForward(projectID string, port int) error {
 	kubeConfig, err := GetKubeConfig()
 	if err != nil {
 		return err
@@ -103,7 +103,7 @@ func HandlePortForward(projectID string, namespace string) error {
 			},
 		},
 		LocalPort: 9229,
-		PodPort:   9229,
+		PodPort:   port,
 		Streams:   stream,
 		StopCh:    portForwarder.StopChannel,
 		ReadyCh:   portForwarder.ReadyChannel,

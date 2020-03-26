@@ -16,12 +16,14 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"text/tabwriter"
 
 	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/project"
+	"github.com/eclipse/codewind-installer/pkg/remote"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
@@ -283,4 +285,23 @@ func ProjectRestart(c *cli.Context) {
 	response, _ := json.Marshal(project.Result{Status: "OK", StatusMessage: "Project restart request accepted"})
 	fmt.Println(string(response))
 	os.Exit(0)
+}
+
+// ProjectPortForward : Forward a remote project port to local
+func ProjectPortForward(c *cli.Context) error {
+	projectID := strings.TrimSpace(strings.ToLower(c.String("id")))
+	port := strings.TrimSpace(strings.ToLower(c.String("port")))
+
+	// convert port string to int
+	intPort, err := strconv.Atoi(port)
+	if err != nil {
+		return err
+	}
+
+	err = remote.HandlePortForward(projectID, intPort)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

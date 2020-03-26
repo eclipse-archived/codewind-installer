@@ -143,7 +143,7 @@ This is the same as `go test ./...`, but outputs test coverage scores for each f
 ### CLI Commands
 
 | Command         | Alias | Usage                                                               |
-| ----------------| ----- | ------------------------------------------------------------------- |
+| --------------- | ----- | ------------------------------------------------------------------- |
 | project         |       | 'Manage Codewind projects'                                          |
 | install         | `in`  | 'Pull pfe & performance images from dockerhub'                      |
 | start           |       | 'Start the Codewind containers'                                     |
@@ -203,21 +203,29 @@ Subcommands:</br>
 > --time,-t value Time of last project sync
 
 `list` - List projects bound to a Codewind deployment
+
 > **Flags**
-> --conid value                 Connection ID
+> --conid value Connection ID
 
 `get` - Get a single project, requires either the project ID or name
 When using a project ID the CLI will automatically detect which connection it relates to
+
 > **Flags**
-> --id value                    Project ID
-> --name                        Project name
-> --conid                       Connection ID
+> --id value Project ID
+> --name Project name
+> --conid Connection ID
 
 `restart` - Restart a project
+
 > **Flags**
-> --id, i                       Project ID
-> --conid                       Connection ID
-> --startMode                   "run" | "debug" | "debugNoInit"
+> --id, i Project ID
+> --conid Connection ID
+> --startMode "run" | "debug" | "debugNoInit"
+
+`port-forward` - Forward a remote project port, to local
+
+> --id, i Project ID
+> --port, p The remote port to port to local
 
 `connection/con` - Manage the connection targets for a project
 
@@ -280,20 +288,24 @@ Subcommands:</br>
 ### remove
 
 `--tag/-t <value>` - Dockerhub image tag.</br>
+
 > **Note:** Failing to specify a `--tag`, will result in an attempt to remove the default `latest` tagged Codewind images on the host machine.
 
 Subcommands:</br>
 
 `local/l` - Removes and deletes a Codewind local deployment
+
 > **Flags:**
 > --tag - Docker hub image tag
 
 `remote/r` - Removes and deletes a Codewind remote deployment from Kubernetes
+
 > **Flags:**
 > --namespace - Kubernetes namespace
 > --workspace - Codewind workspace ID
 
 `keycloak/k` - Removes and deletes a Keycloak deployment from Kubernetes
+
 > **Flags:**
 > --namespace - Kubernetes namespace
 > --workspace - Keycloak workspace ID
