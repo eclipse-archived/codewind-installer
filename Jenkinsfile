@@ -153,10 +153,10 @@ spec:
                         whoami
                         echo groups
                         groups
-                        echo ls -lR /home/jenkins/agent
-                        ls -lR /home/jenkins/agent
-                        echo ls -lRd /home/jenkins/agent
-                        ls -lRd /home/jenkins/agent
+                        #  echo ls -lR /home/jenkins/agent
+                        #  ls -lR /home/jenkins/agent
+                        #  echo ls -lRd /home/jenkins/agent
+                        #  ls -lRd /home/jenkins/agent
                         HOME="$WORKSPACE"
                         echo HOME $HOME
                         echo ls WORKSPACE 1
