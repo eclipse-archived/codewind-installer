@@ -26,8 +26,9 @@ import (
 	"github.com/zalando/go-keyring"
 )
 
-var insecureKeyringDir = connections.GetConnectionConfigDir()
+var insecureKeyringDir = os.Getwd()
 
+//var insecureKeyringDir = connections.GetConnectionConfigDir()
 // var insecureKeyringDir = "."
 
 // KeyringSecret : Secret
