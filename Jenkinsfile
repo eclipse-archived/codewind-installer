@@ -162,6 +162,13 @@ spec:
                         echo ls WORKSPACE 1
                         ls $WORKSPACE
                         go test ./... -v -short -coverprofile=coverage.txt -covermode=count
+                        
+                        #  echo ls -lR /home/jenkins/agent/src/github.com/eclipse/codewind-installer/pkg/security
+                        ls -lR /home/jenkins/agent/src/github.com/eclipse/codewind-installer/pkg/security
+
+                        #  echo ls -lR /home/jenkins/agent
+                        ls -lR /home/jenkins/agent/src/github.com/eclipse/codewind-installer
+                        
                         echo ls WORKSPACE 2
                         ls $WORKSPACE
                         TEST_RESULT=$?
