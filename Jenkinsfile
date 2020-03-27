@@ -163,11 +163,12 @@ spec:
                         ls $WORKSPACE
                         go test ./... -v -short -coverprofile=coverage.txt -covermode=count
                         
-                        #  echo ls -lR /home/jenkins/agent/src/github.com/eclipse/codewind-installer/pkg/security
-                        ls -lR /home/jenkins/agent/src/github.com/eclipse/codewind-installer/pkg/security
-
-                        #  echo ls -lR /home/jenkins/agent
-                        ls -lR /home/jenkins/agent/src/github.com/eclipse/codewind-installer
+                        echo whoami
+                        whoami
+                        echo touch
+                        touch /home/jenkins/agent/src/github.com/eclipse/codewind-installer/pkg/security/.codewind/config/test.txt
+                        echo ls -laR /home/jenkins/agent/src/github.com/eclipse/codewind-installer/pkg/security
+                        ls -laR /home/jenkins/agent/src/github.com/eclipse/codewind-installer/pkg/security
                         
                         echo ls WORKSPACE 2
                         ls $WORKSPACE
