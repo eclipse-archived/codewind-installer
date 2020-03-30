@@ -217,6 +217,63 @@ func Commands() {
 						return nil
 					},
 				},
+				{
+					Name:  "link",
+					Usage: "Manage project links",
+					Subcommands: []cli.Command{
+						{
+							Name:    "list",
+							Aliases: []string{"l"},
+							Usage:   "Lists all the links for a project",
+							Flags: []cli.Flag{
+								cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
+							},
+							Action: func(c *cli.Context) error {
+								ProjectSetConnection(c)
+								return nil
+							},
+						},
+						{
+							Name:    "create",
+							Aliases: []string{"c"},
+							Usage:   "Creates a new link for a project",
+							Flags: []cli.Flag{
+								cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
+								cli.StringFlag{Name: "targetID,t", Usage: "The Project ID of the project to add a link to", Required: true},
+								cli.StringFlag{Name: "env,e", Usage: "Environment variable name", Required: true},
+							},
+							Action: func(c *cli.Context) error {
+								ProjectLinkCreate(c)
+								return nil
+							},
+						}, {
+							Name:    "rename",
+							Aliases: []string{"r"},
+							Usage:   "Renames the environment variable name for a link",
+							Flags: []cli.Flag{
+								cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
+								cli.StringFlag{Name: "env,e", Usage: "Environment variable name", Required: true},
+								cli.StringFlag{Name: "newEnv,n", Usage: "New environment variable name", Required: true},
+							},
+							Action: func(c *cli.Context) error {
+								ProjectGetConnection(c)
+								return nil
+							},
+						}, {
+							Name:    "delete",
+							Aliases: []string{"d"},
+							Usage:   "Delete a project link",
+							Flags: []cli.Flag{
+								cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
+								cli.StringFlag{Name: "env,e", Usage: "Environment variable name", Required: true},
+							},
+							Action: func(c *cli.Context) error {
+								ProjectRemoveConnection(c)
+								return nil
+							},
+						},
+					},
+				},
 			},
 		},
 

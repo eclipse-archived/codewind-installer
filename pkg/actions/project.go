@@ -284,3 +284,38 @@ func ProjectRestart(c *cli.Context) {
 	fmt.Println(string(response))
 	os.Exit(0)
 }
+
+// ProjectLinkCreate : creates a new link
+func ProjectLinkCreate(c *cli.Context) {
+	projectID := strings.TrimSpace(strings.ToLower(c.String("id")))
+	targetProjectID := strings.TrimSpace(strings.ToLower(c.String("targetID")))
+	envName := strings.TrimSpace(c.String("env"))
+
+	conID, getConnectionIDErr := project.GetConnectionID(projectID)
+	if getConnectionIDErr != nil {
+		HandleProjectError(getConnectionIDErr)
+		os.Exit(1)
+	}
+
+	conInfo, conInfoErr := connections.GetConnectionByID(conID)
+	if conInfoErr != nil {
+		HandleConnectionError(conInfoErr)
+		os.Exit(1)
+	}
+
+	conURL, conErr := config.PFEOriginFromConnection(conInfo)
+	if conErr != nil {
+		HandleConfigError(conErr)
+		os.Exit(1)
+	}
+
+	err := project.CreateProjectLink(http.DefaultClient, conInfo, conURL, projectID, targetProjectID, envName)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+
+	response, _ := json.Marshal(project.Result{Status: "OK", StatusMessage: "Project restart request accepted"})
+	fmt.Println(string(response))
+	os.Exit(0)
+}
