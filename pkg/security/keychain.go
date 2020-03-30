@@ -164,7 +164,7 @@ func GetSecretFromKeyring(connectionID, uName string) (string, *SecError) {
 	if err != nil {
 		if err == keyring.ErrNotFound {
 			errNotFound := errors.New(textSecretNotFound)
-			return "", &SecError{errOpKeyring, errNotFound, errNotFound.Error()}
+			return "", &SecError{errOpKeyringSecretNotFound, errNotFound, errNotFound.Error()}
 		}
 		return "", &SecError{errOpKeyring, err, err.Error()}
 	}
@@ -214,6 +214,10 @@ func DeleteSecretFromKeyring(connectionID, uName string) *SecError {
 	// else delete from system keyring
 	err := keyring.Delete(service, uName)
 	if err != nil {
+		if err == keyring.ErrNotFound {
+			errNotFound := errors.New(textSecretNotFound)
+			return &SecError{errOpKeyringSecretNotFound, errNotFound, errNotFound.Error()}
+		}
 		return &SecError{errOpKeyring, err, err.Error()}
 	}
 	return nil
