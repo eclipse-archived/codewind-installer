@@ -8,4 +8,4 @@ docker build -t cwctl-insecure .
 
 rm cmd/cli/cwctl-linux
 
-docker run -it -v /var/run/docker.sock:/var/run/docker.sock --rm cwctl-insecure ./cwctl start
+docker run -it -v /var/run/docker.sock:/var/run/docker.sock --rm cwctl-insecure ./cwctl --json start

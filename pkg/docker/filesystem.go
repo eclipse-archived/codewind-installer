@@ -33,9 +33,11 @@ func WriteToComposeFile(dockerComposeFile string, debug bool) bool {
 	}
 
 	secretFileName, secretErr := writeDockerConfigSecretFile(path.Dir(dockerComposeFile))
+
+	fmt.Println("BEFORE")
 	errors.CheckErr(secretErr, 204, "")
 	dataStruct := Compose{}
-
+	fmt.Print("HERE")
 	data := fmt.Sprintf(composeTemplate, secretFileName)
 
 	unmarshDataErr := yaml.Unmarshal([]byte(data), &dataStruct)
@@ -62,8 +64,10 @@ func WriteToComposeFile(dockerComposeFile string, debug bool) bool {
 }
 
 func writeDockerConfigSecretFile(parentPath string) (string, error) {
+	// TODO handle error coming from here
 	dockerConfig, err := getDockerCredentials("local")
 	if err != nil {
+		fmt.Println(err.Error())
 		return "", err
 	}
 	dockerConfigBytes, jsonErr := json.MarshalIndent(dockerConfig, "", "  ")

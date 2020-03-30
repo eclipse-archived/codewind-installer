@@ -672,6 +672,7 @@ func RemoveDockerCredential(connectionID string, address string) *DockerError {
 func getDockerCredentials(connectionID string) (*DockerConfig, error) {
 	secret, err := security.GetSecretFromKeyring(connectionID, "docker_credentials")
 	if err != nil {
+		// Here should we just default to no secrets are found ???
 		if security.IsSecretNotFoundError(err) {
 			secret = "{\"auths\": {}}"
 		} else {
