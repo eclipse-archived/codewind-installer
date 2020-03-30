@@ -22,6 +22,7 @@ import (
 	"strings"
 	"syscall"
 
+	logr "github.com/sirupsen/logrus"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -64,21 +65,22 @@ type IOStreams struct {
 }
 
 // HandlePortForward : Forwards port from remote pod to local
-func HandlePortForward(projectID string, port int) error {
+func HandlePortForward(projectID string, port int) *RemInstError {
 	kubeConfig, err := GetKubeConfig()
 	if err != nil {
-		return err
+		logr.Infof("Unable to retrieve Kubernetes Config %v\n", err)
+		return &RemInstError{errOpNotFound, err, err.Error()}
 	}
 
 	client := K8sAPI{}
 	client.clientset, err = kubernetes.NewForConfig(kubeConfig)
 	if err != nil {
-		return err
+		return &RemInstError{errOpNotFound, err, err.Error()}
 	}
 
-	podInfo, err := client.GetProjectPodFromID(projectID)
-	if err != nil {
-		return err
+	podInfo, RemErr := client.GetProjectPodFromID(projectID)
+	if RemErr != nil {
+		return RemErr
 	}
 
 	portForwarder := PortForwarder{
@@ -116,7 +118,7 @@ func HandlePortForward(projectID string, port int) error {
 		ReadyCh:   portForwarder.ReadyChannel,
 	})
 	if err != nil {
-		return err
+		return &RemInstError{errOpPortForward, err, err.Error()}
 	}
 	return nil
 }
@@ -141,21 +143,23 @@ func PortForwardPod(req PortForwardPodRequest) error {
 }
 
 // GetProjectPodFromID : Gets a project pod from its id
-func (client K8sAPI) GetProjectPodFromID(projectID string) (*ProjectPod, error) {
+func (client K8sAPI) GetProjectPodFromID(projectID string) (*ProjectPod, *RemInstError) {
 	// projectIDs are unique, so this should only return one deployment
 	podList, err := client.clientset.CoreV1().Pods("").List(metav1.ListOptions{
 		LabelSelector: "projectID=" + projectID,
 	})
 	if err != nil {
-		return nil, err
+		return nil, &RemInstError{errOpGetPods, err, err.Error()}
 	}
 
 	if len(podList.Items) == 0 {
-		return nil, errors.New("No remote pod with given projectID")
+		err = errors.New("No remote pod with given projectID")
+		return nil, &RemInstError{errOpGetPods, err, err.Error()}
 	}
 
 	if len(podList.Items) > 1 {
-		return nil, errors.New("Multiple remote pods with given projectID")
+		err = errors.New("Multiple remote pods with given projectID")
+		return nil, &RemInstError{errOpGetPods, err, err.Error()}
 	}
 
 	pod := podList.Items[0]

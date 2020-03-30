@@ -288,20 +288,22 @@ func ProjectRestart(c *cli.Context) {
 }
 
 // ProjectPortForward : Forward a remote project port to local
-func ProjectPortForward(c *cli.Context) error {
+func ProjectPortForward(c *cli.Context) {
 	projectID := strings.TrimSpace(strings.ToLower(c.String("id")))
 	port := strings.TrimSpace(strings.ToLower(c.String("port")))
 
 	// convert port string to int
 	intPort, err := strconv.Atoi(port)
 	if err != nil {
-		return err
+		fmt.Println(err.Error())
+		os.Exit(1)
 	}
 
-	err = remote.HandlePortForward(projectID, intPort)
-	if err != nil {
-		return err
+	RemErr := remote.HandlePortForward(projectID, intPort)
+	if RemErr != nil {
+		HandleRemInstError(RemErr)
+		os.Exit(1)
 	}
 
-	return nil
+	os.Exit(0)
 }

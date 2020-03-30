@@ -26,6 +26,8 @@ const (
 	errOpNotFound        = "rem_not_found"
 	errOpNoIngress       = "rem_no_ingress"
 	errOpCreateNamespace = "rem_create_namespace"
+	errOpGetPods         = "rem_get_pods"
+	errOpPortForward     = "rem_port_forward"
 )
 
 const (
