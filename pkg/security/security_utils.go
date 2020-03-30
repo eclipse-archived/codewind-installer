@@ -38,17 +38,18 @@ type SecError struct {
 }
 
 const (
-	errOpConnection     = "sec_connection"      // Connection failed
-	errOpResponse       = "sec_response"        // Bad response
-	errOpResponseFormat = "sec_bodyparser"      // Parse errors
-	errOpNotFound       = "sec_notfound"        // No matching search results
-	errOpCreate         = "sec_create"          // Create failed
-	errOpPassword       = "sec_passwordcontent" // Password formatting
-	errOpHostname       = "sec_badhostname"     // Bad hostname / url
-	errOpKeyring        = "sec_keyring"         // Keyring operations
-	errOpConConfig      = "sec_con_config"      // Connection configuration errors
-	errOpCLICommand     = "sec_cli_options"     // Invalid command line options
-	errOpPasswordRead   = "sec_password_read"   // Unable to fetch password
+	errOpConnection      = "sec_connection"       // Connection failed
+	errOpResponse        = "sec_response"         // Bad response
+	errOpResponseFormat  = "sec_bodyparser"       // Parse errors
+	errOpNotFound        = "sec_notfound"         // No matching search results
+	errOpCreate          = "sec_create"           // Create failed
+	errOpPassword        = "sec_passwordcontent"  // Password formatting
+	errOpHostname        = "sec_badhostname"      // Bad hostname / url
+	errOpKeyring         = "sec_keyring"          // Keyring operations
+	errOpInsecureKeyring = "sec_insecure_keyring" // Insecure Keyring operations
+	errOpConConfig       = "sec_con_config"       // Connection configuration errors
+	errOpCLICommand      = "sec_cli_options"      // Invalid command line options
+	errOpPasswordRead    = "sec_password_read"    // Unable to fetch password
 )
 
 const (

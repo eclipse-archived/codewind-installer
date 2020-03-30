@@ -85,23 +85,23 @@ func StoreSecretInKeyring(connectionID, uName, pass string) *SecError {
 		if os.IsNotExist(statErr) {
 			mkdirErr := os.MkdirAll(insecureKeyringDir, 0600)
 			if mkdirErr != nil {
-				return &SecError{errOpKeyring, mkdirErr, mkdirErr.Error()}
+				return &SecError{errOpInsecureKeyring, mkdirErr, mkdirErr.Error()}
 			}
 			_, openFileErr := os.OpenFile(GetPathToInsecureKeyring(), os.O_CREATE, 0600)
 			if openFileErr != nil {
-				return &SecError{errOpKeyring, openFileErr, openFileErr.Error()}
+				return &SecError{errOpInsecureKeyring, openFileErr, openFileErr.Error()}
 			}
 		}
 
 		existingSecrets := []KeyringSecret{}
 		file, readErr := ioutil.ReadFile(GetPathToInsecureKeyring())
 		if readErr != nil {
-			return &SecError{errOpKeyring, readErr, readErr.Error()}
+			return &SecError{errOpInsecureKeyring, readErr, readErr.Error()}
 		}
 		if len(file) != 0 {
 			unmarshalErr := json.Unmarshal([]byte(file), &existingSecrets)
 			if unmarshalErr != nil {
-				return &SecError{errOpKeyring, unmarshalErr, unmarshalErr.Error()}
+				return &SecError{errOpInsecureKeyring, unmarshalErr, unmarshalErr.Error()}
 			}
 		}
 		newSecret := KeyringSecret{
@@ -123,11 +123,11 @@ func StoreSecretInKeyring(connectionID, uName, pass string) *SecError {
 		secrets := append(existingSecrets, newSecret)
 		body, marshallErr := json.MarshalIndent(secrets, "", "\t")
 		if marshallErr != nil {
-			return &SecError{errOpKeyring, marshallErr, marshallErr.Error()}
+			return &SecError{errOpInsecureKeyring, marshallErr, marshallErr.Error()}
 		}
 		writeErr := ioutil.WriteFile(GetPathToInsecureKeyring(), body, 0644)
 		if writeErr != nil {
-			return &SecError{errOpKeyring, writeErr, writeErr.Error()}
+			return &SecError{errOpInsecureKeyring, writeErr, writeErr.Error()}
 		}
 		return nil
 	}
@@ -157,7 +157,7 @@ func GetSecretFromKeyring(connectionID, uName string) (string, *SecError) {
 			}
 		}
 		err := errors.New(textSecretNotFound)
-		return "", &SecError{errOpKeyring, err, err.Error()}
+		return "", &SecError{errOpInsecureKeyring, err, err.Error()}
 	}
 	// else get from system keyring
 	secret, err := keyring.Get(service, uName)
@@ -189,25 +189,25 @@ func DeleteSecretFromKeyring(connectionID, uName string) *SecError {
 			}
 		}
 		if indexOfSecretToDelete == -1 {
-			err := errors.New("secret not found in keyring")
-			return &SecError{errOpKeyring, err, err.Error()}
+			err := errors.New(textSecretNotFound)
+			return &SecError{errOpInsecureKeyring, err, err.Error()}
 		}
 		// remove existing secret
 		secrets = append(secrets[:indexOfSecretToDelete], secrets[indexOfSecretToDelete+1:]...)
 		if len(secrets) == 0 {
 			err := os.Remove(GetPathToInsecureKeyring())
 			if err != nil {
-				return &SecError{errOpKeyring, err, err.Error()}
+				return &SecError{errOpInsecureKeyring, err, err.Error()}
 			}
 			return nil
 		}
 		body, marshallErr := json.MarshalIndent(secrets, "", "\t")
 		if marshallErr != nil {
-			return &SecError{errOpKeyring, marshallErr, marshallErr.Error()}
+			return &SecError{errOpInsecureKeyring, marshallErr, marshallErr.Error()}
 		}
 		writeErr := ioutil.WriteFile(GetPathToInsecureKeyring(), body, 0644)
 		if writeErr != nil {
-			return &SecError{errOpKeyring, writeErr, writeErr.Error()}
+			return &SecError{errOpInsecureKeyring, writeErr, writeErr.Error()}
 		}
 		return nil
 	}
@@ -224,15 +224,15 @@ func readInsecureKeyring() ([]KeyringSecret, *SecError) {
 	if readErr != nil {
 		if os.IsNotExist(readErr) {
 			err := errors.New(textSecretNotFound)
-			return nil, &SecError{errOpKeyring, err, err.Error()}
+			return nil, &SecError{errOpInsecureKeyring, err, err.Error()}
 		}
-		return nil, &SecError{errOpKeyring, readErr, readErr.Error()}
+		return nil, &SecError{errOpInsecureKeyring, readErr, readErr.Error()}
 	}
 	secrets := []KeyringSecret{}
 	if len(file) != 0 {
 		unmarshalErr := json.Unmarshal([]byte(file), &secrets)
 		if unmarshalErr != nil {
-			return nil, &SecError{errOpKeyring, unmarshalErr, unmarshalErr.Error()}
+			return nil, &SecError{errOpInsecureKeyring, unmarshalErr, unmarshalErr.Error()}
 		}
 	}
 	return secrets, nil

@@ -12,6 +12,7 @@
 package security
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -36,6 +37,7 @@ func Test_Keychain_Secure(t *testing.T) {
 
 	t.Run("Secret cannot be retrieved for an unknown account", func(t *testing.T) {
 		retrievedSecret, err := SecKeyGetSecret(testConnection, testUsername)
+		fmt.Println(err)
 		assert.NotNil(t, err)
 		assert.Equal(t, "", retrievedSecret)
 	})
@@ -127,7 +129,7 @@ func Test_Keychain_Insecure(t *testing.T) {
 	t.Run("Test keyring returns an error when trying to delete from a non-existent keyring", func(t *testing.T) {
 		err := DeleteSecretFromKeyring("mockConnectionID", "mockUsername")
 		assert.NotNil(t, err)
-		assert.Equal(t, "secret not found in keyring", err.Desc)
+		assert.Equal(t, "Secret not found in keyring", err.Desc)
 	})
 
 	t.Run("Secret can be removed without deleting keychain", func(t *testing.T) {
