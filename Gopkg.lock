@@ -142,6 +142,17 @@
   version = "v0.4.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:ecdc8e0fe3bc7d549af1c9c36acf3820523b707d6c071b6d0c3860882c6f7b42"
+  name = "github.com/docker/spdystream"
+  packages = [
+    ".",
+    "spdy",
+  ]
+  pruneopts = "UT"
+  revision = "6480d4af844c189cf5dd913db24ddd339d3a4f85"
+
+[[projects]]
   digest = "1:2b5f431fa18891a2ac0e02353c83fb3bf458fced6ccecd664b429054e0c4ce3b"
   name = "github.com/evanphx/json-patch"
   packages = ["."]
@@ -540,14 +551,6 @@
   version = "v2.2.4"
 
 [[projects]]
-  branch = "v3"
-  digest = "1:46754188622566b86271d7526cb643b88c2b9589ee224c2d55e282f0f35a0df8"
-  name = "gopkg.in/yaml.v3"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "674ba3eaed223079f9377fbb0c98c0951bf6ec10"
-
-[[projects]]
   branch = "master"
   digest = "1:bd776e2c0357331ee88cbe8989a7424ddc1e20b49066739fc9a86dbe704df284"
   name = "k8s.io/api"
@@ -594,7 +597,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:7d0f2423733b8bc7379bb6aeef64e6ead6e374060d7c9d405cf7aa43c0e70466"
+  digest = "1:4b43985392bba7fc757d7b4d36f48c7e69432c764dfe54d02f4d9b07467fe3f5"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/api/errors",
@@ -619,6 +622,8 @@
     "pkg/util/clock",
     "pkg/util/errors",
     "pkg/util/framer",
+    "pkg/util/httpstream",
+    "pkg/util/httpstream/spdy",
     "pkg/util/intstr",
     "pkg/util/json",
     "pkg/util/mergepatch",
@@ -634,13 +639,14 @@
     "pkg/version",
     "pkg/watch",
     "third_party/forked/golang/json",
+    "third_party/forked/golang/netutil",
     "third_party/forked/golang/reflect",
   ]
   pruneopts = "UT"
   revision = "31cb258e7ad9e746e7f46dbd0844c992ed56d179"
 
 [[projects]]
-  digest = "1:055f27bf0f54eaa99f4bbe9d52275a4bd755f99ad9c88dd4790bd46c27fdca38"
+  digest = "1:677dea746504d89c8f33e130dbed92e65e7fe3e02c3d19f3f2d2673d79b1b032"
   name = "k8s.io/client-go"
   packages = [
     "discovery",
@@ -740,8 +746,10 @@
     "tools/clientcmd/api/latest",
     "tools/clientcmd/api/v1",
     "tools/metrics",
+    "tools/portforward",
     "tools/reference",
     "transport",
+    "transport/spdy",
     "util/cert",
     "util/connrotation",
     "util/flowcontrol",
@@ -804,7 +812,7 @@
     "github.com/stretchr/testify/require",
     "github.com/urfave/cli",
     "github.com/zalando/go-keyring",
-    "gopkg.in/yaml.v3",
+    "gopkg.in/yaml.v2",
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
     "k8s.io/api/extensions/v1beta1",
@@ -822,6 +830,8 @@
     "k8s.io/client-go/rest",
     "k8s.io/client-go/testing",
     "k8s.io/client-go/tools/clientcmd",
+    "k8s.io/client-go/tools/portforward",
+    "k8s.io/client-go/transport/spdy",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

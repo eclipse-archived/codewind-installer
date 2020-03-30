@@ -14,6 +14,7 @@ package remote
 import (
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -23,7 +24,6 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/portforward"
@@ -44,7 +44,7 @@ type (
 		Pod        v1.Pod
 		LocalPort  int
 		PodPort    int
-		Streams    genericclioptions.IOStreams
+		Streams    IOStreams
 		StopCh     <-chan struct{}
 		ReadyCh    chan struct{}
 	}
@@ -55,6 +55,13 @@ type (
 		ReadyChannel chan struct{}
 	}
 )
+
+// IOStreams provides the standard names for IOstreams, which are passed to kubernetes port-forward
+type IOStreams struct {
+	In     io.Reader
+	Out    io.Writer
+	ErrOut io.Writer
+}
 
 // HandlePortForward : Forwards port from remote pod to local
 func HandlePortForward(projectID string, port int) error {
@@ -79,7 +86,7 @@ func HandlePortForward(projectID string, port int) error {
 		ReadyChannel: make(chan struct{}),
 	}
 
-	stream := genericclioptions.IOStreams{
+	stream := IOStreams{
 		In:     os.Stdin,
 		Out:    os.Stdout,
 		ErrOut: os.Stderr,
