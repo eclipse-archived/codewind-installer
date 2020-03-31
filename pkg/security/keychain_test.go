@@ -12,6 +12,7 @@
 package security
 
 import (
+	"fmt" 
 	"os"
 	"testing"
 
@@ -84,11 +85,11 @@ func Test_Keychain_Insecure(t *testing.T) {
 	// remove insecureKeychain.json if it already exists
 	os.Remove(GetPathToInsecureKeyring())
 	
-	//fmt.Printf("USER_HOME is %s.\n", os.UserHomeDir())
-	//fmt.Printf("XDG_CONFIG_HOME is %s.\n", os.Getenv("XDG_CONFIG_HOME"))
+	fmt.Printf("USER_HOME is %s.\n", os.UserHomeDir())
+	fmt.Printf("XDG_CONFIG_HOME is %s.\n", os.Getenv("XDG_CONFIG_HOME"))
 	
-	//mkConfigDirErr := os.Mkdir("/home/jenkins/agent/workspace/.config", 0777)
-	//assert.Nil(t, mkConfigDirErr)
+	mkConfigDirErr := os.Mkdir("/home/jenkins/agent/workspace/.config", 0777)
+	assert.Nil(t, mkConfigDirErr)
 
 	//os.Setenv("XDG_CONFIG_HOME", "/home/jenkins/agent/workspace/.config")
 
