@@ -285,6 +285,39 @@ func ProjectRestart(c *cli.Context) {
 	os.Exit(0)
 }
 
+// ProjectLinkList : lists all the links for a project
+func ProjectLinkList(c *cli.Context) {
+	projectID := strings.TrimSpace(strings.ToLower(c.String("id")))
+
+	conID, getConnectionIDErr := project.GetConnectionID(projectID)
+	if getConnectionIDErr != nil {
+		HandleProjectError(getConnectionIDErr)
+		os.Exit(1)
+	}
+
+	conInfo, conInfoErr := connections.GetConnectionByID(conID)
+	if conInfoErr != nil {
+		HandleConnectionError(conInfoErr)
+		os.Exit(1)
+	}
+
+	conURL, conErr := config.PFEOriginFromConnection(conInfo)
+	if conErr != nil {
+		HandleConfigError(conErr)
+		os.Exit(1)
+	}
+
+	err := project.GetProjectLinks(http.DefaultClient, conInfo, conURL, projectID)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+
+	response, _ := json.Marshal(project.Result{Status: "OK", StatusMessage: "Project restart request accepted"})
+	fmt.Println(string(response))
+	os.Exit(0)
+}
+
 // ProjectLinkCreate : creates a new link
 func ProjectLinkCreate(c *cli.Context) {
 	projectID := strings.TrimSpace(strings.ToLower(c.String("id")))

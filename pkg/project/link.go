@@ -24,12 +24,39 @@ import (
 )
 
 type (
+	Link struct {
+	}
 	// LinkParameters : The request structure to create a link
 	LinkParameters struct {
 		TargetProjectID string `json:"targetProjectID"`
 		EnvName         string `json:"envName"`
 	}
 )
+
+// GetProjectLinks calls the project link API on PFE with a POST request
+func GetProjectLinks(httpClient utils.HTTPClient, conInfo *connections.Connection, conURL string, projectID string) error {
+	requestURL := conURL + "/api/v1/projects/" + projectID + "/links"
+	req, err := http.NewRequest("GET", requestURL, nil)
+	req.Header.Set("Content-Type", "application/json")
+	if err != nil {
+		return err
+	}
+
+	byteArray, projectLinkResponseErr := handleProjectLinkResponse(req, conInfo, httpClient, http.StatusOK)
+	if projectLinkResponseErr != nil {
+		return projectLinkResponseErr
+	}
+
+	var links Link
+	err = json.Unmarshal(byteArray, &links)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(links)
+
+	return nil
+}
 
 // CreateProjectLink calls the project link API on PFE with a POST request
 func CreateProjectLink(httpClient utils.HTTPClient, conInfo *connections.Connection, conURL string, projectID string, targetProjectID string, envName string) error {
@@ -44,35 +71,26 @@ func CreateProjectLink(httpClient utils.HTTPClient, conInfo *connections.Connect
 	if err != nil {
 		return err
 	}
-	return handleProjectLinkResponse(req, conInfo, httpClient, http.StatusOK)
+
+	_, projectLinkResponseErr := handleProjectLinkResponse(req, conInfo, httpClient, http.StatusOK)
+	return projectLinkResponseErr
 }
 
-// GetProjectLinks calls the project link API on PFE with a POST request
-func GetProjectLinks(httpClient utils.HTTPClient, conInfo *connections.Connection, conURL string, projectID string) error {
-	requestURL := conURL + "/api/v1/projects/" + projectID + "/links"
-	req, err := http.NewRequest("GET", requestURL, nil)
-	req.Header.Set("Content-Type", "application/json")
-	if err != nil {
-		return err
-	}
-	return handleProjectLinkResponse(req, conInfo, httpClient, http.StatusOK)
-}
-
-func handleProjectLinkResponse(req *http.Request, conInfo *connections.Connection, httpClient utils.HTTPClient, successCode int) error {
+func handleProjectLinkResponse(req *http.Request, conInfo *connections.Connection, httpClient utils.HTTPClient, successCode int) ([]byte, error) {
 	resp, httpSecError := sechttp.DispatchHTTPRequest(httpClient, req, conInfo)
 	if httpSecError != nil {
-		return httpSecError
+		return nil, httpSecError
 	}
 	defer resp.Body.Close()
 
 	byteArray, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if resp.StatusCode != successCode {
-		return fmt.Errorf("Error code: %s - %s", http.StatusText(resp.StatusCode), string(byteArray))
+		return nil, fmt.Errorf("Error code: %s - %s", http.StatusText(resp.StatusCode), string(byteArray))
 	}
 
-	return nil
+	return byteArray, nil
 }

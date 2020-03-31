@@ -229,7 +229,7 @@ func Commands() {
 								cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
 							},
 							Action: func(c *cli.Context) error {
-								ProjectSetConnection(c)
+								ProjectLinkList(c)
 								return nil
 							},
 						},
