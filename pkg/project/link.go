@@ -25,6 +25,9 @@ import (
 
 type (
 	Link struct {
+		ProjectID  string `json:"projectID"`
+		EnvName    string `json:"envName"`
+		ProjectURL string `json:"projectURL"`
 	}
 	// LinkParameters : The request structure to create a link
 	LinkParameters struct {
@@ -47,7 +50,7 @@ func GetProjectLinks(httpClient utils.HTTPClient, conInfo *connections.Connectio
 		return projectLinkResponseErr
 	}
 
-	var links Link
+	var links []Link
 	err = json.Unmarshal(byteArray, &links)
 	if err != nil {
 		return err
