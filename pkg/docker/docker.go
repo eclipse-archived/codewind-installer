@@ -639,66 +639,66 @@ func LoginToRegistry(address string, username string, password string) *DockerEr
 
 // AddDockerCredential : Add (or update) a single docker login in the keychain entry.
 func AddDockerCredential(connectionID string, address string, username string, password string) *DockerError {
-	dockerConfig, err := getDockerCredentials(connectionID)
-	if err != nil {
-		return &DockerError{errDockerCredential, err, err.Error()}
+	dockerConfig, getDockerCredentialsErr := getDockerCredentials(connectionID)
+	if getDockerCredentialsErr != nil {
+		return getDockerCredentialsErr
 	}
 	authStr := fmt.Sprintf("%s:%s", username, password)
 	authEncoded := base64.StdEncoding.EncodeToString([]byte(authStr))
 	newDockerCredential := DockerCredential{Auth: authEncoded, Username: username, Password: password}
 	dockerConfig.Auths[address] = newDockerCredential
-	err = setDockerCredentials(connectionID, dockerConfig)
-	if err != nil {
-		return &DockerError{errDockerCredential, err, err.Error()}
+	setDockerCredentialsErr := setDockerCredentials(connectionID, dockerConfig)
+	if setDockerCredentialsErr != nil {
+		return setDockerCredentialsErr
 	}
 	return nil
 }
 
 // RemoveDockerCredential : Remove a single docker login in the keychain entry.
 func RemoveDockerCredential(connectionID string, address string) *DockerError {
-	dockerConfig, err := getDockerCredentials(connectionID)
-	if err != nil {
-		return &DockerError{errDockerCredential, err, err.Error()}
+	dockerConfig, getDockerCredentialsErr := getDockerCredentials(connectionID)
+	if getDockerCredentialsErr != nil {
+		return getDockerCredentialsErr
 	}
 	delete(dockerConfig.Auths, address)
-	err = setDockerCredentials(connectionID, dockerConfig)
-	if err != nil {
-		return &DockerError{errDockerCredential, err, err.Error()}
+	setDockerCredentialsErr := setDockerCredentials(connectionID, dockerConfig)
+	if setDockerCredentialsErr != nil {
+		return setDockerCredentialsErr
 	}
 	return nil
 }
 
 // getDockerCredentials : Get the existing docker credentials from the keychain.
-func getDockerCredentials(connectionID string) (*DockerConfig, error) {
+func getDockerCredentials(connectionID string) (*DockerConfig, *DockerError) {
 	secret, err := security.GetSecretFromKeyring(connectionID, "docker_credentials")
 	if err != nil {
-		// Here should we just default to no secrets are found ???
 		if security.IsSecretNotFoundError(err) {
 			secret = "{\"auths\": {}}"
 		} else {
-			return nil, err
+			// Pass the error straight back
+			return nil, &DockerError{err.Op, err.Err, err.Desc}
 		}
 	}
 	dockerConfig := DockerConfig{}
 	jsonErr := json.Unmarshal([]byte(secret), &dockerConfig)
 	if jsonErr != nil {
-		return nil, jsonErr
+		return nil, &DockerError{errDockerCredential, jsonErr, jsonErr.Error()}
 	}
 	return &dockerConfig, nil
 }
 
 // setDockerCredentials : Set the docker credentials in the keychain.
-func setDockerCredentials(connectionID string, dockerConfig *DockerConfig) error {
+func setDockerCredentials(connectionID string, dockerConfig *DockerConfig) *DockerError {
 	newSecretBytes, jsonErr := json.MarshalIndent(dockerConfig, "", "  ")
 	// This shouldn't happen as we don't add anything that can't be encoded to the
 	// structure.
 	if jsonErr != nil {
-		return jsonErr
+		return &DockerError{errDockerCredential, jsonErr, jsonErr.Error()}
 	}
 	newSecret := string(newSecretBytes)
 	err := security.StoreSecretInKeyring(connectionID, "docker_credentials", newSecret)
 	if err != nil {
-		return err
+		return &DockerError{errDockerCredential, err, err.Error()}
 	}
 	return nil
 }

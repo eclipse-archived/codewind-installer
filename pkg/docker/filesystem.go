@@ -22,26 +22,37 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/eclipse/codewind-installer/pkg/errors"
+	"github.com/eclipse/codewind-installer/pkg/utils"
 	"gopkg.in/yaml.v2"
 )
 
 // WriteToComposeFile the contents of the docker compose yaml
-func WriteToComposeFile(dockerComposeFile string, debug bool) bool {
+func WriteToComposeFile(dockerComposeFile string, debug bool) (bool, *DockerError) {
 	if dockerComposeFile == "" {
-		return false
+		return false, nil
+	}
+
+	dockerComposeTempFile, dockerComposeTempErr := utils.CreateTempFile(dockerComposeFile)
+	if dockerComposeTempErr != nil {
+		return false, &DockerError{errOpDockerComposeFileCreate, dockerComposeTempErr, dockerComposeTempErr.Error()}
+	}
+
+	if dockerComposeTempFile != "" {
+		fmt.Println("==> created file", dockerComposeTempFile)
 	}
 
 	secretFileName, secretErr := writeDockerConfigSecretFile(path.Dir(dockerComposeFile))
+	if secretErr != nil {
+		return false, secretErr
+	}
 
-	fmt.Println("BEFORE")
-	errors.CheckErr(secretErr, 204, "")
 	dataStruct := Compose{}
-	fmt.Print("HERE")
 	data := fmt.Sprintf(composeTemplate, secretFileName)
 
 	unmarshDataErr := yaml.Unmarshal([]byte(data), &dataStruct)
-	errors.CheckErr(unmarshDataErr, 202, "")
+	if unmarshDataErr != nil {
+		return false, &DockerError{errOpDockerComposeFileCreate, unmarshDataErr, unmarshDataErr.Error()}
+	}
 
 	if debug == true && len(dataStruct.SERVICES.PFE.Ports) > 0 {
 		debugPort := DetermineDebugPortForPFE()
@@ -49,8 +60,10 @@ func WriteToComposeFile(dockerComposeFile string, debug bool) bool {
 		dataStruct.SERVICES.PFE.Ports = append(dataStruct.SERVICES.PFE.Ports, "127.0.0.1:"+debugPort+":9777")
 	}
 
-	marshalledData, err := yaml.Marshal(&dataStruct)
-	errors.CheckErr(err, 203, "")
+	marshalledData, yamlErr := yaml.Marshal(&dataStruct)
+	if yamlErr != nil {
+		return false, &DockerError{errOpDockerComposeFileCreate, yamlErr, yamlErr.Error()}
+	}
 
 	if debug == true {
 		fmt.Printf("==> %s structure is: \n%s\n\n", dockerComposeFile, string(marshalledData))
@@ -58,26 +71,29 @@ func WriteToComposeFile(dockerComposeFile string, debug bool) bool {
 		fmt.Println("==> environment structure written to " + filepath.ToSlash(dockerComposeFile))
 	}
 
-	err = ioutil.WriteFile(dockerComposeFile, marshalledData, 0644)
-	errors.CheckErr(err, 204, "")
-	return true
+	writeFileErr := ioutil.WriteFile(dockerComposeFile, marshalledData, 0644)
+	if writeFileErr != nil {
+		return false, &DockerError{errOpDockerComposeFileCreate, writeFileErr, writeFileErr.Error()}
+	}
+	return true, nil
 }
 
-func writeDockerConfigSecretFile(parentPath string) (string, error) {
-	// TODO handle error coming from here
+func writeDockerConfigSecretFile(parentPath string) (string, *DockerError) {
 	dockerConfig, err := getDockerCredentials("local")
 	if err != nil {
-		fmt.Println(err.Error())
 		return "", err
 	}
 	dockerConfigBytes, jsonErr := json.MarshalIndent(dockerConfig, "", "  ")
 	if jsonErr != nil {
-		return "", jsonErr
+		return "", &DockerError{errDockerCredential, jsonErr, jsonErr.Error()}
 	}
 	encoded := base64.StdEncoding.EncodeToString(dockerConfigBytes)
 	secretFile := path.Join(parentPath, dockerConfigSecretFile)
-	err = ioutil.WriteFile(secretFile, []byte(encoded), 0600)
-	return secretFile, err
+	writeFileErr := ioutil.WriteFile(secretFile, []byte(encoded), 0600)
+	if writeFileErr != nil {
+		return "", &DockerError{errDockerCredential, writeFileErr, writeFileErr.Error()}
+	}
+	return secretFile, nil
 }
 
 // ClearDockerConfigSecret We erase the contents rather than deleting

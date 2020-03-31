@@ -26,26 +26,29 @@ func TestWriteToComposeFile(t *testing.T) {
 	t.Run("docker compose should be written to the filepath", func(t *testing.T) {
 		testFile := "TestFile.yaml"
 		os.Create(testFile)
-		_ = WriteToComposeFile("TestFile.yaml", false)
+		_, err := WriteToComposeFile("TestFile.yaml", false)
 
 		pathExists := utils.PathExists(testFile)
 		assert.True(t, pathExists)
+		assert.Nil(t, err)
 		os.Remove(testFile)
 	})
 
 	t.Run("docker compose should be written to the filepath", func(t *testing.T) {
 		testFile := "TestFile.yaml"
 		os.Create(testFile)
-		composeWritten := WriteToComposeFile("TestFile.yaml", false)
+		composeWritten, err := WriteToComposeFile("TestFile.yaml", false)
 
 		pathExists := utils.PathExists(testFile)
 		assert.True(t, pathExists)
 		assert.True(t, composeWritten)
+		assert.Nil(t, err)
 		os.Remove(testFile)
 	})
 	t.Run("empty path returns nil", func(t *testing.T) {
-		composeWritten := WriteToComposeFile("", false)
+		composeWritten, err := WriteToComposeFile("", false)
 		assert.False(t, composeWritten)
+		assert.Nil(t, err)
 	})
 	globals.SetUseInsecureKeyring(originalUseInsecureKeyring)
 }
