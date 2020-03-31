@@ -87,10 +87,10 @@ func Test_Keychain_Insecure(t *testing.T) {
 	fmt.Printf("USER_HOME is %s.\n", os.UserHomeDir())
 	fmt.Printf("XDG_CONFIG_HOME is %s.\n", os.Getenv("XDG_CONFIG_HOME"))
 	
-	mkConfigDirErr := os.Mkdir("/home/jenkins/agent/workspace/.config", 0777)
-	assert.Nil(t, mkConfigDirErr)
+	//mkConfigDirErr := os.Mkdir("/home/jenkins/agent/workspace/.config", 0777)
+	//assert.Nil(t, mkConfigDirErr)
 
-	os.Setenv("XDG_CONFIG_HOME", "/home/jenkins/agent/workspace/.config")
+	//os.Setenv("XDG_CONFIG_HOME", "/home/jenkins/agent/workspace/.config")
 
 	t.Run("Secret cannot be retrieved when keychain file does not exist", func(t *testing.T) {
 		testDir := "keychain_test_folder_delete_me"
