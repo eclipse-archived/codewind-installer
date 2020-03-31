@@ -287,7 +287,7 @@ func ProjectRestart(c *cli.Context) {
 	os.Exit(0)
 }
 
-// ProjectPortForward : Forward a remote project port to local
+// ProjectPortForward : Forward a remote project port to an available local port
 func ProjectPortForward(c *cli.Context) {
 	projectID := strings.TrimSpace(strings.ToLower(c.String("id")))
 	port := strings.TrimSpace(strings.ToLower(c.String("port")))

@@ -219,7 +219,7 @@ func Commands() {
 				},
 				{
 					Name:  "port-forward",
-					Usage: "Forward a port from a remote project to local'",
+					Usage: "Forward a port from a remote project to an available local port'",
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
 						cli.StringFlag{Name: "port, p", Usage: "Remote port to forward", Required: true},

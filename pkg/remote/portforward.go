@@ -57,14 +57,14 @@ type (
 	}
 )
 
-// IOStreams provides the standard names for IOstreams, which are passed to kubernetes port-forward
+// IOStreams provides the standard names for IOstreams, which are passed to k8s port-forward
 type IOStreams struct {
 	In     io.Reader
 	Out    io.Writer
 	ErrOut io.Writer
 }
 
-// HandlePortForward : Forwards port from remote pod to local
+// HandlePortForward : Forwards port from remote pod to an available local port
 func HandlePortForward(projectID string, port int) *RemInstError {
 	kubeConfig, err := GetKubeConfig()
 	if err != nil {
@@ -111,7 +111,8 @@ func HandlePortForward(projectID string, port int) *RemInstError {
 				Namespace: podInfo.Namespace,
 			},
 		},
-		LocalPort: 9229,
+		// k8s port-forwarder will select an available local port, as local port is set to 0
+		LocalPort: 0,
 		PodPort:   port,
 		Streams:   stream,
 		StopCh:    portForwarder.StopChannel,
@@ -123,11 +124,11 @@ func HandlePortForward(projectID string, port int) *RemInstError {
 	return nil
 }
 
-// PortForwardPod : Requests PortForward from remote pod to local
+// PortForwardPod : Requests PortForward from remote port to local
 func PortForwardPod(req PortForwardPodRequest) error {
 	path := fmt.Sprintf("/api/v1/namespaces/%s/pods/%s/portforward",
 		req.Pod.Namespace, req.Pod.Name)
-	hostIP := strings.TrimLeft(req.RestConfig.Host, "htps:/")
+	hostIP := strings.TrimLeft(req.RestConfig.Host, "https://")
 
 	transport, upgrader, err := spdy.RoundTripperFor(req.RestConfig)
 	if err != nil {
