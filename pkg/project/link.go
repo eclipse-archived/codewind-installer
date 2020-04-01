@@ -14,7 +14,7 @@ package project
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"io/ioutil"
 	"net/http"
 
@@ -31,68 +31,112 @@ type (
 	}
 	// LinkParameters : The request structure to create a link
 	LinkParameters struct {
-		TargetProjectID string `json:"targetProjectID"`
 		EnvName         string `json:"envName"`
+		TargetProjectID string `json:"targetProjectID,omitempty"`
+		UpdatedEnvName  string `json:"updatedEnvName,omitempty"`
 	}
 )
 
 // GetProjectLinks calls the project link API on PFE with a POST request
-func GetProjectLinks(httpClient utils.HTTPClient, conInfo *connections.Connection, conURL string, projectID string) error {
+func GetProjectLinks(httpClient utils.HTTPClient, conInfo *connections.Connection, conURL string, projectID string) ([]Link, *ProjectError) {
 	requestURL := conURL + "/api/v1/projects/" + projectID + "/links"
-	req, err := http.NewRequest("GET", requestURL, nil)
+	req, reqErr := http.NewRequest("GET", requestURL, nil)
 	req.Header.Set("Content-Type", "application/json")
-	if err != nil {
-		return err
+	if reqErr != nil {
+		return nil, &ProjectError{errOpRequest, reqErr, reqErr.Error()}
 	}
 
 	byteArray, projectLinkResponseErr := handleProjectLinkResponse(req, conInfo, httpClient, http.StatusOK)
 	if projectLinkResponseErr != nil {
-		return projectLinkResponseErr
+		return nil, projectLinkResponseErr
 	}
 
 	var links []Link
-	err = json.Unmarshal(byteArray, &links)
-	if err != nil {
-		return err
+	jsonErr := json.Unmarshal(byteArray, &links)
+	if jsonErr != nil {
+		return nil, &ProjectError{errOpRequest, jsonErr, jsonErr.Error()}
 	}
 
-	fmt.Println(links)
-
-	return nil
+	return links, nil
 }
 
 // CreateProjectLink calls the project link API on PFE with a POST request
-func CreateProjectLink(httpClient utils.HTTPClient, conInfo *connections.Connection, conURL string, projectID string, targetProjectID string, envName string) error {
+func CreateProjectLink(httpClient utils.HTTPClient, conInfo *connections.Connection, conURL string, projectID string, targetProjectID string, envName string) *ProjectError {
 	requestURL := conURL + "/api/v1/projects/" + projectID + "/links"
 	parameters := LinkParameters{
 		TargetProjectID: targetProjectID,
 		EnvName:         envName,
 	}
 	jsonPayload, _ := json.Marshal(parameters)
-	req, err := http.NewRequest("POST", requestURL, bytes.NewBuffer(jsonPayload))
+	req, reqErr := http.NewRequest("POST", requestURL, bytes.NewBuffer(jsonPayload))
 	req.Header.Set("Content-Type", "application/json")
-	if err != nil {
-		return err
+	if reqErr != nil {
+		return &ProjectError{errOpRequest, reqErr, reqErr.Error()}
 	}
 
 	_, projectLinkResponseErr := handleProjectLinkResponse(req, conInfo, httpClient, http.StatusOK)
 	return projectLinkResponseErr
 }
 
-func handleProjectLinkResponse(req *http.Request, conInfo *connections.Connection, httpClient utils.HTTPClient, successCode int) ([]byte, error) {
+// UpdateProjectLink calls the project link API on PFE with a PUT request
+func UpdateProjectLink(httpClient utils.HTTPClient, conInfo *connections.Connection, conURL string, projectID string, envName string, updatedEnvName string) *ProjectError {
+	requestURL := conURL + "/api/v1/projects/" + projectID + "/links"
+	parameters := LinkParameters{
+		EnvName:        envName,
+		UpdatedEnvName: updatedEnvName,
+	}
+	jsonPayload, _ := json.Marshal(parameters)
+	req, reqErr := http.NewRequest("PUT", requestURL, bytes.NewBuffer(jsonPayload))
+	req.Header.Set("Content-Type", "application/json")
+	if reqErr != nil {
+		return &ProjectError{errOpRequest, reqErr, reqErr.Error()}
+	}
+
+	_, projectLinkResponseErr := handleProjectLinkResponse(req, conInfo, httpClient, http.StatusNoContent)
+	return projectLinkResponseErr
+}
+
+// DeleteProjectLink calls the project link API on PFE with a DELETE request
+func DeleteProjectLink(httpClient utils.HTTPClient, conInfo *connections.Connection, conURL string, projectID string, envName string) *ProjectError {
+	requestURL := conURL + "/api/v1/projects/" + projectID + "/links"
+	parameters := LinkParameters{
+		EnvName: envName,
+	}
+	jsonPayload, _ := json.Marshal(parameters)
+	req, reqErr := http.NewRequest("DELETE", requestURL, bytes.NewBuffer(jsonPayload))
+	req.Header.Set("Content-Type", "application/json")
+	if reqErr != nil {
+		return &ProjectError{errOpRequest, reqErr, reqErr.Error()}
+	}
+
+	_, projectLinkResponseErr := handleProjectLinkResponse(req, conInfo, httpClient, http.StatusNoContent)
+	return projectLinkResponseErr
+}
+
+func handleProjectLinkResponse(req *http.Request, conInfo *connections.Connection, httpClient utils.HTTPClient, successCode int) ([]byte, *ProjectError) {
 	resp, httpSecError := sechttp.DispatchHTTPRequest(httpClient, req, conInfo)
 	if httpSecError != nil {
-		return nil, httpSecError
+		return nil, &ProjectError{errOpResponse, httpSecError, httpSecError.Error()}
 	}
 	defer resp.Body.Close()
 
-	byteArray, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
+	byteArray, byteError := ioutil.ReadAll(resp.Body)
+	if byteError != nil {
+		return nil, &ProjectError{errOpResponse, byteError, byteError.Error()}
 	}
 
 	if resp.StatusCode != successCode {
-		return nil, fmt.Errorf("Error code: %s - %s", http.StatusText(resp.StatusCode), string(byteArray))
+		var respErr error
+		if resp.StatusCode == http.StatusBadRequest {
+			respErr = errors.New(textInvalidRequest)
+		} else if resp.StatusCode == http.StatusNotFound {
+			respErr = errors.New(textProjectLinkTargetNotFound)
+		} else if resp.StatusCode == http.StatusConflict {
+			respErr = errors.New(textProjectLinkConflict)
+		} else {
+			respErr = errors.New(textUnknownResponseCode)
+		}
+		return nil, &ProjectError{errOpResponse, respErr, respErr.Error()}
 	}
 
 	return byteArray, nil

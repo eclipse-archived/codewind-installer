@@ -223,7 +223,7 @@ func Commands() {
 					Subcommands: []cli.Command{
 						{
 							Name:    "list",
-							Aliases: []string{"l"},
+							Aliases: []string{"ls"},
 							Usage:   "Lists all the links for a project",
 							Flags: []cli.Flag{
 								cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
@@ -256,19 +256,19 @@ func Commands() {
 								cli.StringFlag{Name: "newEnv,n", Usage: "New environment variable name", Required: true},
 							},
 							Action: func(c *cli.Context) error {
-								ProjectGetConnection(c)
+								ProjectLinkUpdate(c)
 								return nil
 							},
 						}, {
-							Name:    "delete",
-							Aliases: []string{"d"},
-							Usage:   "Delete a project link",
+							Name:    "remove",
+							Aliases: []string{"rm"},
+							Usage:   "Removes a project link",
 							Flags: []cli.Flag{
 								cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
 								cli.StringFlag{Name: "env,e", Usage: "Environment variable name", Required: true},
 							},
 							Action: func(c *cli.Context) error {
-								ProjectRemoveConnection(c)
+								ProjectLinkDelete(c)
 								return nil
 							},
 						},

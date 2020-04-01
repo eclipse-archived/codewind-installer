@@ -307,14 +307,29 @@ func ProjectLinkList(c *cli.Context) {
 		os.Exit(1)
 	}
 
-	err := project.GetProjectLinks(http.DefaultClient, conInfo, conURL, projectID)
-	if err != nil {
-		fmt.Println(err.Error())
+	links, projectLinkErr := project.GetProjectLinks(http.DefaultClient, conInfo, conURL, projectID)
+	if projectLinkErr != nil {
+		HandleProjectError(projectLinkErr)
 		os.Exit(1)
 	}
 
-	response, _ := json.Marshal(project.Result{Status: "OK", StatusMessage: "Project restart request accepted"})
-	fmt.Println(string(response))
+	if printAsJSON {
+		json, _ := json.Marshal(links)
+		fmt.Println(string(json))
+	} else {
+		if len(links) == 0 {
+			fmt.Println("No projects bound to Codewind")
+		} else {
+			w := new(tabwriter.Writer)
+			w.Init(os.Stdout, 0, 8, 2, '\t', 0)
+			fmt.Fprintln(w, "ENVIRONMENT VARIABLE \tPROJECT ID")
+			for _, project := range links {
+				fmt.Fprintln(w, project.EnvName+"\t"+project.ProjectID)
+			}
+			fmt.Fprintln(w)
+			w.Flush()
+		}
+	}
 	os.Exit(0)
 }
 
@@ -342,13 +357,82 @@ func ProjectLinkCreate(c *cli.Context) {
 		os.Exit(1)
 	}
 
-	err := project.CreateProjectLink(http.DefaultClient, conInfo, conURL, projectID, targetProjectID, envName)
-	if err != nil {
-		fmt.Println(err.Error())
+	projectLinkErr := project.CreateProjectLink(http.DefaultClient, conInfo, conURL, projectID, targetProjectID, envName)
+	if projectLinkErr != nil {
+		HandleProjectError(projectLinkErr)
 		os.Exit(1)
 	}
 
-	response, _ := json.Marshal(project.Result{Status: "OK", StatusMessage: "Project restart request accepted"})
+	response, _ := json.Marshal(project.Result{Status: "OK", StatusMessage: "Project link create request accepted"})
+	fmt.Println(string(response))
+	os.Exit(0)
+}
+
+// ProjectLinkUpdate : updates a link
+func ProjectLinkUpdate(c *cli.Context) {
+	projectID := strings.TrimSpace(strings.ToLower(c.String("id")))
+	envName := strings.TrimSpace(c.String("env"))
+	updatedEnvName := strings.TrimSpace(strings.ToLower(c.String("newEnv")))
+
+	conID, getConnectionIDErr := project.GetConnectionID(projectID)
+	if getConnectionIDErr != nil {
+		HandleProjectError(getConnectionIDErr)
+		os.Exit(1)
+	}
+
+	conInfo, conInfoErr := connections.GetConnectionByID(conID)
+	if conInfoErr != nil {
+		HandleConnectionError(conInfoErr)
+		os.Exit(1)
+	}
+
+	conURL, conErr := config.PFEOriginFromConnection(conInfo)
+	if conErr != nil {
+		HandleConfigError(conErr)
+		os.Exit(1)
+	}
+
+	projectLinkErr := project.UpdateProjectLink(http.DefaultClient, conInfo, conURL, projectID, envName, updatedEnvName)
+	if projectLinkErr != nil {
+		HandleProjectError(projectLinkErr)
+		os.Exit(1)
+	}
+
+	response, _ := json.Marshal(project.Result{Status: "OK", StatusMessage: "Project link update request accepted"})
+	fmt.Println(string(response))
+	os.Exit(0)
+}
+
+// ProjectLinkDelete : deletes a link
+func ProjectLinkDelete(c *cli.Context) {
+	projectID := strings.TrimSpace(strings.ToLower(c.String("id")))
+	envName := strings.TrimSpace(c.String("env"))
+
+	conID, getConnectionIDErr := project.GetConnectionID(projectID)
+	if getConnectionIDErr != nil {
+		HandleProjectError(getConnectionIDErr)
+		os.Exit(1)
+	}
+
+	conInfo, conInfoErr := connections.GetConnectionByID(conID)
+	if conInfoErr != nil {
+		HandleConnectionError(conInfoErr)
+		os.Exit(1)
+	}
+
+	conURL, conErr := config.PFEOriginFromConnection(conInfo)
+	if conErr != nil {
+		HandleConfigError(conErr)
+		os.Exit(1)
+	}
+
+	projectLinkErr := project.DeleteProjectLink(http.DefaultClient, conInfo, conURL, projectID, envName)
+	if projectLinkErr != nil {
+		HandleProjectError(projectLinkErr)
+		os.Exit(1)
+	}
+
+	response, _ := json.Marshal(project.Result{Status: "OK", StatusMessage: "Project link delete request accepted"})
 	fmt.Println(string(response))
 	os.Exit(0)
 }
