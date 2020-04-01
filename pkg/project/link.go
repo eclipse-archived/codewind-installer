@@ -118,12 +118,6 @@ func handleProjectLinkResponse(req *http.Request, conInfo *connections.Connectio
 	if httpSecError != nil {
 		return nil, &ProjectError{errOpResponse, httpSecError, httpSecError.Error()}
 	}
-	defer resp.Body.Close()
-
-	byteArray, byteError := ioutil.ReadAll(resp.Body)
-	if byteError != nil {
-		return nil, &ProjectError{errOpResponse, byteError, byteError.Error()}
-	}
 
 	if resp.StatusCode != successCode {
 		var respErr error
@@ -137,6 +131,18 @@ func handleProjectLinkResponse(req *http.Request, conInfo *connections.Connectio
 			respErr = errors.New(textUnknownResponseCode)
 		}
 		return nil, &ProjectError{errOpResponse, respErr, respErr.Error()}
+	}
+
+	// POST, PUT and DELETE requests don't need a body
+	if resp.Body == nil {
+		return nil, nil
+	}
+
+	resp.Body.Close()
+
+	byteArray, byteError := ioutil.ReadAll(resp.Body)
+	if byteError != nil {
+		return nil, &ProjectError{errOpResponse, byteError, byteError.Error()}
 	}
 
 	return byteArray, nil
