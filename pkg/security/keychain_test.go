@@ -88,10 +88,6 @@ func Test_Keychain_Insecure(t *testing.T) {
 		testDir := "keychain_test_folder_delete_me"
 		mkdirErr := os.Mkdir(testDir, 0777)
 		assert.Nil(t, mkdirErr)
-		
-		chmodErr := os.Chmod(os.Getwd() + "/.config", 0777)
-		assert.Nil(t, chmodErr)
-
 		retrievedSecret, err := SecKeyGetSecret(testConnection, testUsername)
 		assert.NotNil(t, err)
 		assert.Contains(t, err.Desc, "insecureKeychain.json: no such file or directory")
@@ -99,8 +95,6 @@ func Test_Keychain_Insecure(t *testing.T) {
 	})
 
 	t.Run("A new secret is stored in a new keychain file when the keychain file didn't exist", func(t *testing.T) {
-		chmodErr := os.Chmod(os.Getwd() + "/.config", 0777)
-		assert.Nil(t, chmodErr)
 		
 		err := SecKeyUpdate(testConnection, testUsername, testPassword)
 		assert.Nil(t, err)
