@@ -48,10 +48,13 @@ func AddRegistrySecret(c *cli.Context) {
 	// Log in to local docker to support extensions such as appsody.
 	// Do this first as it will validate the credentials.
 	// Otherwise we have to undo everything else if they are wrong.
-	dockerErr := docker.LoginToRegistry(address, username, password)
-	if dockerErr != nil {
-		HandleDockerError(dockerErr)
-		os.Exit(1)
+	_, foundChe := os.LookupEnv("CHE_API_EXTERNAL")
+	if !foundChe {
+		dockerErr := docker.LoginToRegistry(address, username, password)
+		if dockerErr != nil {
+			HandleDockerError(dockerErr)
+			os.Exit(1)
+		}
 	}
 
 	// If this is a local connection we need to persist the details in the
@@ -60,7 +63,7 @@ func AddRegistrySecret(c *cli.Context) {
 	if conInfo.ID == "local" {
 
 		// Add the credentials to the local keyring.
-		dockerErr = docker.AddDockerCredential(conInfo.ID, address, username, password)
+		dockerErr := docker.AddDockerCredential(conInfo.ID, address, username, password)
 		if dockerErr != nil {
 			HandleDockerError(dockerErr)
 			os.Exit(1)
