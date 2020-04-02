@@ -118,7 +118,7 @@ func DispatchHTTPRequest(httpClient utils.HTTPClient, originalRequest *http.Requ
 
 	// No other methods of authentication left to try, tell the user and give up
 	logr.Tracef("No other methods of authentication left to try, tell the user and give up")
-	failedError := errors.New("No other methods left to try")
+	failedError := errors.New("No other methods of authentication left to try")
 	return nil, &HTTPSecError{errOpFailed, failedError, failedError.Error()}
 }
 
