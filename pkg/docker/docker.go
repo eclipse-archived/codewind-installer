@@ -27,14 +27,11 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/eclipse/codewind-installer/pkg/security"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 
 	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/registry"
-	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
 	desktoputils "github.com/eclipse/codewind-installer/pkg/desktop_utils"
@@ -163,26 +160,6 @@ const (
 	minDebugPort = 34000
 	maxDebugPort = 35000
 )
-
-// DockerClient requires all the functions called on the docker client package
-type DockerClient interface {
-	ImagePull(ctx context.Context, image string, imagePullOptions types.ImagePullOptions) (io.ReadCloser, error)
-	ImageList(ctx context.Context, imageListOptions types.ImageListOptions) ([]types.ImageSummary, error)
-	ContainerList(ctx context.Context, containerListOptions types.ContainerListOptions) ([]types.Container, error)
-	ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error)
-	ContainerStop(ctx context.Context, containerID string, timeout *time.Duration) error
-	ContainerRemove(ctx context.Context, containerID string, options types.ContainerRemoveOptions) error
-	DistributionInspect(ctx context.Context, image, encodedRegistryAuth string) (registry.DistributionInspect, error)
-}
-
-// NewDockerClient creates a new client for the docker API
-func NewDockerClient() (*client.Client, *DockerError) {
-	dockerClient, err := client.NewClientWithOpts(client.WithVersion("1.30"))
-	if err != nil {
-		return nil, &DockerError{errOpClientCreate, err, err.Error()}
-	}
-	return dockerClient, nil
-}
 
 // DockerCompose to set up the Codewind environment
 func DockerCompose(dockerComposeFile string, tag string, loglevel string) *DockerError {
