@@ -64,7 +64,7 @@ func AddRegistrySecret(c *cli.Context) {
 
 		localAddress := address
 		if strings.HasPrefix(localAddress, "docker.io") {
-			strings.Replace(localAddress, "docker.io", "https://index.docker.io/v1", 1)
+			localAddress = "https://index.docker.io/v1/"
 		}
 
 		// Add the credentials to the local keyring.
@@ -103,7 +103,7 @@ func RemoveRegistrySecret(c *cli.Context) {
 
 		localAddress := address
 		if strings.HasPrefix(localAddress, "docker.io") {
-			strings.Replace(localAddress, "docker.io", "https://index.docker.io/v1", 1)
+			localAddress = "https://index.docker.io/v1/"
 		}
 
 		dockerErr := docker.RemoveDockerCredential(conInfo.ID, localAddress)
