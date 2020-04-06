@@ -161,7 +161,7 @@ spec:
                         echo HOME $HOME
                         echo ls WORKSPACE 1
                         ls $WORKSPACE
-                        go test ./... -v -short -coverprofile=coverage.txt -covermode=count
+                        sudo -E go test ./... -v -short -coverprofile=coverage.txt -covermode=count
                         
                         echo whoami
                         whoami
