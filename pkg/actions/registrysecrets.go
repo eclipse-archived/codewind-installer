@@ -62,8 +62,13 @@ func AddRegistrySecret(c *cli.Context) {
 	// (On Kubernetes PFE persists them in a secret inside Kubernetes itself.)
 	if conInfo.ID == "local" {
 
+		localAddress := address
+		if strings.HasPrefix(localAddress, "docker.io") {
+			strings.Replace(localAddress, "docker.io", "https://index.docker.io/v1", 1)
+		}
+
 		// Add the credentials to the local keyring.
-		dockerErr := docker.AddDockerCredential(conInfo.ID, address, username, password)
+		dockerErr := docker.AddDockerCredential(conInfo.ID, localAddress, username, password)
 		if dockerErr != nil {
 			HandleDockerError(dockerErr)
 			os.Exit(1)
@@ -94,10 +99,18 @@ func RemoveRegistrySecret(c *cli.Context) {
 	}
 	// Remove secret from our keychain entry.
 	// (But don't logout of docker locally.)
-	dockerErr := docker.RemoveDockerCredential(conInfo.ID, address)
-	if dockerErr != nil {
-		HandleDockerError(dockerErr)
-		os.Exit(1)
+	if conInfo.ID == "local" {
+
+		localAddress := address
+		if strings.HasPrefix(localAddress, "docker.io") {
+			strings.Replace(localAddress, "docker.io", "https://index.docker.io/v1", 1)
+		}
+
+		dockerErr := docker.RemoveDockerCredential(conInfo.ID, localAddress)
+		if dockerErr != nil {
+			HandleDockerError(dockerErr)
+			os.Exit(1)
+		}
 	}
 	utils.PrettyPrintJSON(registrySecrets)
 }
