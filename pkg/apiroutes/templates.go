@@ -87,6 +87,11 @@ func GetTemplates(conID, projectStyle string, showEnabledOnly bool) ([]Template,
 
 	defer resp.Body.Close()
 
+	// May return 204, no content, which means no resp.Body to parse.
+	if resp.StatusCode == 204 {
+		return []Template{}, nil
+	}
+
 	byteArray, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
