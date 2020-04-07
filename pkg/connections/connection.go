@@ -372,11 +372,13 @@ func applySchemaUpdates() *ConError {
 				originalConnection := originalConnectionsV0[i]
 				connectionJSON, _ := json.Marshal(originalConnection)
 				var upgradedConnection ConnectionV1
-				_ = json.Unmarshal(connectionJSON, &upgradedConnection)
+				err = json.Unmarshal(connectionJSON, &upgradedConnection)
 
-				// rename 'name' field to 'id'
-				upgradedConnection.ID = originalConnection.Name
-				newConnectionConfig.Connections = append(newConnectionConfig.Connections, upgradedConnection)
+				if err == nil {
+					// rename 'name' field to 'id'
+					upgradedConnection.ID = originalConnection.Name
+					newConnectionConfig.Connections = append(newConnectionConfig.Connections, upgradedConnection)
+				}
 			}
 
 			// schema has been updated

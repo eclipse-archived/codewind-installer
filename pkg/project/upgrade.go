@@ -56,7 +56,10 @@ func UpgradeProjects(oldDir string) (*map[string]interface{}, *ProjectError) {
 			}
 
 			var result map[string]string
-			json.Unmarshal([]byte(file), &result)
+			err = json.Unmarshal([]byte(file), &result)
+			if err != nil {
+				return nil
+			}
 
 			language := result["language"]
 			projectType := result["projectType"]
