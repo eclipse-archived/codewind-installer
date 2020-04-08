@@ -49,7 +49,8 @@ var baseImageNameArr = [2]string{
 const pfeContainerName = "codewind-pfe"
 const performanceContainerName = "codewind-performance"
 
-var containerNames = [...]string{
+//ContainerNames : array of codewind container names
+var ContainerNames = [...]string{
 	pfeContainerName,
 	performanceContainerName,
 }
@@ -387,7 +388,7 @@ func GetContainersToRemove(containerList []types.Container) []types.Container {
 // CheckContainerStatus of Codewind running/stopped
 func CheckContainerStatus(dockerClient DockerClient) (bool, *DockerError) {
 	var containerStatus = false
-	containerArr := containerNames
+	containerArr := ContainerNames
 
 	containers, err := GetContainerList(dockerClient)
 	if err != nil {
@@ -453,9 +454,14 @@ func RemoveImage(imageID string) *DockerError {
 
 // GetContainerList from docker
 func GetContainerList(dockerClient DockerClient) ([]types.Container, *DockerError) {
+	return GetContainerListWithOptions(dockerClient, types.ContainerListOptions{})
+}
+
+// GetContainerListWithOptions from docker
+func GetContainerListWithOptions(dockerClient DockerClient, options types.ContainerListOptions) ([]types.Container, *DockerError) {
 	ctx := context.Background()
 
-	containers, err := dockerClient.ContainerList(ctx, types.ContainerListOptions{})
+	containers, err := dockerClient.ContainerList(ctx, options)
 	if err != nil {
 		return nil, &DockerError{errOpContainerList, err, err.Error()}
 	}
@@ -594,7 +600,7 @@ func DetermineDebugPortForPFE() (pfeDebugPort string) {
 
 // GetContainerTags of the Codewind version(s) currently running
 func GetContainerTags(dockerClient DockerClient) ([]string, *DockerError) {
-	containerArr := containerNames
+	containerArr := ContainerNames
 	tagArr := []string{}
 
 	containers, err := GetContainerList(dockerClient)
@@ -703,4 +709,27 @@ func setDockerCredentials(connectionID string, dockerConfig *DockerConfig) *Dock
 		return &DockerError{errDockerCredential, err, err.Error()}
 	}
 	return nil
+}
+
+//InspectContainer : returns the result of 'docker inspect' for the specified container.
+func InspectContainer(dockerClient DockerClient, containerID string) (types.ContainerJSON, *DockerError) {
+	ctx := context.Background()
+
+	containerInfo, err := dockerClient.ContainerInspect(ctx, containerID)
+	if err != nil {
+		return types.ContainerJSON{nil, nil, nil, nil}, &DockerError{errOpContainerInspect, err, err.Error()}
+	}
+	return containerInfo, nil
+}
+
+//GetContainerLogs : returns the container log for the specified container.
+func GetContainerLogs(dockerClient DockerClient, containerID string) (io.ReadCloser, *DockerError) {
+	ctx := context.Background()
+
+	containerLogStream, err := dockerClient.ContainerLogs(ctx, containerID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true})
+	if err != nil {
+		return nil, &DockerError{errOpContainerLogs, err, err.Error()}
+	}
+
+	return containerLogStream, nil
 }

@@ -27,6 +27,7 @@ type DockerClient interface {
 	ImageList(ctx context.Context, imageListOptions types.ImageListOptions) ([]types.ImageSummary, error)
 	ContainerList(ctx context.Context, containerListOptions types.ContainerListOptions) ([]types.Container, error)
 	ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error)
+	ContainerLogs(ctx context.Context, containerID string, options types.ContainerLogsOptions) (io.ReadCloser, error)
 	ContainerStop(ctx context.Context, containerID string, timeout *time.Duration) error
 	ContainerRemove(ctx context.Context, containerID string, options types.ContainerRemoveOptions) error
 	DistributionInspect(ctx context.Context, image, encodedRegistryAuth string) (registry.DistributionInspect, error)

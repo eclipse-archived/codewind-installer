@@ -1003,6 +1003,16 @@ func Commands() {
 				return nil
 			},
 		},
+
+		{
+			Name:    "mustgather",
+			Aliases: []string{"mg"},
+			Usage:   "Gathers logs and project files to aid diagnosis of Codewind errors",
+			Action: func(c *cli.Context) error {
+				MustGatherCommand(c)
+				return nil
+			},
+		},
 	}
 
 	app.Before = func(c *cli.Context) error {
