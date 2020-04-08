@@ -332,7 +332,7 @@ func GetConnectionConfigDir() string {
 		// homeDir = "."
 		// homeDir, _ = os.UserHomeDir()
 	}
-	return path.Join(homeDir1, ".codewind", "config")
+	return path.Join(homeDir, ".codewind", "config")
 }
 
 // GetConnectionConfigFilename  : get full file path of connections file
