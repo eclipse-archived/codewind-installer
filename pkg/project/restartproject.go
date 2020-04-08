@@ -38,10 +38,10 @@ func RestartProject(httpClient utils.HTTPClient, conInfo *connections.Connection
 	}
 	jsonPayload, _ := json.Marshal(parameters)
 	req, err := http.NewRequest("POST", requestURL, bytes.NewBuffer(jsonPayload))
-	req.Header.Set("Content-Type", "application/json")
 	if err != nil {
 		return err
 	}
+	req.Header.Set("Content-Type", "application/json")
 	return handleRestartResponse(req, conInfo, httpClient, http.StatusAccepted)
 }
 

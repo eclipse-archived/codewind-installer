@@ -186,10 +186,10 @@ func AddTemplateRepo(conID, URL, description, name string) ([]utils.TemplateRepo
 	}
 
 	req, err := http.NewRequest("POST", conURL+"/api/v1/templates/repositories", bytes.NewBuffer(jsonValue))
-	req.Header.Set("Content-Type", "application/json")
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}
 	resp, httpSecError := HTTPRequestWithRetryOnLock(client, req, conInfo)
 	if httpSecError != nil {
@@ -231,8 +231,12 @@ func DeleteTemplateRepo(conID, URL string) ([]utils.TemplateRepo, error) {
 		return nil, conErr.Err
 	}
 
-	req, _ := http.NewRequest("DELETE", conURL+"/api/v1/templates/repositories", bytes.NewBuffer(jsonValue))
+	req, err := http.NewRequest("DELETE", conURL+"/api/v1/templates/repositories", bytes.NewBuffer(jsonValue))
+	if err != nil {
+		return nil, err
+	}
 	req.Header.Set("Content-Type", "application/json")
+
 	client := &http.Client{}
 	resp, httpSecError := HTTPRequestWithRetryOnLock(client, req, conInfo)
 	if httpSecError != nil {
@@ -333,7 +337,10 @@ func BatchPatchTemplateRepos(conID string, operations []RepoOperation) ([]SubRes
 		return nil, conErr.Err
 	}
 
-	req, _ := http.NewRequest("PATCH", conURL+"/api/v1/batch/templates/repositories", bytes.NewBuffer(jsonValue))
+	req, err := http.NewRequest("PATCH", conURL+"/api/v1/batch/templates/repositories", bytes.NewBuffer(jsonValue))
+	if err != nil {
+		return nil, err
+	}
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
