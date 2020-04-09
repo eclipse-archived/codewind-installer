@@ -77,9 +77,9 @@ func Test_Keychain_Secure(t *testing.T) {
 }
 
 func Test_Keychain_Insecure(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping testing in short mode")
-	}
+	// if testing.Short() {
+	// 	t.Skip("skipping testing in short mode")
+	// }
 
 	var originalUseInsecureKeyring = globals.UseInsecureKeyring
 	globals.SetUseInsecureKeyring(true)
