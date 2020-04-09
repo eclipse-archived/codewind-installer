@@ -301,23 +301,25 @@ func saveConnectionsConfigFile(ConnectionConfig *ConnectionConfig) *ConError {
 // GetConnectionConfigDir : get path to the connections config directory
 func GetConnectionConfigDir() string {
 	val, isSet := os.LookupEnv("CHE_API_EXTERNAL")
-	homeDir := "/home/jenkins/agent/workspace"
-	// if isSet && (val != "") {
-	// 	val, isSet := os.LookupEnv("CHE_PROJECTS_ROOT")
-	// 	if isSet && (val != "") {
-	// 		homeDir = val
-	// 	} else {
-	// 		// Cannot set projects root without env variable, suggests issue with Codewind Che installation
-	// 		panic("CHE_PROJECTS_ROOT not set")
-	// 	}
-	// } else {
-	// 	const GOOS string = runtime.GOOS
-	// 	if GOOS == "windows" {
-	// 		homeDir = os.Getenv("USERPROFILE")
-	// 	} else {
-	// 		homeDir = os.Getenv("HOME")
-	// 	}
-	// }
+	homeDir := ""
+	if isSet && (val != "") {
+		val, isSet := os.LookupEnv("CHE_PROJECTS_ROOT")
+		if isSet && (val != "") {
+			homeDir = val
+		} else {
+			// Cannot set projects root without env variable, suggests issue with Codewind Che installation
+			panic("CHE_PROJECTS_ROOT not set")
+		}
+	} else {
+		const GOOS string = runtime.GOOS
+		if GOOS == "windows" {
+			homeDir = os.Getenv("USERPROFILE")
+		} else {
+			homeDir = os.Getenv("HOME")
+		}
+	}
+	// TEST
+	homeDir = "/home/jenkins/agent/workspace/ind_codewind-installer_testMkdir1"
 	return path.Join(homeDir, ".codewind", "config")
 }
 
