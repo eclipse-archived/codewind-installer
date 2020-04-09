@@ -18,6 +18,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
+	"strings"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -28,7 +30,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-var codewindHome = filepath.Join(os.Getenv("HOMEPATH"), ".codewind")
+var codewindHome = filepath.Join(homeDir, ".codewind")
 var mustGatherDirName = filepath.Join(codewindHome, "mustgather", time.Now().Format("20060102150405"))
 
 func logMG(input ...string) {
@@ -41,6 +43,8 @@ func MustGatherCommand(c *cli.Context) {
 	if dirErr != nil {
 		errors.CheckErr(dirErr, 205, "")
 	}
+	logMG("Mustgather files will be collected at " + mustGatherDirName)
+
 	// Collect Codewind container inspection & logs
 	for _, cwContainerName := range docker.ContainerNames {
 		logMG("Collecting information from container " + cwContainerName)
@@ -78,20 +82,46 @@ func MustGatherCommand(c *cli.Context) {
 	}
 
 	// Attempt to gather VSCode logs
-	//logMG("Collecting VSCode logs")
-	vsCodeLogsDir := ""
-	switch os.Getenv("OSTYPE") {
+	logMG("Collecting VSCode logs")
+	vsCodeDir := ""
+	switch runtime.GOOS {
 	case "darwin":
-		vsCodeLogsDir = filepath.Join(os.Getenv("HOME"), "Library", "Application Support", "Code", "logs")
-	case "linux-gnu":
-		vsCodeLogsDir = filepath.Join(os.Getenv("HOME"), ".config", "Code", "logs")
-	case "msys", "cygwin", "win32":
-		vsCodeLogsDir = filepath.Join(os.Getenv("HOME"), "AppData", "Roaming", "Code", "logs")
+		vsCodeDir = filepath.Join(homeDir, "Library", "Application Support", "Code")
+	case "linux":
+		vsCodeDir = filepath.Join(homeDir, ".config", "Code")
+	case "windows":
+		vsCodeDir = filepath.Join(homeDir, "AppData", "Roaming", "Code")
 	}
-	if len(vsCodeLogsDir) > 0 {
-		//	logMG("TODO - walk entire directory structure")
+	if len(vsCodeDir) > 0 {
+		vsCodeLogsDir := filepath.Join(vsCodeDir, "logs")
+		
+		mustGatherVsCodeLogPath := filepath.Join(mustGatherDirName, "vsCodeLogs")
+		dirErr := os.MkdirAll(mustGatherVsCodeLogPath, 0755)
+		if dirErr != nil {
+			errors.CheckErr(dirErr, 205, "")
+		}
+		err := filepath.Walk(vsCodeLogsDir, func(path string, info os.FileInfo, err error) error {
+			localPath := filepath.Join(mustGatherVsCodeLogPath, strings.Replace(path, vsCodeDir, "", 1))
+			logMG("path = " + path)
+			logMG("localPath = " + localPath)
+			if info.IsDir() {
+				logMG(path + " is a Directory")
+				// dirErr := os.MkdirAll(, 0755)
+				// if dirErr != nil {
+				//   errors.CheckErr(dirErr, 205, "")
+				// }
+			}
+			if info.Mode().IsRegular() {
+				logMG(path + " is a Regular file")
+			}
+			return nil
+		})
+		if err != nil {
+			logMG("walk error " + err.Error())
+		}
+
 	} else {
-		//	logMG("Unable to collect VSCode logs")
+		logMG("Unable to collect VSCode logs - cannot find logs directory")
 	}
 
 }
