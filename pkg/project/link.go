@@ -24,6 +24,7 @@ import (
 )
 
 type (
+	// Link : The structure of a Link object returned from PFE
 	Link struct {
 		ProjectID  string `json:"projectID"`
 		EnvName    string `json:"envName"`
@@ -37,14 +38,14 @@ type (
 	}
 )
 
-// GetProjectLinks calls the project link API on PFE with a POST request
+// GetProjectLinks calls the project links API on PFE with a POST request
 func GetProjectLinks(httpClient utils.HTTPClient, conInfo *connections.Connection, conURL string, projectID string) ([]Link, *ProjectError) {
 	requestURL := conURL + "/api/v1/projects/" + projectID + "/links"
 	req, reqErr := http.NewRequest("GET", requestURL, nil)
-	req.Header.Set("Content-Type", "application/json")
 	if reqErr != nil {
 		return nil, &ProjectError{errOpRequest, reqErr, reqErr.Error()}
 	}
+	req.Header.Set("Content-Type", "application/json")
 
 	byteArray, projectLinkResponseErr := handleProjectLinkResponse(req, conInfo, httpClient, http.StatusOK)
 	if projectLinkResponseErr != nil {
@@ -69,12 +70,12 @@ func CreateProjectLink(httpClient utils.HTTPClient, conInfo *connections.Connect
 	}
 	jsonPayload, _ := json.Marshal(parameters)
 	req, reqErr := http.NewRequest("POST", requestURL, bytes.NewBuffer(jsonPayload))
-	req.Header.Set("Content-Type", "application/json")
 	if reqErr != nil {
 		return &ProjectError{errOpRequest, reqErr, reqErr.Error()}
 	}
+	req.Header.Set("Content-Type", "application/json")
 
-	_, projectLinkResponseErr := handleProjectLinkResponse(req, conInfo, httpClient, http.StatusOK)
+	_, projectLinkResponseErr := handleProjectLinkResponse(req, conInfo, httpClient, http.StatusAccepted)
 	return projectLinkResponseErr
 }
 
@@ -87,12 +88,12 @@ func UpdateProjectLink(httpClient utils.HTTPClient, conInfo *connections.Connect
 	}
 	jsonPayload, _ := json.Marshal(parameters)
 	req, reqErr := http.NewRequest("PUT", requestURL, bytes.NewBuffer(jsonPayload))
-	req.Header.Set("Content-Type", "application/json")
 	if reqErr != nil {
 		return &ProjectError{errOpRequest, reqErr, reqErr.Error()}
 	}
+	req.Header.Set("Content-Type", "application/json")
 
-	_, projectLinkResponseErr := handleProjectLinkResponse(req, conInfo, httpClient, http.StatusNoContent)
+	_, projectLinkResponseErr := handleProjectLinkResponse(req, conInfo, httpClient, http.StatusAccepted)
 	return projectLinkResponseErr
 }
 
@@ -104,12 +105,12 @@ func DeleteProjectLink(httpClient utils.HTTPClient, conInfo *connections.Connect
 	}
 	jsonPayload, _ := json.Marshal(parameters)
 	req, reqErr := http.NewRequest("DELETE", requestURL, bytes.NewBuffer(jsonPayload))
-	req.Header.Set("Content-Type", "application/json")
 	if reqErr != nil {
 		return &ProjectError{errOpRequest, reqErr, reqErr.Error()}
 	}
+	req.Header.Set("Content-Type", "application/json")
 
-	_, projectLinkResponseErr := handleProjectLinkResponse(req, conInfo, httpClient, http.StatusNoContent)
+	_, projectLinkResponseErr := handleProjectLinkResponse(req, conInfo, httpClient, http.StatusAccepted)
 	return projectLinkResponseErr
 }
 
@@ -138,7 +139,7 @@ func handleProjectLinkResponse(req *http.Request, conInfo *connections.Connectio
 		return nil, nil
 	}
 
-	resp.Body.Close()
+	defer resp.Body.Close()
 
 	byteArray, byteError := ioutil.ReadAll(resp.Body)
 	if byteError != nil {

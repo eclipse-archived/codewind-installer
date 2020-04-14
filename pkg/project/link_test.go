@@ -48,6 +48,14 @@ func TestGetProjectLinks(t *testing.T) {
 		assert.Nil(t, projectLinkErr)
 		assert.Equal(t, links, returnedLinks)
 	})
+	t.Run("Expect failure - request returns unknown HTTP code", func(t *testing.T) {
+		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusPermanentRedirect, Body: nil}
+		mockConnection := connections.Connection{ID: "local"}
+
+		_, projectLinkErr := GetProjectLinks(mockClient, &mockConnection, "dummyurl", "dummyProjectID")
+		wantedError := &ProjectError{errOpResponse, errUnknownHTTPCode, errUnknownHTTPCode.Error()}
+		assert.Equal(t, wantedError, projectLinkErr)
+	})
 }
 
 func TestCreateProjectLinks(t *testing.T) {
@@ -93,7 +101,7 @@ func TestCreateProjectLinks(t *testing.T) {
 }
 
 func TestUpdateProjectLinks(t *testing.T) {
-	t.Run("Expect success - project links should be created", func(t *testing.T) {
+	t.Run("Expect success - project links should be updated", func(t *testing.T) {
 		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusNoContent, Body: nil}
 		mockConnection := connections.Connection{ID: "local"}
 
@@ -135,7 +143,7 @@ func TestUpdateProjectLinks(t *testing.T) {
 }
 
 func TestDeleteProjectLinks(t *testing.T) {
-	t.Run("Expect success - project links should be created", func(t *testing.T) {
+	t.Run("Expect success - project links should be deleted", func(t *testing.T) {
 		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusNoContent, Body: nil}
 		mockConnection := connections.Connection{ID: "local"}
 

@@ -226,7 +226,7 @@ func Commands() {
 							Aliases: []string{"ls"},
 							Usage:   "Lists all the links for a project",
 							Flags: []cli.Flag{
-								cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
+								cli.StringFlag{Name: "id, i", Usage: "Project ID", Required: true},
 							},
 							Action: func(c *cli.Context) error {
 								ProjectLinkList(c)
@@ -238,9 +238,9 @@ func Commands() {
 							Aliases: []string{"c"},
 							Usage:   "Creates a new link for a project",
 							Flags: []cli.Flag{
-								cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
-								cli.StringFlag{Name: "targetID,t", Usage: "The Project ID of the project to add a link to", Required: true},
-								cli.StringFlag{Name: "env,e", Usage: "Environment variable name", Required: true},
+								cli.StringFlag{Name: "id, i", Usage: "Project ID", Required: true},
+								cli.StringFlag{Name: "targetID, t", Usage: "The Project ID of the project to add a link to", Required: true},
+								cli.StringFlag{Name: "env, e", Usage: "Environment variable name", Required: true},
 							},
 							Action: func(c *cli.Context) error {
 								ProjectLinkCreate(c)
@@ -251,9 +251,9 @@ func Commands() {
 							Aliases: []string{"r"},
 							Usage:   "Renames the environment variable name for a link",
 							Flags: []cli.Flag{
-								cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
-								cli.StringFlag{Name: "env,e", Usage: "Environment variable name", Required: true},
-								cli.StringFlag{Name: "newEnv,n", Usage: "New environment variable name", Required: true},
+								cli.StringFlag{Name: "id, i", Usage: "Project ID", Required: true},
+								cli.StringFlag{Name: "env, e", Usage: "Environment variable name", Required: true},
+								cli.StringFlag{Name: "newEnv, n", Usage: "New environment variable name", Required: true},
 							},
 							Action: func(c *cli.Context) error {
 								ProjectLinkUpdate(c)
@@ -264,8 +264,8 @@ func Commands() {
 							Aliases: []string{"rm"},
 							Usage:   "Removes a project link",
 							Flags: []cli.Flag{
-								cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
-								cli.StringFlag{Name: "env,e", Usage: "Environment variable name", Required: true},
+								cli.StringFlag{Name: "id, i", Usage: "Project ID", Required: true},
+								cli.StringFlag{Name: "env, e", Usage: "Environment variable name", Required: true},
 							},
 							Action: func(c *cli.Context) error {
 								ProjectLinkDelete(c)

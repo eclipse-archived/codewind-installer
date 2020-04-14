@@ -318,7 +318,7 @@ func ProjectLinkList(c *cli.Context) {
 		fmt.Println(string(json))
 	} else {
 		if len(links) == 0 {
-			fmt.Println("No projects bound to Codewind")
+			fmt.Println("Project has no links")
 		} else {
 			w := new(tabwriter.Writer)
 			w.Init(os.Stdout, 0, 8, 2, '\t', 0)
@@ -372,7 +372,7 @@ func ProjectLinkCreate(c *cli.Context) {
 func ProjectLinkUpdate(c *cli.Context) {
 	projectID := strings.TrimSpace(strings.ToLower(c.String("id")))
 	envName := strings.TrimSpace(c.String("env"))
-	updatedEnvName := strings.TrimSpace(strings.ToLower(c.String("newEnv")))
+	updatedEnvName := strings.TrimSpace(c.String("newEnv"))
 
 	conID, getConnectionIDErr := project.GetConnectionID(projectID)
 	if getConnectionIDErr != nil {
