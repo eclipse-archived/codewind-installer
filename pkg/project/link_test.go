@@ -60,7 +60,7 @@ func TestGetProjectLinks(t *testing.T) {
 
 func TestCreateProjectLinks(t *testing.T) {
 	t.Run("Expect success - project links should be created", func(t *testing.T) {
-		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusOK, Body: nil}
+		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusAccepted, Body: nil}
 		mockConnection := connections.Connection{ID: "local"}
 
 		projectLinkErr := CreateProjectLink(mockClient, &mockConnection, "dummyurl", "dummyProjectID", "dummyTargetProjectID", "dummyEnvName")
@@ -102,7 +102,7 @@ func TestCreateProjectLinks(t *testing.T) {
 
 func TestUpdateProjectLinks(t *testing.T) {
 	t.Run("Expect success - project links should be updated", func(t *testing.T) {
-		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusNoContent, Body: nil}
+		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusAccepted, Body: nil}
 		mockConnection := connections.Connection{ID: "local"}
 
 		projectLinkErr := UpdateProjectLink(mockClient, &mockConnection, "dummyurl", "dummyProjectID", "dummyEnvName", "dummyUpdatedEnvName")
@@ -144,7 +144,7 @@ func TestUpdateProjectLinks(t *testing.T) {
 
 func TestDeleteProjectLinks(t *testing.T) {
 	t.Run("Expect success - project links should be deleted", func(t *testing.T) {
-		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusNoContent, Body: nil}
+		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusAccepted, Body: nil}
 		mockConnection := connections.Connection{ID: "local"}
 
 		projectLinkErr := DeleteProjectLink(mockClient, &mockConnection, "dummyurl", "dummyProjectID", "dummyEnvName")
