@@ -87,13 +87,22 @@ func GetTemplates(conID, projectStyle string, showEnabledOnly bool) ([]Template,
 
 	defer resp.Body.Close()
 
+	// May return 204, no content, which means no resp.Body to parse.
+	if resp.StatusCode == 204 {
+		return []Template{}, nil
+	}
+
 	byteArray, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
 
 	var templates []Template
-	json.Unmarshal(byteArray, &templates)
+	err = json.Unmarshal(byteArray, &templates)
+	if err != nil {
+		return nil, err
+	}
+
 	return templates, nil
 }
 
@@ -124,7 +133,10 @@ func GetTemplateStyles(conID string) ([]string, error) {
 	}
 
 	var styles []string
-	json.Unmarshal(byteArray, &styles)
+	err = json.Unmarshal(byteArray, &styles)
+	if err != nil {
+		return nil, err
+	}
 
 	return styles, nil
 }
@@ -157,7 +169,10 @@ func GetTemplateRepos(conID string) ([]utils.TemplateRepo, error) {
 	}
 
 	var repos []utils.TemplateRepo
-	json.Unmarshal(byteArray, &repos)
+	err = json.Unmarshal(byteArray, &repos)
+	if err != nil {
+		return nil, err
+	}
 
 	return repos, nil
 }
@@ -207,7 +222,10 @@ func AddTemplateRepo(conID, URL, description, name string) ([]utils.TemplateRepo
 	}
 
 	var repos []utils.TemplateRepo
-	json.Unmarshal(byteArray, &repos)
+	err = json.Unmarshal(byteArray, &repos)
+	if err != nil {
+		return nil, err
+	}
 
 	return repos, nil
 }
@@ -254,7 +272,10 @@ func DeleteTemplateRepo(conID, URL string) ([]utils.TemplateRepo, error) {
 	}
 
 	var repos []utils.TemplateRepo
-	json.Unmarshal(byteArray, &repos)
+	err = json.Unmarshal(byteArray, &repos)
+	if err != nil {
+		return nil, err
+	}
 
 	return repos, nil
 }
@@ -360,7 +381,10 @@ func BatchPatchTemplateRepos(conID string, operations []RepoOperation) ([]SubRes
 	}
 
 	var subResponsesFromBatchOperation []SubResponseFromBatchOperation
-	json.Unmarshal(byteArray, &subResponsesFromBatchOperation)
+	err = json.Unmarshal(byteArray, &subResponsesFromBatchOperation)
+	if err != nil {
+		return nil, err
+	}
 
 	return subResponsesFromBatchOperation, nil
 }

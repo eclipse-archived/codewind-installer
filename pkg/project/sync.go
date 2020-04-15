@@ -334,9 +334,10 @@ func retrieveIgnoredPathsList(projectPath string) []string {
 	if _, err := os.Stat(cwSettingsPath); !os.IsNotExist(err) {
 		plan, _ := ioutil.ReadFile(cwSettingsPath)
 		var cwSettingsJSON CWSettings
-		// Don't need to handle an invalid JSON file as we should just return []
-		json.Unmarshal(plan, &cwSettingsJSON)
-		cwSettingsIgnoredPathsList = cwSettingsJSON.IgnoredPaths
+		err = json.Unmarshal(plan, &cwSettingsJSON)
+		if err == nil {
+			cwSettingsIgnoredPathsList = cwSettingsJSON.IgnoredPaths
+		}
 	}
 	return cwSettingsIgnoredPathsList
 }
@@ -348,9 +349,10 @@ func retrieveRefPathsList(projectPath string) []refPath {
 	if _, err := os.Stat(cwRefPathsPath); !os.IsNotExist(err) {
 		plan, _ := ioutil.ReadFile(cwRefPathsPath)
 		var cwRefPathsJSON refPaths
-		// Don't need to handle an invalid JSON file as we should just return []
-		json.Unmarshal(plan, &cwRefPathsJSON)
-		cwRefPathsList = cwRefPathsJSON.RefPaths
+		err = json.Unmarshal(plan, &cwRefPathsJSON)
+		if err == nil {
+			cwRefPathsList = cwRefPathsJSON.RefPaths
+		}
 	}
 	return cwRefPathsList
 }

@@ -51,7 +51,10 @@ func GetExtensions(conID string) ([]utils.Extension, error) {
 	}
 
 	var extensions []utils.Extension
-	json.Unmarshal(byteArray, &extensions)
+	err = json.Unmarshal(byteArray, &extensions)
+	if err != nil {
+		return nil, err
+	}
 
 	return extensions, nil
 }

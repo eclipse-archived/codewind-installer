@@ -89,7 +89,10 @@ type Result struct {
 func parseKeycloakError(body string, httpCode int) *KeycloakAPIError {
 	keycloakAPIError := KeycloakAPIError{}
 	keycloakAPIError.HTTPStatus = httpCode
-	json.Unmarshal([]byte(body), &keycloakAPIError)
+	err := json.Unmarshal([]byte(body), &keycloakAPIError)
+	if err != nil {
+		keycloakAPIError.ErrorDescription = "Bad JSON in error response from keycloak"
+	}
 	// copy message into description if one is not set
 	if keycloakAPIError.ErrorMessage != "" && keycloakAPIError.ErrorDescription == "" {
 		keycloakAPIError.ErrorDescription = keycloakAPIError.ErrorMessage
