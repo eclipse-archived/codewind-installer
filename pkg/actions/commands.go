@@ -1008,6 +1008,11 @@ func Commands() {
 			Name:    "mustgather",
 			Aliases: []string{"mg"},
 			Usage:   "Gathers logs and project files to aid diagnosis of Codewind errors",
+			Flags: []cli.Flag{
+				cli.StringFlag{Name: "eclipseWorkspaceDir, e", Usage: "The location of your Eclipse workspace `directory` if using the Eclipse IDE", Required: false},
+				cli.BoolFlag{Name: "quiet, q", Usage: "Turn off console messages", Required: false},
+				cli.BoolFlag{Name: "projects, p", Usage: "Collect project containers information", Required: false},
+			},
 			Action: func(c *cli.Context) error {
 				MustGatherCommand(c)
 				return nil

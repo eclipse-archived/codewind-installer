@@ -46,12 +46,13 @@ var baseImageNameArr = [2]string{
 	performanceImageName,
 }
 
-const pfeContainerName = "codewind-pfe"
+//PfeContainerName : name of the Codewind PFE container
+const PfeContainerName = "codewind-pfe"
 const performanceContainerName = "codewind-performance"
 
 //ContainerNames : array of codewind container names
 var ContainerNames = [...]string{
-	pfeContainerName,
+	PfeContainerName,
 	performanceContainerName,
 }
 
@@ -63,7 +64,7 @@ var dockerConfigSecretFile = "dockerconfig"
 var composeTemplate = `
 version: 3.3
 services:
- ` + pfeContainerName + `:
+ ` + PfeContainerName + `:
   image: ${PFE_IMAGE_NAME}${PLATFORM}:${TAG}
   container_name: codewind-pfe
   user: root
@@ -732,4 +733,16 @@ func GetContainerLogs(dockerClient DockerClient, containerID string) (io.ReadClo
 	}
 
 	return containerLogStream, nil
+}
+
+//GetFilesFromContainer : returns the tar file stream for the path in the specified container.
+func GetFilesFromContainer(dockerClient DockerClient, containerID, path string) (io.ReadCloser, *DockerError) {
+	ctx := context.Background()
+
+	fileTarStream, _, err := dockerClient.CopyFromContainer(ctx, containerID, path)
+	if err != nil {
+		return nil, &DockerError{errOpContainerError, err, err.Error()}
+	}
+
+	return fileTarStream, nil
 }
