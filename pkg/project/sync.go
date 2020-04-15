@@ -97,10 +97,6 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	projectPath := strings.TrimSpace(c.String("path"))
 	projectID := strings.TrimSpace(c.String("id"))
 	synctime := int64(c.Int("time"))
-	_, err := os.Stat(projectPath)
-	if err != nil {
-		return nil, &ProjectError{errBadPath, err, err.Error()}
-	}
 
 	if !ConnectionFileExists(projectID) {
 		fmt.Println("Project connection file does not exist, creating default local connection")
@@ -121,6 +117,30 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	conURL, conURLErr := config.PFEOriginFromConnection(conInfo)
 	if conURLErr != nil {
 		return nil, &ProjectError{errOpConNotFound, conURLErr.Err, conURLErr.Desc}
+	}
+
+	// if local path doesn't exist but is equal to the locationOnDisk, the directory has likely been deleted
+	// emit this message to the UI socket by calling the PFE /localDirDeleted API
+	pathExists := utils.PathExists(projectPath)
+
+	if !pathExists {
+		projectInfo, err := GetProjectFromID(&http.Client{}, conInfo, conURL, projectID)
+		if err != nil {
+			return nil, err
+		}
+		newErr := fmt.Errorf(textProjectPathDoesNotExist)
+
+		if projectPath != projectInfo.LocationOnDisk {
+			return nil, &ProjectError{errBadPath, newErr, newErr.Error()}
+		}
+
+
+		err = handleLocalDirDeleted(&http.Client{}, conInfo, conURL, projectID)
+		if err != nil {
+			return nil, &ProjectError{errBadPath, err, err.Error()}
+		}
+
+		return nil, &ProjectError{errBadPath, newErr, newErr.Error()}
 	}
 
 	// Sync all the necessary project files
@@ -421,4 +441,25 @@ func ignoreFileOrDirectory(name string, isDir bool, cwSettingsIgnoredPathsList [
 		}
 	}
 	return isFileInIgnoredList
+}
+
+// handleLocalDirDeleted : Respond to a local project dir not existing
+func handleLocalDirDeleted(httpClient utils.HTTPClient, connection *connections.Connection, url, projectID string) *ProjectError {
+	req, requestErr := http.NewRequest("POST", url+"/api/v1/projects/"+projectID+"/localDirDeleted", nil)
+	if requestErr != nil {
+		return &ProjectError{errOpRequest, requestErr, requestErr.Error()}
+	}
+
+	resp, httpSecError := sechttp.DispatchHTTPRequest(httpClient, req, connection)
+	if httpSecError != nil {
+		return &ProjectError{errOpRequest, httpSecError, httpSecError.Desc}
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		respErr := errors.New(errOpResponse)
+		return &ProjectError{errOpNotFound, respErr, textAPINotFound}
+	}
+
+	return nil
 }
