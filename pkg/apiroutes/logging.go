@@ -74,10 +74,10 @@ func SetLogLevel(conInfo *connections.Connection, conURL string, httpClient util
 	logLevel := &LogParameter{Level: newLogLevel}
 	jsonPayload, _ := json.Marshal(logLevel)
 	req, err := http.NewRequest("PUT", conURL+"/api/v1/logging", bytes.NewBuffer(jsonPayload))
-	req.Header.Set("Content-Type", "application/json")
 	if err != nil {
 		return err
 	}
+	req.Header.Set("Content-Type", "application/json")
 
 	resp, httpSecError := sechttp.DispatchHTTPRequest(httpClient, req, conInfo)
 	if httpSecError != nil {
