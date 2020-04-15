@@ -16,7 +16,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	goErr "errors"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -357,7 +357,7 @@ func ValidateImageDigest(dockerClient DockerClient, image string) (string, *Dock
 					logr.Tracef("Validation for image digest ..%v succeeded\n", last10)
 				} else {
 					logr.Traceln("Local image digest did not match queried image digest from dockerhub - This could be a result of a bad download")
-					valError := goErr.New(textBadDigest)
+					valError := errors.New(textBadDigest)
 					return image.ID, &DockerError{errOpValidate, valError, valError.Error()}
 				}
 			}
@@ -623,7 +623,7 @@ func LoginToRegistry(address string, username string, password string) *DockerEr
 		return &DockerError{errDockerCredential, err, "Error executing 'docker login'"}
 	}
 
-	// Write to stdin using an asyncrhonous go routine.
+	// Write to stdin using an asynchronous go routine.
 	go func() {
 		defer stdin.Close()
 		io.WriteString(stdin, password)
@@ -631,7 +631,9 @@ func LoginToRegistry(address string, username string, password string) *DockerEr
 
 	_, err = cmd.CombinedOutput()
 	if err != nil {
-		return &DockerError{errDockerCredential, err, "Error executing 'docker login'"}
+		textDockerLoginFailed := fmt.Sprintf("Docker login to %s as %s failed. Address, username or password is incorrect", address, username)
+		loginErr := errors.New(textDockerLoginFailed)
+		return &DockerError{errDockerCredential, loginErr, textDockerLoginFailed}
 	}
 
 	return nil
