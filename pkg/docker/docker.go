@@ -171,7 +171,7 @@ func DockerCompose(dockerComposeFile string, tag string, loglevel string) *Docke
 	if err := cmd.Start(); err != nil { // after 'Start' the program is continued and script is executing in background
 		//print out docker-compose sysout & syserr for error diagnosis
 		fmt.Printf(output.String())
-		utils.DeleteTempFile(dockerComposeFile)
+		os.Remove(dockerComposeFile)
 		ClearDockerConfigSecret(path.Dir(dockerComposeFile))
 		return &DockerError{errOpDockerComposeStart, err, err.Error()}
 	}
@@ -179,20 +179,20 @@ func DockerCompose(dockerComposeFile string, tag string, loglevel string) *Docke
 	if err := cmd.Wait(); err != nil {
 		//print out docker-compose sysout & syserr for error diagnosis
 		fmt.Printf(output.String())
-		utils.DeleteTempFile(dockerComposeFile)
+		os.Remove(dockerComposeFile)
 		ClearDockerConfigSecret(path.Dir(dockerComposeFile))
 		return &DockerError{errOpDockerComposeStart, err, err.Error()}
 	}
 	fmt.Printf(output.String()) // Wait to finish execution, so we can read all output
 
 	if strings.Contains(output.String(), "ERROR") || strings.Contains(output.String(), "error") {
-		utils.DeleteTempFile(dockerComposeFile)
+		os.Remove(dockerComposeFile)
 		ClearDockerConfigSecret(path.Dir(dockerComposeFile))
 		os.Exit(1)
 	}
 
 	if strings.Contains(output.String(), "The image for the service you're trying to recreate has been removed") {
-		utils.DeleteTempFile(dockerComposeFile)
+		os.Remove(dockerComposeFile)
 		ClearDockerConfigSecret(path.Dir(dockerComposeFile))
 		os.Exit(1)
 	}

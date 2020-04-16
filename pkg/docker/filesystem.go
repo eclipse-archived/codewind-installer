@@ -27,23 +27,15 @@ import (
 )
 
 // WriteToComposeFile the contents of the docker compose yaml
-func WriteToComposeFile(dockerComposeFile string, debug bool) (bool, *DockerError) {
-	if dockerComposeFile == "" {
-		return false, nil
-	}
-
-	dockerComposeTempFile, dockerComposeTempErr := utils.CreateTempFile(dockerComposeFile)
+func WriteToComposeFile(dockerComposeFile string, debug bool) *DockerError {
+	dockerComposeTempErr := utils.CreateTempFile(dockerComposeFile)
 	if dockerComposeTempErr != nil {
-		return false, &DockerError{errOpDockerComposeFileCreate, dockerComposeTempErr, dockerComposeTempErr.Error()}
-	}
-
-	if dockerComposeTempFile != "" {
-		fmt.Println("==> created file", dockerComposeTempFile)
+		return &DockerError{errOpDockerComposeFileCreate, dockerComposeTempErr, dockerComposeTempErr.Error()}
 	}
 
 	secretFileName, secretErr := writeDockerConfigSecretFile(path.Dir(dockerComposeFile))
 	if secretErr != nil {
-		return false, secretErr
+		return secretErr
 	}
 
 	dataStruct := Compose{}
@@ -51,7 +43,7 @@ func WriteToComposeFile(dockerComposeFile string, debug bool) (bool, *DockerErro
 
 	unmarshDataErr := yaml.Unmarshal([]byte(data), &dataStruct)
 	if unmarshDataErr != nil {
-		return false, &DockerError{errOpDockerComposeFileCreate, unmarshDataErr, unmarshDataErr.Error()}
+		return &DockerError{errOpDockerComposeFileCreate, unmarshDataErr, unmarshDataErr.Error()}
 	}
 
 	if debug == true && len(dataStruct.SERVICES.PFE.Ports) > 0 {
@@ -62,7 +54,7 @@ func WriteToComposeFile(dockerComposeFile string, debug bool) (bool, *DockerErro
 
 	marshalledData, yamlErr := yaml.Marshal(&dataStruct)
 	if yamlErr != nil {
-		return false, &DockerError{errOpDockerComposeFileCreate, yamlErr, yamlErr.Error()}
+		return &DockerError{errOpDockerComposeFileCreate, yamlErr, yamlErr.Error()}
 	}
 
 	if debug == true {
@@ -73,9 +65,9 @@ func WriteToComposeFile(dockerComposeFile string, debug bool) (bool, *DockerErro
 
 	writeFileErr := ioutil.WriteFile(dockerComposeFile, marshalledData, 0644)
 	if writeFileErr != nil {
-		return false, &DockerError{errOpDockerComposeFileCreate, writeFileErr, writeFileErr.Error()}
+		return &DockerError{errOpDockerComposeFileCreate, writeFileErr, writeFileErr.Error()}
 	}
-	return true, nil
+	return nil
 }
 
 func writeDockerConfigSecretFile(parentPath string) (string, *DockerError) {

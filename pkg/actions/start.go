@@ -41,7 +41,7 @@ func StartCommand(c *cli.Context, dockerComposeFile string, healthEndpoint strin
 		loglevel := c.GlobalString("loglevel")
 		fmt.Println("Debug:", debug)
 
-		_, writeToComposeFileErr := docker.WriteToComposeFile(dockerComposeFile, debug)
+		writeToComposeFileErr := docker.WriteToComposeFile(dockerComposeFile, debug)
 		if writeToComposeFileErr != nil {
 			HandleDockerError(writeToComposeFileErr)
 			os.Exit(1)

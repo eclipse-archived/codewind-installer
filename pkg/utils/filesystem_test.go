@@ -55,25 +55,21 @@ func CreateTempTestDir(t *testing.T) (string, func()) {
 
 func TestCreateTempFile(t *testing.T) {
 	testPath := "create_temp_file_test_delete_me"
-	dir, _ := os.Getwd()
-	fullTestPath := path.Join(dir, testPath)
 	t.Run("success case - creates temporary file", func(*testing.T) {
-		createdFilePath, err := CreateTempFile(testPath)
+		err := CreateTempFile(testPath)
 		assert.Nil(t, err)
 
 		_, err = os.Stat(testPath)
 		assert.Nil(t, err)
 		assert.Equal(t, PathExists(testPath), true)
 
-		assert.Equal(t, fullTestPath, createdFilePath)
 		os.Remove(testPath)
 	})
 	t.Run("doesn't change an existing file", func(t *testing.T) {
 		file, removeFile := CreateTempTestFile(t, "Hello World")
 		defer removeFile()
-		createdFilePath, err := CreateTempFile(file.Name())
+		err := CreateTempFile(file.Name())
 		assert.Nil(t, err)
-		assert.Equal(t, "", createdFilePath)
 
 		writeFileContent := []byte("Hello World")
 		fileContent, _ := ioutil.ReadFile(file.Name())
