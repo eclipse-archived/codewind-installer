@@ -134,7 +134,6 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 			return nil, &ProjectError{errBadPath, newErr, newErr.Error()}
 		}
 
-
 		err = handleLocalDirDeleted(&http.Client{}, conInfo, conURL, projectID)
 		if err != nil {
 			return nil, &ProjectError{errBadPath, err, err.Error()}
@@ -457,8 +456,8 @@ func handleLocalDirDeleted(httpClient utils.HTTPClient, connection *connections.
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		respErr := errors.New(errOpResponse)
-		return &ProjectError{errOpNotFound, respErr, textAPINotFound}
+		respErr := fmt.Errorf("Error: PFE responded with status code %d", resp.StatusCode)
+		return &ProjectError{errOpNotFound, respErr, respErr.Error()}
 	}
 
 	return nil

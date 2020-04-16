@@ -322,6 +322,22 @@ func TestRetrieveIgnoredPathsList(t *testing.T) {
 	cleanupTestFolder(t, testFolder)
 }
 
+func TestHandleLocalDirDeleted(t *testing.T) {
+	body := ioutil.NopCloser(bytes.NewReader([]byte{}))
+	mockConnection := connections.Connection{ID: "local"}
+	t.Run("success case: 200 response from PFE", func(t *testing.T) {
+		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusOK, Body: body}
+		err := handleLocalDirDeleted(mockClient, &mockConnection, "mockURL", "mockID")
+		assert.Nil(t, err)
+	})
+
+	t.Run("error case: non 200 response from PFE", func(t *testing.T) {
+		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusNotFound, Body: body}
+		err := handleLocalDirDeleted(mockClient, &mockConnection, "mockURL", "mockID")
+		assert.NotNil(t, err)
+	})
+}
+
 func setupIgnoredPathsTests(t *testing.T, testFolder string, createPaths testDirPaths) {
 	t.Helper()
 	os.Mkdir(testFolder, 0777)
