@@ -44,7 +44,7 @@ func DownloadFromTarGzURL(URL string, destination string) error {
 		return err
 	}
 	err = UnTar(pathToTempFile, destination)
-	DeleteTempFile(pathToTempFile)
+	os.Remove(pathToTempFile)
 	return err
 }
 
@@ -84,7 +84,7 @@ func DownloadAndExtractZip(zipURL string, destination string) error {
 		return err
 	}
 
-	DeleteTempFile(pathToTempZipFile)
+	os.Remove(pathToTempZipFile)
 	return nil
 }
 

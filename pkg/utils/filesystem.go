@@ -34,34 +34,18 @@ import (
 )
 
 // CreateTempFile in the same directory as the binary for docker compose
-func CreateTempFile(filePath string) bool {
+func CreateTempFile(filePath string) error {
 	var _, err = os.Stat(filePath)
 
 	// create file if not exists
 	if os.IsNotExist(err) {
-		var file, err = os.Create(filePath)
-		errors.CheckErr(err, 201, "")
+		file, createErr := os.Create(filePath)
+		if createErr != nil {
+			return createErr
+		}
 		defer file.Close()
-
-		dir, _ := os.Getwd()
-		fmt.Println("==> created file", path.Join(dir, filePath))
-		return true
 	}
-	return false
-}
-
-// DeleteTempFile once the the Codewind environment has been created
-func DeleteTempFile(filePath string) (bool, error) {
-	var _, file = os.Stat(filePath)
-
-	if os.IsNotExist(file) {
-		errors.CheckErr(file, 206, "No files to delete")
-		return false, file
-	}
-
-	os.Remove(filePath)
-	// fmt.Printf("==> Deleted file: %s\n", filePath)
-	return true, nil
+	return nil
 }
 
 // GetZipURL from github api /repos/:owner/:repo/:archive_format/:ref

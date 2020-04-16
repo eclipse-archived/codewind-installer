@@ -16,7 +16,6 @@ import (
 	"os"
 
 	"github.com/eclipse/codewind-installer/pkg/docker"
-	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/urfave/cli"
 )
 
@@ -42,8 +41,11 @@ func StartCommand(c *cli.Context, dockerComposeFile string, healthEndpoint strin
 		loglevel := c.GlobalString("loglevel")
 		fmt.Println("Debug:", debug)
 
-		utils.CreateTempFile(dockerComposeFile)
-		docker.WriteToComposeFile(dockerComposeFile, debug)
+		writeToComposeFileErr := docker.WriteToComposeFile(dockerComposeFile, debug)
+		if writeToComposeFileErr != nil {
+			HandleDockerError(writeToComposeFileErr)
+			os.Exit(1)
+		}
 
 		err := docker.DockerCompose(dockerComposeFile, tag, loglevel)
 		if err != nil {
