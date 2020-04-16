@@ -34,7 +34,7 @@ var numTemplatesEnabled = numCodewindTemplates + numAppsodyTemplatesEnabled
 
 var numTemplates = numTemplatesEnabled + numAppsodyTemplatesDisabled
 
-var URLOfExistingRepo = "https://raw.githubusercontent.com/kabanero-io/codewind-templates/master/devfiles/index.json"
+var URLOfExistingRepo = "https://raw.githubusercontent.com/codewind-resources/codewind-templates/master/devfiles/index.json"
 var URLOfNewRepo = "https://raw.githubusercontent.com/kabanero-io/codewind-templates/aad4bafc14e1a295fb8e462c20fe8627248609a3/devfiles/index.json"
 var URLOfUnknownRepo = "https://raw.githubusercontent.com/UNKNOWN"
 var URLOfUnknownRepo2 = "https://raw.githubusercontent.com/UNKNOWN_2"
@@ -162,7 +162,7 @@ func TestFailuresAddTemplateRepo(t *testing.T) {
 			inURL:         URLOfExistingRepo,
 			inDescription: "example repository containing links to templates",
 			wantedType:    nil,
-			wantedErr:     errors.New("Error: PFE responded with status code 400"),
+			wantedErr:     errors.New("Error: Bad Request - " + URLOfExistingRepo + " is already a template repository"),
 		},
 	}
 	for name, test := range tests {

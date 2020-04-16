@@ -210,15 +210,15 @@ func AddTemplateRepo(conID, URL, description, name string) ([]utils.TemplateRepo
 	if httpSecError != nil {
 		return nil, httpSecError
 	}
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("Error: PFE responded with status code %d", resp.StatusCode)
-	}
-
 	defer resp.Body.Close()
 
 	byteArray, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
+	}
+
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("Error: %s - %s", http.StatusText(resp.StatusCode), string(byteArray))
 	}
 
 	var repos []utils.TemplateRepo
