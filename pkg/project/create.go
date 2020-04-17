@@ -54,8 +54,7 @@ type (
 )
 
 // DownloadTemplate using the url/link provided
-func DownloadTemplate(destination string, url string) (*Result, *ProjectError) {
-
+func DownloadTemplate(destination, url string, gitCredentials utils.GitCredentials) (*Result, *ProjectError) {
 	projErr := checkProjectDirIsEmpty(destination)
 	if projErr != nil {
 		return nil, projErr
@@ -71,7 +70,7 @@ func DownloadTemplate(destination string, url string) (*Result, *ProjectError) {
 		projectName = "PROJ_NAME_PLACEHOLDER"
 	}
 
-	err := utils.DownloadFromURLThenExtract(url, destination)
+	err := utils.DownloadFromURLThenExtract(url, destination, gitCredentials)
 	if err != nil {
 		return nil, &ProjectError{errOpCreateProject, err, err.Error()}
 	}

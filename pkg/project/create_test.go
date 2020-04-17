@@ -20,13 +20,69 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"testing"
 
 	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/security"
+	"github.com/eclipse/codewind-installer/pkg/test"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/stretchr/testify/assert"
 )
+
+const testDir = "./testDir"
+
+func TestDownloadTemplate(t *testing.T) {
+	t.Run("insecure template repo", func(t *testing.T) {
+		os.RemoveAll(testDir)
+		defer os.RemoveAll(testDir)
+
+		dest := filepath.Join(testDir, "insecureTemplateRepo")
+		url := test.PublicGHRepoURL
+		gitCredentials := utils.GitCredentials{}
+
+		out, err := DownloadTemplate(dest, url, gitCredentials)
+
+		assert.Equal(t, "success", out.Status)
+		assert.Nil(t, err)
+	})
+	t.Run("secure template repo (good credentials)", func(t *testing.T) {
+		if !test.UsingOwnGHECredentials {
+			t.Skip("skipping this test because you haven't set GitHub credentials needed for this test")
+		}
+
+		os.RemoveAll(testDir)
+		defer os.RemoveAll(testDir)
+
+		dest := filepath.Join(testDir, "secureTemplateRepoGoodCredentials")
+		url := test.GHERepoURL
+		gitCredentials := utils.GitCredentials{
+			Username: test.GHEUsername,
+			Password: test.GHEPassword,
+		}
+
+		out, err := DownloadTemplate(dest, url, gitCredentials)
+
+		assert.NotNil(t, out)
+		assert.Nil(t, err)
+	})
+	t.Run("secure template repo (bad credentials)", func(t *testing.T) {
+		os.RemoveAll(testDir)
+		defer os.RemoveAll(testDir)
+
+		dest := filepath.Join(testDir, "secureTemplateRepoBadCredentials")
+		url := test.GHERepoURL
+		gitCredentials := utils.GitCredentials{
+			Username: test.GHEUsername,
+			Password: "badpassword",
+		}
+
+		out, err := DownloadTemplate(dest, url, gitCredentials)
+
+		assert.Nil(t, out)
+		assert.Equal(t, err.Desc, "unexpected status code: 401 Unauthorized")
+	})
+}
 
 func TestDetermineProjectInfo(t *testing.T) {
 	tests := map[string]struct {

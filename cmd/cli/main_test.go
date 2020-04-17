@@ -19,12 +19,14 @@ import (
 	"testing"
 
 	"github.com/eclipse/codewind-installer/pkg/security"
+	"github.com/eclipse/codewind-installer/pkg/test"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 const cwctlName = "cwctl_test"
 const cwctl = "./" + cwctlName
+const testDir = "./testDir"
 
 func TestCwctl(t *testing.T) {
 	if testing.Short() {
@@ -36,6 +38,7 @@ func TestCwctl(t *testing.T) {
 
 	testBasicUsage(t)
 	testUseInsecureKeyring(t)
+	testCreateProjectFromTemplate(t)
 
 	os.Remove(cwctlName)
 }
@@ -104,5 +107,52 @@ func testUseInsecureKeyring(t *testing.T) {
 		require.Equal(t, "seCretphrase", string(secret.Password))
 
 		os.Remove(security.GetPathToInsecureKeyring())
+	})
+}
+
+func testCreateProjectFromTemplate(t *testing.T) {
+	t.Run("cwctl project create --url <insecureTemplateRepo> --path <testDir>", func(t *testing.T) {
+		os.RemoveAll(testDir)
+		defer os.RemoveAll(testDir)
+
+		cmd := exec.Command(cwctl, "project", "create",
+			"--url="+test.PublicGHRepoURL,
+			"--path="+testDir,
+		)
+		out, err := cmd.Output()
+		assert.Nil(t, err)
+		assert.Equal(t, "{\"status\":\"success\",\"projectPath\":\"./testDir\",\"result\":{\"language\":\"javascript\",\"projectType\":\"nodejs\"}}\n", string(out))
+	})
+	t.Run("cwctl project create --url <secureTemplateRepo> --path <testDir> --username <test.GHEUsername> --password <test.GHEPassword>", func(t *testing.T) {
+		if !test.UsingOwnGHECredentials {
+			t.Skip("skipping this test because you haven't set GitHub credentials needed for this test")
+		}
+
+		os.RemoveAll(testDir)
+		defer os.RemoveAll(testDir)
+
+		cmd := exec.Command(cwctl, "project", "create",
+			"--url="+test.GHERepoURL,
+			"--path="+testDir,
+			"--username="+test.GHEUsername,
+			"--password="+test.GHEPassword,
+		)
+		out, err := cmd.Output()
+		assert.Nil(t, err)
+		assert.Equal(t, "{\"status\":\"success\",\"projectPath\":\"./testDir\",\"result\":{\"language\":\"unknown\",\"projectType\":\"docker\"}}\n", string(out))
+	})
+	t.Run("cwctl project create --url <secureTemplateRepo> --path <testDir> --username <goodUsername> --password <badPassword>", func(t *testing.T) {
+		os.RemoveAll(testDir)
+		defer os.RemoveAll(testDir)
+
+		cmd := exec.Command(cwctl, "project", "create",
+			"--url="+test.GHERepoURL,
+			"--path="+testDir,
+			"--username="+test.GHEUsername,
+			"--password=badpassword",
+		)
+		out, err := cmd.Output()
+		assert.NotNil(t, err)
+		assert.Equal(t, "", string(out))
 	})
 }
