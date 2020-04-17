@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/eclipse/codewind-installer/pkg/security"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -42,7 +43,7 @@ func TestCwctl(t *testing.T) {
 func testBasicUsage(t *testing.T) {
 	t.Run("cwctl", func(t *testing.T) {
 		out, err := exec.Command(cwctl).Output()
-		require.Nil(t, err)
+		assert.Nil(t, err)
 		require.NotNil(t, out)
 	})
 }
@@ -57,20 +58,20 @@ func testUseInsecureKeyring(t *testing.T) {
 			"--password=seCretphrase",
 		)
 		out, err := cmd.Output()
-		require.Nil(t, err)
+		assert.Nil(t, err)
 		require.Equal(t, "{\"status\":\"OK\"}\n", string(out))
 
 		file, readErr := ioutil.ReadFile(security.GetPathToInsecureKeyring())
-		require.Nil(t, readErr)
+		assert.Nil(t, readErr)
 		require.NotNil(t, file)
 
 		secrets := []security.KeyringSecret{}
 		unmarshalErr := json.Unmarshal([]byte(file), &secrets)
-		require.Nil(t, unmarshalErr)
+		assert.Nil(t, unmarshalErr)
 		require.Len(t, secrets, 1)
 
 		secret := secrets[0]
-		require.Equal(t, "testuser", string(secret.Username))
+		assert.Equal(t, "testuser", string(secret.Username))
 		require.Equal(t, "seCretphrase", string(secret.Password))
 
 		os.Remove(security.GetPathToInsecureKeyring())
@@ -86,20 +87,20 @@ func testUseInsecureKeyring(t *testing.T) {
 		cmd.Env = os.Environ()
 		cmd.Env = append(cmd.Env, "INSECURE_KEYRING=true")
 		out, err := cmd.Output()
-		require.Nil(t, err)
+		assert.Nil(t, err)
 		require.Equal(t, "{\"status\":\"OK\"}\n", string(out))
 
 		file, readErr := ioutil.ReadFile(security.GetPathToInsecureKeyring())
-		require.Nil(t, readErr)
+		assert.Nil(t, readErr)
 		require.NotNil(t, file)
 
 		secrets := []security.KeyringSecret{}
 		unmarshalErr := json.Unmarshal([]byte(file), &secrets)
-		require.Nil(t, unmarshalErr)
+		assert.Nil(t, unmarshalErr)
 		require.Len(t, secrets, 1)
 
 		secret := secrets[0]
-		require.Equal(t, "testuser", string(secret.Username))
+		assert.Equal(t, "testuser", string(secret.Username))
 		require.Equal(t, "seCretphrase", string(secret.Password))
 
 		os.Remove(security.GetPathToInsecureKeyring())
