@@ -119,8 +119,8 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 		return nil, &ProjectError{errOpConNotFound, conURLErr.Err, conURLErr.Desc}
 	}
 
-	// if local path doesn't exist but is equal to the locationOnDisk, the directory has likely been deleted
-	// emit this message to the UI socket by calling the PFE /localDirDeleted API
+	// if local path doesn't exist but is equal to the locOnDisk, the directory has likely been deleted
+	// emit this message to the UI socket by calling the PFE /missingLocalDir API
 	pathExists := utils.PathExists(projectPath)
 
 	if !pathExists {
@@ -134,7 +134,7 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 			return nil, &ProjectError{errBadPath, newErr, newErr.Error()}
 		}
 
-		err = handleLocalDirDeleted(&http.Client{}, conInfo, conURL, projectID)
+		err = handleMissingProjectDir(&http.Client{}, conInfo, conURL, projectID)
 		if err != nil {
 			return nil, &ProjectError{errBadPath, err, err.Error()}
 		}
@@ -442,9 +442,9 @@ func ignoreFileOrDirectory(name string, isDir bool, cwSettingsIgnoredPathsList [
 	return isFileInIgnoredList
 }
 
-// handleLocalDirDeleted : Respond to a local project dir not existing
-func handleLocalDirDeleted(httpClient utils.HTTPClient, connection *connections.Connection, url, projectID string) *ProjectError {
-	req, requestErr := http.NewRequest("POST", url+"/api/v1/projects/"+projectID+"/localDirDeleted", nil)
+// handleMissingProjectDir : Respond to a local project dir not existing
+func handleMissingProjectDir(httpClient utils.HTTPClient, connection *connections.Connection, url, projectID string) *ProjectError {
+	req, requestErr := http.NewRequest("POST", url+"/api/v1/projects/"+projectID+"/missingLocalDir", nil)
 	if requestErr != nil {
 		return &ProjectError{errOpRequest, requestErr, requestErr.Error()}
 	}
