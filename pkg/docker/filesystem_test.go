@@ -13,6 +13,7 @@ package docker
 
 import (
 	"os"
+	"path"
 	"testing"
 
 	"github.com/eclipse/codewind-installer/pkg/globals"
@@ -20,29 +21,24 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const testDir = "./testDir"
+
+var testFile = path.Join(testDir, "TestFile.yaml")
+
 func TestWriteToComposeFile(t *testing.T) {
 	originalUseInsecureKeyring := globals.UseInsecureKeyring
 	globals.SetUseInsecureKeyring(true)
 	t.Run("docker compose should be written to the filepath", func(t *testing.T) {
-		testFile := "TestFile.yaml"
+		os.RemoveAll(testDir)
+		os.Mkdir(testDir, 0777)
 		os.Create(testFile)
-		err := WriteToComposeFile("TestFile.yaml", false)
+		defer os.RemoveAll(testDir)
+
+		err := WriteToComposeFile(testFile, false)
 
 		pathExists := utils.PathExists(testFile)
 		assert.True(t, pathExists)
 		assert.Nil(t, err)
-		os.Remove(testFile)
-	})
-
-	t.Run("docker compose should be written to the filepath", func(t *testing.T) {
-		testFile := "TestFile.yaml"
-		os.Create(testFile)
-		err := WriteToComposeFile("TestFile.yaml", false)
-
-		pathExists := utils.PathExists(testFile)
-		assert.True(t, pathExists)
-		assert.Nil(t, err)
-		os.Remove(testFile)
 	})
 	globals.SetUseInsecureKeyring(originalUseInsecureKeyring)
 }
