@@ -280,6 +280,7 @@ Subcommands:</br>
 `--quiet/-q` - Turn off console messages</br>
 `--projects/-p` - Collect project containers information</br>
 `--nozip/-n` - Does not create collection zip and leaves individual collected files in place</br>
+`--clean` - Removes the mustgather directory and all its contents from the Codewind home directory
 
 ### stop-all
 

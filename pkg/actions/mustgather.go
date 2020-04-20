@@ -25,7 +25,6 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
-	"github.com/eclipse/codewind-installer/pkg/appconstants"
 	"github.com/eclipse/codewind-installer/pkg/docker"
 	"github.com/eclipse/codewind-installer/pkg/errors"
 	"github.com/eclipse/codewind-installer/pkg/utils"
@@ -34,7 +33,8 @@ import (
 
 var codewindHome = filepath.Join(homeDir, ".codewind")
 var nowTime = time.Now().Format("20060102150405")
-var mustGatherDirName = filepath.Join(codewindHome, "mustgather", nowTime)
+var mustGatherMasterDirName = filepath.Join(codewindHome, "mustgather")
+var mustGatherDirName = filepath.Join(mustGatherMasterDirName, nowTime)
 
 var isLoud = true
 
@@ -46,6 +46,18 @@ func logMG(input ...string) {
 
 //MustGatherCommand to gather logs and project files to aid diagnosis of Codewind errors
 func MustGatherCommand(c *cli.Context) {
+	if c.Bool("clean") {
+		logMG("Deleting all collected mustgather files")
+		err := os.RemoveAll(mustGatherMasterDirName)
+		if err != nil {
+			errors.CheckErr(err, 206, "")
+		}
+	} else {
+		mgCommand(c)
+	}
+}
+
+func mgCommand(c *cli.Context) {
 	if c.Bool("quiet") {
 		isLoud = false
 	}
@@ -69,13 +81,8 @@ func MustGatherCommand(c *cli.Context) {
 	logMG("Collecting docker-compose.yaml")
 	utils.CopyFile(filepath.Join(codewindHome, "docker-compose.yaml"), filepath.Join(mustGatherDirName, "docker-compose.yaml"))
 
-	// Collect codewind version
-	logMG("Collecting CWCTL version")
-	versionByteArray := []byte(appconstants.VersionNum)
-	versionErr := ioutil.WriteFile(filepath.Join(mustGatherDirName, "cwctl.version"), versionByteArray, 0644)
-	if versionErr != nil {
-		errors.CheckErr(versionErr, 201, "")
-	}
+	// Collect codewind versions
+	gatherCodewindVersions()
 
 	// Attempt to gather Eclipse logs
 	gatherCodewindEclipseLogs(c.String("eclipseWorkspaceDir"))
@@ -218,6 +225,19 @@ func createZipAndRemoveCollectedFiles() {
 		if err != nil {
 			errors.CheckErr(err, 206, "")
 		}
+	}
+}
+
+func gatherCodewindVersions() {
+	logMG("Collecting version information")
+	containerVersions := GetContainerVersions("local")
+	versionsByteArray := []byte(
+		"CWCTL VERSION: " + containerVersions.CwctlVersion + "\n" +
+			"PFE VERSION: " + containerVersions.PFEVersion + "\n" +
+			"PERFORMANCE VERSION: " + containerVersions.PerformanceVersion)
+	versionsErr := ioutil.WriteFile(filepath.Join(mustGatherDirName, "codewind.versions"), versionsByteArray, 0644)
+	if versionsErr != nil {
+		errors.CheckErr(versionsErr, 201, "")
 	}
 }
 

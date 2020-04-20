@@ -36,10 +36,26 @@ func GetVersions(c *cli.Context) {
 	}
 }
 
-// GetSingleConnectionVersion : Gets the cwctl and container versions for a single connection
+// GetSingleConnectionVersion : Prints the cwctl and container versions for a single connection to console
 func GetSingleConnectionVersion(c *cli.Context) {
 	connectionID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 
+	containerVersions := GetContainerVersions(connectionID)
+
+	if printAsJSON {
+		utils.PrettyPrintJSON(containerVersions)
+	} else {
+		var tableContent []string
+		tableContent = append(tableContent, "CWCTL VERSION: "+containerVersions.CwctlVersion+"\n")
+		tableContent = append(tableContent, "CONNECTION ID \tPFE VERSION\tPERFORMANCE VERSION\tGATEKEEPER VERSION")
+		tableContent = append(tableContent, connectionID+"\t"+containerVersions.PFEVersion+"\t"+containerVersions.PerformanceVersion+"\t"+containerVersions.GatekeeperVersion)
+
+		PrintTable(tableContent)
+	}
+}
+
+// GetContainerVersions : Gets the cwctl and container versions for a single connection
+func GetContainerVersions(connectionID string) apiroutes.ContainerVersions {
 	conInfo, conInfoErr := connections.GetConnectionByID(connectionID)
 	if conInfoErr != nil {
 		HandleConnectionError(conInfoErr)
@@ -57,20 +73,10 @@ func GetSingleConnectionVersion(c *cli.Context) {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
-
-	if printAsJSON {
-		utils.PrettyPrintJSON(containerVersions)
-	} else {
-		var tableContent []string
-		tableContent = append(tableContent, "CWCTL VERSION: "+containerVersions.CwctlVersion+"\n")
-		tableContent = append(tableContent, "CONNECTION ID \tPFE VERSION\tPERFORMANCE VERSION\tGATEKEEPER VERSION")
-		tableContent = append(tableContent, connectionID+"\t"+containerVersions.PFEVersion+"\t"+containerVersions.PerformanceVersion+"\t"+containerVersions.GatekeeperVersion)
-
-		PrintTable(tableContent)
-	}
+	return containerVersions
 }
 
-// GetAllConnectionVersions : Gets the cwctl and container versions for all connections
+// GetAllConnectionVersions : Prints the cwctl and container versions for all connections to console
 func GetAllConnectionVersions() {
 	connections, getConnectionsErr := connections.GetAllConnections()
 	if getConnectionsErr != nil {

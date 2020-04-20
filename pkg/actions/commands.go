@@ -1013,6 +1013,7 @@ func Commands() {
 				cli.BoolFlag{Name: "quiet, q", Usage: "Turn off console messages", Required: false},
 				cli.BoolFlag{Name: "projects, p", Usage: "Collect project containers information", Required: false},
 				cli.BoolFlag{Name: "nozip, n", Usage: "Does not create collection zip and leaves individual collected files in place", Required: false},
+				cli.BoolFlag{Name: "clean", Usage: "Removes the mustgather directory and all its contents from the Codewind home directory", Required: false},
 			},
 			Action: func(c *cli.Context) error {
 				MustGatherCommand(c)
