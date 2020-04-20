@@ -13,7 +13,6 @@ package actions
 
 import (
 	"archive/tar"
-	"archive/zip"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -29,6 +28,7 @@ import (
 	"github.com/eclipse/codewind-installer/pkg/appconstants"
 	"github.com/eclipse/codewind-installer/pkg/docker"
 	"github.com/eclipse/codewind-installer/pkg/errors"
+	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/urfave/cli"
 )
 
@@ -54,14 +54,7 @@ func MustGatherCommand(c *cli.Context) {
 		errors.CheckErr(dirErr, 205, "")
 	}
 	logMG("Mustgather files will be collected at " + mustGatherDirName)
-
-	// Collect Codewind container inspection & logs
-	for _, cwContainerName := range docker.ContainerNames {
-		logMG("Collecting information from container " + cwContainerName)
-		containerID := getContainerID(cwContainerName)
-		writeContainerInspectToFile(containerID, cwContainerName)
-		writeContainerLogToFile(containerID, cwContainerName)
-	}
+	collectCodewindContainers()
 
 	// Collect Codewind PFE workspace
 	logMG("Collecting Codewind workspace")
@@ -69,38 +62,67 @@ func MustGatherCommand(c *cli.Context) {
 	copyCodewindWorkspace(pfeContainerID)
 
 	if c.Bool("projects") {
-		// Collect project container inspection & logs
-		dockerClient, dockerErr := docker.NewDockerClient()
-		if dockerErr != nil {
-			HandleDockerError(dockerErr)
-			os.Exit(1)
-		}
-		allContainers, cListErr := docker.GetContainerListWithOptions(dockerClient, types.ContainerListOptions{All: true})
-		if cListErr != nil {
-			HandleDockerError(cListErr)
-			os.Exit(1)
-		}
-		for _, cwContainer := range docker.GetContainersToRemove(allContainers) {
-			logMG("Collecting information from container " + cwContainer.Names[0])
-			writeContainerInspectToFile(cwContainer.ID, filepath.Join("projects", cwContainer.Names[0]))
-			writeContainerLogToFile(cwContainer.ID, filepath.Join("projects", cwContainer.Names[0]))
-		}
+		collectCodewindProjectContainers()
 	}
 
 	// Collect docker-compose file
 	logMG("Collecting docker-compose.yaml")
-	copyFileHere(filepath.Join(codewindHome, "docker-compose.yaml"), "docker-compose.yaml")
+	utils.CopyFile(filepath.Join(codewindHome, "docker-compose.yaml"), filepath.Join(mustGatherDirName, "docker-compose.yaml"))
 
 	// Collect codewind version
 	logMG("Collecting CWCTL version")
-	d1 := []byte(appconstants.VersionNum)
-	versionErr := ioutil.WriteFile(filepath.Join(mustGatherDirName, "cwctl.version"), d1, 0644)
+	versionByteArray := []byte(appconstants.VersionNum)
+	versionErr := ioutil.WriteFile(filepath.Join(mustGatherDirName, "cwctl.version"), versionByteArray, 0644)
 	if versionErr != nil {
 		errors.CheckErr(versionErr, 201, "")
 	}
 
 	// Attempt to gather Eclipse logs
-	codewindEclipseWSDir := c.String("eclipseWorkspaceDir")
+	gatherCodewindEclipseLogs(c.String("eclipseWorkspaceDir"))
+
+	// Attempt to gather VSCode logs
+	gatherCodewindVSCodeLogs()
+
+	// zip
+	logMG("Creating mustgather.zip")
+	zipErr := utils.Zip("mustgather."+nowTime+".zip", mustGatherDirName)
+	if zipErr != nil {
+		errors.CheckErr(zipErr, 401, "")
+	}
+}
+
+// Collect Codewind container inspection & logs
+func collectCodewindContainers() {
+	for _, cwContainerName := range docker.ContainerNames {
+		logMG("Collecting information from container " + cwContainerName)
+		containerID := getContainerID(cwContainerName)
+		writeContainerInspectToFile(containerID, cwContainerName)
+		writeContainerLogToFile(containerID, cwContainerName)
+	}
+}
+
+func collectCodewindProjectContainers() {
+	// Collect project container inspection & logs
+	dockerClient, dockerErr := docker.NewDockerClient()
+	if dockerErr != nil {
+		HandleDockerError(dockerErr)
+		os.Exit(1)
+	}
+	// using getContainerListWithOptions to pick up all containers, including stopped ones
+	allContainers, cListErr := docker.GetContainerListWithOptions(dockerClient, types.ContainerListOptions{All: true})
+	if cListErr != nil {
+		HandleDockerError(cListErr)
+		os.Exit(1)
+	}
+	for _, cwContainer := range docker.GetCodewindProjectContainers(allContainers) {
+		logMG("Collecting information from container " + cwContainer.Names[0])
+		writeContainerInspectToFile(cwContainer.ID, filepath.Join("projects", cwContainer.Names[0]))
+		writeContainerLogToFile(cwContainer.ID, filepath.Join("projects", cwContainer.Names[0]))
+	}
+}
+
+func gatherCodewindEclipseLogs(codewindEclipseWSDir string) {
+	// Attempt to gather Eclipse logs
 	if codewindEclipseWSDir != "" {
 		codewindEclipseWSLogDir := filepath.Join(codewindEclipseWSDir, ".metadata")
 		if _, err := os.Stat(codewindEclipseWSLogDir); !os.IsNotExist(err) {
@@ -118,7 +140,7 @@ func MustGatherCommand(c *cli.Context) {
 			for _, f := range files {
 				fileName := f.Name()
 				if f.Mode().IsRegular() && strings.HasSuffix(fileName, ".log") {
-					copyFileHere(filepath.Join(codewindEclipseWSLogDir, fileName), filepath.Join(eclipseLogDir, fileName))
+					utils.CopyFile(filepath.Join(codewindEclipseWSLogDir, fileName), filepath.Join(mustGatherDirName, eclipseLogDir, fileName))
 				}
 			}
 		} else {
@@ -127,8 +149,9 @@ func MustGatherCommand(c *cli.Context) {
 	} else {
 		logMG("Unable to collect Eclipse logs - workspace not specified")
 	}
+}
 
-	// Attempt to gather VSCode logs
+func gatherCodewindVSCodeLogs() {
 	logMG("Collecting VSCode logs")
 	vsCodeDir := ""
 	switch runtime.GOOS {
@@ -157,7 +180,7 @@ func MustGatherCommand(c *cli.Context) {
 				}
 				if info.Mode().IsRegular() {
 					// strip out mustGatherDirName from target, as copyFileHere adds it back
-					copyFileHere(path, strings.Replace(localPath, mustGatherDirName, "", 1))
+					utils.CopyFile(path, localPath)
 				}
 				return nil
 			})
@@ -169,60 +192,6 @@ func MustGatherCommand(c *cli.Context) {
 		}
 	} else {
 		logMG("Unable to collect VSCode logs - cannot find logs directory")
-	}
-
-	// zip
-	logMG("Creating mustgather.zip")
-	newZipFileName := "mustgather." + nowTime + ".zip"
-	newZipFile, zipCreateErr := os.Create(filepath.Join(mustGatherDirName, newZipFileName))
-	if zipCreateErr != nil {
-		logMG("Unable to create zip file - " + zipCreateErr.Error())
-	} else {
-		defer newZipFile.Close()
-
-		zipWriter := zip.NewWriter(newZipFile)
-		defer zipWriter.Close()
-
-		// Add files to zip
-		err := filepath.Walk(mustGatherDirName, func(path string, info os.FileInfo, err error) error {
-			if info.Mode().IsRegular() && (info.Name() != newZipFileName) {
-				fileToZip, err := os.Open(path)
-				if err != nil {
-					return err
-				}
-				defer fileToZip.Close()
-
-				// Get the file information
-				info, err := fileToZip.Stat()
-				if err != nil {
-					return err
-				}
-
-				header, err := zip.FileInfoHeader(info)
-				if err != nil {
-					return err
-				}
-
-				// Using FileInfoHeader() above only uses the basename of the file. If we want
-				// to preserve the folder structure we can overwrite this with the full path.
-				header.Name = strings.Replace(path, mustGatherDirName+string(os.PathSeparator), "", 1)
-
-				// Change to deflate to gain better compression
-				// see http://golang.org/pkg/archive/zip/#pkg-constants
-				header.Method = zip.Deflate
-
-				writer, err := zipWriter.CreateHeader(header)
-				if err != nil {
-					return err
-				}
-				_, err = io.Copy(writer, fileToZip)
-				return err
-			}
-			return nil
-		})
-		if err != nil {
-			logMG("walk error " + err.Error())
-		}
 	}
 }
 
@@ -296,69 +265,5 @@ func copyCodewindWorkspace(containerID string) error {
 	// Extracting tarred files
 	tarBallReader := tar.NewReader(tarFileStream)
 
-	for {
-		header, err := tarBallReader.Next()
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			return (err)
-		}
-
-		// get the individual filename and extract to the current directory
-		filename := header.Name
-
-		switch header.Typeflag {
-		case tar.TypeDir:
-			// handle directory
-			err = os.MkdirAll(filepath.Join(mustGatherDirName, filename), os.FileMode(header.Mode)) // or use 0755 if you prefer
-			if err != nil {
-				return err
-			}
-
-		case tar.TypeReg:
-			// handle normal file
-			writer, err := os.Create(filepath.Join(mustGatherDirName, filename))
-			if err != nil {
-				return err
-			}
-
-			io.Copy(writer, tarBallReader)
-
-			err = os.Chmod(filepath.Join(mustGatherDirName, filename), os.FileMode(header.Mode))
-			if err != nil {
-				return err
-			}
-
-			writer.Close()
-		default:
-			logMG("Unable to untar type : " + string(header.Typeflag) + " in file " + filename)
-		}
-	}
-	return nil
-}
-
-//copyFileHere - copies the contents of the source file to a target file in the mustgather directory
-func copyFileHere(sourceFilePath, targetFile string) error {
-	sourceFileStat, err := os.Stat(sourceFilePath)
-	if err != nil {
-		return err
-	}
-	if !sourceFileStat.Mode().IsRegular() {
-		return fmt.Errorf("%s is not a regular file", sourceFilePath)
-	}
-
-	source, err := os.Open(sourceFilePath)
-	if err != nil {
-		return err
-	}
-	defer source.Close()
-	dst := filepath.Join(mustGatherDirName, targetFile)
-	destination, err := os.Create(dst)
-	if err != nil {
-		return err
-	}
-	defer destination.Close()
-	_, err = io.Copy(destination, source)
-	return err
+	return utils.ExtractTarToFileSystem(tarBallReader, mustGatherDirName)
 }

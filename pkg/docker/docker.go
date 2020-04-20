@@ -368,8 +368,8 @@ func ValidateImageDigest(dockerClient DockerClient, image string) (string, *Dock
 	return "", nil
 }
 
-// GetContainersToRemove returns a list of containers ([]types.Container) matching "/cw"
-func GetContainersToRemove(containerList []types.Container) []types.Container {
+// GetCodewindProjectContainers returns a list of containers ([]types.Container) matching "/cw"
+func GetCodewindProjectContainers(containerList []types.Container) []types.Container {
 	codewindContainerPrefixes := []string{
 		"/cw-",
 	}
