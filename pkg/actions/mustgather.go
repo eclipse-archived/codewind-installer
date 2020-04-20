@@ -84,32 +84,7 @@ func MustGatherCommand(c *cli.Context) {
 	gatherCodewindVSCodeLogs()
 
 	if !c.Bool("nozip") {
-		// zip
-		logMG("Creating mustgather.zip")
-		mustGatherZipFileName := "mustgather." + nowTime + ".zip"
-		zipErr := utils.Zip(mustGatherZipFileName, mustGatherDirName)
-		if zipErr != nil {
-			errors.CheckErr(zipErr, 401, "")
-		}
-		// remove other files & directories from mustgather directory
-		mgDir, err := os.Open(mustGatherDirName)
-		if err != nil {
-			errors.CheckErr(err, 205, "")
-		}
-		defer mgDir.Close()
-		filenames, err := mgDir.Readdirnames(-1)
-		if err != nil {
-			errors.CheckErr(err, 205, "")
-		}
-		for _, filename := range filenames {
-			if filename == mustGatherZipFileName {
-				continue
-			}
-			err = os.RemoveAll(filepath.Join(mustGatherDirName, filename))
-			if err != nil {
-				errors.CheckErr(err, 206, "")
-			}
-		}
+		createZipAndRemoveCollectedFiles()
 	}
 }
 
@@ -214,6 +189,35 @@ func gatherCodewindVSCodeLogs() {
 		}
 	} else {
 		logMG("Unable to collect VSCode logs - cannot find logs directory")
+	}
+}
+
+func createZipAndRemoveCollectedFiles() {
+	// zip
+	logMG("Creating mustgather.zip")
+	mustGatherZipFileName := "mustgather." + nowTime + ".zip"
+	zipErr := utils.Zip(mustGatherZipFileName, mustGatherDirName)
+	if zipErr != nil {
+		errors.CheckErr(zipErr, 401, "")
+	}
+	// remove other files & directories from mustgather directory
+	mgDir, err := os.Open(mustGatherDirName)
+	if err != nil {
+		errors.CheckErr(err, 205, "")
+	}
+	defer mgDir.Close()
+	filenames, err := mgDir.Readdirnames(-1)
+	if err != nil {
+		errors.CheckErr(err, 205, "")
+	}
+	for _, filename := range filenames {
+		if filename == mustGatherZipFileName {
+			continue
+		}
+		err = os.RemoveAll(filepath.Join(mustGatherDirName, filename))
+		if err != nil {
+			errors.CheckErr(err, 206, "")
+		}
 	}
 }
 
