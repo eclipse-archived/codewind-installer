@@ -15,6 +15,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -156,14 +157,14 @@ func GetSecretFromKeyring(connectionID, uName string) (string, *SecError) {
 				return string(secret.Password), nil
 			}
 		}
-		err := errors.New(textSecretNotFound)
+		err := fmt.Errorf(textSecretNotFound, service+"."+uName)
 		return "", &SecError{errOpInsecureKeyring, err, err.Error()}
 	}
 	// else get from system keyring
 	secret, err := keyring.Get(service, uName)
 	if err != nil {
 		if err == keyring.ErrNotFound {
-			errNotFound := errors.New(textSecretNotFound)
+			errNotFound := fmt.Errorf(textSecretNotFound, service+"."+uName)
 			return "", &SecError{errOpKeyringSecretNotFound, errNotFound, errNotFound.Error()}
 		}
 		return "", &SecError{errOpKeyring, err, err.Error()}
@@ -189,7 +190,7 @@ func DeleteSecretFromKeyring(connectionID, uName string) *SecError {
 			}
 		}
 		if indexOfSecretToDelete == -1 {
-			err := errors.New(textSecretNotFound)
+			err := fmt.Errorf(textSecretNotFound, service+"."+uName)
 			return &SecError{errOpInsecureKeyring, err, err.Error()}
 		}
 		// remove existing secret
@@ -215,7 +216,7 @@ func DeleteSecretFromKeyring(connectionID, uName string) *SecError {
 	err := keyring.Delete(service, uName)
 	if err != nil {
 		if err == keyring.ErrNotFound {
-			errNotFound := errors.New(textSecretNotFound)
+			errNotFound := fmt.Errorf(textSecretNotFound, service+"."+uName)
 			return &SecError{errOpKeyringSecretNotFound, errNotFound, errNotFound.Error()}
 		}
 		return &SecError{errOpKeyring, err, err.Error()}
@@ -227,7 +228,7 @@ func readInsecureKeyring() ([]KeyringSecret, *SecError) {
 	file, readErr := ioutil.ReadFile(GetPathToInsecureKeyring())
 	if readErr != nil {
 		if os.IsNotExist(readErr) {
-			err := errors.New(textSecretNotFound)
+			err := errors.New(textKeyringNotFound)
 			return nil, &SecError{errOpInsecureKeyring, err, err.Error()}
 		}
 		return nil, &SecError{errOpInsecureKeyring, readErr, readErr.Error()}
