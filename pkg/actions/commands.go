@@ -1012,6 +1012,7 @@ func Commands() {
 				cli.StringFlag{Name: "eclipseWorkspaceDir, e", Usage: "The location of your Eclipse workspace `directory` if using the Eclipse IDE", Required: false},
 				cli.BoolFlag{Name: "quiet, q", Usage: "Turn off console messages", Required: false},
 				cli.BoolFlag{Name: "projects, p", Usage: "Collect project containers information", Required: false},
+				cli.BoolFlag{Name: "nozip, n", Usage: "Does not create collection zip and leaves individual collected files in place", Required: false},
 			},
 			Action: func(c *cli.Context) error {
 				MustGatherCommand(c)

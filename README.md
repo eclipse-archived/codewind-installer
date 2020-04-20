@@ -278,7 +278,8 @@ Subcommands:</br>
 
 `--eclipseWorkspaceDir/-e <value>` - The location of your Eclipse workspace directory if using the Eclipse IDE (default: "")</br>
 `--quiet/-q` - Turn off console messages</br>
-`--projects/-p` - Collect project containers information
+`--projects/-p` - Collect project containers information</br>
+`--nozip/-n` - Does not create collection zip and leaves individual collected files in place</br>
 
 ### stop-all
 
