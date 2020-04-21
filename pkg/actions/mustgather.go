@@ -230,6 +230,13 @@ func createZipAndRemoveCollectedFiles() {
 
 func gatherCodewindVersions() {
 	logMG("Collecting version information")
+	//dockerClient, dockerErr := docker.NewDockerClient()
+	//if dockerErr != nil {
+	//	HandleDockerError(dockerErr)
+	//	os.Exit(1)
+	//}
+	//dockerClientVersion := docker.GetClientVersion(dockerClient)
+	//dockerServerVersion, gsvErr := docker.GetServerVersion(dockerClient)
 	containerVersions := GetContainerVersions("local")
 	versionsByteArray := []byte(
 		"CWCTL VERSION: " + containerVersions.CwctlVersion + "\n" +

@@ -746,3 +746,20 @@ func GetFilesFromContainer(dockerClient DockerClient, containerID, path string) 
 
 	return fileTarStream, nil
 }
+
+//GetServerVersion : returns the docker server version string.
+func GetServerVersion(dockerClient DockerClient) (types.Version, *DockerError) {
+	ctx := context.Background()
+
+	version, err := dockerClient.ServerVersion(ctx)
+	if err != nil {
+		return version, &DockerError{errDockerVersion, err, err.Error()}
+	}
+
+	return version, nil
+}
+
+//GetClientVersion : returns the docker server version string.
+func GetClientVersion(dockerClient DockerClient) string {
+	return dockerClient.ClientVersion()
+}

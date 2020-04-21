@@ -39,6 +39,7 @@ const (
 	errOpContainerList           = "CONTAINER_LIST_ERROR"
 	errOpImageList               = "IMAGE_LIST_ERROR"
 	errDockerCredential          = "DOCKER_CREDENTIAL_ERROR"
+	errDockerVersion             = "DOCKER_VERSION_ERROR"
 )
 
 const (
