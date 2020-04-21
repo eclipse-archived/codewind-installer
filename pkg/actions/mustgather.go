@@ -38,9 +38,9 @@ var mustGatherDirName = filepath.Join(mustGatherMasterDirName, nowTime)
 
 var isLoud = true
 
-func logMG(input ...string) {
+func logMG(input string) {
 	if isLoud {
-		fmt.Println(input[0])
+		fmt.Println(input)
 	}
 }
 

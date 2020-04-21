@@ -26,6 +26,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 
 	"github.com/eclipse/codewind-installer/pkg/errors"
@@ -170,20 +171,26 @@ func ExtractTarToFileSystem(tarReader *tar.Reader, destination string) error {
 				log.Fatal(err)
 			}
 		case tar.TypeReg:
-			fileToOverwrite, err := overwriteFile(target)
-			defer fileToOverwrite.Close()
-			if err != nil {
-				log.Fatal(err)
-			}
-			if _, err := io.Copy(fileToOverwrite, tarReader); err != nil {
-				log.Fatal(err)
-			}
-			os.Chmod(target, os.FileMode(header.Mode))
+			extractFile(target, tarReader, header)
 		default:
 			log.Printf("Can't extract to %s: unknown typeflag %c\n", target, header.Typeflag)
 		}
 	}
 	return nil
+}
+
+func extractFile(target string, tarReader *tar.Reader, header *tar.Header) {
+	fileToOverwrite, err := overwriteFile(target)
+	defer fileToOverwrite.Close()
+	if err != nil {
+		debug.PrintStack()
+		log.Fatal(err)
+	}
+	if _, err := io.Copy(fileToOverwrite, tarReader); err != nil {
+		debug.PrintStack()
+		log.Fatal(err)
+	}
+	os.Chmod(target, os.FileMode(header.Mode))
 }
 
 func overwriteFile(filePath string) (*os.File, error) {
