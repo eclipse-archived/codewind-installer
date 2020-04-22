@@ -72,7 +72,7 @@ func Test_Keychain_Secure(t *testing.T) {
 		err := DeleteSecretFromKeyring(testConnection, testUsername)
 		assert.NotNil(t, err)
 		assert.Equal(t, err.Op, "sec_keyring_secret_not_found")
-		assert.Equal(t, "Secret not found in keyring", err.Desc)
+		assert.Contains(t, err.Desc, "not found in keyring")
 	})
 
 	globals.SetUseInsecureKeyring(originalUseInsecureKeyring)
@@ -92,7 +92,8 @@ func Test_Keychain_Insecure(t *testing.T) {
 	t.Run("Secret cannot be retrieved when keychain file does not exist", func(t *testing.T) {
 		retrievedSecret, err := SecKeyGetSecret(testConnection, testUsername)
 		assert.NotNil(t, err)
-		assert.Contains(t, err.Desc, "Secret not found in keyring")
+		assert.Equal(t, "sec_insecure_keyring", err.Op)
+		assert.Contains(t, err.Desc, "Keyring not found")
 		assert.Equal(t, "", retrievedSecret)
 	})
 
@@ -111,7 +112,8 @@ func Test_Keychain_Insecure(t *testing.T) {
 	t.Run("Secret cannot be retrieved for an unknown account", func(t *testing.T) {
 		retrievedSecret, err := SecKeyGetSecret(testConnection, "unknownaccount")
 		assert.NotNil(t, err)
-		assert.Equal(t, "Secret not found in keyring", err.Desc)
+		assert.Equal(t, "sec_insecure_keyring", err.Op)
+		assert.Contains(t, err.Desc, "not found in keyring")
 		assert.Equal(t, "", retrievedSecret)
 	})
 
@@ -129,7 +131,8 @@ func Test_Keychain_Insecure(t *testing.T) {
 	t.Run("Test keyring returns an error when trying to delete from a non-existent keyring", func(t *testing.T) {
 		err := DeleteSecretFromKeyring("mockConnectionID", "mockUsername")
 		assert.NotNil(t, err)
-		assert.Equal(t, "Secret not found in keyring", err.Desc)
+		assert.Equal(t, "sec_insecure_keyring", err.Op)
+		assert.Contains(t, err.Desc, "not found in keyring")
 	})
 
 	t.Run("Secret can be removed without deleting keychain", func(t *testing.T) {
@@ -141,7 +144,8 @@ func Test_Keychain_Insecure(t *testing.T) {
 		// check this secret has been deleted
 		secretFromThisTest, err := GetSecretFromKeyring("mockConnectionID", "mockUsername")
 		assert.Equal(t, "", secretFromThisTest)
-		assert.Equal(t, "Secret not found in keyring", err.Desc)
+		assert.Equal(t, "sec_insecure_keyring", err.Op)
+		assert.Contains(t, err.Desc, "not found in keyring")
 
 		// check the secret created before this test has not been deleted
 		existingSecret, err2 := GetSecretFromKeyring(testConnection, testUsername)
@@ -159,7 +163,8 @@ func Test_Keychain_Insecure(t *testing.T) {
 	t.Run("Test keyring returns an error when trying to delete from a non-existent keyring", func(t *testing.T) {
 		err := DeleteSecretFromKeyring(testConnection, testUsername)
 		assert.NotNil(t, err)
-		assert.Contains(t, err.Desc, "Secret not found in keyring")
+		assert.Equal(t, "sec_insecure_keyring", err.Op)
+		assert.Contains(t, err.Desc, "Keyring not found")
 	})
 
 	// remove insecureKeychain.json if it still exists
