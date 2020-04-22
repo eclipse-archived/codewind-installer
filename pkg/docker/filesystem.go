@@ -33,9 +33,19 @@ func WriteToComposeFile(dockerComposeFile string, debug bool) *DockerError {
 		return &DockerError{errOpDockerComposeFileCreate, dockerComposeTempErr, dockerComposeTempErr.Error()}
 	}
 
-	secretFileName, secretErr := writeDockerConfigSecretFile(path.Dir(dockerComposeFile))
-	if secretErr != nil {
-		return secretErr
+	dockerClient, dockerErr := NewDockerClient()
+	if dockerErr != nil {
+		return dockerErr
+	}
+
+	// If we are using a remote docker host it won't be able to read a local secrets file.
+	secretFileName := "/dev/null"
+	if UsingLocalDockerHost(dockerClient) {
+		var secretErr *DockerError
+		secretFileName, secretErr = writeDockerConfigSecretFile(path.Dir(dockerComposeFile))
+		if secretErr != nil {
+			return secretErr
+		}
 	}
 
 	dataStruct := Compose{}
