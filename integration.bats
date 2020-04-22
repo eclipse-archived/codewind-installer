@@ -162,9 +162,9 @@
   run go run main.go seckeyring validate --conid remoteNotKnown --username testuser
   echo "status = ${status}"
   echo "output trace = ${output}"
+  [ "${lines[0]}" = '{"error":"sec_keyring","error_description":"secret not found in keyring"}' ]
+  [ "${lines[1]}" = "exit status 1" ]
   [ "$status" -eq 1 ]
-  [[ ${lines[0]} =~ "sec_keyring_secret_not_found" && ${lines[0]} =~ "not found in keyring" ]]
-  [[ ${lines[1]} = "exit status 1" ]]
 }
 
 @test "invoke seckeyring validate command (using secure keyring) - key not found (incorrect username)"  {
@@ -172,9 +172,9 @@
   run go run main.go seckeyring validate --conid local --username testuser_unknown
   echo "status = ${status}"
   echo "output trace = ${output}"
+  [ "${lines[0]}" = '{"error":"sec_keyring","error_description":"secret not found in keyring"}' ]
+  [ "${lines[1]}" = "exit status 1" ]
   [ "$status" -eq 1 ]
-  [[ ${lines[0]} =~ "sec_keyring_secret_not_found" && ${lines[0]} =~ "not found in keyring" ]]
-  [[ ${lines[1]} = "exit status 1" ]]
 }
 
 # use our keyring (insecure)
@@ -211,9 +211,9 @@
   run go run main.go --insecureKeyring seckeyring validate --conid remoteNotKnown --username testuser
   echo "status = ${status}"
   echo "output trace = ${output}"
+  [ "${lines[0]}" = '{"error":"sec_keyring","error_description":"secret not found in keyring"}' ]
+  [ "${lines[1]}" = "exit status 1" ]
   [ "$status" -eq 1 ]
-  [[ ${lines[0]} =~ "sec_keyring" && ${lines[0]} =~ "not found in keyring" ]]
-  [[ ${lines[1]} = "exit status 1" ]]
 }
 
 @test "invoke seckeyring validate command (using insecure keyring) - key not found (incorrect username)"  {
@@ -221,7 +221,7 @@
   run go run main.go --insecureKeyring seckeyring validate --conid local --username testuser_unknown
   echo "status = ${status}"
   echo "output trace = ${output}"
+  [ "${lines[0]}" = '{"error":"sec_keyring","error_description":"secret not found in keyring"}' ]
+  [ "${lines[1]}" = "exit status 1" ]
   [ "$status" -eq 1 ]
-  [[ ${lines[0]} =~ "sec_keyring" && ${lines[0]} =~ "not found in keyring" ]]
-  [[ ${lines[1]} = "exit status 1" ]]
 }
