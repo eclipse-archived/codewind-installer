@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/eclipse/codewind-installer/pkg/connections"
+	"github.com/eclipse/codewind-installer/pkg/security"
 	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
@@ -83,11 +84,33 @@ func ConnectionGetByID(c *cli.Context) {
 }
 
 // ConnectionRemoveFromList : Removes a connection from the connections config file
+// and from associated secrets from the keychain
 func ConnectionRemoveFromList(c *cli.Context) {
-	conErr := connections.RemoveConnectionFromList(c)
+	connectionID := strings.TrimSpace(strings.ToLower(c.String("conid")))
+	connection, conErr := connections.GetConnectionByID(connectionID)
 	if conErr != nil {
 		HandleConnectionError(conErr)
 		os.Exit(1)
+	}
+	conErr = connections.RemoveConnectionFromList(c)
+	if conErr != nil {
+		HandleConnectionError(conErr)
+		os.Exit(1)
+	}
+
+	// Try to remove secrets from keychain for the specific connection.
+	// Report warnings if removal of secrets failed, (eg: secret does not exist) but allowed to resume.
+	secErr := security.DeleteSecretFromKeyring(connectionID, connection.Username)
+	if secErr != nil {
+		HandleKeyringWarning(secErr)
+	}
+	secErr = security.DeleteSecretFromKeyring(connectionID, "access_token")
+	if secErr != nil {
+		HandleKeyringWarning(secErr)
+	}
+	secErr = security.DeleteSecretFromKeyring(connectionID, "refresh_token")
+	if secErr != nil {
+		HandleKeyringWarning(secErr)
 	}
 	response, _ := json.Marshal(connections.Result{Status: "OK", StatusMessage: "Connection removed"})
 	if printAsJSON {
