@@ -261,11 +261,18 @@ func getContainerID(containerName string) string {
 		HandleDockerError(getErr)
 		os.Exit(1)
 	}
-	return container[0].ID
+	if len(container) > 0 {
+		return container[0].ID
+	}
+	return ""
 }
 
 //writeContainerInspectToFile - writes the results of `docker inspect containerId` to a file
 func writeContainerInspectToFile(containerID, containerName string) error {
+	if containerID == "" {
+		logMG("Unable to find " + containerName + " container")
+		return nil
+	}
 	dockerClient, dockerErr := docker.NewDockerClient()
 	if dockerErr != nil {
 		HandleDockerError(dockerErr)
@@ -283,6 +290,10 @@ func writeContainerInspectToFile(containerID, containerName string) error {
 
 //writeContainerLogToFile - writes the results of `docker logs containerId` to a file
 func writeContainerLogToFile(containerID, containerName string) error {
+	if containerID == "" {
+		logMG("Unable to find " + containerName + " container")
+		return nil
+	}
 	dockerClient, dockerErr := docker.NewDockerClient()
 	if dockerErr != nil {
 		HandleDockerError(dockerErr)
@@ -304,6 +315,10 @@ func writeContainerLogToFile(containerID, containerName string) error {
 
 //copyCodewindWorkspace - copies the Codewind PFE container's workspace to mustgather
 func copyCodewindWorkspace(containerID string) error {
+	if containerID == "" {
+		logMG("Unable to find Codewind PFE container")
+		return nil
+	}
 	dockerClient, dockerErr := docker.NewDockerClient()
 	if dockerErr != nil {
 		HandleDockerError(dockerErr)
