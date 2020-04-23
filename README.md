@@ -1,7 +1,7 @@
 # Codewind Command Line Interface (CLI)
 
 Install Codewind on MacOS or Windows.
-Prebuilt binary files are available for download [on Eclipse](https://download.eclipse.org/codewind/codewind-installer/).
+Prebuilt binary files are available for download [on Eclipse](https://archive.eclipse.org/codewind/codewind-installer/).
 
 [![License](https://img.shields.io/badge/License-EPL%202.0-red.svg?label=license&logo=eclipse)](https://www.eclipse.org/legal/epl-2.0/)
 [![Build Status](https://ci.eclipse.org/codewind/buildStatus/icon?job=Codewind%2Fcodewind-installer%2Fmaster)](https://ci.eclipse.org/codewind/job/Codewind/job/codewind-installer/job/master/)
@@ -164,6 +164,7 @@ This is the same as `go test ./...`, but outputs test coverage scores for each f
 | registrysecrets | `rs`  | 'Manage docker registry secrets'                                     |
 | mustgather      | `mg`  | 'Gathers logs and project files to aid diagnosis of Codewind errors' |
 | help            | `h`   | 'Shows a list of commands or help for one command'                   |
+
 
 ### Command Options:
 

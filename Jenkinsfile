@@ -231,11 +231,11 @@ spec:
 
                 sh '''
                     export REPO_NAME="codewind-installer"
-                    export DOWNLOAD_AREA_URL="https://download.eclipse.org/codewind/$REPO_NAME"
+                    export DOWNLOAD_AREA_URL="https://archive.eclipse.org/codewind/$REPO_NAME"
                     export LATEST_DIR="latest"
                     export BUILD_INFO="build_info.properties"
                     export sshHost="genie.codewind@projects-storage.eclipse.org"
-                    export deployDir="/home/data/httpd/download.eclipse.org/codewind/$REPO_NAME"
+                    export deployDir="/home/data/httpd/archive.eclipse.org/codewind/$REPO_NAME"
                     export CWCTL_BASENAME="cwctl"
                     export CWCTL_LINUX="${CWCTL_BASENAME}-linux"
                     export CWCTL_PPC64LE="${CWCTL_BASENAME}-ppc64le"
