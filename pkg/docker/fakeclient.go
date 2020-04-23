@@ -124,6 +124,10 @@ func (m *mockDockerClientWithCw) ContainerInspect(ctx context.Context, container
 	}, nil
 }
 
+func (m *mockDockerClientWithCw) DaemonHost() string {
+	return ""
+}
+
 func (m *mockDockerClientWithCw) DistributionInspect(ctx context.Context, image, encodedRegistryAuth string) (registry.DistributionInspect, error) {
 	return registry.DistributionInspect{
 		Descriptor: v1.Descriptor{
@@ -169,6 +173,10 @@ func (m *mockDockerClientWithoutCw) ContainerInspect(ctx context.Context, contai
 			},
 		},
 	}, nil
+}
+
+func (m *mockDockerClientWithoutCw) DaemonHost() string {
+	return ""
 }
 
 func (m *mockDockerClientWithoutCw) DistributionInspect(ctx context.Context, image, encodedRegistryAuth string) (registry.DistributionInspect, error) {
@@ -236,6 +244,10 @@ func (m *mockDockerErrorClient) ContainerRemove(ctx context.Context, containerID
 
 func (m *mockDockerErrorClient) ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error) {
 	return types.ContainerJSON{}, errContainerInspect
+}
+
+func (m *mockDockerErrorClient) DaemonHost() string {
+	return ""
 }
 
 func (m *mockDockerErrorClient) DistributionInspect(ctx context.Context, image, encodedRegistryAuth string) (registry.DistributionInspect, error) {
