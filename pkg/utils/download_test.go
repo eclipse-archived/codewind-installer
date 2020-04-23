@@ -159,7 +159,6 @@ func TestDownloadFromURLThenExtract(t *testing.T) {
 
 			os.RemoveAll(testDir)
 			defer os.RemoveAll(testDir)
-			defer fmt.Println()
 
 			got := DownloadFromURLThenExtract(test.inURL, test.inDestination, test.inGitCredentials)
 			require.IsType(t, test.wantedType, got, "Got: %s", got)
@@ -183,17 +182,32 @@ func getFilenames(files []os.FileInfo) []string {
 
 func TestDownloadFromRepoURL(t *testing.T) {
 	tests := map[string]struct {
-		inURL            string
+		inURL            *url.URL
 		inDestination    string
 		inGitCredentials GitCredentials
 		wantedType       error
+		wantedErrMsg     string
 		wantedNumFiles   int
 	}{
 		"success case: input good path": {
-			inURL:          test.PublicGHRepoURL,
+			inURL:          toURL(test.PublicGHRepoURL),
 			inDestination:  filepath.Join(testDir, "git"),
 			wantedType:     nil,
 			wantedNumFiles: 17,
+		},
+		"fail case: input URL that isn't to GH": {
+			inURL:          toURL("https://www.google.com"),
+			inDestination:  filepath.Join(testDir, "badURL"),
+			wantedType:     errors.New(""),
+			wantedErrMsg:   "URL must point to a GitHub repository",
+			wantedNumFiles: 0,
+		},
+		"fail case: input GH URL that isn't to a repo": {
+			inURL:          toURL("https://github.com/eclipse"),
+			inDestination:  filepath.Join(testDir, "badURL"),
+			wantedType:     errors.New(""),
+			wantedErrMsg:   "URL must point to a GitHub repository",
+			wantedNumFiles: 0,
 		},
 	}
 	for name, test := range tests {
@@ -201,38 +215,40 @@ func TestDownloadFromRepoURL(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got := DownloadFromRepoURL(test.inURL, test.inDestination, test.inGitCredentials)
 
-			assert.IsType(t, test.wantedType, got, "Got: %s", got)
+			require.IsType(t, test.wantedType, got, "Got: %s", got)
+			if test.wantedErrMsg != "" {
+				assert.Contains(t, got.Error(), test.wantedErrMsg)
+			}
 
 			createdFiles, _ := ioutil.ReadDir(test.inDestination)
 			assert.Truef(t, len(createdFiles) == test.wantedNumFiles, "len(createdFiles) was %d but should have been %d. createdFiles: %s", len(createdFiles), test.wantedNumFiles, getFilenames(createdFiles))
 
 		})
 		os.RemoveAll(testDir)
-		fmt.Println()
 	}
 }
 
 func TestDownloadAndExtractZip(t *testing.T) {
 	tests := map[string]struct {
-		inURL          string
+		inURL          *url.URL
 		inDestination  string
 		wantedType     error
 		wantedNumFiles int
 	}{
 		"success case: input good path": {
-			inURL:          publicGHZipURL,
+			inURL:          toURL(publicGHZipURL),
 			inDestination:  filepath.Join(testDir, "zip"),
 			wantedType:     nil,
 			wantedNumFiles: 17,
 		},
 		"fail case: input bad URL": {
-			inURL:          "/bad/URL",
+			inURL:          toURL("/bad/URL"),
 			inDestination:  filepath.Join(testDir, "badURL"),
 			wantedType:     new(url.Error),
 			wantedNumFiles: 0,
 		},
 		"fail case: input URL that doesn't provide JSON": {
-			inURL:          "https://www.google.com/",
+			inURL:          toURL("https://www.google.com/"),
 			inDestination:  filepath.Join(testDir, "badURL"),
 			wantedType:     errors.New(""),
 			wantedNumFiles: 0,
@@ -256,29 +272,41 @@ func TestDownloadAndExtractZip(t *testing.T) {
 
 func TestDownloadFromTarGzURL(t *testing.T) {
 	tests := map[string]struct {
-		inURL            string
+		inURL            *url.URL
 		inDestination    string
 		inGitCredentials GitCredentials
 		wantedType       error
+		wantedErrMsg     string
 		wantedNumFiles   int
 	}{
-		"success case: input good path": {
-			inURL:          publicGHTarGzURL,
+		"success case: input good public GH URL": {
+			inURL:          toURL(publicGHTarGzURL),
 			inDestination:  "./testDir",
 			wantedType:     nil,
 			wantedNumFiles: 6,
 		},
 		"fail case: input bad URL": {
-			inURL:          "/bad/URL",
+			inURL:          toURL("/bad/URL"),
 			inDestination:  filepath.Join(testDir, "badURL"),
 			wantedType:     new(url.Error),
+			wantedErrMsg:   "unsupported protocol scheme",
 			wantedNumFiles: 0,
 		},
-		"fail case: input URL that doesn't provide JSON": {
-			inURL:          "https://www.google.com/",
-			inDestination:  filepath.Join(testDir, "badURL"),
-			wantedType:     errors.New(""),
-			wantedNumFiles: 0,
+		"fail case: input Git credentials with URL that isn't GitHub": {
+			inURL:            toURL("https://www.google.com/"),
+			inDestination:    filepath.Join(testDir, "badURL"),
+			inGitCredentials: GitCredentials{Username: test.GHEUsername, Password: test.GHEPassword},
+			wantedType:       errors.New(""),
+			wantedErrMsg:     "URL must point to a GitHub repository release asset",
+			wantedNumFiles:   0,
+		},
+		"fail case: input Git credentials with GHE URL that isn't to a release asset": {
+			inURL:            toURL("https://github.ibm.com/Richard-Waller/sampleGHERepo/foo"),
+			inDestination:    filepath.Join(testDir, "badURL"),
+			inGitCredentials: GitCredentials{Username: test.GHEUsername, Password: test.GHEPassword},
+			wantedType:       errors.New(""),
+			wantedErrMsg:     "URL must point to a GitHub repository release asset",
+			wantedNumFiles:   0,
 		},
 	}
 	for name, test := range tests {
@@ -287,7 +315,10 @@ func TestDownloadFromTarGzURL(t *testing.T) {
 
 			got := DownloadFromTarGzURL(test.inURL, test.inDestination, test.inGitCredentials)
 
-			assert.IsType(t, test.wantedType, got, "Got: %s", got)
+			require.IsType(t, test.wantedType, got, "Got: %s", got)
+			if test.wantedErrMsg != "" {
+				assert.Contains(t, got.Error(), test.wantedErrMsg)
+			}
 
 			createdFiles, _ := ioutil.ReadDir(test.inDestination)
 			assert.Truef(t, len(createdFiles) == test.wantedNumFiles, "len(createdFiles) was %d but should have been %d. createdFiles: %s", len(createdFiles), test.wantedNumFiles, getFilenames(createdFiles))
@@ -301,7 +332,7 @@ func TestDownloadFromTarGzURL(t *testing.T) {
 func TestDownloadFile(t *testing.T) {
 	t.Run("fail case - response status code is not 200", func(t *testing.T) {
 		testURL := "https://github.com/nonexistentrepo"
-		err := DownloadFile(testURL, testDir, GitCredentials{})
+		err := DownloadFile(toURL(testURL), testDir, GitCredentials{})
 		assert.NotNil(t, err)
 		assert.Contains(t, err.Error(), "File download failed for "+testURL+", status code ")
 	})
@@ -309,23 +340,19 @@ func TestDownloadFile(t *testing.T) {
 
 func TestIsTarGzURL(t *testing.T) {
 	tests := map[string]struct {
-		in   string
+		in   *url.URL
 		want bool
 	}{
 		"success case": {
-			in:   publicGHTarGzURL,
+			in:   toURL(publicGHTarGzURL),
 			want: true,
 		},
 		"fail case: git repo URL": {
-			in:   test.PublicGHRepoURL,
+			in:   toURL(test.PublicGHRepoURL),
 			want: false,
 		},
 		"fail case: zip URL": {
-			in:   publicGHZipURL,
-			want: false,
-		},
-		"fail case: other string": {
-			in:   "not a targz",
+			in:   toURL(publicGHZipURL),
 			want: false,
 		},
 	}
@@ -335,4 +362,9 @@ func TestIsTarGzURL(t *testing.T) {
 			assert.Equal(t, got, test.want)
 		})
 	}
+}
+
+func toURL(inURL string) *url.URL {
+	URL, _ := url.ParseRequestURI(inURL)
+	return URL
 }

@@ -35,13 +35,13 @@ type (
 
 // DownloadFromURLThenExtract downloads files from a URL
 // to a destination, extracting them if necessary
-func DownloadFromURLThenExtract(URL, destination string, gitCredentials GitCredentials) error {
-	_url, err := url.ParseRequestURI(URL)
+func DownloadFromURLThenExtract(inURL, destination string, gitCredentials GitCredentials) error {
+	URL, err := url.ParseRequestURI(inURL)
 	if err != nil {
 		return err
 	}
-	if !_url.IsAbs() {
-		return fmt.Errorf("URL must be absolute, but received relative URL %s", _url)
+	if !URL.IsAbs() {
+		return fmt.Errorf("URL must be absolute, but received relative URL %s", URL)
 	}
 
 	if IsTarGzURL(URL) {
@@ -52,7 +52,7 @@ func DownloadFromURLThenExtract(URL, destination string, gitCredentials GitCrede
 
 // DownloadFromTarGzURL downloads a tar.gz file from a URL
 // and extracts it to a destination
-func DownloadFromTarGzURL(URL, destination string, gitCredentials GitCredentials) error {
+func DownloadFromTarGzURL(URL *url.URL, destination string, gitCredentials GitCredentials) error {
 	time := time.Now().Format(time.RFC3339)
 	time = strings.Replace(time, ":", "-", -1) // ":" is illegal char in windows
 	pathToTempFile := path.Join(os.TempDir(), "_"+time+"temp.tar.gz")
@@ -74,19 +74,21 @@ func DownloadFromTarGzURL(URL, destination string, gitCredentials GitCredentials
 	return err
 }
 
-func getURLToDownloadReleaseAsset(URL string, gitCredentials GitCredentials) (string, error) {
-	URLSlice := strings.Split(URL, "/")
+func getURLToDownloadReleaseAsset(URL *url.URL, gitCredentials GitCredentials) (*url.URL, error) {
+	URLPathSlice := strings.Split(URL.Path, "/")
 
-	domain := URLSlice[2]
-	client, err := getGitHubClient(domain, gitCredentials)
+	if !strings.Contains(URL.Host, "github") || len(URLPathSlice) < 6 {
+		return nil, fmt.Errorf("URL must point to a GitHub repository release asset: %v", URL)
+	}
+	client, err := getGitHubClient(URL.Host, gitCredentials)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	ctx := context.Background()
 
-	owner := URLSlice[3]
-	repo := URLSlice[4]
+	owner := URLPathSlice[1]
+	repo := URLPathSlice[2]
 	releases, gitHubResponse, err := client.Repositories.ListReleases(
 		ctx,
 		owner,
@@ -95,13 +97,13 @@ func getURLToDownloadReleaseAsset(URL string, gitCredentials GitCredentials) (st
 	)
 	resp := gitHubResponse.Response
 	if resp.StatusCode != 200 {
-		return "", fmt.Errorf("[client.Repositories.ListReleases] GitHub responded with status code %d", resp.StatusCode)
+		return nil, fmt.Errorf("[client.Repositories.ListReleases] GitHub responded with status code %d", resp.StatusCode)
 	}
 
-	release := URLSlice[7]
+	release := URLPathSlice[5]
 	assetID, err := findAssetID(releases, release, URL)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	_, redirectURL, err := client.Repositories.DownloadReleaseAsset(
@@ -111,16 +113,17 @@ func getURLToDownloadReleaseAsset(URL string, gitCredentials GitCredentials) (st
 		assetID,
 	)
 	if err != nil {
-		return "", fmt.Errorf("Repositories.DownloadReleaseAsset returned error: %v", err)
+		return nil, fmt.Errorf("Repositories.DownloadReleaseAsset returned error: %v", err)
 	}
-	return redirectURL, nil
+	ru, _ := url.ParseRequestURI(redirectURL)
+	return ru, nil
 }
 
-func findAssetID(releases []*github.RepositoryRelease, releaseName, URL string) (int64, error) {
+func findAssetID(releases []*github.RepositoryRelease, releaseName string, URL *url.URL) (int64, error) {
 	for _, v := range releases {
 		if *v.TagName == releaseName {
 			for _, val := range v.Assets {
-				if *val.BrowserDownloadURL == URL {
+				if *val.BrowserDownloadURL == URL.String() {
 					return *val.ID, nil
 				}
 			}
@@ -131,18 +134,20 @@ func findAssetID(releases []*github.RepositoryRelease, releaseName, URL string) 
 }
 
 // DownloadFromRepoURL downloads a repo from a URL to a destination
-func DownloadFromRepoURL(repoURL, destination string, gitCredentials GitCredentials) error {
-	// expecting string in format 'https://<github.com>/<owner>/<repo>'
-	URLSlice := strings.Split(repoURL, "/")
+func DownloadFromRepoURL(URL *url.URL, destination string, gitCredentials GitCredentials) error {
+	URLPathSlice := strings.Split(URL.Path, "/")
 
-	domain := URLSlice[2]
-	client, err := getGitHubClient(domain, gitCredentials)
+	if !strings.Contains(URL.Host, "github") || len(URLPathSlice) < 3 {
+		return fmt.Errorf("URL must point to a GitHub repository release asset: %v", URL)
+	}
+
+	client, err := getGitHubClient(URL.Host, gitCredentials)
 	if err != nil {
 		return err
 	}
 
-	owner := URLSlice[3]
-	repo := URLSlice[4]
+	owner := URLPathSlice[1]
+	repo := URLPathSlice[2]
 	zipURL, err := GetZipURL(owner, repo, "master", client)
 	if err != nil {
 		return err
@@ -168,20 +173,19 @@ func getGitHubClient(domain string, gitCredentials GitCredentials) (*github.Clie
 }
 
 // GetZipURL from github api /repos/:owner/:repo/:archive_format/:ref
-func GetZipURL(owner, repo, branch string, client *github.Client) (string, error) {
+func GetZipURL(owner, repo, branch string, client *github.Client) (*url.URL, error) {
 	ctx := context.Background()
 	opt := &github.RepositoryContentGetOptions{Ref: branch}
 	URL, _, err := client.Repositories.GetArchiveLink(ctx, owner, repo, "zipball", opt, true)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	url := URL.String()
-	return url, nil
+	return URL, nil
 }
 
 // DownloadAndExtractZip downloads a zip file from a URL
 // and extracts it to a destination
-func DownloadAndExtractZip(zipURL string, destination string) error {
+func DownloadAndExtractZip(zipURL *url.URL, destination string) error {
 	time := time.Now().Format(time.RFC3339)
 	time = strings.Replace(time, ":", "-", -1) // ":" is illegal char in windows
 	pathToTempZipFile := path.Join(os.TempDir(), "_"+time+".zip")
@@ -201,8 +205,8 @@ func DownloadAndExtractZip(zipURL string, destination string) error {
 }
 
 // DownloadFile from URL to file destination
-func DownloadFile(URL, destination string, gitCredentials GitCredentials) error {
-	resp, err := http.Get(URL)
+func DownloadFile(URL *url.URL, destination string, gitCredentials GitCredentials) error {
+	resp, err := http.Get(URL.String())
 	if err != nil {
 		return err
 	}
@@ -224,6 +228,6 @@ func DownloadFile(URL, destination string, gitCredentials GitCredentials) error 
 }
 
 // IsTarGzURL returns whether the provided URL is a tar.gz file
-func IsTarGzURL(URL string) bool {
-	return strings.HasSuffix(URL, ".tar.gz")
+func IsTarGzURL(URL *url.URL) bool {
+	return strings.HasSuffix(URL.Path, ".tar.gz")
 }
