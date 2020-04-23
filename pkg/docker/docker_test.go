@@ -220,7 +220,7 @@ func TestStopContainer(t *testing.T) {
 	})
 }
 
-func TestGetContainersToRemove(t *testing.T) {
+func TestGetCodewindProjectContainers(t *testing.T) {
 	tests := map[string]struct {
 		containerList      []types.Container
 		expectedContainers []string
@@ -255,7 +255,7 @@ func TestGetContainersToRemove(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			containersToRemove := GetContainersToRemove(test.containerList)
+			containersToRemove := GetCodewindProjectContainers(test.containerList)
 			assert.Equal(t, len(test.expectedContainers), len(containersToRemove))
 			for _, container := range containersToRemove {
 				assert.Contains(t, test.expectedContainers, container.Names[0])

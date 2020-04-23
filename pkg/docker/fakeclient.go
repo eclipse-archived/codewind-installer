@@ -96,6 +96,24 @@ func (m *mockDockerClientWithCw) ContainerRemove(ctx context.Context, containerI
 	return nil
 }
 
+func (m *mockDockerClientWithCw) ClientVersion() string {
+	return ""
+}
+
+func (m *mockDockerClientWithCw) ContainerLogs(ctx context.Context, containerID string, options types.ContainerLogsOptions) (io.ReadCloser, error) {
+	r := ioutil.NopCloser(bytes.NewReader([]byte("")))
+	return r, nil
+}
+
+func (m *mockDockerClientWithCw) CopyFromContainer(ctx context.Context, containerID, srcPath string) (io.ReadCloser, types.ContainerPathStat, error) {
+	r := ioutil.NopCloser(bytes.NewReader([]byte("")))
+	return r, types.ContainerPathStat{Name: "", Size: 0, Mode: 0, Mtime: time.Now(), LinkTarget: ""}, nil
+}
+
+func (m *mockDockerClientWithCw) ServerVersion(ctx context.Context) (types.Version, error) {
+	return types.Version{Platform: struct{ Name string }{""}, Components: []types.ComponentVersion{}, Version: "", APIVersion: "", MinAPIVersion: "", GitCommit: "", GoVersion: "", Os: "", Arch: "", KernelVersion: "", Experimental: true, BuildTime: ""}, nil
+}
+
 func (m *mockDockerClientWithCw) ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error) {
 	return types.ContainerJSON{
 		ContainerJSONBase: &types.ContainerJSONBase{
@@ -173,6 +191,24 @@ func (m *mockDockerClientWithoutCw) RegistryLogin(ctx context.Context, auth type
 	return registry.AuthenticateOKBody{}, nil
 }
 
+func (m *mockDockerClientWithoutCw) ClientVersion() string {
+	return ""
+}
+
+func (m *mockDockerClientWithoutCw) ContainerLogs(ctx context.Context, containerID string, options types.ContainerLogsOptions) (io.ReadCloser, error) {
+	r := ioutil.NopCloser(bytes.NewReader([]byte("")))
+	return r, nil
+}
+
+func (m *mockDockerClientWithoutCw) CopyFromContainer(ctx context.Context, containerID, srcPath string) (io.ReadCloser, types.ContainerPathStat, error) {
+	r := ioutil.NopCloser(bytes.NewReader([]byte("")))
+	return r, types.ContainerPathStat{Name: "", Size: 0, Mode: 0, Mtime: time.Now(), LinkTarget: ""}, nil
+}
+
+func (m *mockDockerClientWithoutCw) ServerVersion(ctx context.Context) (types.Version, error) {
+	return types.Version{Platform: struct{ Name string }{""}, Components: []types.ComponentVersion{}, Version: "", APIVersion: "", MinAPIVersion: "", GitCommit: "", GoVersion: "", Os: "", Arch: "", KernelVersion: "", Experimental: true, BuildTime: ""}, nil
+}
+
 // This mock client will return errors for each call to a docker function
 type mockDockerErrorClient struct {
 }
@@ -220,4 +256,22 @@ func (m *mockDockerErrorClient) DistributionInspect(ctx context.Context, image, 
 
 func (m *mockDockerErrorClient) RegistryLogin(ctx context.Context, auth types.AuthConfig) (registry.AuthenticateOKBody, error) {
 	return registry.AuthenticateOKBody{}, nil
+}
+
+func (m *mockDockerErrorClient) ClientVersion() string {
+	return ""
+}
+
+func (m *mockDockerErrorClient) ContainerLogs(ctx context.Context, containerID string, options types.ContainerLogsOptions) (io.ReadCloser, error) {
+	r := ioutil.NopCloser(bytes.NewReader([]byte("")))
+	return r, nil
+}
+
+func (m *mockDockerErrorClient) CopyFromContainer(ctx context.Context, containerID, srcPath string) (io.ReadCloser, types.ContainerPathStat, error) {
+	r := ioutil.NopCloser(bytes.NewReader([]byte("")))
+	return r, types.ContainerPathStat{Name: "", Size: 0, Mode: 0, Mtime: time.Now(), LinkTarget: ""}, nil
+}
+
+func (m *mockDockerErrorClient) ServerVersion(ctx context.Context) (types.Version, error) {
+	return types.Version{Platform: struct{ Name string }{""}, Components: []types.ComponentVersion{}, Version: "", APIVersion: "", MinAPIVersion: "", GitCommit: "", GoVersion: "", Os: "", Arch: "", KernelVersion: "", Experimental: true, BuildTime: ""}, nil
 }

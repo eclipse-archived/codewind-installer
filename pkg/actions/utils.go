@@ -21,6 +21,7 @@ import (
 	"github.com/eclipse/codewind-installer/pkg/docker"
 	"github.com/eclipse/codewind-installer/pkg/project"
 	"github.com/eclipse/codewind-installer/pkg/remote"
+	"github.com/eclipse/codewind-installer/pkg/security"
 	logr "github.com/sirupsen/logrus"
 )
 
@@ -50,6 +51,15 @@ func HandleConnectionError(err *connections.ConError) {
 		fmt.Println(err.Error())
 	} else {
 		logr.Error(err.Desc)
+	}
+}
+
+// HandleKeyringWarning : display keyring warning messages
+func HandleKeyringWarning(secErr *security.SecError) {
+	if printAsJSON {
+		fmt.Println(secErr.Error())
+	} else {
+		logr.Warnf("%s", secErr.Desc)
 	}
 }
 

@@ -13,6 +13,7 @@ package security
 
 import (
 	"encoding/json"
+	"strings"
 )
 
 // KeycloakMasterRealm : master realm name
@@ -54,12 +55,14 @@ const (
 )
 
 const (
-	textBadPassword    = "Passwords must not contains quoted characters"
-	textUserNotFound   = "Registered User not found"
-	textUnableToParse  = "Unable to parse Keycloak response"
-	textInvalidOptions = "Invalid or missing command line options"
-	textAuthIsDown     = "Authentication service unavailable"
-	textSecretNotFound = "Secret not found in keyring"
+	textBadPassword     = "Passwords must not contains quoted characters"
+	textUserNotFound    = "Registered User not found"
+	textUnableToParse   = "Unable to parse Keycloak response"
+	textInvalidOptions  = "Invalid or missing command line options"
+	textAuthIsDown      = "Authentication service unavailable"
+	textNotFoundSuffix  = "not found in keyring"
+	textSecretNotFound  = "Secret %s " + textNotFoundSuffix
+	textKeyringNotFound = "Keyring not found"
 )
 
 // SecError : Error formatted in JSON containing an errorOp and a description from
@@ -102,7 +105,7 @@ func parseKeycloakError(body string, httpCode int) *KeycloakAPIError {
 	return &keycloakAPIError
 }
 
-// IsSecretNotFoundError : Test whether a secret error is due to the secret not exisiting.
+// IsSecretNotFoundError : Test whether a secret error is due to the secret not existing.
 func IsSecretNotFoundError(se *SecError) bool {
-	return se.Desc == textSecretNotFound
+	return strings.Contains(se.Desc, textNotFoundSuffix) || strings.Contains(se.Desc, textKeyringNotFound)
 }
