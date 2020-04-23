@@ -42,7 +42,7 @@ func StopAllCommand(c *cli.Context, dockerComposeFile string) {
 	}
 
 	fmt.Println("Stopping Project containers")
-	containersToRemove := docker.GetContainersToRemove(containers)
+	containersToRemove := docker.GetCodewindProjectContainers(containers)
 	for _, container := range containersToRemove {
 		fmt.Println("Stopping container ", container.Names[0], "... ")
 		docker.StopContainer(dockerClient, container)

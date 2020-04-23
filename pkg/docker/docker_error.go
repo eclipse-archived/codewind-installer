@@ -24,6 +24,7 @@ const (
 	errOpValidate                = "DOCKER_VALIDATE"
 	errOpClientCreate            = "CLIENT_CREATE_ERROR"
 	errOpContainerInspect        = "CONTAINER_INSPECT_ERROR"
+	errOpContainerLogs           = "CONTAINER_LOGS_ERROR"
 	errOpContainerError          = "CONTAINER_ERROR"
 	errOpStopContainer           = "CONTAINER_STOP_ERROR"
 	errOpDockerComposeFileCreate = "DOCKER_COMPOSE_FILE_CREATE_ERROR"
@@ -38,6 +39,7 @@ const (
 	errOpContainerList           = "CONTAINER_LIST_ERROR"
 	errOpImageList               = "IMAGE_LIST_ERROR"
 	errDockerCredential          = "DOCKER_CREDENTIAL_ERROR"
+	errDockerVersion             = "DOCKER_VERSION_ERROR"
 )
 
 const (

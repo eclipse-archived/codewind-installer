@@ -26,6 +26,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 
 	"github.com/eclipse/codewind-installer/pkg/errors"
@@ -149,6 +150,11 @@ func UnTar(pathToTarFile, destination string) error {
 	}
 	defer gzipReader.Close()
 	tarReader := tar.NewReader(gzipReader)
+	return ExtractTarToFileSystem(tarReader, destination)
+}
+
+// ExtractTarToFileSystem reads a tar Reader to a filesystem
+func ExtractTarToFileSystem(tarReader *tar.Reader, destination string) error {
 	for {
 		header, err := tarReader.Next()
 		if err == io.EOF {
@@ -165,20 +171,26 @@ func UnTar(pathToTarFile, destination string) error {
 				log.Fatal(err)
 			}
 		case tar.TypeReg:
-			fileToOverwrite, err := overwriteFile(target)
-			defer fileToOverwrite.Close()
-			if err != nil {
-				log.Fatal(err)
-			}
-			if _, err := io.Copy(fileToOverwrite, tarReader); err != nil {
-				log.Fatal(err)
-			}
-			os.Chmod(target, os.FileMode(header.Mode))
+			extractFile(target, tarReader, header)
 		default:
 			log.Printf("Can't extract to %s: unknown typeflag %c\n", target, header.Typeflag)
 		}
 	}
 	return nil
+}
+
+func extractFile(target string, tarReader *tar.Reader, header *tar.Header) {
+	fileToOverwrite, err := overwriteFile(target)
+	defer fileToOverwrite.Close()
+	if err != nil {
+		debug.PrintStack()
+		log.Fatal(err)
+	}
+	if _, err := io.Copy(fileToOverwrite, tarReader); err != nil {
+		debug.PrintStack()
+		log.Fatal(err)
+	}
+	os.Chmod(target, os.FileMode(header.Mode))
 }
 
 func overwriteFile(filePath string) (*os.File, error) {
@@ -263,4 +275,83 @@ func ReplaceInFiles(projectPath string, oldStr string, newStr string) error {
 	}
 
 	return lastError
+}
+
+//CopyFile - copies the contents of the source file to a target file
+func CopyFile(sourceFilePath, targetFilePath string) error {
+	sourceFileStat, err := os.Stat(sourceFilePath)
+	if err != nil {
+		return err
+	}
+	if !sourceFileStat.Mode().IsRegular() {
+		return fmt.Errorf("%s is not a regular file", sourceFilePath)
+	}
+
+	source, err := os.Open(sourceFilePath)
+	if err != nil {
+		return err
+	}
+	defer source.Close()
+	destination, err := os.Create(targetFilePath)
+	if err != nil {
+		return err
+	}
+	defer destination.Close()
+	_, err = io.Copy(destination, source)
+	return err
+}
+
+//Zip - creates a zip file in the target directory and populates it with the contents of that directory
+func Zip(zipFileName, targetDirectory string) error {
+	newZipFile, zipCreateErr := os.Create(filepath.Join(targetDirectory, zipFileName))
+	if zipCreateErr != nil {
+		return fmt.Errorf("Unable to create zip file - " + zipCreateErr.Error())
+	} else {
+		defer newZipFile.Close()
+
+		zipWriter := zip.NewWriter(newZipFile)
+		defer zipWriter.Close()
+
+		// Add files to zip
+		err := filepath.Walk(targetDirectory, func(path string, info os.FileInfo, err error) error {
+			if info.Mode().IsRegular() && (info.Name() != zipFileName) {
+				fileToZip, err := os.Open(path)
+				if err != nil {
+					return err
+				}
+				defer fileToZip.Close()
+
+				// Get the file information
+				info, err := fileToZip.Stat()
+				if err != nil {
+					return err
+				}
+
+				header, err := zip.FileInfoHeader(info)
+				if err != nil {
+					return err
+				}
+
+				// Using FileInfoHeader() above only uses the basename of the file. If we want
+				// to preserve the folder structure we can overwrite this with the full path.
+				header.Name = strings.Replace(path, targetDirectory+string(os.PathSeparator), "", 1)
+
+				// Change to deflate to gain better compression
+				// see http://golang.org/pkg/archive/zip/#pkg-constants
+				header.Method = zip.Deflate
+
+				writer, err := zipWriter.CreateHeader(header)
+				if err != nil {
+					return err
+				}
+				_, err = io.Copy(writer, fileToZip)
+				return err
+			}
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("walk error " + err.Error())
+		}
+	}
+	return nil
 }

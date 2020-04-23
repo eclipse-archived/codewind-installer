@@ -25,19 +25,29 @@ import (
 type DockerClient interface {
 	ImagePull(ctx context.Context, image string, imagePullOptions types.ImagePullOptions) (io.ReadCloser, error)
 	ImageList(ctx context.Context, imageListOptions types.ImageListOptions) ([]types.ImageSummary, error)
+	ClientVersion() string
 	ContainerList(ctx context.Context, containerListOptions types.ContainerListOptions) ([]types.Container, error)
 	ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error)
+	ContainerLogs(ctx context.Context, containerID string, options types.ContainerLogsOptions) (io.ReadCloser, error)
 	ContainerStop(ctx context.Context, containerID string, timeout *time.Duration) error
 	ContainerRemove(ctx context.Context, containerID string, options types.ContainerRemoveOptions) error
+	DaemonHost() string
+	CopyFromContainer(ctx context.Context, containerID, srcPath string) (io.ReadCloser, types.ContainerPathStat, error)
 	DistributionInspect(ctx context.Context, image, encodedRegistryAuth string) (registry.DistributionInspect, error)
+	ServerVersion(ctx context.Context) (types.Version, error)
 }
 
 // NewDockerClient creates a new client for the docker API
 func NewDockerClient() (DockerClient, *DockerError) {
-	dockerClient, err := client.NewClientWithOpts(client.WithVersion("1.30"))
+	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithVersion("1.30"))
 	if err != nil {
 		return nil, &DockerError{errOpClientCreate, err, err.Error()}
 	}
 
 	return dockerClient, nil
+}
+
+// UsingLocalDockerHost returns true if we are using the default local docker host.
+func UsingLocalDockerHost(dockerClient DockerClient) bool {
+	return dockerClient.DaemonHost() == client.DefaultDockerHost
 }
