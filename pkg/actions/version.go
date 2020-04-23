@@ -40,7 +40,10 @@ func GetVersions(c *cli.Context) {
 func GetSingleConnectionVersion(c *cli.Context) {
 	connectionID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 
-	containerVersions := GetContainerVersions(connectionID)
+	containerVersions, cvErr := GetContainerVersions(connectionID)
+	if cvErr != nil {
+		os.Exit(1)
+	}
 
 	if printAsJSON {
 		utils.PrettyPrintJSON(containerVersions)
@@ -55,25 +58,27 @@ func GetSingleConnectionVersion(c *cli.Context) {
 }
 
 // GetContainerVersions : Gets the cwctl and container versions for a single connection
-func GetContainerVersions(connectionID string) apiroutes.ContainerVersions {
+func GetContainerVersions(connectionID string) (apiroutes.ContainerVersions, error) {
+	// dummy ContainerVersions to send back if there is an error
+	errorVersions := apiroutes.ContainerVersions{CwctlVersion: "Unknown", PerformanceVersion: "Unknown", GatekeeperVersion: "Unknown", PFEVersion: "Unknown"}
 	conInfo, conInfoErr := connections.GetConnectionByID(connectionID)
 	if conInfoErr != nil {
 		HandleConnectionError(conInfoErr)
-		os.Exit(1)
+		return errorVersions, conInfoErr
 	}
 
 	conURL, conErr := config.PFEOriginFromConnection(conInfo)
 	if conErr != nil {
 		HandleConfigError(conErr)
-		os.Exit(1)
+		return errorVersions, conErr
 	}
 
 	containerVersions, err := apiroutes.GetContainerVersions(conURL, appconstants.VersionNum, conInfo, http.DefaultClient)
 	if err != nil {
 		fmt.Println(err.Error())
-		os.Exit(1)
+		return errorVersions, err
 	}
-	return containerVersions
+	return containerVersions, nil
 }
 
 // GetAllConnectionVersions : Prints the cwctl and container versions for all connections to console

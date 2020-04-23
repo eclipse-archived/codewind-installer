@@ -237,7 +237,11 @@ func gatherCodewindVersions() {
 	//}
 	//dockerClientVersion := docker.GetClientVersion(dockerClient)
 	//dockerServerVersion, gsvErr := docker.GetServerVersion(dockerClient)
-	containerVersions := GetContainerVersions("local")
+	containerVersions, cvErr := GetContainerVersions("local")
+	if cvErr != nil {
+		//just log and continue; version file will have "Unknown" values
+		logMG("Problems getting Codewind container versions")
+	}
 	versionsByteArray := []byte(
 		"CWCTL VERSION: " + containerVersions.CwctlVersion + "\n" +
 			"PFE VERSION: " + containerVersions.PFEVersion + "\n" +
