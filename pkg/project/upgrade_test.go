@@ -13,6 +13,7 @@ package project
 
 import (
 	"path"
+	"runtime"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -39,11 +40,20 @@ func Test_UpgradeProjects(t *testing.T) {
 
 	missingDirectoryOutput := make(map[string]interface{})
 	missingDirectoryOutput["migrated"] = make([]string, 0)
-	missingDirectoryOutput["failed"] = []interface{}{
-		&map[string]string{
-			"projectName": "missing-project-dir",
-			"error":       "stat ../../resources/workspaces/error-projects/missing-project-dir/missing-project-dir: no such file or directory",
-		},
+	if runtime.GOOS == "windows" {
+		missingDirectoryOutput["failed"] = []interface{}{
+			&map[string]string{
+				"projectName": "missing-project-dir",
+				"error":       "CreateFile ../../resources/workspaces/error-projects/missing-project-dir/missing-project-dir: The system cannot find the file specified.",
+			},
+		}
+	} else {
+		missingDirectoryOutput["failed"] = []interface{}{
+			&map[string]string{
+				"projectName": "missing-project-dir",
+				"error":       "stat ../../resources/workspaces/error-projects/missing-project-dir/missing-project-dir: no such file or directory",
+			},
+		}
 	}
 
 	tests := map[string]struct {

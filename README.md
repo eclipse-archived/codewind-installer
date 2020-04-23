@@ -143,26 +143,27 @@ This is the same as `go test ./...`, but outputs test coverage scores for each f
 ### CLI Commands
 
 | Command         | Alias | Usage                                                               |
-| ----------------| ----- | ------------------------------------------------------------------- |
-| project         |       | 'Manage Codewind projects'                                          |
-| install         | `in`  | 'Pull pfe & performance images from dockerhub'                      |
-| start           |       | 'Start the Codewind containers'                                     |
-| status          |       | 'Print the installation status of Codewind'                         |
-| stop            |       | 'Stop the running Codewind containers'                              |
-| stop-all        |       | 'Stop all of the Codewind and project containers'                   |
-| remove          | `rm`  | 'Remove Codewind and Project docker images'                         |
-| templates       |       | 'Manage project templates'                                          |
-| version         |       | 'Print the versions of Codewind containers, for a given connection' |
-| sectoken        | `st`  | 'Authenticate with username and password to obtain an access_token' |
-| secrole         | `sl`  | 'Manage realm based ACCESS roles'                                   |
-| secrealm        | `sr`  | 'Manage new or existing REALM configurations'                       |
-| secclient       | `sc`  | 'Manage new or existing APPLICATION access configurations'          |
-| seckeyring      | `sk`  | 'Manage Codewind keys in the desktop keyring'                       |
-| secuser         | `su`  | 'Manage new or existing USER access configurations'                 |
-| connections     | `con` | 'Manage connections configuration list'                             |
-| loglevels       | `log` | 'Get or set logging levels for Codewind containers'                 |
-| registrysecrets | `rs`  | 'Manage docker registry secrets'                                    |
-| help            | `h`   | 'Shows a list of commands or help for one command'                  |
+| ----------------| ----- | -------------------------------------------------------------------- |
+| project         |       | 'Manage Codewind projects'                                           |
+| install         | `in`  | 'Pull pfe & performance images from dockerhub'                       |
+| start           |       | 'Start the Codewind containers'                                      |
+| status          |       | 'Print the installation status of Codewind'                          |
+| stop            |       | 'Stop the running Codewind containers'                               |
+| stop-all        |       | 'Stop all of the Codewind and project containers'                    |
+| remove          | `rm`  | 'Remove Codewind and Project docker images'                          |
+| templates       |       | 'Manage project templates'                                           |
+| version         |       | 'Print the versions of Codewind containers, for a given connection'  |
+| sectoken        | `st`  | 'Authenticate with username and password to obtain an access_token'  |
+| secrole         | `sl`  | 'Manage realm based ACCESS roles'                                    |
+| secrealm        | `sr`  | 'Manage new or existing REALM configurations'                        |
+| secclient       | `sc`  | 'Manage new or existing APPLICATION access configurations'           |
+| seckeyring      | `sk`  | 'Manage Codewind keys in the desktop keyring'                        |
+| secuser         | `su`  | 'Manage new or existing USER access configurations'                  |
+| connections     | `con` | 'Manage connections configuration list'                              |
+| loglevels       | `log` | 'Get or set logging levels for Codewind containers'                  |
+| registrysecrets | `rs`  | 'Manage docker registry secrets'                                     |
+| mustgather      | `mg`  | 'Gathers logs and project files to aid diagnosis of Codewind errors' |
+| help            | `h`   | 'Shows a list of commands or help for one command'                   |
 
 ### Command Options:
 
@@ -272,6 +273,14 @@ Subcommands:</br>
 ### stop
 
 > **Note:** No additional flags
+
+### mustgather/mg
+
+`--eclipseWorkspaceDir/-e <value>` - The location of your Eclipse workspace directory if using the Eclipse IDE (default: "")</br>
+`--quiet/-q` - Turn off console messages</br>
+`--projects/-p` - Collect project containers information</br>
+`--nozip/-n` - Does not create collection zip and leaves individual collected files in place</br>
+`--clean` - Removes the mustgather directory and all its contents from the Codewind home directory
 
 ### stop-all
 
