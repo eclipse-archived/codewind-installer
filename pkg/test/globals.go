@@ -11,8 +11,11 @@
 
 package test
 
-// PublicGHRepoURL is a URL to a GitHub repo not requiring auth to access
+// PublicGHRepoURL is a URL to a public GitHub repo (not requiring auth to access)
 const PublicGHRepoURL = "https://github.com/microclimate-dev2ops/nodeExpressTemplate"
+
+// PublicGHDevfileURL is a URL to a devfiles/index.json in a public GitHub repo (not requiring auth to access)
+const PublicGHDevfileURL = "https://raw.githubusercontent.com/kabanero-io/codewind-templates/aad4bafc14e1a295fb8e462c20fe8627248609a3/devfiles/index.json"
 
 // GHERepoURL is a URL to a GitHub Enterprise repo (requiring auth to access)
 const GHERepoURL = "https://github.ibm.com/DevCamp2018/git-basics"
