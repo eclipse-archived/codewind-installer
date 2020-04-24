@@ -44,6 +44,7 @@ type (
 		URL            string               `json:"url"`
 		Description    string               `json:"description"`
 		Name           string               `json:"name"`
+		GitCredentials utils.GitCredentials `json:"gitCredentials"`
 	}
 
 	// RepoOperation represents a requested operation on a template repository.
@@ -186,7 +187,7 @@ func GetTemplateRepos(conID string) ([]utils.TemplateRepo, error) {
 
 // AddTemplateRepo adds a template repo to PFE and
 // returns the new list of existing repos
-func AddTemplateRepo(conID, URL, description, name string) ([]utils.TemplateRepo, error) {
+func AddTemplateRepo(conID, URL, description, name string, gitCredentials utils.GitCredentials) ([]utils.TemplateRepo, error) {
 	if _, err := url.ParseRequestURI(URL); err != nil {
 		return nil, fmt.Errorf("Error: '%s' is not a valid URL", URL)
 	}
@@ -204,6 +205,7 @@ func AddTemplateRepo(conID, URL, description, name string) ([]utils.TemplateRepo
 		URL:            URL,
 		Description:    description,
 		Name:           name,
+		GitCredentials: gitCredentials,
 	}
 	buf := new(bytes.Buffer)
 	json.NewEncoder(buf).Encode(requestBody)
