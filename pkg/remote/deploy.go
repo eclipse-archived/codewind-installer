@@ -59,7 +59,7 @@ type DeploymentResult struct {
 
 // DeployRemote : InstallRemote
 func DeployRemote(remoteDeployOptions *DeployOptions) (*DeploymentResult, *RemInstError) {
-	config, err := getKubeConfig()
+	config, err := GetKubeConfig()
 	if err != nil {
 		logr.Infof("Unable to retrieve Kubernetes Config %v\n", err)
 		return nil, &RemInstError{errOpNotFound, err, err.Error()}

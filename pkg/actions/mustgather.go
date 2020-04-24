@@ -25,10 +25,14 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
+	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/docker"
 	"github.com/eclipse/codewind-installer/pkg/errors"
+	"github.com/eclipse/codewind-installer/pkg/remote"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/urfave/cli"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
 var codewindHome = filepath.Join(homeDir, ".codewind")
@@ -53,19 +57,87 @@ func MustGatherCommand(c *cli.Context) {
 			errors.CheckErr(err, 206, "")
 		}
 	} else {
-		mgCommand(c)
+		if c.Bool("quiet") {
+			isLoud = false
+		}
+		dirErr := os.MkdirAll(filepath.Join(mustGatherDirName, "projects"), 0755)
+		if dirErr != nil {
+			errors.CheckErr(dirErr, 205, "")
+		}
+		logMG("Mustgather files will be collected at " + mustGatherDirName)
+		if c.String("conid") != "local" {
+			mgRemoteCommand(c)
+		} else {
+			mgCommand(c)
+		}
+	}
+}
+
+func mgRemoteCommand(c *cli.Context) {
+	// find the connectionID specified by conid - could be ID or Label
+	connectionID := strings.TrimSpace(strings.ToLower(c.String("conid")))
+	kubeNameSpace := ""
+	clientID := ""
+	connectionList, conErr := connections.GetAllConnections()
+	if conErr != nil {
+		fmt.Println("Unable to gather Connections " + conErr.Error())
+		os.Exit(1)
+	}
+	found := false
+	for _, connection := range connectionList {
+		if strings.ToUpper(connectionID) == strings.ToUpper(connection.Label) {
+			connectionID = connection.ID
+		}
+		if strings.ToUpper(connectionID) == strings.ToUpper(connection.ID) {
+			found = true
+			clientID = strings.Replace(connection.ClientID, "codewind-", "", 1)
+			break
+		}
+	}
+	if !found {
+		fmt.Println("Unable to associate " + connectionID + " with existing connection")
+		os.Exit(1)
+	}
+	existingDeployments, edErr := remote.GetExistingDeployments("")
+	if edErr != nil {
+		fmt.Println("Unable to gather existing deployments " + edErr.Error())
+		os.Exit(1)
+	}
+	found = false
+	for _, existingDeployment := range existingDeployments {
+		if strings.ToUpper(existingDeployment.WorkspaceID) == strings.ToUpper(clientID) {
+			kubeNameSpace = existingDeployment.Namespace
+			found = true
+			break
+		}
+	}
+	if !found {
+		fmt.Println("Unable to locate existing deployment with Workspace ID " + clientID)
+		os.Exit(1)
+	}
+	config, err := remote.GetKubeConfig()
+	if err != nil {
+		fmt.Println("Unable to retrieve Kubernetes Config %v\n", err)
+		os.Exit(1)
+	}
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		fmt.Println("Unable to retrieve Kubernetes clientset %v\n", err)
+		os.Exit(1)
+	}
+	nameSpacePods, nspErr := clientset.CoreV1().Pods(kubeNameSpace).List(v1.ListOptions{})
+	if nspErr != nil {
+		fmt.Println("Unable to retrieve Kubernetes Pods %v\n", nspErr)
+		os.Exit(1)
+	}
+	for _, pod := range nameSpacePods.Items {
+		if strings.HasPrefix(pod.ObjectMeta.Name, "codewind-") {
+			fmt.Println(pod.ObjectMeta.Name)
+		}
 	}
 }
 
 func mgCommand(c *cli.Context) {
-	if c.Bool("quiet") {
-		isLoud = false
-	}
-	dirErr := os.MkdirAll(filepath.Join(mustGatherDirName, "projects"), 0755)
-	if dirErr != nil {
-		errors.CheckErr(dirErr, 205, "")
-	}
-	logMG("Mustgather files will be collected at " + mustGatherDirName)
 	collectCodewindContainers()
 
 	// Collect Codewind PFE workspace
