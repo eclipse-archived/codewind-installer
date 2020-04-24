@@ -180,6 +180,8 @@ Subcommands:</br>
 > --url,-u value URL of project to download
 > --path,-p value Path at which to create the new project
 > --conid value Connection ID of PFE that will be used to validate the project (optional)
+> --username value Username for GitHub account authorized to download the provided GitHub repo
+> --password value Password for GitHub account authorized to download the provided GitHub repo
 
 `validate` - Returns the predicted language and build type for a project, and writes a default .cw-settings to it if one does not already exist
 

@@ -43,7 +43,15 @@ func ProjectValidate(c *cli.Context) {
 func ProjectCreate(c *cli.Context) {
 	destination := c.String("path")
 	url := c.String("url")
-	result, err := project.DownloadTemplate(destination, url)
+	username := c.String("username")
+	password := c.String("password")
+	var gitCredentials utils.GitCredentials
+	if username != "" && password != "" {
+		gitCredentials.Username = username
+		gitCredentials.Password = password
+	}
+
+	result, err := project.DownloadTemplate(destination, url, gitCredentials)
 	if err != nil {
 		HandleProjectError(err)
 		os.Exit(1)

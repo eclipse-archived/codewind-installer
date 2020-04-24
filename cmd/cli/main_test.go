@@ -19,11 +19,14 @@ import (
 	"testing"
 
 	"github.com/eclipse/codewind-installer/pkg/security"
+	"github.com/eclipse/codewind-installer/pkg/test"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 const cwctlName = "cwctl_test"
 const cwctl = "./" + cwctlName
+const testDir = "./testDir"
 
 func TestCwctl(t *testing.T) {
 	if testing.Short() {
@@ -35,6 +38,7 @@ func TestCwctl(t *testing.T) {
 
 	testBasicUsage(t)
 	testUseInsecureKeyring(t)
+	testCreateProjectFromTemplate(t)
 
 	os.Remove(cwctlName)
 }
@@ -42,7 +46,7 @@ func TestCwctl(t *testing.T) {
 func testBasicUsage(t *testing.T) {
 	t.Run("cwctl", func(t *testing.T) {
 		out, err := exec.Command(cwctl).Output()
-		require.Nil(t, err)
+		assert.Nil(t, err)
 		require.NotNil(t, out)
 	})
 }
@@ -57,20 +61,20 @@ func testUseInsecureKeyring(t *testing.T) {
 			"--password=seCretphrase",
 		)
 		out, err := cmd.Output()
-		require.Nil(t, err)
+		assert.Nil(t, err)
 		require.Equal(t, "{\"status\":\"OK\"}\n", string(out))
 
 		file, readErr := ioutil.ReadFile(security.GetPathToInsecureKeyring())
-		require.Nil(t, readErr)
+		assert.Nil(t, readErr)
 		require.NotNil(t, file)
 
 		secrets := []security.KeyringSecret{}
 		unmarshalErr := json.Unmarshal([]byte(file), &secrets)
-		require.Nil(t, unmarshalErr)
+		assert.Nil(t, unmarshalErr)
 		require.Len(t, secrets, 1)
 
 		secret := secrets[0]
-		require.Equal(t, "testuser", string(secret.Username))
+		assert.Equal(t, "testuser", string(secret.Username))
 		require.Equal(t, "seCretphrase", string(secret.Password))
 
 		os.Remove(security.GetPathToInsecureKeyring())
@@ -86,22 +90,69 @@ func testUseInsecureKeyring(t *testing.T) {
 		cmd.Env = os.Environ()
 		cmd.Env = append(cmd.Env, "INSECURE_KEYRING=true")
 		out, err := cmd.Output()
-		require.Nil(t, err)
+		assert.Nil(t, err)
 		require.Equal(t, "{\"status\":\"OK\"}\n", string(out))
 
 		file, readErr := ioutil.ReadFile(security.GetPathToInsecureKeyring())
-		require.Nil(t, readErr)
+		assert.Nil(t, readErr)
 		require.NotNil(t, file)
 
 		secrets := []security.KeyringSecret{}
 		unmarshalErr := json.Unmarshal([]byte(file), &secrets)
-		require.Nil(t, unmarshalErr)
+		assert.Nil(t, unmarshalErr)
 		require.Len(t, secrets, 1)
 
 		secret := secrets[0]
-		require.Equal(t, "testuser", string(secret.Username))
+		assert.Equal(t, "testuser", string(secret.Username))
 		require.Equal(t, "seCretphrase", string(secret.Password))
 
 		os.Remove(security.GetPathToInsecureKeyring())
+	})
+}
+
+func testCreateProjectFromTemplate(t *testing.T) {
+	t.Run("cwctl project create --url <insecureTemplateRepo> --path <testDir>", func(t *testing.T) {
+		os.RemoveAll(testDir)
+		defer os.RemoveAll(testDir)
+
+		cmd := exec.Command(cwctl, "project", "create",
+			"--url="+test.PublicGHRepoURL,
+			"--path="+testDir,
+		)
+		out, err := cmd.Output()
+		assert.Nil(t, err)
+		assert.Equal(t, "{\"status\":\"success\",\"projectPath\":\"./testDir\",\"result\":{\"language\":\"javascript\",\"projectType\":\"nodejs\"}}\n", string(out))
+	})
+	t.Run("cwctl project create --url <secureTemplateRepo> --path <testDir> --username <test.GHEUsername> --password <test.GHEPassword>", func(t *testing.T) {
+		if !test.UsingOwnGHECredentials {
+			t.Skip("skipping this test because you haven't set GitHub credentials needed for this test")
+		}
+
+		os.RemoveAll(testDir)
+		defer os.RemoveAll(testDir)
+
+		cmd := exec.Command(cwctl, "project", "create",
+			"--url="+test.GHERepoURL,
+			"--path="+testDir,
+			"--username="+test.GHEUsername,
+			"--password="+test.GHEPassword,
+		)
+		out, err := cmd.Output()
+		assert.Nil(t, err)
+		assert.Equal(t, "{\"status\":\"success\",\"projectPath\":\"./testDir\",\"result\":{\"language\":\"unknown\",\"projectType\":\"docker\"}}\n", string(out))
+	})
+	t.Run("cwctl project create --url <secureTemplateRepo> --path <testDir> --username <goodUsername> --password <badPassword>", func(t *testing.T) {
+		os.RemoveAll(testDir)
+		defer os.RemoveAll(testDir)
+
+		cmd := exec.Command(cwctl, "project", "create",
+			"--url="+test.GHERepoURL,
+			"--path="+testDir,
+			"--username="+test.GHEUsername,
+			"--password=badpassword",
+		)
+		out, err := cmd.Output()
+		assert.NotNil(t, err)
+		assert.Equal(t, "", string(out))
 	})
 }

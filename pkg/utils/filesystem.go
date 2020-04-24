@@ -16,13 +16,10 @@ import (
 	"archive/zip"
 	"bytes"
 	"compress/gzip"
-	"context"
-	goErr "errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"path"
 	"path/filepath"
@@ -30,7 +27,6 @@ import (
 	"strings"
 
 	"github.com/eclipse/codewind-installer/pkg/errors"
-	"github.com/google/go-github/github"
 	logr "github.com/sirupsen/logrus"
 )
 
@@ -47,48 +43,6 @@ func CreateTempFile(filePath string) error {
 		defer file.Close()
 	}
 	return nil
-}
-
-// GetZipURL from github api /repos/:owner/:repo/:archive_format/:ref
-func GetZipURL(owner, repo, branch string) (string, error) {
-	client := github.NewClient(nil)
-
-	opt := &github.RepositoryContentGetOptions{Ref: branch}
-
-	URL, _, err := client.Repositories.GetArchiveLink(context.Background(), owner, repo, "zipball", opt, true)
-	if err != nil {
-		return "", err
-	}
-	url := URL.String()
-	return url, nil
-}
-
-// DownloadFile from URL to file destination
-func DownloadFile(URL, destination string) error {
-	// Get the data
-	resp, err := http.Get(URL)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 200 {
-		return goErr.New(fmt.Sprintf("File download failed for %s, status code %d", URL, resp.StatusCode))
-	}
-
-	// Create the file
-	file, err := os.Create(destination)
-	if err != nil {
-		log.Println(err)
-		return err
-	}
-	defer file.Close()
-
-	// Write body to file
-	_, err = io.Copy(file, resp.Body)
-	logr.Tracef("Downloaded file from '%s' to '%s'\n", URL, destination)
-
-	return err
 }
 
 // UnZip unzips a file to a destination
