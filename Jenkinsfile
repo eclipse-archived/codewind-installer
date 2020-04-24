@@ -231,11 +231,14 @@ spec:
 
                 sh '''
                     export REPO_NAME="codewind-installer"
-                    export DOWNLOAD_AREA_URL="https://archive.eclipse.org/codewind/$REPO_NAME"
+                    export ARCHIVE_AREA_URL="https://archive.eclipse.org/codewind/$REPO_NAME"
+                    export DOWNLOAD_AREA_URL="https://download.eclipse.org/codewind/$REPO_NAME"
                     export LATEST_DIR="latest"
                     export BUILD_INFO="build_info.properties"
                     export sshHost="genie.codewind@projects-storage.eclipse.org"
                     export deployDir="/home/data/httpd/archive.eclipse.org/codewind/$REPO_NAME"
+                    export deployDownloadDir="/home/data/httpd/download.eclipse.org/codewind/$REPO_NAME"
+                    
                     export CWCTL_BASENAME="cwctl"
                     export CWCTL_LINUX="${CWCTL_BASENAME}-linux"
                     export CWCTL_PPC64LE="${CWCTL_BASENAME}-ppc64le"
@@ -243,13 +246,16 @@ spec:
                     export CWCTL_WIN="${CWCTL_BASENAME}-win"
 
                     UPLOAD_DIR="$GIT_BRANCH/$BUILD_ID"
-                    BUILD_URL="$DOWNLOAD_AREA_URL/$UPLOAD_DIR"
-
+                    BUILD_URL="$ARCHIVE_AREA_URL/$UPLOAD_DIR"
+                    
                     ssh $sshHost rm -rf $deployDir/${UPLOAD_DIR}
                     ssh $sshHost mkdir -p $deployDir/${UPLOAD_DIR}
 
                     ssh $sshHost rm -rf $deployDir/$GIT_BRANCH/$LATEST_DIR
                     ssh $sshHost mkdir -p $deployDir/$GIT_BRANCH/$LATEST_DIR
+
+                    ssh $sshHost rm -rf $deployDownloadDir/$GIT_BRANCH/$LATEST_DIR
+                    ssh $sshHost mkdir -p $deployDownloadDir/$GIT_BRANCH/$LATEST_DIR
 
                     ls -lA
 
@@ -294,8 +300,11 @@ spec:
                     SHA1_WIN=$(sha1sum $CWCTL_WIN.exe | cut -d ' ' -f 1)
                     echo "build_info.win.SHA-1=${SHA1_WIN}" >> $BUILD_INFO
 
-                    # Copy the build.properties, the zips, and the renamed artifacts to the latest/ build directory
+                    # Copy the build.properties, the zips, and the renamed artifacts to the latest/ build directory in archive area
                     scp -r ${BUILD_INFO} ${CWCTL_BASENAME}* zips/ $sshHost:$deployDir/$GIT_BRANCH/$LATEST_DIR
+
+                    # Copy the build.properties, the zips, and the renamed artifacts to the latest/ build directory in download area
+                    scp -r ${BUILD_INFO} ${CWCTL_BASENAME}* zips/ $sshHost:$deployDownloadDir/$GIT_BRANCH/$LATEST_DIR
                   '''
                }
            }
