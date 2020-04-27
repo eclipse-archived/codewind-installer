@@ -41,9 +41,9 @@ var nowTime = time.Now().Format("20060102150405")
 var mustGatherMasterDirName = filepath.Join(codewindHome, "mustgather")
 var mustGatherDirName = filepath.Join(mustGatherMasterDirName, nowTime)
 
-const CODEWIND_POD_PREFIX = "codewind-"
-const CODEWIND_PROJECT_PREFIX = "cw-"
-const MG_PROJECT_DIRNAME = "projects"
+const codewindPodPrefix = "codewind-"
+const codewindProjectPrefix = "cw-"
+const mgProjectDirName = "projects"
 
 var isLoud = true
 
@@ -65,7 +65,7 @@ func MustGatherCommand(c *cli.Context) {
 		if c.Bool("quiet") {
 			isLoud = false
 		}
-		dirErr := os.MkdirAll(filepath.Join(mustGatherDirName, MG_PROJECT_DIRNAME), 0755)
+		dirErr := os.MkdirAll(filepath.Join(mustGatherDirName, mgProjectDirName), 0755)
 		if dirErr != nil {
 			errors.CheckErr(dirErr, 205, "")
 		}
@@ -73,8 +73,9 @@ func MustGatherCommand(c *cli.Context) {
 		if c.String("conid") != "local" {
 			mgRemoteCommand(c)
 		} else {
-			mgCommand(c)
+			mgLocalCommand(c)
 		}
+		mgSharedCommand(c)
 	}
 }
 
@@ -95,7 +96,7 @@ func mgRemoteCommand(c *cli.Context) {
 		}
 		if strings.ToUpper(connectionID) == strings.ToUpper(connection.ID) {
 			found = true
-			clientID = strings.Replace(connection.ClientID, CODEWIND_POD_PREFIX, "", 1)
+			clientID = strings.Replace(connection.ClientID, codewindPodPrefix, "", 1)
 			break
 		}
 	}
@@ -137,17 +138,20 @@ func mgRemoteCommand(c *cli.Context) {
 	}
 	for _, pod := range nameSpacePods.Items {
 		podName := pod.ObjectMeta.Name
-		if strings.HasPrefix(podName, CODEWIND_POD_PREFIX) {
+		if strings.HasPrefix(podName, codewindPodPrefix) {
 			logMG("Collecting information from pod " + podName)
 			// Pod struct contains all details to be found in kubectl describe
 			writeJSONStructToFile(pod, podName+".describe")
 			writePodLogToFile(clientset, pod, podName)
 		}
-		if c.Bool("projects") && strings.HasPrefix(podName, CODEWIND_PROJECT_PREFIX) {
+		if c.Bool("projects") && strings.HasPrefix(podName, codewindProjectPrefix) {
 			logMG("Collecting information from pod " + podName)
 			// Pod struct contains all details to be found in kubectl describe
-			writeJSONStructToFile(pod, filepath.Join(MG_PROJECT_DIRNAME, podName+".describe"))
-			writePodLogToFile(clientset, pod, filepath.Join(MG_PROJECT_DIRNAME, podName))
+			writeJSONStructToFile(pod, filepath.Join(mgProjectDirName, podName+".describe"))
+			writePodLogToFile(clientset, pod, filepath.Join(mgProjectDirName, podName))
+		}
+		if strings.HasPrefix(podName, docker.PfeContainerName) {
+			logMG("Collecting Codewind workspace")
 		}
 	}
 }
@@ -164,7 +168,7 @@ func writePodLogToFile(clientset *kubernetes.Clientset, pod corev1.Pod, podName 
 	return writeStreamToFile(podLogs, podName+".log")
 }
 
-func mgCommand(c *cli.Context) {
+func mgLocalCommand(c *cli.Context) {
 	collectCodewindContainers()
 
 	// Collect Codewind PFE workspace
@@ -175,6 +179,9 @@ func mgCommand(c *cli.Context) {
 	if c.Bool("projects") {
 		collectCodewindProjectContainers()
 	}
+}
+
+func mgSharedCommand(c *cli.Context) {
 
 	// Collect docker-compose file
 	logMG("Collecting docker-compose.yaml")
@@ -219,7 +226,7 @@ func collectCodewindProjectContainers() {
 	}
 	for _, cwContainer := range docker.GetCodewindProjectContainers(allContainers) {
 		logMG("Collecting information from container " + cwContainer.Names[0])
-		relativeFilePath := filepath.Join(MG_PROJECT_DIRNAME, cwContainer.Names[0])
+		relativeFilePath := filepath.Join(mgProjectDirName, cwContainer.Names[0])
 		writeContainerInspectToFile(cwContainer.ID, relativeFilePath)
 		writeContainerLogToFile(cwContainer.ID, relativeFilePath)
 	}
