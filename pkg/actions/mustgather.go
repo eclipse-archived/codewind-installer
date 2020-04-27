@@ -41,6 +41,10 @@ var nowTime = time.Now().Format("20060102150405")
 var mustGatherMasterDirName = filepath.Join(codewindHome, "mustgather")
 var mustGatherDirName = filepath.Join(mustGatherMasterDirName, nowTime)
 
+const CODEWIND_POD_PREFIX = "codewind-"
+const CODEWIND_PROJECT_PREFIX = "cw-"
+const MG_PROJECT_DIRNAME = "projects"
+
 var isLoud = true
 
 func logMG(input string) {
@@ -61,7 +65,7 @@ func MustGatherCommand(c *cli.Context) {
 		if c.Bool("quiet") {
 			isLoud = false
 		}
-		dirErr := os.MkdirAll(filepath.Join(mustGatherDirName, "projects"), 0755)
+		dirErr := os.MkdirAll(filepath.Join(mustGatherDirName, MG_PROJECT_DIRNAME), 0755)
 		if dirErr != nil {
 			errors.CheckErr(dirErr, 205, "")
 		}
@@ -91,7 +95,7 @@ func mgRemoteCommand(c *cli.Context) {
 		}
 		if strings.ToUpper(connectionID) == strings.ToUpper(connection.ID) {
 			found = true
-			clientID = strings.Replace(connection.ClientID, "codewind-", "", 1)
+			clientID = strings.Replace(connection.ClientID, CODEWIND_POD_PREFIX, "", 1)
 			break
 		}
 	}
@@ -118,26 +122,32 @@ func mgRemoteCommand(c *cli.Context) {
 	}
 	config, err := remote.GetKubeConfig()
 	if err != nil {
-		fmt.Println("Unable to retrieve Kubernetes Config %v\n", err)
+		fmt.Printf("Unable to retrieve Kubernetes Config %v\n", err)
 		os.Exit(1)
 	}
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		fmt.Println("Unable to retrieve Kubernetes clientset %v\n", err)
+		fmt.Printf("Unable to retrieve Kubernetes clientset %v\n", err)
 		os.Exit(1)
 	}
 	nameSpacePods, nspErr := clientset.CoreV1().Pods(kubeNameSpace).List(metav1.ListOptions{})
 	if nspErr != nil {
-		fmt.Println("Unable to retrieve Kubernetes Pods %v\n", nspErr)
+		fmt.Printf("Unable to retrieve Kubernetes Pods %v\n", nspErr)
 		os.Exit(1)
 	}
 	for _, pod := range nameSpacePods.Items {
 		podName := pod.ObjectMeta.Name
-		if strings.HasPrefix(podName, "codewind-") {
+		if strings.HasPrefix(podName, CODEWIND_POD_PREFIX) {
 			logMG("Collecting information from pod " + podName)
 			// Pod struct contains all details to be found in kubectl describe
 			writeJSONStructToFile(pod, podName+".describe")
 			writePodLogToFile(clientset, pod, podName)
+		}
+		if c.Bool("projects") && strings.HasPrefix(podName, CODEWIND_PROJECT_PREFIX) {
+			logMG("Collecting information from pod " + podName)
+			// Pod struct contains all details to be found in kubectl describe
+			writeJSONStructToFile(pod, filepath.Join(MG_PROJECT_DIRNAME, podName+".describe"))
+			writePodLogToFile(clientset, pod, filepath.Join(MG_PROJECT_DIRNAME, podName))
 		}
 	}
 }
@@ -209,8 +219,9 @@ func collectCodewindProjectContainers() {
 	}
 	for _, cwContainer := range docker.GetCodewindProjectContainers(allContainers) {
 		logMG("Collecting information from container " + cwContainer.Names[0])
-		writeContainerInspectToFile(cwContainer.ID, filepath.Join("projects", cwContainer.Names[0]))
-		writeContainerLogToFile(cwContainer.ID, filepath.Join("projects", cwContainer.Names[0]))
+		relativeFilePath := filepath.Join(MG_PROJECT_DIRNAME, cwContainer.Names[0])
+		writeContainerInspectToFile(cwContainer.ID, relativeFilePath)
+		writeContainerLogToFile(cwContainer.ID, relativeFilePath)
 	}
 }
 
