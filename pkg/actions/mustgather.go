@@ -69,7 +69,7 @@ func MustGatherCommand(c *cli.Context) {
 		if dirErr != nil {
 			errors.CheckErr(dirErr, 205, "")
 		}
-		logMG("Mustgather files will be collected at " + mustGatherDirName)
+		logMG("Mustgather files will be written to " + mustGatherDirName)
 		if c.String("conid") != "local" {
 			mgRemoteCommand(c)
 		} else {
