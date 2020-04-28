@@ -162,7 +162,7 @@ This is the same as `go test ./...`, but outputs test coverage scores for each f
 | connections     | `con` | 'Manage connections configuration list'                              |
 | loglevels       | `log` | 'Get or set logging levels for Codewind containers'                  |
 | registrysecrets | `rs`  | 'Manage docker registry secrets'                                     |
-| mustgather      | `mg`  | 'Gathers logs and project files to aid diagnosis of Codewind errors' |
+| diagnostics     | `dg`  | 'Gathers logs and project files to aid diagnosis of Codewind errors' |
 | help            | `h`   | 'Shows a list of commands or help for one command'                   |
 
 
@@ -277,7 +277,7 @@ Subcommands:</br>
 
 > **Note:** No additional flags
 
-### mustgather/mg
+### diagnostics/dg
 
 ` --conid <value>` -  Triggers mustgather collection for the remote codewind connection ID (must have currently configured Kubectl connection)</br>
 `--eclipseWorkspaceDir/-e <value>` - The location of your Eclipse workspace directory if using the Eclipse IDE (default: "")</br>
