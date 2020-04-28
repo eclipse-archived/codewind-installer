@@ -92,7 +92,7 @@ func StatusCommandLocalConnection(c *cli.Context) {
 		os.Exit(1)
 	}
 
-	containersAreRunning, err := docker.CheckContainerStatus(dockerClient)
+	containersAreRunning, err := docker.CheckContainerStatus(dockerClient, docker.LocalCWContainerNames)
 	if err != nil {
 		HandleDockerError(err)
 		os.Exit(1)

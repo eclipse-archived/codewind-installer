@@ -210,7 +210,7 @@ func dgSharedCommand(c *cli.Context) {
 
 // Collect Codewind container inspection & logs
 func collectCodewindContainers() {
-	for _, cwContainerName := range docker.ContainerNames {
+	for _, cwContainerName := range docker.LocalCWContainerNames {
 		logDG("Collecting information from container " + cwContainerName)
 		containerID := getContainerID(cwContainerName)
 		writeContainerInspectToFile(containerID, cwContainerName)

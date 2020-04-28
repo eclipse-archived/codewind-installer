@@ -96,7 +96,15 @@ func TestCheckContainerStatus(t *testing.T) {
 	t.Run("returns true when correct containers are returned by the docker client", func(t *testing.T) {
 		client := &mockDockerClientWithCw{}
 
-		containerStatus, err := CheckContainerStatus(client)
+		containerStatus, err := CheckContainerStatus(client, LocalCWContainerNames)
+		assert.Nil(t, err)
+		assert.True(t, containerStatus)
+	})
+
+	t.Run("returns true when checking for only PFE", func(t *testing.T) {
+		client := &mockDockerClientWithCw{}
+
+		containerStatus, err := CheckContainerStatus(client, []string{PfeContainerName})
 		assert.Nil(t, err)
 		assert.True(t, containerStatus)
 	})
@@ -104,14 +112,14 @@ func TestCheckContainerStatus(t *testing.T) {
 	t.Run("returns false when correct codewind containers are not returned by the docker client", func(t *testing.T) {
 		client := &mockDockerClientWithoutCw{}
 
-		containerStatus, err := CheckContainerStatus(client)
+		containerStatus, err := CheckContainerStatus(client, LocalCWContainerNames)
 		assert.Nil(t, err)
 		assert.False(t, containerStatus)
 	})
 
 	t.Run("returns DockerError when docker ContainerList errors", func(t *testing.T) {
 		client := &mockDockerErrorClient{}
-		_, err := CheckContainerStatus(client)
+		_, err := CheckContainerStatus(client, LocalCWContainerNames)
 		wantErr := &DockerError{errOpContainerList, errContainerList, errContainerList.Error()}
 		assert.Equal(t, wantErr, err)
 	})

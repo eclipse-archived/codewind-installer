@@ -46,14 +46,16 @@ var baseImageNameArr = [2]string{
 	performanceImageName,
 }
 
-//PfeContainerName : name of the Codewind PFE container
+// PfeContainerName : name of the Codewind PFE container
 const PfeContainerName = "codewind-pfe"
-const performanceContainerName = "codewind-performance"
 
-//ContainerNames : array of codewind container names
-var ContainerNames = [...]string{
+// PerformanceContainerName : name of the Codewind performance container
+const PerformanceContainerName = "codewind-performance"
+
+// LocalCWContainerNames : array of all the container names for a locally deployed Codewind
+var LocalCWContainerNames = []string{
 	PfeContainerName,
-	performanceContainerName,
+	PerformanceContainerName,
 }
 
 var homeDir = desktoputils.GetHomeDir()
@@ -82,7 +84,7 @@ services:
   volumes: ["/var/run/docker.sock:/var/run/docker.sock","cw-workspace:/codewind-workspace","${WORKSPACE_DIRECTORY}:/mounted-workspace"]
   networks: [network]
   secrets: [dockerconfig]
- ` + performanceContainerName + `:
+ ` + PerformanceContainerName + `:
   image: ${PERFORMANCE_IMAGE_NAME}${PLATFORM}:${TAG}
   ports: ["127.0.0.1:9095:9095"]
   container_name: codewind-performance
@@ -374,46 +376,41 @@ func GetCodewindProjectContainers(containerList []types.Container) []types.Conta
 		"/cw-",
 	}
 
-	containersToRemove := []types.Container{}
+	projectContainers := []types.Container{}
 	for _, container := range containerList {
 		for _, prefix := range codewindContainerPrefixes {
 			if strings.HasPrefix(container.Names[0], prefix) {
-				containersToRemove = append(containersToRemove, container)
+				projectContainers = append(projectContainers, container)
 				break
 			}
 		}
 	}
-	return containersToRemove
+	return projectContainers
 }
 
-// CheckContainerStatus of Codewind running/stopped
-func CheckContainerStatus(dockerClient DockerClient) (bool, *DockerError) {
-	var containerStatus = false
-	containerArr := ContainerNames
-
+// CheckContainerStatus : check that containers exist with each of the given prefixes
+func CheckContainerStatus(dockerClient DockerClient, codewindPrefixes []string) (bool, *DockerError) {
 	containers, err := GetContainerList(dockerClient)
 	if err != nil {
 		return false, err
 	}
 
 	containerCount := 0
-	for _, container := range containers {
-		for _, key := range containerArr {
+	// check that at least one running container has each of the given prefixes
+	for _, prefix := range codewindPrefixes {
+		for _, container := range containers {
 			if len(container.Names) != 1 {
 				continue
 			}
 			// The container names returned by docker are prefixed with "/"
-			if strings.HasPrefix(container.Names[0], "/"+key) {
+			if strings.HasPrefix(container.Names[0], "/"+prefix) {
 				containerCount++
+				break
 			}
 		}
 	}
-	if containerCount >= 2 {
-		containerStatus = true
-	} else {
-		containerStatus = false
-	}
-	return containerStatus, nil
+
+	return containerCount == len(codewindPrefixes), nil
 }
 
 // CheckImageStatus of Codewind installed/uninstalled
@@ -520,7 +517,8 @@ func getContainerAutoRemovePolicy(dockerClient DockerClient, containerID string)
 
 // GetPFEHostAndPort will return the current hostname and port that PFE is running on
 func GetPFEHostAndPort(dockerClient DockerClient) (string, string, *DockerError) {
-	containerIsRunning, err := CheckContainerStatus(dockerClient)
+	// only check that a PFE container is running, as that is all that's needed to get hostname and port
+	containerIsRunning, err := CheckContainerStatus(dockerClient, []string{PfeContainerName})
 	if err != nil {
 		return "", "", err
 	}
@@ -601,7 +599,7 @@ func DetermineDebugPortForPFE() (pfeDebugPort string) {
 
 // GetContainerTags of the Codewind version(s) currently running
 func GetContainerTags(dockerClient DockerClient) ([]string, *DockerError) {
-	containerArr := ContainerNames
+	containerArr := LocalCWContainerNames
 	tagArr := []string{}
 
 	containers, err := GetContainerList(dockerClient)
