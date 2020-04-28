@@ -13,31 +13,32 @@ package apiroutes
 
 import (
 	"errors"
-	"log"
 	"net/http"
 	"testing"
 
 	"github.com/eclipse/codewind-installer/pkg/connections"
+	"github.com/eclipse/codewind-installer/pkg/test"
+	cwTest "github.com/eclipse/codewind-installer/pkg/test"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-var numCodewindTemplates = 8
+const numCodewindTemplates = 8
 
-var numAppsodyTemplatesEnabled = 11
+const numAppsodyTemplatesEnabled = 11
 
-var numAppsodyTemplatesDisabled = 7
+const numAppsodyTemplatesDisabled = 7
 
-var numAppsodyTemplates = numAppsodyTemplatesEnabled + numAppsodyTemplatesDisabled
+const numAppsodyTemplates = numAppsodyTemplatesEnabled + numAppsodyTemplatesDisabled
 
-var numTemplatesEnabled = numCodewindTemplates + numAppsodyTemplatesEnabled
+const numTemplatesEnabled = numCodewindTemplates + numAppsodyTemplatesEnabled
 
-var numTemplates = numTemplatesEnabled + numAppsodyTemplatesDisabled
+const numTemplates = numTemplatesEnabled + numAppsodyTemplatesDisabled
 
-var URLOfExistingRepo = "https://raw.githubusercontent.com/codewind-resources/codewind-templates/master/devfiles/index.json"
-var URLOfNewRepo = "https://raw.githubusercontent.com/kabanero-io/codewind-templates/aad4bafc14e1a295fb8e462c20fe8627248609a3/devfiles/index.json"
-var URLOfUnknownRepo = "https://raw.githubusercontent.com/UNKNOWN"
-var URLOfUnknownRepo2 = "https://raw.githubusercontent.com/UNKNOWN_2"
+const URLOfExistingRepo = "https://raw.githubusercontent.com/codewind-resources/codewind-templates/master/devfiles/index.json"
+const URLOfUnknownRepo = "https://raw.githubusercontent.com/UNKNOWN"
+const URLOfUnknownRepo2 = "https://raw.githubusercontent.com/UNKNOWN_2"
 
 func TestGetTemplates(t *testing.T) {
 	if testing.Short() {
@@ -89,7 +90,7 @@ func TestGetTemplates(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got, err := GetTemplates("local", test.inProjectStyle, test.inShowEnabledOnly)
 			assert.IsType(t, test.wantedType, got)
-			assert.True(t, len(got) >= test.wantedLength)
+			assert.True(t, len(got) >= test.wantedLength, "wanted len(got) >= %d but len(got) was %d", test.wantedLength, len(got))
 			assert.Nil(t, err)
 		})
 	}
@@ -136,7 +137,7 @@ func TestGetTemplateRepos(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got, err := GetTemplateRepos("local")
 			assert.IsType(t, test.wantedType, got)
-			assert.True(t, len(got) >= test.wantedLength)
+			assert.True(t, len(got) >= test.wantedLength, "wanted len(got) >= %d but len(got) was %d", test.wantedLength, len(got))
 			assert.Equal(t, test.wantedErr, err)
 		})
 	}
@@ -167,7 +168,7 @@ func TestFailuresAddTemplateRepo(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := AddTemplateRepo("local", test.inURL, test.inDescription, "template-name")
+			got, err := AddTemplateRepo("local", test.inURL, test.inDescription, "template-name", utils.GitCredentials{})
 			assert.IsType(t, test.wantedType, got, "got: %v", got)
 			assert.Equal(t, test.wantedErr, err)
 		})
@@ -198,39 +199,60 @@ func TestFailuresDeleteTemplateRepo(t *testing.T) {
 	}
 }
 
-func TestSuccessfulAddAndDeleteTemplateRepo(t *testing.T) {
+func TestSuccessfulAddAndDeleteTemplateRepos(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping testing in short mode")
 	}
-	testRepoURL := URLOfNewRepo
-
-	originalRepos, err := GetTemplateRepos("local")
-	if err != nil {
-		log.Fatalf("[TestSuccessfulAddAndDeleteTemplateRepo] Error getting template repos: %s", err)
+	tests := map[string]struct {
+		skip             bool
+		inURL            string
+		inGitCredentials utils.GitCredentials
+	}{
+		"PublicGHDevFileURL": {
+			inURL:            cwTest.PublicGHDevfileURL,
+			inGitCredentials: utils.GitCredentials{},
+		},
+		"GHEDevfileURL": {
+			skip:  !cwTest.UsingOwnGHECredentials,
+			inURL: cwTest.GHEDevfileURL,
+			inGitCredentials: utils.GitCredentials{
+				Username: test.GHEUsername,
+				Password: test.GHEPassword,
+			},
+		},
 	}
-	originalNumRepos := len(originalRepos)
+	for name, test := range tests {
+		if test.skip {
+			t.Skip()
+		}
 
-	t.Run("Successfully add template repo", func(t *testing.T) {
-		wantedNumRepos := originalNumRepos + 1
+		originalRepos, err := GetTemplateRepos("local")
+		require.Nilf(t, err, "Error getting template repos: %s", err)
+		originalNumRepos := len(originalRepos)
 
-		got, err := AddTemplateRepo("local", testRepoURL, "example description", "template-name")
+		t.Run(name, func(t *testing.T) {
+			t.Run("Add template repo", func(t *testing.T) {
+				wantedNumRepos := originalNumRepos + 1
 
-		assert.IsType(t, []utils.TemplateRepo{}, got)
-		assert.Equal(t, wantedNumRepos, len(got), "got: %v", got)
-		assert.Nil(t, err)
-	})
+				got, err := AddTemplateRepo("local", test.inURL, "description", "name", test.inGitCredentials)
 
-	t.Run("Successfully delete template repo", func(t *testing.T) {
-		wantedNumRepos := originalNumRepos
+				assert.IsType(t, []utils.TemplateRepo{}, got)
+				assert.Equal(t, wantedNumRepos, len(got), "got: %v", got)
+				require.Nil(t, err)
+			})
 
-		got, err := DeleteTemplateRepo("local", testRepoURL)
+			t.Run("Delete template repo", func(t *testing.T) {
+				wantedNumRepos := originalNumRepos
 
-		assert.IsType(t, []utils.TemplateRepo{}, got)
-		assert.Equal(t, wantedNumRepos, len(got), "got: %v", got)
-		assert.Nil(t, err)
-	})
+				got, err := DeleteTemplateRepo("local", test.inURL)
 
-	// This test block cleans up after itself, assuming that the template repo tested was initially enabled. (This test block resets it to 'enabled')
+				assert.IsType(t, []utils.TemplateRepo{}, got)
+				assert.Equal(t, wantedNumRepos, len(got), "got: %v", got)
+				assert.Nil(t, err)
+			})
+		})
+		// This test block cleans up after itself
+	}
 }
 
 func TestFailuresEnableTemplateRepos(t *testing.T) {

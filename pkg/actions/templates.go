@@ -68,8 +68,15 @@ func AddTemplateRepo(c *cli.Context) {
 	url := c.String("url")
 	desc := c.String("description")
 	name := c.String("name")
+	username := c.String("username")
+	password := c.String("password")
+
+	gitCredentials := utils.GitCredentials{
+		Username: username,
+		Password: password,
+	}
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
-	repos, err := apiroutes.AddTemplateRepo(conID, url, desc, name)
+	repos, err := apiroutes.AddTemplateRepo(conID, url, desc, name, gitCredentials)
 	if err != nil {
 		templateErr := &TemplateError{errOpAddRepo, err, err.Error()}
 		HandleTemplateError(templateErr)

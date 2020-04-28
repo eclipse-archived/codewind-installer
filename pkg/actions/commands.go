@@ -516,6 +516,16 @@ func Commands() {
 									Usage:    "Connection ID",
 									Required: false,
 								},
+								cli.StringFlag{
+									Name:     "username",
+									Usage:    "GitHub username",
+									Required: false,
+								},
+								cli.StringFlag{
+									Name:     "password",
+									Usage:    "GitHub password",
+									Required: false,
+								},
 							},
 							Action: func(c *cli.Context) error {
 								AddTemplateRepo(c)

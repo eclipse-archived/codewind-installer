@@ -317,6 +317,17 @@ Subcommands:</br>
 Subcommands:</br>
 
 `list/ls` - List available templates
+`repos` - Manage template repositories
+
+Subcommands:</br>
+`list/ls` - List available template repositories
+`add` - Add a new template repository
+> **Flags:**
+> --url - URL to template repository index.json
+> --name - Custom name for template repository
+> --description - Custom description for template repository
+> --username - GitHub username (required if accessing the provided URL requires GitHub authentication)
+> --password - GitHub password (required if accessing the provided URL requires GitHub authentication)
 
 ### version
 

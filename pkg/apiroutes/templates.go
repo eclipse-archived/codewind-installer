@@ -39,6 +39,14 @@ type (
 		SourceID     string `json:"sourceId,omitempty"`
 	}
 
+	// RepoCreationOptions is the request body for PFE's POST /templates/repositories API
+	RepoCreationOptions struct {
+		URL            string               `json:"url"`
+		Description    string               `json:"description"`
+		Name           string               `json:"name"`
+		GitCredentials utils.GitCredentials `json:"gitCredentials"`
+	}
+
 	// RepoOperation represents a requested operation on a template repository.
 	RepoOperation struct {
 		Operation string `json:"op"`
@@ -179,17 +187,10 @@ func GetTemplateRepos(conID string) ([]utils.TemplateRepo, error) {
 
 // AddTemplateRepo adds a template repo to PFE and
 // returns the new list of existing repos
-func AddTemplateRepo(conID, URL, description, name string) ([]utils.TemplateRepo, error) {
+func AddTemplateRepo(conID, URL, description, name string, gitCredentials utils.GitCredentials) ([]utils.TemplateRepo, error) {
 	if _, err := url.ParseRequestURI(URL); err != nil {
 		return nil, fmt.Errorf("Error: '%s' is not a valid URL", URL)
 	}
-
-	values := map[string]string{
-		"url":         URL,
-		"description": description,
-		"name":        name,
-	}
-	jsonValue, _ := json.Marshal(values)
 
 	conInfo, conInfoErr := connections.GetConnectionByID(conID)
 	if conInfoErr != nil {
@@ -200,7 +201,16 @@ func AddTemplateRepo(conID, URL, description, name string) ([]utils.TemplateRepo
 		return nil, conErr.Err
 	}
 
-	req, err := http.NewRequest("POST", conURL+"/api/v1/templates/repositories", bytes.NewBuffer(jsonValue))
+	requestBody := RepoCreationOptions{
+		URL:            URL,
+		Description:    description,
+		Name:           name,
+		GitCredentials: gitCredentials,
+	}
+	buf := new(bytes.Buffer)
+	json.NewEncoder(buf).Encode(requestBody)
+
+	req, err := http.NewRequest("POST", conURL+"/api/v1/templates/repositories", buf)
 	if err != nil {
 		return nil, err
 	}

@@ -35,12 +35,13 @@ func TestCwctl(t *testing.T) {
 
 	err := exec.Command("go", "build", "-o", cwctlName).Run()
 	require.Nil(t, err)
+	defer os.Remove(cwctlName)
 
 	testBasicUsage(t)
 	testUseInsecureKeyring(t)
 	testCreateProjectFromTemplate(t)
-
-	os.Remove(cwctlName)
+	testSuccessfulAddAndDeleteTemplateRepos(t)
+	testFailToAddTemplateRepo(t)
 }
 
 func testBasicUsage(t *testing.T) {
@@ -154,5 +155,75 @@ func testCreateProjectFromTemplate(t *testing.T) {
 		out, err := cmd.Output()
 		assert.NotNil(t, err)
 		assert.Equal(t, "", string(out))
+	})
+}
+
+func testSuccessfulAddAndDeleteTemplateRepos(t *testing.T) {
+	t.Run("cwctl templates repos add --url <publicGHDevfile>"+
+		"\n then cwctl templates repos remove --url <publicGHDevfile>", func(t *testing.T) {
+		cmd := exec.Command(cwctl, "templates", "repos", "add",
+			"--url="+test.PublicGHDevfileURL,
+		)
+		out, err := cmd.Output()
+		assert.Nil(t, err)
+		assert.Contains(t, string(out), test.PublicGHDevfileURL)
+
+		removeCmd := exec.Command(cwctl, "templates", "repos", "remove",
+			"--url="+test.PublicGHDevfileURL,
+		)
+		removeOut, removeErr := removeCmd.Output()
+		assert.Nil(t, removeErr)
+		assert.NotContains(t, string(removeOut), test.PublicGHDevfileURL)
+	})
+	t.Run("cwctl templates repos add --url --name --description"+
+		"\n then cwctl templates repos remove --url", func(t *testing.T) {
+		cmd := exec.Command(cwctl, "templates", "repos", "add",
+			"--url="+test.PublicGHDevfileURL,
+			"--name=publicGHDevfile",
+			"--description=publicGHDevfile",
+		)
+		out, err := cmd.Output()
+		assert.Nil(t, err)
+		assert.Contains(t, string(out), test.PublicGHDevfileURL)
+
+		removeCmd := exec.Command(cwctl, "templates", "repos", "remove",
+			"--url="+test.PublicGHDevfileURL,
+		)
+		removeOut, removeErr := removeCmd.Output()
+		assert.Nil(t, removeErr)
+		assert.NotContains(t, string(removeOut), test.PublicGHDevfileURL)
+	})
+	t.Run("cwctl templates repos add --url <GHEDevfile>"+
+		"\n then cwctl templates repos remove --url", func(t *testing.T) {
+		if !test.UsingOwnGHECredentials {
+			t.Skip("skipping this test because you haven't set GitHub credentials needed for this test")
+		}
+
+		cmd := exec.Command(cwctl, "templates", "repos", "add",
+			"--url="+test.GHEDevfileURL,
+			"--username="+test.GHEUsername,
+			"--password="+test.GHEPassword,
+		)
+		out, err := cmd.Output()
+		assert.Nil(t, err)
+		assert.Contains(t, string(out), test.GHEDevfileURL)
+
+		removeCmd := exec.Command(cwctl, "templates", "repos", "remove",
+			"--url="+test.GHEDevfileURL,
+		)
+		removeOut, removeErr := removeCmd.Output()
+		assert.Nil(t, removeErr)
+		assert.NotContains(t, string(removeOut), test.GHEDevfileURL)
+	})
+}
+
+func testFailToAddTemplateRepo(t *testing.T) {
+	t.Run("cwctl templates repos add --url <badURL>", func(t *testing.T) {
+		cmd := exec.Command(cwctl, "templates", "repos", "add",
+			"--url=https://raw.githubusercontent.com/kabanero-io/codewind-templates/aad4bafc14e1a295fb8e462c20fe8627248609a3/devfiles/NOT_INDEX_JSON",
+		)
+		out, err := cmd.Output()
+		assert.Nil(t, err)
+		assert.Equal(t, string(out), "")
 	})
 }
