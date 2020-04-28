@@ -69,7 +69,7 @@ func GetImages() (string, string, string, string) {
 }
 
 // Get kubeconfig
-func getKubeConfig() (*rest.Config, error) {
+func GetKubeConfig() (*rest.Config, error) {
 	var config *rest.Config
 	var err error
 

@@ -279,6 +279,7 @@ Subcommands:</br>
 
 ### mustgather/mg
 
+` --conid <value>` -  Triggers mustgather collection for the remote codewind connection ID (must have currently configured Kubectl connection)</br>
 `--eclipseWorkspaceDir/-e <value>` - The location of your Eclipse workspace directory if using the Eclipse IDE (default: "")</br>
 `--quiet/-q` - Turn off console messages</br>
 `--projects/-p` - Collect project containers information</br>

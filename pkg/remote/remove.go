@@ -85,7 +85,7 @@ type RemovalResult struct {
 // RemoveRemote : Remove remote install from Kube
 func RemoveRemote(remoteRemovalOptions *RemoveDeploymentOptions) (*RemovalResult, *RemInstError) {
 	namespace := remoteRemovalOptions.Namespace
-	config, err := getKubeConfig()
+	config, err := GetKubeConfig()
 	if err != nil {
 		logr.Infof("Unable to retrieve Kubernetes Config %v\n", err)
 		return nil, &RemInstError{errOpNotFound, err, err.Error()}
@@ -199,7 +199,7 @@ func RemoveRemote(remoteRemovalOptions *RemoveDeploymentOptions) (*RemovalResult
 // RemoveRemoteKeycloak : Remove remote keycloak install from Kube
 func RemoveRemoteKeycloak(remoteRemovalOptions *RemoveDeploymentOptions) (*RemovalResult, *RemInstError) {
 	namespace := remoteRemovalOptions.Namespace
-	config, err := getKubeConfig()
+	config, err := GetKubeConfig()
 	if err != nil {
 		logr.Infof("Unable to retrieve Kubernetes Config %v\n", err)
 		return nil, &RemInstError{errOpNotFound, err, err.Error()}
