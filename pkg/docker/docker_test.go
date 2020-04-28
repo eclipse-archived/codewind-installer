@@ -109,6 +109,14 @@ func TestCheckContainerStatus(t *testing.T) {
 		assert.True(t, containerStatus)
 	})
 
+	t.Run("returns false when checking for all local codewind containers, and only PFE is running", func(t *testing.T) {
+		client := &mockDockerClientWithPFEContainerOnly{}
+
+		containerStatus, err := CheckContainerStatus(client, LocalCWContainerNames)
+		assert.Nil(t, err)
+		assert.False(t, containerStatus)
+	})
+
 	t.Run("returns false when correct codewind containers are not returned by the docker client", func(t *testing.T) {
 		client := &mockDockerClientWithoutCw{}
 
@@ -119,6 +127,7 @@ func TestCheckContainerStatus(t *testing.T) {
 
 	t.Run("returns DockerError when docker ContainerList errors", func(t *testing.T) {
 		client := &mockDockerErrorClient{}
+
 		_, err := CheckContainerStatus(client, LocalCWContainerNames)
 		wantErr := &DockerError{errOpContainerList, errContainerList, errContainerList.Error()}
 		assert.Equal(t, wantErr, err)
@@ -162,6 +171,15 @@ func TestGetContainerTags(t *testing.T) {
 func TestGetPFEHostAndPort(t *testing.T) {
 	t.Run("returns the PFE host and port set in the ContainerList mock", func(t *testing.T) {
 		client := &mockDockerClientWithCw{}
+
+		host, port, err := GetPFEHostAndPort(client)
+		assert.Nil(t, err)
+		assert.Equal(t, "pfe", host)
+		assert.Equal(t, "1000", port)
+	})
+
+	t.Run("returns the PFE host and port when only PFE is running, no performance", func(t *testing.T) {
+		client := &mockDockerClientWithPFEContainerOnly{}
 
 		host, port, err := GetPFEHostAndPort(client)
 		assert.Nil(t, err)

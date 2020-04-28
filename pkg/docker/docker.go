@@ -403,7 +403,7 @@ func CheckContainerStatus(dockerClient DockerClient, codewindPrefixes []string) 
 				continue
 			}
 			// The container names returned by docker are prefixed with "/"
-			if strings.HasPrefix(container.Names[0], "/"+prefix) {
+			if strings.HasPrefix(container.Names[0], "/" + prefix) {
 				containerCount++
 				break
 			}
