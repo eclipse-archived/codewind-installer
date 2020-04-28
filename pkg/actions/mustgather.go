@@ -62,7 +62,7 @@ func MustGatherCommand(c *cli.Context) {
 			errors.CheckErr(err, 206, "")
 		}
 	} else {
-		if c.Bool("quiet") {
+		if c.Bool("quiet") || c.GlobalBool("json") {
 			isLoud = false
 		}
 		dirErr := os.MkdirAll(filepath.Join(mustGatherDirName, mgProjectDirName), 0755)
@@ -76,6 +76,13 @@ func MustGatherCommand(c *cli.Context) {
 			mgLocalCommand(c)
 		}
 		mgSharedCommand(c)
+		if c.GlobalBool("json") {
+			outputStruct := struct {
+				DgOutputDir string `json:"outputdir"`
+			}{DgOutputDir: mustGatherDirName}
+			json, _ := json.Marshal(outputStruct)
+			fmt.Println(string(json))
+		}
 	}
 }
 
