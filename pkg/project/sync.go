@@ -98,11 +98,6 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	projectID := strings.TrimSpace(c.String("id"))
 	synctime := int64(c.Int("time"))
 
-	if !ConnectionFileExists(projectID) {
-		fmt.Println("Project connection file does not exist, creating default local connection")
-		CreateConnectionFile(projectID)
-	}
-
 	conID, projErr := GetConnectionID(projectID)
 
 	if projErr != nil {

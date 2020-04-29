@@ -139,49 +139,6 @@ func Commands() {
 					},
 				},
 				{
-					Name:    "connection",
-					Aliases: []string{"con"},
-					Usage:   "Manage project connections",
-					Subcommands: []cli.Command{
-						{
-							Name:    "set",
-							Aliases: []string{"s"},
-							Usage:   "Set connectionID for a project",
-							Flags: []cli.Flag{
-								cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
-								cli.StringFlag{Name: "conid", Usage: "Connection ID", Required: true},
-							},
-							Action: func(c *cli.Context) error {
-								ProjectSetConnection(c)
-								return nil
-							},
-						},
-						{
-							Name:    "get",
-							Aliases: []string{"g"},
-							Usage:   "Get connectionID for a project",
-							Flags: []cli.Flag{
-								cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
-							},
-							Action: func(c *cli.Context) error {
-								ProjectGetConnection(c)
-								return nil
-							},
-						}, {
-							Name:    "remove",
-							Aliases: []string{"r"},
-							Usage:   "Remove connection from a project",
-							Flags: []cli.Flag{
-								cli.StringFlag{Name: "id,i", Usage: "Project ID", Required: true},
-							},
-							Action: func(c *cli.Context) error {
-								ProjectRemoveConnection(c)
-								return nil
-							},
-						},
-					},
-				},
-				{
 					Name:    "list",
 					Aliases: []string{"ls"},
 					Usage:   "List projects",

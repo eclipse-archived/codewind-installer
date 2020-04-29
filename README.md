@@ -223,24 +223,6 @@ When using a project ID the CLI will automatically detect which connection it re
 > --conid                       Connection ID
 > --startMode                   "run" | "debug" | "debugNoInit"
 
-`connection/con` - Manage the connection targets for a project
-
-`set,s` - Sets the connection for a projectID
-
-> **Flags:**
-> --id,i value Project ID
-> --conid value Connection ID
-
-`get,g` - Gets connections for a projectID
-
-> **Flags:**
-> --id,i value Project ID
-
-`remove,r` - Removes the connection from a projectID
-
-> **Flags:**
-> --id,i value Project ID
-
 ## install
 
 `--tag/-t <value>` - Dockerhub image tag (default: "latest")</br>

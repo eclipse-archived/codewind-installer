@@ -103,11 +103,7 @@ func Bind(projectPath string, name string, language string, projectType string, 
 	if projErr != nil {
 		return nil, projErr
 	}
-
 	projectID := projectInfo.ProjectID
-
-	// Generate the .codewind/connections/{projectID}.json file based on the given conID
-	SetConnection(conID, projectID)
 
 	// Sync all the project files
 	syncInfo, syncErr := syncFiles(&http.Client{}, projectPath, projectID, conURL, 0, conInfo)
