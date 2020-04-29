@@ -220,6 +220,9 @@ func dgSharedCommand(c *cli.Context) {
 	// Attempt to gather VSCode logs
 	gatherCodewindVSCodeLogs()
 
+	// Attempt to gather IntelliJ logs
+	gatherCodewindIntellijLogs(c.String("intellijLogsDir"))
+
 	if !c.Bool("nozip") {
 		createZipAndRemoveCollectedFiles()
 	}
@@ -326,6 +329,72 @@ func gatherCodewindVSCodeLogs() {
 		}
 	} else {
 		logDG("Unable to collect VSCode logs - cannot find logs directory")
+	}
+}
+
+func findIntellijDirectory(inDir string) string {
+	dgDir, err := os.Open(inDir)
+	if err != nil {
+		errors.CheckErr(err, 205, "")
+	}
+	defer dgDir.Close()
+	filenames, err := dgDir.Readdirnames(-1)
+	if err != nil {
+		errors.CheckErr(err, 205, "")
+	}
+	foundFile := ""
+	for _, filename := range filenames {
+		if strings.Contains(filename, "IntelliJ") {
+			foundFile = filename
+			break
+		}
+	}
+	return foundFile
+}
+
+func gatherCodewindIntellijLogs(codewindIntellijLogDir string) {
+	logDG("Collecting Intellij logs")
+	intellijLogsDir := codewindIntellijLogDir
+	if intellijLogsDir == "" {
+		// attempt to use default path
+		switch runtime.GOOS {
+		case "darwin":
+			libraryLogsdir := filepath.Join(homeDir, "Library", "Logs")
+			intellijLogsDir = filepath.Join(libraryLogsDir, findIntellijDirectory(libraryLogsDir))
+		case "linux":
+			intellijLogsDir = filepath.Join(homeDir, findIntellijDirectory(homedir), "system", "log")
+		case "windows":
+			intellijLogsDir = filepath.Join(homeDir, findIntellijDirectory(homedir), "system", "log")
+		}
+	}
+	if len(intellijLogsDir) > 0 {
+		diagnosticsIntellijLogPath := filepath.Join(diagnosticsDirName, "intellijLogs")
+		dirErr := os.MkdirAll(diagnosticsIntellijLogPath, 0755)
+		if dirErr != nil {
+			errors.CheckErr(dirErr, 205, "")
+		}
+		if _, err := os.Stat(intellijLogsDir); !os.IsNotExist(err) {
+			err := filepath.Walk(intellijLogsDir, func(path string, info os.FileInfo, err error) error {
+				localPath := filepath.Join(diagnosticsIntellijLogPath, strings.Replace(path, diagnosticsIntellijLogPath, "logs", 1))
+				if info.IsDir() {
+					logDirErr := os.MkdirAll(localPath, 0755)
+					if logDirErr != nil {
+						errors.CheckErr(logDirErr, 205, "")
+					}
+				}
+				if info.Mode().IsRegular() {
+					utils.CopyFile(path, localPath)
+				}
+				return nil
+			})
+			if err != nil {
+				logDG("walk error " + err.Error())
+			}
+		} else {
+			logDG("Unable to collect Intellij logs - cannot find logs directory")
+		}
+	} else {
+		logDG("Unable to collect Intellij logs - cannot find logs directory")
 	}
 }
 
