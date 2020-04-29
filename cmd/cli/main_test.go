@@ -152,9 +152,9 @@ func testCreateProjectFromTemplate(t *testing.T) {
 			"--username="+test.GHEUsername,
 			"--password=badpassword",
 		)
-		out, err := cmd.Output()
+		out, err := cmd.CombinedOutput()
 		assert.NotNil(t, err)
-		assert.Equal(t, "", string(out))
+		assert.Contains(t, string(out), "401 Unauthorized")
 	})
 }
 
@@ -193,7 +193,7 @@ func testSuccessfulAddAndDeleteTemplateRepos(t *testing.T) {
 		assert.Nil(t, removeErr)
 		assert.NotContains(t, string(removeOut), test.PublicGHDevfileURL)
 	})
-	t.Run("cwctl templates repos add --url <GHEDevfile>"+
+	t.Run("cwctl templates repos add --url <GHEDevfile> --username --password"+
 		"\n then cwctl templates repos remove --url", func(t *testing.T) {
 		if !test.UsingOwnGHECredentials {
 			t.Skip("skipping this test because you haven't set GitHub credentials needed for this test")
