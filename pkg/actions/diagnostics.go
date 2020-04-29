@@ -46,10 +46,24 @@ const codewindProjectPrefix = "cw-"
 const dgProjectDirName = "projects"
 
 var isLoud = true
+var jsonOutput = false
 
 func logDG(input string) {
 	if isLoud {
 		fmt.Println(input)
+	}
+}
+
+func errDG(err, description string) {
+	if jsonOutput {
+		outputStruct := struct {
+			ErrorType string `json:"error"`
+			ErrorDesc string `json:"error_description"`
+		}{ErrorType: err, ErrorDesc: description}
+		json, _ := json.Marshal(outputStruct)
+		fmt.Println(string(json))
+	} else {
+		logDG(err + ": " + description)
 	}
 }
 
@@ -62,7 +76,10 @@ func DiagnosticsCommand(c *cli.Context) {
 			errors.CheckErr(err, 206, "")
 		}
 	} else {
-		if c.Bool("quiet") || c.GlobalBool("json") {
+		if c.GlobalBool("json") {
+			jsonOutput = true
+		}
+		if c.Bool("quiet") || jsonOutput {
 			isLoud = false
 		}
 		dirErr := os.MkdirAll(filepath.Join(diagnosticsDirName, dgProjectDirName), 0755)
@@ -76,7 +93,7 @@ func DiagnosticsCommand(c *cli.Context) {
 			dgLocalCommand(c)
 		}
 		dgSharedCommand(c)
-		if c.GlobalBool("json") {
+		if jsonOutput {
 			outputStruct := struct {
 				DgOutputDir string `json:"outputdir"`
 			}{DgOutputDir: diagnosticsDirName}
@@ -93,7 +110,7 @@ func dgRemoteCommand(c *cli.Context) {
 	clientID := ""
 	connectionList, conErr := connections.GetAllConnections()
 	if conErr != nil {
-		fmt.Println("Unable to get Connections " + conErr.Error())
+		errDG("connections_error", "Unable to get Connections "+conErr.Error())
 		os.Exit(1)
 	}
 	found := false
@@ -108,12 +125,12 @@ func dgRemoteCommand(c *cli.Context) {
 		}
 	}
 	if !found {
-		fmt.Println("Unable to associate " + connectionID + " with existing connection")
+		errDG("connection_not_found", "Unable to associate "+connectionID+" with existing connection")
 		os.Exit(1)
 	}
 	existingDeployments, edErr := remote.GetExistingDeployments("")
 	if edErr != nil {
-		fmt.Println("Unable to get existing deployments " + edErr.Error())
+		errDG("existing_deployment_error", "Unable to get existing deployments "+edErr.Error())
 		os.Exit(1)
 	}
 	found = false
@@ -125,22 +142,22 @@ func dgRemoteCommand(c *cli.Context) {
 		}
 	}
 	if !found {
-		fmt.Println("Unable to locate existing deployment with Workspace ID " + clientID)
+		errDG("existing_deployment_error", "Unable to locate existing deployment with Workspace ID "+clientID)
 		os.Exit(1)
 	}
 	config, err := remote.GetKubeConfig()
 	if err != nil {
-		fmt.Printf("Unable to retrieve Kubernetes Config %v\n", err)
+		errDG("kube_config_error", "Unable to retrieve Kubernetes Config: "+err.Error())
 		os.Exit(1)
 	}
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		fmt.Printf("Unable to retrieve Kubernetes clientset %v\n", err)
+		errDG("kube_client_error", "Unable to retrieve Kubernetes clientset: "+err.Error())
 		os.Exit(1)
 	}
 	nameSpacePods, nspErr := clientset.CoreV1().Pods(kubeNameSpace).List(metav1.ListOptions{})
 	if nspErr != nil {
-		fmt.Printf("Unable to retrieve Kubernetes Pods %v\n", nspErr)
+		errDG("kube_podlist_error", "Unable to retrieve Kubernetes Pods: "+nspErr.Error())
 		os.Exit(1)
 	}
 	for _, pod := range nameSpacePods.Items {
