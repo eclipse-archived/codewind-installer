@@ -122,45 +122,6 @@ func UpgradeProjects(c *cli.Context) {
 	os.Exit(0)
 }
 
-// ProjectSetConnection : Set connection for a project
-func ProjectSetConnection(c *cli.Context) {
-	projectID := strings.TrimSpace(strings.ToLower(c.String("id")))
-	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
-	err := project.SetConnection(conID, projectID)
-	if err != nil {
-		HandleProjectError(err)
-		os.Exit(1)
-	}
-	response, _ := json.Marshal(project.Result{Status: "OK", StatusMessage: "Project target added successfully"})
-	fmt.Println(string(response))
-	os.Exit(0)
-}
-
-// ProjectGetConnection : List connection for a project
-func ProjectGetConnection(c *cli.Context) {
-	projectID := strings.TrimSpace(strings.ToLower(c.String("id")))
-	connectionTargets, err := project.GetConnectionID(projectID)
-	if err != nil {
-		HandleProjectError(err)
-		os.Exit(1)
-	}
-	fmt.Println(connectionTargets)
-	os.Exit(0)
-}
-
-// ProjectRemoveConnection : Remove Connection from a project
-func ProjectRemoveConnection(c *cli.Context) {
-	projectID := strings.TrimSpace(strings.ToLower(c.String("id")))
-	err := project.ResetConnectionFile(projectID)
-	if err != nil {
-		HandleProjectError(err)
-		os.Exit(1)
-	}
-	response, _ := json.Marshal(project.Result{Status: "OK", StatusMessage: "Project target removed successfully"})
-	fmt.Println(string(response))
-	os.Exit(0)
-}
-
 // ProjectList : Print the list of projects to the terminal
 func ProjectList(c *cli.Context) {
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))

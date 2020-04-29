@@ -59,10 +59,8 @@ func RemoveProject(c *cli.Context) *ProjectError {
 	}
 
 	// Delete the associated connection file
-	projError = RemoveConnectionFile(projectID)
-	if projError != nil {
-		return projError
-	}
+	// We can ignore errors as we are no longer creating this file
+	RemoveConnectionFile(projectID)
 
 	// Delete the source if the flag is set
 	if deleteFiles {
