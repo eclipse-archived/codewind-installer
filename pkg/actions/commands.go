@@ -1017,19 +1017,19 @@ func Commands() {
 		},
 
 		{
-			Name:    "mustgather",
-			Aliases: []string{"mg"},
+			Name:    "diagnostics",
+			Aliases: []string{"dg"},
 			Usage:   "Gathers logs and project files to aid diagnosis of Codewind errors",
 			Flags: []cli.Flag{
-				cli.StringFlag{Name: "conid", Value: "local", Usage: "Triggers mustgather collection for the `remote` codewind instance (_must_ have currently configured Kubectl connection!)", Required: false},
+				cli.StringFlag{Name: "conid", Value: "local", Usage: "Triggers diagnostics collection for the `remote` codewind instance (_must_ have currently configured Kubectl connection!)", Required: false},
 				cli.StringFlag{Name: "eclipseWorkspaceDir, e", Usage: "The location of your Eclipse workspace `directory` if using the Eclipse IDE", Required: false},
 				cli.BoolFlag{Name: "quiet, q", Usage: "Turn off console messages", Required: false},
 				cli.BoolFlag{Name: "projects, p", Usage: "Collect project containers information", Required: false},
 				cli.BoolFlag{Name: "nozip, n", Usage: "Does not create collection zip and leaves individual collected files in place", Required: false},
-				cli.BoolFlag{Name: "clean", Usage: "Removes the mustgather directory and all its contents from the Codewind home directory", Required: false},
+				cli.BoolFlag{Name: "clean", Usage: "Removes the diagnostics directory and all its contents from the Codewind home directory", Required: false},
 			},
 			Action: func(c *cli.Context) error {
-				MustGatherCommand(c)
+				DiagnosticsCommand(c)
 				return nil
 			},
 		},
