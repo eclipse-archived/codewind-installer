@@ -168,7 +168,7 @@ func TestFailuresAddTemplateRepo(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := AddTemplateRepo("local", test.inURL, test.inDescription, "template-name", utils.GitCredentials{})
+			got, err := AddTemplateRepo("local", test.inURL, test.inDescription, "template-name", nil)
 			assert.IsType(t, test.wantedType, got, "got: %v", got)
 			assert.Equal(t, test.wantedErr, err)
 		})
@@ -206,18 +206,24 @@ func TestSuccessfulAddAndDeleteTemplateRepos(t *testing.T) {
 	tests := map[string]struct {
 		skip             bool
 		inURL            string
-		inGitCredentials utils.GitCredentials
+		inGitCredentials *utils.GitCredentials
 	}{
-		"PublicGHDevFileURL": {
-			inURL:            cwTest.PublicGHDevfileURL,
-			inGitCredentials: utils.GitCredentials{},
+		"public GH devfile URL": {
+			inURL: cwTest.PublicGHDevfileURL,
 		},
-		"GHEDevfileURL": {
+		"GHE devfile URL with GHE basic credentials": {
 			skip:  !cwTest.UsingOwnGHECredentials,
 			inURL: cwTest.GHEDevfileURL,
-			inGitCredentials: utils.GitCredentials{
+			inGitCredentials: &utils.GitCredentials{
 				Username: test.GHEUsername,
 				Password: test.GHEPassword,
+			},
+		},
+		"GHE devfile URL with GHE personal access token": {
+			skip:  !cwTest.UsingOwnGHECredentials,
+			inURL: cwTest.GHEDevfileURL,
+			inGitCredentials: &utils.GitCredentials{
+				PersonalAccessToken: test.GHEPersonalAccessToken,
 			},
 		},
 	}

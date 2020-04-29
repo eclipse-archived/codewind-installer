@@ -41,10 +41,10 @@ type (
 
 	// RepoCreationOptions is the request body for PFE's POST /templates/repositories API
 	RepoCreationOptions struct {
-		URL            string               `json:"url"`
-		Description    string               `json:"description"`
-		Name           string               `json:"name"`
-		GitCredentials utils.GitCredentials `json:"gitCredentials"`
+		URL            string                `json:"url,omitempty"`
+		Description    string                `json:"description,omitempty"`
+		Name           string                `json:"name,omitempty"`
+		GitCredentials *utils.GitCredentials `json:"gitCredentials,omitempty"`
 	}
 
 	// RepoOperation represents a requested operation on a template repository.
@@ -187,7 +187,7 @@ func GetTemplateRepos(conID string) ([]utils.TemplateRepo, error) {
 
 // AddTemplateRepo adds a template repo to PFE and
 // returns the new list of existing repos
-func AddTemplateRepo(conID, URL, description, name string, gitCredentials utils.GitCredentials) ([]utils.TemplateRepo, error) {
+func AddTemplateRepo(conID, URL, description, name string, gitCredentials *utils.GitCredentials) ([]utils.TemplateRepo, error) {
 	if _, err := url.ParseRequestURI(URL); err != nil {
 		return nil, fmt.Errorf("Error: '%s' is not a valid URL", URL)
 	}

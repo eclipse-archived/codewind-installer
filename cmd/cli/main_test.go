@@ -215,6 +215,27 @@ func testSuccessfulAddAndDeleteTemplateRepos(t *testing.T) {
 		assert.Nil(t, removeErr)
 		assert.NotContains(t, string(removeOut), test.GHEDevfileURL)
 	})
+	t.Run("cwctl templates repos add --url <GHEDevfile> --personalAccessToken"+
+		"\n then cwctl templates repos remove --url", func(t *testing.T) {
+		if !test.UsingOwnGHECredentials {
+			t.Skip("skipping this test because you haven't set GitHub credentials needed for this test")
+		}
+
+		cmd := exec.Command(cwctl, "templates", "repos", "add",
+			"--url="+test.GHEDevfileURL,
+			"--personalAccessToken="+test.GHEPersonalAccessToken,
+		)
+		out, err := cmd.Output()
+		assert.Nil(t, err)
+		assert.Contains(t, string(out), test.GHEDevfileURL)
+
+		removeCmd := exec.Command(cwctl, "templates", "repos", "remove",
+			"--url="+test.GHEDevfileURL,
+		)
+		removeOut, removeErr := removeCmd.Output()
+		assert.Nil(t, removeErr)
+		assert.NotContains(t, string(removeOut), test.GHEDevfileURL)
+	})
 }
 
 func testFailToAddTemplateRepo(t *testing.T) {
@@ -222,8 +243,36 @@ func testFailToAddTemplateRepo(t *testing.T) {
 		cmd := exec.Command(cwctl, "templates", "repos", "add",
 			"--url=https://raw.githubusercontent.com/kabanero-io/codewind-templates/aad4bafc14e1a295fb8e462c20fe8627248609a3/devfiles/NOT_INDEX_JSON",
 		)
-		out, err := cmd.Output()
+		out, err := cmd.CombinedOutput()
 		assert.Nil(t, err)
-		assert.Equal(t, string(out), "")
+		assert.Contains(t, string(out), "does not point to a JSON file of the correct form")
+	})
+	t.Run("cwctl templates repos add --url <GHEDevfile> --personalAccessToken --username", func(t *testing.T) {
+		cmd := exec.Command(cwctl, "templates", "repos", "add",
+			"--url="+test.GHEDevfileURL,
+			"--personalAccessToken=validPersonalAccessToken",
+			"--username=validUsername",
+		)
+		out, err := cmd.CombinedOutput()
+		assert.Nil(t, err)
+		assert.Contains(t, string(out), "received credentials for multiple authentication methods")
+	})
+	t.Run("cwctl templates repos add --url <GHEDevfile> --username", func(t *testing.T) {
+		cmd := exec.Command(cwctl, "templates", "repos", "add",
+			"--url="+test.GHEDevfileURL,
+			"--username=validUsername",
+		)
+		out, err := cmd.CombinedOutput()
+		assert.Nil(t, err)
+		assert.Contains(t, string(out), "received username but no password")
+	})
+	t.Run("cwctl templates repos add --url <GHEDevfile> --password", func(t *testing.T) {
+		cmd := exec.Command(cwctl, "templates", "repos", "add",
+			"--url="+test.GHEDevfileURL,
+			"--password=validPassword",
+		)
+		out, err := cmd.CombinedOutput()
+		assert.Nil(t, err)
+		assert.Contains(t, string(out), "received password but no username")
 	})
 }
