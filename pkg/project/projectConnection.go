@@ -24,10 +24,9 @@ import (
 
 // GetConnectionID : Gets the the connectionID for a given projectID
 func GetConnectionID(projectID string) (string, *ProjectError) {
-	projError := errors.New("Connection not found for project " + projectID)
-	allConnections, conErr := connections.GetConnectionsConfig()
-	if conErr != nil {
-		return "", &ProjectError{errOpConNotFound, projError, projError.Error()}
+	allConnections, getConConfigErr := connections.GetConnectionsConfig()
+	if getConConfigErr != nil {
+		return "", &ProjectError{errOpConNotFound, getConConfigErr, getConConfigErr.Error()}
 	}
 
 	for i := 0; i < len(allConnections.Connections); i++ {
@@ -35,18 +34,19 @@ func GetConnectionID(projectID string) (string, *ProjectError) {
 
 		conInfo, conInfoErr := connections.GetConnectionByID(currentConID)
 		if conInfoErr != nil {
-			return "", &ProjectError{errOpConNotFound, projError, projError.Error()}
+			return "", &ProjectError{errOpConNotFound, conInfoErr, conInfoErr.Error()}
 		}
 
 		conURL, conErr := config.PFEOriginFromConnection(conInfo)
 		if conErr != nil {
-			return "", &ProjectError{errOpConNotFound, projError, projError.Error()}
+			return "", &ProjectError{errOpConNotFound, conErr, conErr.Error()}
 		}
 
 		projects, getAllErr := GetAll(http.DefaultClient, conInfo, conURL)
 		if getAllErr != nil {
-			return "", &ProjectError{errOpConNotFound, projError, projError.Error()}
+			return "", &ProjectError{errOpConNotFound, getAllErr, getAllErr.Error()}
 		}
+
 		for _, project := range projects {
 			if project.ProjectID == projectID {
 				return currentConID, nil
@@ -54,6 +54,7 @@ func GetConnectionID(projectID string) (string, *ProjectError) {
 		}
 	}
 	// We haven't found the project on any connection so return an error
+	projError := errors.New("Connection not found for project " + projectID)
 	return "", &ProjectError{errOpConNotFound, projError, projError.Error()}
 }
 
