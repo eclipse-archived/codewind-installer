@@ -977,7 +977,7 @@ func Commands() {
 			Name:    "diagnostics",
 			Aliases: []string{"dg"},
 			Usage:   "Gathers logs and project files to aid diagnosis of Codewind errors",
-			Flags: []cli.Flag{ intellijLogsDir
+			Flags: []cli.Flag{
 				cli.StringFlag{Name: "conid", Value: "local", Usage: "Triggers diagnostics collection for the `remote` codewind instance (_must_ have currently configured Kubectl connection!)", Required: false},
 				cli.StringFlag{Name: "eclipseWorkspaceDir, e", Usage: "The location of your Eclipse workspace `directory` if using the Eclipse IDE", Required: false},
 				cli.StringFlag{Name: "intellijLogsDir, i", Usage: "The location of your IntelliJ logs `directory` if using the IntelliJ IDE", Required: false},

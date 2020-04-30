@@ -359,23 +359,21 @@ func gatherCodewindIntellijLogs(codewindIntellijLogDir string) {
 		// attempt to use default path
 		switch runtime.GOOS {
 		case "darwin":
-			libraryLogsdir := filepath.Join(homeDir, "Library", "Logs")
+			libraryLogsDir := filepath.Join(homeDir, "Library", "Logs", "JetBrains")
 			intellijLogsDir = filepath.Join(libraryLogsDir, findIntellijDirectory(libraryLogsDir))
 		case "linux":
-			intellijLogsDir = filepath.Join(homeDir, findIntellijDirectory(homedir), "system", "log")
+			jetBrainsDir := filepath.Join(homeDir, ".cache", "JetBrains")
+			intellijLogsDir = filepath.Join(jetBrainsDir, findIntellijDirectory(jetBrainsDir), "log")
 		case "windows":
-			intellijLogsDir = filepath.Join(homeDir, findIntellijDirectory(homedir), "system", "log")
+			jetBrainsDir := filepath.Join(homeDir, "AppData", "Local", "JetBrains")
+			intellijLogsDir = filepath.Join(jetBrainsDir, findIntellijDirectory(jetBrainsDir), "log")
 		}
 	}
 	if len(intellijLogsDir) > 0 {
 		diagnosticsIntellijLogPath := filepath.Join(diagnosticsDirName, "intellijLogs")
-		dirErr := os.MkdirAll(diagnosticsIntellijLogPath, 0755)
-		if dirErr != nil {
-			errors.CheckErr(dirErr, 205, "")
-		}
 		if _, err := os.Stat(intellijLogsDir); !os.IsNotExist(err) {
 			err := filepath.Walk(intellijLogsDir, func(path string, info os.FileInfo, err error) error {
-				localPath := filepath.Join(diagnosticsIntellijLogPath, strings.Replace(path, diagnosticsIntellijLogPath, "logs", 1))
+				localPath := filepath.Join(diagnosticsIntellijLogPath, strings.Replace(path, intellijLogsDir, "", 1))
 				if info.IsDir() {
 					logDirErr := os.MkdirAll(localPath, 0755)
 					if logDirErr != nil {
