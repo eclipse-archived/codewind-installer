@@ -204,7 +204,7 @@ Subcommands:</br>
 > **Flags:**
 > --path,-p value Project Path
 > --id,-i value Project ID
-> --time,-t value Time of last project sync
+> --time,-t value UNIX timestamp of the last sync for the given project, in milliseconds
 
 `list` - List projects bound to a Codewind deployment
 > **Flags**
