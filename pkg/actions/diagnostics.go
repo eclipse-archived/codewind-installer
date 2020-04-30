@@ -450,16 +450,23 @@ func copyCodewindWorkspace(containerID string) error {
 		HandleDockerError(dockerErr)
 		os.Exit(1)
 	}
-	tarFileStream, fileErr := docker.GetFilesFromContainer(dockerClient, containerID, "/codewind-workspace")
-	if fileErr != nil {
-		HandleDockerError(fileErr)
-		os.Exit(1)
-	}
-	defer tarFileStream.Close()
-	// Extracting tarred files
-	tarBallReader := tar.NewReader(tarFileStream)
+	codewindWorkspace := "codewind-workspace"
+	for _, path := range []string{".appsody", ".config", ".extensions", ".logs", ".projects"} {
+		tarFileStream, fileErr := docker.GetFilesFromContainer(dockerClient, containerID, "/"+codewindWorkspace+"/"+path)
+		if fileErr != nil {
+			HandleDockerError(fileErr)
+			os.Exit(1)
+		}
+		defer tarFileStream.Close()
+		// Extracting tarred files
+		tarBallReader := tar.NewReader(tarFileStream)
 
-	return utils.ExtractTarToFileSystem(tarBallReader, diagnosticsDirName)
+		extractErr := utils.ExtractTarToFileSystem(tarBallReader, filepath.Join(diagnosticsDirName, codewindWorkspace))
+		if extractErr != nil {
+			return extractErr
+		}
+	}
+	return nil
 }
 
 //writeJSONStructToFile - writes the given struct to file as JSON
