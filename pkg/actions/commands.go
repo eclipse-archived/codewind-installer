@@ -131,7 +131,7 @@ func Commands() {
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "path, p", Usage: "the path to the project", Required: true},
 						cli.StringFlag{Name: "id, i", Usage: "the project id", Required: true},
-						cli.StringFlag{Name: "time, t", Usage: "time of the last sync for the given project", Required: true},
+						cli.StringFlag{Name: "time, t", Usage: "UNIX timestamp of the last sync for the given project, in milliseconds", Required: true},
 					},
 					Action: func(c *cli.Context) error {
 						ProjectSync(c)
