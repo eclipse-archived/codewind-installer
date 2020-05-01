@@ -29,7 +29,7 @@ type ConfigError struct {
 
 const errOpConfConNotFound = "config_connection_notfound"
 const errOpConfPFEHostnamePortNotFound = "config_pfe_hostname_port_notfound"
-const textHostnameOrPortNotFound = "Hostname or port for PFE not found"
+const textHostnameOrPortNotFound = "Hostname or port for Codewind containers not found. Make sure they are running."
 
 // ConfigError : Error formatted in JSON containing an errorOp and a description from
 // either a fault condition in the CLI, or an error payload from a REST request

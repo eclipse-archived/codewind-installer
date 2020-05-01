@@ -49,6 +49,14 @@ var mockContainerListWithCwContainers = []types.Container{
 		Image: "eclipse/codewind-performance:0.0.9"},
 }
 
+var mockContainerListWithOnlyPFEContainer = []types.Container{
+	types.Container{
+		Names: []string{"/codewind-pfe"},
+		ID:    "pfe",
+		Image: "eclipse/codewind-pfe:0.0.9",
+		Ports: []types.Port{types.Port{PrivatePort: 9090, PublicPort: 1000, IP: "pfe"}}},
+}
+
 var mockImageSummaryWithoutCwImages = []types.ImageSummary{
 	types.ImageSummary{
 		ID:       "golang",
@@ -137,6 +145,75 @@ func (m *mockDockerClientWithCw) DistributionInspect(ctx context.Context, image,
 }
 
 func (m *mockDockerClientWithCw) RegistryLogin(ctx context.Context, auth types.AuthConfig) (registry.AuthenticateOKBody, error) {
+	return registry.AuthenticateOKBody{}, nil
+}
+
+// This mock client will return container and images lists, with only a PFE container running
+type mockDockerClientWithPFEContainerOnly struct {
+}
+
+func (m *mockDockerClientWithPFEContainerOnly) ImagePull(ctx context.Context, image string, imagePullOptions types.ImagePullOptions) (io.ReadCloser, error) {
+	r := ioutil.NopCloser(bytes.NewReader([]byte("")))
+	return r, nil
+}
+
+func (m *mockDockerClientWithPFEContainerOnly) ImageList(ctx context.Context, imageListOptions types.ImageListOptions) ([]types.ImageSummary, error) {
+	return mockImageSummaryWithCwImages, nil
+}
+
+func (m *mockDockerClientWithPFEContainerOnly) ContainerList(ctx context.Context, containerListOptions types.ContainerListOptions) ([]types.Container, error) {
+	return mockContainerListWithOnlyPFEContainer, nil
+}
+
+func (m *mockDockerClientWithPFEContainerOnly) ContainerStop(ctx context.Context, containerID string, timeout *time.Duration) error {
+	return nil
+}
+
+func (m *mockDockerClientWithPFEContainerOnly) ContainerRemove(ctx context.Context, containerID string, options types.ContainerRemoveOptions) error {
+	return nil
+}
+
+func (m *mockDockerClientWithPFEContainerOnly) ClientVersion() string {
+	return ""
+}
+
+func (m *mockDockerClientWithPFEContainerOnly) ContainerLogs(ctx context.Context, containerID string, options types.ContainerLogsOptions) (io.ReadCloser, error) {
+	r := ioutil.NopCloser(bytes.NewReader([]byte("")))
+	return r, nil
+}
+
+func (m *mockDockerClientWithPFEContainerOnly) CopyFromContainer(ctx context.Context, containerID, srcPath string) (io.ReadCloser, types.ContainerPathStat, error) {
+	r := ioutil.NopCloser(bytes.NewReader([]byte("")))
+	return r, types.ContainerPathStat{Name: "", Size: 0, Mode: 0, Mtime: time.Now(), LinkTarget: ""}, nil
+}
+
+func (m *mockDockerClientWithPFEContainerOnly) ServerVersion(ctx context.Context) (types.Version, error) {
+	return types.Version{Platform: struct{ Name string }{""}, Components: []types.ComponentVersion{}, Version: "", APIVersion: "", MinAPIVersion: "", GitCommit: "", GoVersion: "", Os: "", Arch: "", KernelVersion: "", Experimental: true, BuildTime: ""}, nil
+}
+
+func (m *mockDockerClientWithPFEContainerOnly) ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error) {
+	return types.ContainerJSON{
+		ContainerJSONBase: &types.ContainerJSONBase{
+			HostConfig: &container.HostConfig{
+				AutoRemove: true,
+			},
+		},
+	}, nil
+}
+
+func (m *mockDockerClientWithPFEContainerOnly) DaemonHost() string {
+	return ""
+}
+
+func (m *mockDockerClientWithPFEContainerOnly) DistributionInspect(ctx context.Context, image, encodedRegistryAuth string) (registry.DistributionInspect, error) {
+	return registry.DistributionInspect{
+		Descriptor: v1.Descriptor{
+			Digest: "sha256:7173b809",
+		},
+	}, nil
+}
+
+func (m *mockDockerClientWithPFEContainerOnly) RegistryLogin(ctx context.Context, auth types.AuthConfig) (registry.AuthenticateOKBody, error) {
 	return registry.AuthenticateOKBody{}, nil
 }
 

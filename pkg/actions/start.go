@@ -27,7 +27,7 @@ func StartCommand(c *cli.Context, dockerComposeFile string, healthEndpoint strin
 		os.Exit(1)
 	}
 
-	status, err := docker.CheckContainerStatus(dockerClient)
+	status, err := docker.CheckContainerStatus(dockerClient, docker.LocalCWContainerNames)
 	if err != nil {
 		HandleDockerError(err)
 		os.Exit(1)
