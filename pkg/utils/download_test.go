@@ -65,7 +65,7 @@ func TestDownloadFromURLThenExtract(t *testing.T) {
 			wantedNumFiles:   7,
 		},
 		"success case: input good private Git URL and credentials": {
-			skip:             !test.UsingOwnGHECredentials,
+			skip:             !usingOwnPrivateGHCredentials,
 			inURL:            privateGHRepoURL,
 			inDestination:    filepath.Join(testDir, "git"),
 			inGitCredentials: GitCredentials{Username: privateGHUsername, Password: privateGHPassword},
