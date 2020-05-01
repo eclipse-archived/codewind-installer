@@ -86,7 +86,6 @@ services:
   secrets: [dockerconfig]
  ` + PerformanceContainerName + `:
   image: ${PERFORMANCE_IMAGE_NAME}${PLATFORM}:${TAG}
-  ports: ["127.0.0.1:9095:9095"]
   container_name: codewind-performance
   networks: [network]
 networks:
@@ -403,7 +402,7 @@ func CheckContainerStatus(dockerClient DockerClient, codewindPrefixes []string) 
 				continue
 			}
 			// The container names returned by docker are prefixed with "/"
-			if strings.HasPrefix(container.Names[0], "/" + prefix) {
+			if strings.HasPrefix(container.Names[0], "/"+prefix) {
 				containerCount++
 				break
 			}
