@@ -156,27 +156,31 @@ func dgRemoteCommand(c *cli.Context) {
 		errDG("kube_client_error", "Unable to retrieve Kubernetes clientset: "+err.Error())
 		os.Exit(1)
 	}
-	nameSpacePods, nspErr := clientset.CoreV1().Pods(kubeNameSpace).List(metav1.ListOptions{})
+	cwBasePods, nspErr := clientset.CoreV1().Pods(kubeNameSpace).List(metav1.ListOptions{LabelSelector: "codewindWorkspace=" + clientID})
 	if nspErr != nil {
 		errDG("kube_podlist_error", "Unable to retrieve Kubernetes Pods: "+nspErr.Error())
 		os.Exit(1)
 	}
-	for _, pod := range nameSpacePods.Items {
+	collectPodInfo(clientset, cwBasePods.Items)
+	if c.Bool("projects") {
+		logDG("Collecting project containers")
+		cwProjPods, cwPPErr := clientset.CoreV1().Pods(kubeNameSpace).List(metav1.ListOptions{FieldSelector: "spec.serviceAccountName=" + codewindPodPrefix + clientID, LabelSelector: "codewindWorkspace!=" + clientID})
+		if cwPPErr != nil {
+			errDG("kube_podlist_error", "Unable to retrieve Kubernetes Pods: "+cwPPErr.Error())
+			os.Exit(1)
+		}
+		collectPodInfo(clientset, cwProjPods.Items)
+	}
+}
+
+func collectPodInfo(clientset *kubernetes.Clientset, podArray []corev1.Pod) {
+	for _, pod := range podArray {
 		podName := pod.ObjectMeta.Name
-		if strings.HasPrefix(podName, codewindPodPrefix) {
-			logDG("Collecting information from pod " + podName + " ... ")
-			// Pod struct contains all details to be found in kubectl describe
-			writeJSONStructToFile(pod, podName+".describe")
-			writePodLogToFile(clientset, pod, podName)
-			logDG("done\n")
-		}
-		if c.Bool("projects") && strings.HasPrefix(podName, codewindProjectPrefix) {
-			logDG("Collecting information from pod " + podName + " ... ")
-			// Pod struct contains all details to be found in kubectl describe
-			writeJSONStructToFile(pod, filepath.Join(dgProjectDirName, podName+".describe"))
-			writePodLogToFile(clientset, pod, filepath.Join(dgProjectDirName, podName))
-			logDG("done\n")
-		}
+		logDG("Collecting information from pod " + podName + " ... ")
+		// Pod struct contains all details to be found in kubectl describe
+		writeJSONStructToFile(pod, podName+".describe")
+		writePodLogToFile(clientset, pod, podName)
+		logDG("done\n")
 	}
 }
 
