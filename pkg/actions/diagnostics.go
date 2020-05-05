@@ -109,12 +109,6 @@ func DiagnosticsCommand(c *cli.Context) {
 		}
 		logDG("done\n")
 	} else {
-		if c.GlobalBool("json") {
-			jsonOutput = true
-		}
-		if c.Bool("quiet") || jsonOutput {
-			isLoud = false
-		}
 		dirErr := os.MkdirAll(diagnosticsDirName, 0755)
 		if dirErr != nil {
 			errors.CheckErr(dirErr, 205, "")
@@ -149,19 +143,19 @@ func dgRemoteCommand(c *cli.Context) {
 	}
 	existingDeployments, edErr := remote.GetExistingDeployments("")
 	if edErr != nil {
-		errDG("existing_deployment_error", edErr.Error())
+		errDG("existing_deployment_error", "Unable to get existing deployments "+edErr.Error())
 		mkWorkspaceDir = false
 		exitDGUnlessAll()
 	}
 	config, err := remote.GetKubeConfig()
 	if err != nil {
-		errDG("kube_config_error", err.Error())
+		errDG("kube_config_error", "Unable to retrieve Kubernetes Config: "+err.Error())
 		mkWorkspaceDir = false
 		exitDGUnlessAll()
 	}
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		errDG("kube_client_error", err.Error())
+		errDG("kube_client_error", "Unable to retrieve Kubernetes clientset: "+err.Error())
 		mkWorkspaceDir = false
 		exitDGUnlessAll()
 	}
