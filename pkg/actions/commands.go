@@ -131,7 +131,7 @@ func Commands() {
 					Flags: []cli.Flag{
 						cli.StringFlag{Name: "path, p", Usage: "the path to the project", Required: true},
 						cli.StringFlag{Name: "id, i", Usage: "the project id", Required: true},
-						cli.StringFlag{Name: "time, t", Usage: "time of the last sync for the given project", Required: true},
+						cli.StringFlag{Name: "time, t", Usage: "UNIX timestamp of the last sync for the given project, in milliseconds", Required: true},
 					},
 					Action: func(c *cli.Context) error {
 						ProjectSync(c)
@@ -980,6 +980,7 @@ func Commands() {
 			Flags: []cli.Flag{
 				cli.StringFlag{Name: "conid", Value: "local", Usage: "Triggers diagnostics collection for the `remote` codewind instance (_must_ have currently configured Kubectl connection!)", Required: false},
 				cli.StringFlag{Name: "eclipseWorkspaceDir, e", Usage: "The location of your Eclipse workspace `directory` if using the Eclipse IDE", Required: false},
+				cli.StringFlag{Name: "intellijLogsDir, i", Usage: "The location of your IntelliJ logs `directory` if using the IntelliJ IDE", Required: false},
 				cli.BoolFlag{Name: "quiet, q", Usage: "Turn off console messages", Required: false},
 				cli.BoolFlag{Name: "projects, p", Usage: "Collect project containers information", Required: false},
 				cli.BoolFlag{Name: "nozip, n", Usage: "Does not create collection zip and leaves individual collected files in place", Required: false},

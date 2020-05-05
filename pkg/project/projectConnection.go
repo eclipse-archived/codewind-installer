@@ -55,6 +55,7 @@ func GetConnectionID(projectID string) (string, *ProjectError) {
 			}
 		}
 	}
+
 	// We haven't found the project on any active connection so return an error
 	projError := errors.New("Active connection not found for project " + projectID)
 	return "", &ProjectError{errOpConNotFound, projError, projError.Error()}
