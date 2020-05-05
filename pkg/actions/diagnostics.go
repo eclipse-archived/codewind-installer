@@ -109,6 +109,12 @@ func DiagnosticsCommand(c *cli.Context) {
 		}
 		logDG("done\n")
 	} else {
+		if c.GlobalBool("json") {
+			jsonOutput = true
+		}
+		if c.Bool("quiet") || jsonOutput {
+			isLoud = false
+		}
 		dirErr := os.MkdirAll(diagnosticsDirName, 0755)
 		if dirErr != nil {
 			errors.CheckErr(dirErr, 205, "")
@@ -135,7 +141,7 @@ func DiagnosticsCommand(c *cli.Context) {
 }
 
 func dgRemoteCommand(c *cli.Context) {
-	workspaceIDArray := findWorspaceIDsByConnection(c)
+	workspaceIDArray := findWorkspaceIDsByConnection(c)
 	mkWorkspaceDir := true
 	if len(workspaceIDArray) < 1 {
 		logDG("No remote connections found")
@@ -202,7 +208,7 @@ func dgRemoteCommand(c *cli.Context) {
 	}
 }
 
-func findWorspaceIDsByConnection(c *cli.Context) []string {
+func findWorkspaceIDsByConnection(c *cli.Context) []string {
 	connectionList, conErr := connections.GetAllConnections()
 	if conErr != nil {
 		errDG("connections_error", "Unable to get Connections "+conErr.Error())
@@ -279,14 +285,14 @@ func dgLocalCommand(c *cli.Context) {
 
 	// Collect codewind versions
 	gatherCodewindVersions("local")
-}
-
-func dgSharedCommand(c *cli.Context) {
 
 	// Collect docker-compose file
 	logDG("Collecting local docker-compose.yaml ... ")
 	utils.CopyFile(filepath.Join(codewindHome, "docker-compose.yaml"), filepath.Join(diagnosticsLocalDirName, "docker-compose.yaml"))
 	logDG("done\n")
+}
+
+func dgSharedCommand(c *cli.Context) {
 
 	// Attempt to gather Eclipse logs
 	gatherCodewindEclipseLogs(c.String("eclipseWorkspaceDir"))
@@ -307,8 +313,8 @@ func collectCodewindContainers() {
 	for _, cwContainerName := range docker.LocalCWContainerNames {
 		logDG("Collecting information from container " + cwContainerName + " ... ")
 		containerID := getContainerID(cwContainerName)
-		writeContainerInspectToFile(containerID, cwContainerName)
-		writeContainerLogToFile(containerID, cwContainerName)
+		writeContainerInspectToFile(containerID, filepath.Join("local", cwContainerName))
+		writeContainerLogToFile(containerID, filepath.Join("local", cwContainerName))
 		logDG("done\n")
 	}
 }
@@ -328,7 +334,7 @@ func collectCodewindProjectContainers() {
 	}
 	for _, cwContainer := range docker.GetCodewindProjectContainers(allContainers) {
 		logDG("Collecting information from container " + cwContainer.Names[0] + " ... ")
-		relativeFilePath := filepath.Join(dgProjectDirName, cwContainer.Names[0])
+		relativeFilePath := filepath.Join("local", dgProjectDirName, cwContainer.Names[0])
 		writeContainerInspectToFile(cwContainer.ID, relativeFilePath)
 		writeContainerLogToFile(cwContainer.ID, relativeFilePath)
 		logDG("done\n")
@@ -624,7 +630,7 @@ func copyCodewindWorkspace(containerID string) error {
 		// Extracting tarred files
 		tarBallReader := tar.NewReader(tarFileStream)
 
-		extractErr := utils.ExtractTarToFileSystem(tarBallReader, filepath.Join(diagnosticsDirName, codewindWorkspace))
+		extractErr := utils.ExtractTarToFileSystem(tarBallReader, filepath.Join(diagnosticsLocalDirName, codewindWorkspace))
 		if extractErr != nil {
 			return extractErr
 		}
