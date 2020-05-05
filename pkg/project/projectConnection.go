@@ -22,7 +22,7 @@ import (
 	"github.com/eclipse/codewind-installer/pkg/connections"
 )
 
-// GetConnectionID : Gets the the connectionID for a given projectID
+/// GetConnectionID : Gets the the connectionID for a given projectID
 func GetConnectionID(projectID string) (string, *ProjectError) {
 	allConnections, getConConfigErr := connections.GetConnectionsConfig()
 	if getConConfigErr != nil {
@@ -39,12 +39,14 @@ func GetConnectionID(projectID string) (string, *ProjectError) {
 
 		conURL, conErr := config.PFEOriginFromConnection(conInfo)
 		if conErr != nil {
-			return "", &ProjectError{errOpConNotFound, conErr, conErr.Error()}
+			// Skip the connection if it's not running (local will error here)
+			continue
 		}
 
 		projects, getAllErr := GetAll(http.DefaultClient, conInfo, conURL)
 		if getAllErr != nil {
-			return "", &ProjectError{errOpConNotFound, getAllErr, getAllErr.Error()}
+			// Skip the connection if it's not running (remote will error here)
+			continue
 		}
 
 		for _, project := range projects {
@@ -53,8 +55,9 @@ func GetConnectionID(projectID string) (string, *ProjectError) {
 			}
 		}
 	}
-	// We haven't found the project on any connection so return an error
-	projError := errors.New("Connection not found for project " + projectID)
+
+	// We haven't found the project on any active connection so return an error
+	projError := errors.New("Active connection not found for project " + projectID)
 	return "", &ProjectError{errOpConNotFound, projError, projError.Error()}
 }
 
