@@ -22,12 +22,11 @@ import (
 	"github.com/eclipse/codewind-installer/pkg/connections"
 )
 
-// GetConnectionID : Gets the the connectionID for a given projectID
+/// GetConnectionID : Gets the the connectionID for a given projectID
 func GetConnectionID(projectID string) (string, *ProjectError) {
-	projError := errors.New("Connection not found for project " + projectID)
-	allConnections, conErr := connections.GetConnectionsConfig()
-	if conErr != nil {
-		return "", &ProjectError{errOpConNotFound, projError, projError.Error()}
+	allConnections, getConConfigErr := connections.GetConnectionsConfig()
+	if getConConfigErr != nil {
+		return "", &ProjectError{errOpConNotFound, getConConfigErr, getConConfigErr.Error()}
 	}
 
 	for i := 0; i < len(allConnections.Connections); i++ {
@@ -35,25 +34,29 @@ func GetConnectionID(projectID string) (string, *ProjectError) {
 
 		conInfo, conInfoErr := connections.GetConnectionByID(currentConID)
 		if conInfoErr != nil {
-			return "", &ProjectError{errOpConNotFound, projError, projError.Error()}
+			return "", &ProjectError{errOpConNotFound, conInfoErr, conInfoErr.Error()}
 		}
 
 		conURL, conErr := config.PFEOriginFromConnection(conInfo)
 		if conErr != nil {
-			return "", &ProjectError{errOpConNotFound, projError, projError.Error()}
+			// Skip the connection if it's not running (local will error here)
+			continue
 		}
 
 		projects, getAllErr := GetAll(http.DefaultClient, conInfo, conURL)
 		if getAllErr != nil {
-			return "", &ProjectError{errOpConNotFound, projError, projError.Error()}
+			// Skip the connection if it's not running (remote will error here)
+			continue
 		}
+
 		for _, project := range projects {
 			if project.ProjectID == projectID {
 				return currentConID, nil
 			}
 		}
 	}
-	// We haven't found the project on any connection so return an error
+	// We haven't found the project on any active connection so return an error
+	projError := errors.New("Active connection not found for project " + projectID)
 	return "", &ProjectError{errOpConNotFound, projError, projError.Error()}
 }
 
