@@ -55,7 +55,7 @@ func logDG(input string) {
 }
 
 func errDG(err, description string) {
-	if jsonOutput {
+	if printAsJSON {
 		outputStruct := struct {
 			ErrorType string `json:"error"`
 			ErrorDesc string `json:"error_description"`
@@ -77,10 +77,7 @@ func DiagnosticsCommand(c *cli.Context) {
 		}
 		logDG("done\n")
 	} else {
-		if c.GlobalBool("json") {
-			jsonOutput = true
-		}
-		if c.Bool("quiet") || jsonOutput {
+		if c.Bool("quiet") || printAsJSON {
 			isLoud = false
 		}
 		dirErr := os.MkdirAll(filepath.Join(diagnosticsDirName, dgProjectDirName), 0755)
@@ -94,7 +91,7 @@ func DiagnosticsCommand(c *cli.Context) {
 			dgLocalCommand(c)
 		}
 		dgSharedCommand(c)
-		if jsonOutput {
+		if printAsJSON {
 			outputStruct := struct {
 				DgOutputDir string `json:"outputdir"`
 			}{DgOutputDir: diagnosticsDirName}
