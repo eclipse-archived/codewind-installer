@@ -108,7 +108,7 @@ func dgRemoteCommand(c *cli.Context) {
 	// find the connectionID specified by conid - could be ID or Label
 	connectionID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 	kubeNameSpace := ""
-	clientID := ""
+	workspaceID := ""
 	connectionList, conErr := connections.GetAllConnections()
 	if conErr != nil {
 		errDG("connections_error", "Unable to get Connections "+conErr.Error())
@@ -121,7 +121,7 @@ func dgRemoteCommand(c *cli.Context) {
 		}
 		if strings.ToUpper(connectionID) == strings.ToUpper(connection.ID) {
 			found = true
-			clientID = strings.Replace(connection.ClientID, codewindPodPrefix, "", 1)
+			workspaceID = strings.Replace(connection.ClientID, codewindPodPrefix, "", 1)
 			break
 		}
 	}
@@ -136,14 +136,14 @@ func dgRemoteCommand(c *cli.Context) {
 	}
 	found = false
 	for _, existingDeployment := range existingDeployments {
-		if strings.ToUpper(existingDeployment.WorkspaceID) == strings.ToUpper(clientID) {
+		if strings.ToUpper(existingDeployment.WorkspaceID) == strings.ToUpper(workspaceID) {
 			kubeNameSpace = existingDeployment.Namespace
 			found = true
 			break
 		}
 	}
 	if !found {
-		errDG("existing_deployment_error", "Unable to locate existing deployment with Workspace ID "+clientID)
+		errDG("existing_deployment_error", "Unable to locate existing deployment with Workspace ID "+workspaceID)
 		os.Exit(1)
 	}
 	config, err := remote.GetKubeConfig()
@@ -156,7 +156,7 @@ func dgRemoteCommand(c *cli.Context) {
 		errDG("kube_client_error", "Unable to retrieve Kubernetes clientset: "+err.Error())
 		os.Exit(1)
 	}
-	cwBasePods, nspErr := clientset.CoreV1().Pods(kubeNameSpace).List(metav1.ListOptions{LabelSelector: "codewindWorkspace=" + clientID})
+	cwBasePods, nspErr := clientset.CoreV1().Pods(kubeNameSpace).List(metav1.ListOptions{LabelSelector: "codewindWorkspace=" + workspaceID})
 	if nspErr != nil {
 		errDG("kube_podlist_error", "Unable to retrieve Kubernetes Pods: "+nspErr.Error())
 		os.Exit(1)
@@ -164,7 +164,7 @@ func dgRemoteCommand(c *cli.Context) {
 	collectPodInfo(clientset, cwBasePods.Items)
 	if c.Bool("projects") {
 		logDG("Collecting project containers")
-		cwProjPods, cwPPErr := clientset.CoreV1().Pods(kubeNameSpace).List(metav1.ListOptions{FieldSelector: "spec.serviceAccountName=" + codewindPodPrefix + clientID, LabelSelector: "codewindWorkspace!=" + clientID})
+		cwProjPods, cwPPErr := clientset.CoreV1().Pods(kubeNameSpace).List(metav1.ListOptions{FieldSelector: "spec.serviceAccountName=" + codewindPodPrefix + workspaceID, LabelSelector: "codewindWorkspace!=" + workspaceID})
 		if cwPPErr != nil {
 			errDG("kube_podlist_error", "Unable to retrieve Kubernetes Pods: "+cwPPErr.Error())
 			os.Exit(1)
