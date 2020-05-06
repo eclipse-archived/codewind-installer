@@ -83,6 +83,9 @@ func errDG(err, description string) {
 
 //DiagnosticsCommand to gather logs and project files to aid diagnosis of Codewind errors
 func DiagnosticsCommand(c *cli.Context) {
+	if c.Bool("quiet") || printAsJSON {
+		isLoud = false
+	}
 	if c.Bool("clean") {
 		logDG("Deleting all collected diagnostics files ... ")
 		err := os.RemoveAll(diagnosticsMasterDirName)
@@ -91,9 +94,6 @@ func DiagnosticsCommand(c *cli.Context) {
 		}
 		logDG("done\n")
 	} else {
-		if c.Bool("quiet") || printAsJSON {
-			isLoud = false
-		}
 		dirErr := os.MkdirAll(filepath.Join(diagnosticsDirName, dgProjectDirName), 0755)
 		if dirErr != nil {
 			errors.CheckErr(dirErr, 205, "")
