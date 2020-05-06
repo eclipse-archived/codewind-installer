@@ -333,16 +333,16 @@ func gatherCodewindVSCodeLogs() {
 }
 
 func findIntellijDirectory(inDir string) string {
+	foundFile := ""
 	dgDir, err := os.Open(inDir)
 	if err != nil {
-		errors.CheckErr(err, 205, "")
+		return foundFile
 	}
 	defer dgDir.Close()
 	filenames, err := dgDir.Readdirnames(-1)
 	if err != nil {
-		errors.CheckErr(err, 205, "")
+		return foundFile
 	}
-	foundFile := ""
 	for _, filename := range filenames {
 		if strings.Contains(filename, "IntelliJ") {
 			foundFile = filename
@@ -360,13 +360,22 @@ func gatherCodewindIntellijLogs(codewindIntellijLogDir string) {
 		switch runtime.GOOS {
 		case "darwin":
 			libraryLogsDir := filepath.Join(homeDir, "Library", "Logs", "JetBrains")
-			intellijLogsDir = filepath.Join(libraryLogsDir, findIntellijDirectory(libraryLogsDir))
+			intellijDirName := findIntellijDirectory(libraryLogsDir)
+			if intellijDirName != "" {
+				intellijLogsDir = filepath.Join(libraryLogsDir, intellijDirName)
+			}
 		case "linux":
 			jetBrainsDir := filepath.Join(homeDir, ".cache", "JetBrains")
-			intellijLogsDir = filepath.Join(jetBrainsDir, findIntellijDirectory(jetBrainsDir), "log")
+			intellijDirName := findIntellijDirectory(jetBrainsDir)
+			if intellijDirName != "" {
+				intellijLogsDir = filepath.Join(jetBrainsDir, intellijDirName, "log")
+			}
 		case "windows":
 			jetBrainsDir := filepath.Join(homeDir, "AppData", "Local", "JetBrains")
-			intellijLogsDir = filepath.Join(jetBrainsDir, findIntellijDirectory(jetBrainsDir), "log")
+			intellijDirName := findIntellijDirectory(jetBrainsDir)
+			if intellijDirName != "" {
+				intellijLogsDir = filepath.Join(jetBrainsDir, intellijDirName, "log")
+			}
 		}
 	}
 	if len(intellijLogsDir) > 0 {
