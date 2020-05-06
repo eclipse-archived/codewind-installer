@@ -50,7 +50,7 @@ var jsonOutput = false
 
 func logDG(input string) {
 	if isLoud {
-		fmt.Println(input)
+		fmt.Print(input)
 	}
 }
 
@@ -63,18 +63,19 @@ func errDG(err, description string) {
 		json, _ := json.Marshal(outputStruct)
 		fmt.Println(string(json))
 	} else {
-		logDG(err + ": " + description)
+		logDG(err + ": " + description + "\n")
 	}
 }
 
 //DiagnosticsCommand to gather logs and project files to aid diagnosis of Codewind errors
 func DiagnosticsCommand(c *cli.Context) {
 	if c.Bool("clean") {
-		logDG("Deleting all collected diagnostics files")
+		logDG("Deleting all collected diagnostics files ... ")
 		err := os.RemoveAll(diagnosticsMasterDirName)
 		if err != nil {
 			errors.CheckErr(err, 206, "")
 		}
+		logDG("done\n")
 	} else {
 		if c.GlobalBool("json") {
 			jsonOutput = true
@@ -86,7 +87,7 @@ func DiagnosticsCommand(c *cli.Context) {
 		if dirErr != nil {
 			errors.CheckErr(dirErr, 205, "")
 		}
-		logDG("Diagnostics files will be written to " + diagnosticsDirName)
+		logDG("Diagnostics files will be written to " + diagnosticsDirName + "\n")
 		if c.String("conid") != "local" {
 			dgRemoteCommand(c)
 		} else {
@@ -163,19 +164,18 @@ func dgRemoteCommand(c *cli.Context) {
 	for _, pod := range nameSpacePods.Items {
 		podName := pod.ObjectMeta.Name
 		if strings.HasPrefix(podName, codewindPodPrefix) {
-			logDG("Collecting information from pod " + podName)
+			logDG("Collecting information from pod " + podName + " ... ")
 			// Pod struct contains all details to be found in kubectl describe
 			writeJSONStructToFile(pod, podName+".describe")
 			writePodLogToFile(clientset, pod, podName)
+			logDG("done\n")
 		}
 		if c.Bool("projects") && strings.HasPrefix(podName, codewindProjectPrefix) {
-			logDG("Collecting information from pod " + podName)
+			logDG("Collecting information from pod " + podName + " ... ")
 			// Pod struct contains all details to be found in kubectl describe
 			writeJSONStructToFile(pod, filepath.Join(dgProjectDirName, podName+".describe"))
 			writePodLogToFile(clientset, pod, filepath.Join(dgProjectDirName, podName))
-		}
-		if strings.HasPrefix(podName, docker.PfeContainerName) {
-			logDG("Collecting Codewind workspace")
+			logDG("done\n")
 		}
 	}
 }
@@ -186,7 +186,7 @@ func writePodLogToFile(clientset *kubernetes.Clientset, pod corev1.Pod, podName 
 	req := clientset.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &podLogOpts)
 	podLogs, err := req.Stream()
 	if err != nil {
-		logDG("Unable to obtain logs for pod " + podName)
+		logDG("Unable to obtain logs for pod " + podName + "\n")
 	}
 	defer podLogs.Close()
 	return writeStreamToFile(podLogs, podName+".log")
@@ -196,9 +196,10 @@ func dgLocalCommand(c *cli.Context) {
 	collectCodewindContainers()
 
 	// Collect Codewind PFE workspace
-	logDG("Collecting Codewind workspace")
+	logDG("Collecting Codewind workspace ... ")
 	pfeContainerID := getContainerID(docker.PfeContainerName)
 	copyCodewindWorkspace(pfeContainerID)
+	logDG("done\n")
 
 	if c.Bool("projects") {
 		collectCodewindProjectContainers()
@@ -208,8 +209,9 @@ func dgLocalCommand(c *cli.Context) {
 func dgSharedCommand(c *cli.Context) {
 
 	// Collect docker-compose file
-	logDG("Collecting docker-compose.yaml")
+	logDG("Collecting docker-compose.yaml ... ")
 	utils.CopyFile(filepath.Join(codewindHome, "docker-compose.yaml"), filepath.Join(diagnosticsDirName, "docker-compose.yaml"))
+	logDG("done\n")
 
 	// Collect codewind versions
 	gatherCodewindVersions()
@@ -231,10 +233,11 @@ func dgSharedCommand(c *cli.Context) {
 // Collect Codewind container inspection & logs
 func collectCodewindContainers() {
 	for _, cwContainerName := range docker.LocalCWContainerNames {
-		logDG("Collecting information from container " + cwContainerName)
+		logDG("Collecting information from container " + cwContainerName + " ... ")
 		containerID := getContainerID(cwContainerName)
 		writeContainerInspectToFile(containerID, cwContainerName)
 		writeContainerLogToFile(containerID, cwContainerName)
+		logDG("done\n")
 	}
 }
 
@@ -252,10 +255,11 @@ func collectCodewindProjectContainers() {
 		os.Exit(1)
 	}
 	for _, cwContainer := range docker.GetCodewindProjectContainers(allContainers) {
-		logDG("Collecting information from container " + cwContainer.Names[0])
+		logDG("Collecting information from container " + cwContainer.Names[0] + " ... ")
 		relativeFilePath := filepath.Join(dgProjectDirName, cwContainer.Names[0])
 		writeContainerInspectToFile(cwContainer.ID, relativeFilePath)
 		writeContainerLogToFile(cwContainer.ID, relativeFilePath)
+		logDG("done\n")
 	}
 }
 
@@ -266,9 +270,9 @@ func gatherCodewindEclipseLogs(codewindEclipseWSDir string) {
 		if _, err := os.Stat(codewindEclipseWSLogDir); !os.IsNotExist(err) {
 			files, dirErr := ioutil.ReadDir(codewindEclipseWSLogDir)
 			if dirErr != nil {
-				logDG("Unable to collect Eclipse logs - directory read error " + dirErr.Error())
+				logDG("Unable to collect Eclipse logs - directory read error " + dirErr.Error() + "\n")
 			}
-			logDG("Collecting Eclipse Logs")
+			logDG("Collecting Eclipse Logs ... ")
 			eclipseLogDir := "eclipseLogs"
 			diagnosticsEclipseLogPath := filepath.Join(diagnosticsDirName, eclipseLogDir)
 			logDirErr := os.MkdirAll(diagnosticsEclipseLogPath, 0755)
@@ -281,16 +285,17 @@ func gatherCodewindEclipseLogs(codewindEclipseWSDir string) {
 					utils.CopyFile(filepath.Join(codewindEclipseWSLogDir, fileName), filepath.Join(diagnosticsEclipseLogPath, fileName))
 				}
 			}
+			logDG("done\n")
 		} else {
-			logDG("Unable to collect Eclipse logs - workspace metadata directory not found")
+			logDG("Unable to collect Eclipse logs - workspace metadata directory not found\n")
 		}
 	} else {
-		logDG("Unable to collect Eclipse logs - workspace not specified")
+		logDG("Unable to collect Eclipse logs - workspace not specified\n")
 	}
 }
 
 func gatherCodewindVSCodeLogs() {
-	logDG("Collecting VSCode logs")
+	logDG("Collecting VSCode logs ... ")
 	vsCodeDir := ""
 	switch runtime.GOOS {
 	case "darwin":
@@ -322,13 +327,14 @@ func gatherCodewindVSCodeLogs() {
 				return nil
 			})
 			if err != nil {
-				logDG("walk error " + err.Error())
+				logDG("walk error " + err.Error() + "\n")
 			}
+			logDG("done\n")
 		} else {
-			logDG("Unable to collect VSCode logs - cannot find logs directory")
+			logDG("Unable to collect VSCode logs - cannot find logs directory\n")
 		}
 	} else {
-		logDG("Unable to collect VSCode logs - cannot find logs directory")
+		logDG("Unable to collect VSCode logs - cannot find logs directory\n")
 	}
 }
 
@@ -353,7 +359,7 @@ func findIntellijDirectory(inDir string) string {
 }
 
 func gatherCodewindIntellijLogs(codewindIntellijLogDir string) {
-	logDG("Collecting Intellij logs")
+	logDG("Collecting Intellij logs ... ")
 	intellijLogsDir := codewindIntellijLogDir
 	if intellijLogsDir == "" {
 		// attempt to use default path
@@ -397,18 +403,19 @@ func gatherCodewindIntellijLogs(codewindIntellijLogDir string) {
 			if err != nil {
 				logDG("walk error " + err.Error())
 			}
+			logDG("done\n")
 		} else {
-			logDG("Unable to collect Intellij logs - cannot find logs directory")
+			logDG("Unable to collect Intellij logs - cannot find logs directory\n")
 		}
 	} else {
-		logDG("Unable to collect Intellij logs - cannot find logs directory")
+		logDG("Unable to collect Intellij logs - cannot find logs directory\n")
 	}
 }
 
 func createZipAndRemoveCollectedFiles() {
 	// zip
 	diagnosticsZipFileName := "diagnostics." + nowTime + ".zip"
-	logDG("Creating " + diagnosticsZipFileName)
+	logDG("Creating " + diagnosticsZipFileName + " ... ")
 	zipErr := utils.Zip(diagnosticsZipFileName, diagnosticsDirName)
 	if zipErr != nil {
 		errors.CheckErr(zipErr, 401, "")
@@ -432,10 +439,11 @@ func createZipAndRemoveCollectedFiles() {
 			errors.CheckErr(err, 206, "")
 		}
 	}
+	logDG("done\n")
 }
 
 func gatherCodewindVersions() {
-	logDG("Collecting version information")
+	logDG("Collecting version information ... ")
 	//dockerClient, dockerErr := docker.NewDockerClient()
 	//if dockerErr != nil {
 	//	HandleDockerError(dockerErr)
@@ -446,7 +454,7 @@ func gatherCodewindVersions() {
 	containerVersions, cvErr := GetContainerVersions("local")
 	if cvErr != nil {
 		//just log and continue; version file will have "Unknown" values
-		logDG("Problems getting Codewind container versions")
+		logDG("Problems getting Codewind container versions\n")
 	}
 	versionsByteArray := []byte(
 		"CWCTL VERSION: " + containerVersions.CwctlVersion + "\n" +
@@ -456,6 +464,7 @@ func gatherCodewindVersions() {
 	if versionsErr != nil {
 		errors.CheckErr(versionsErr, 201, "")
 	}
+	logDG("done\n")
 }
 
 //getContainerID - returns the ID of the container filtered by name
@@ -480,7 +489,7 @@ func getContainerID(containerName string) string {
 //writeContainerInspectToFile - writes the results of `docker inspect containerId` to a file
 func writeContainerInspectToFile(containerID, containerName string) error {
 	if containerID == "" {
-		logDG("Unable to find " + containerName + " container")
+		logDG("Unable to find " + containerName + " container\n")
 		return nil
 	}
 	dockerClient, dockerErr := docker.NewDockerClient()
@@ -499,7 +508,7 @@ func writeContainerInspectToFile(containerID, containerName string) error {
 //writeContainerLogToFile - writes the results of `docker logs containerId` to a file
 func writeContainerLogToFile(containerID, containerName string) error {
 	if containerID == "" {
-		logDG("Unable to find " + containerName + " container")
+		logDG("Unable to find " + containerName + " container\n")
 		return nil
 	}
 	dockerClient, dockerErr := docker.NewDockerClient()
@@ -518,7 +527,7 @@ func writeContainerLogToFile(containerID, containerName string) error {
 //copyCodewindWorkspace - copies the Codewind PFE container's workspace to diagnostics
 func copyCodewindWorkspace(containerID string) error {
 	if containerID == "" {
-		logDG("Unable to find Codewind PFE container")
+		logDG("Unable to find Codewind PFE container\n")
 		return nil
 	}
 	dockerClient, dockerErr := docker.NewDockerClient()
