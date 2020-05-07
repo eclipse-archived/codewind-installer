@@ -194,6 +194,9 @@ func collectPodInfo(clientset *kubernetes.Clientset, podArray []corev1.Pod) {
 		writePodLogToFile(clientset, pod, podName)
 		logDG("done\n")
 	}
+
+	// Collect codewind versions
+	gatherCodewindVersions(connectionID)
 }
 
 func writePodLogToFile(clientset *kubernetes.Clientset, pod corev1.Pod, podName string) error {
@@ -220,6 +223,9 @@ func dgLocalCommand(c *cli.Context) {
 	if c.Bool("projects") {
 		collectCodewindProjectContainers()
 	}
+
+	// Collect codewind versions
+	gatherCodewindVersions("local")
 }
 
 func dgSharedCommand(c *cli.Context) {
@@ -228,9 +234,6 @@ func dgSharedCommand(c *cli.Context) {
 	logDG("Collecting docker-compose.yaml ... ")
 	utils.CopyFile(filepath.Join(codewindHome, "docker-compose.yaml"), filepath.Join(diagnosticsDirName, "docker-compose.yaml"))
 	logDG("done\n")
-
-	// Collect codewind versions
-	gatherCodewindVersions()
 
 	// Attempt to gather Eclipse logs
 	gatherCodewindEclipseLogs(c.String("eclipseWorkspaceDir"))
@@ -458,24 +461,28 @@ func createZipAndRemoveCollectedFiles() {
 	logDG("done\n")
 }
 
-func gatherCodewindVersions() {
+func gatherCodewindVersions(connectionID string) {
 	logDG("Collecting version information ... ")
-	//dockerClient, dockerErr := docker.NewDockerClient()
-	//if dockerErr != nil {
-	//	HandleDockerError(dockerErr)
-	//	os.Exit(1)
-	//}
-	//dockerClientVersion := docker.GetClientVersion(dockerClient)
-	//dockerServerVersion, gsvErr := docker.GetServerVersion(dockerClient)
-	containerVersions, cvErr := GetContainerVersions("local")
+	containerVersions, cvErr := GetContainerVersions(connectionID)
 	if cvErr != nil {
-		//just log and continue; version file will have "Unknown" values
-		warnDG("Problems getting Codewind container versions", cvErr.Error())
+		if strings.Contains(cvErr.Error(), "certificate signed by unknown authority") {
+			warnDG("Problems getting Codewind container versions - please run command again specifying global option '--insecure'", cvErr.Error())
+		} else {
+			//just log and continue; version file will have "Unknown" values
+			warnDG("Problems getting Codewind container versions", cvErr.Error())
+		}
 	}
 	versionsByteArray := []byte(
 		"CWCTL VERSION: " + containerVersions.CwctlVersion + "\n" +
 			"PFE VERSION: " + containerVersions.PFEVersion + "\n" +
 			"PERFORMANCE VERSION: " + containerVersions.PerformanceVersion)
+	if connectionID != "local" {
+		versionsByteArray = []byte(
+			"CWCTL VERSION: " + containerVersions.CwctlVersion + "\n" +
+				"PFE VERSION: " + containerVersions.PFEVersion + "\n" +
+				"PERFORMANCE VERSION: " + containerVersions.PerformanceVersion + "\n" +
+				"GATEKEEPER VERSION: " + containerVersions.GatekeeperVersion)
+	}
 	versionsErr := ioutil.WriteFile(filepath.Join(diagnosticsDirName, "codewind.versions"), versionsByteArray, 0644)
 	if versionsErr != nil {
 		errors.CheckErr(versionsErr, 201, "")
