@@ -183,6 +183,9 @@ func dgRemoteCommand(c *cli.Context) {
 		}
 		collectPodInfo(clientset, cwProjPods.Items)
 	}
+
+	// Collect codewind versions
+	gatherCodewindVersions(connectionID)
 }
 
 func collectPodInfo(clientset *kubernetes.Clientset, podArray []corev1.Pod) {
@@ -194,9 +197,6 @@ func collectPodInfo(clientset *kubernetes.Clientset, podArray []corev1.Pod) {
 		writePodLogToFile(clientset, pod, podName)
 		logDG("done\n")
 	}
-
-	// Collect codewind versions
-	gatherCodewindVersions(connectionID)
 }
 
 func writePodLogToFile(clientset *kubernetes.Clientset, pod corev1.Pod, podName string) error {
