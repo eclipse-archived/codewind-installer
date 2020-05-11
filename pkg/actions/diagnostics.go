@@ -72,12 +72,17 @@ func warnDG(warning, description string) {
 
 func errDG(err, description string) {
 	if printAsJSON {
-		outputStruct := struct {
-			ErrorType string `json:"error"`
-			ErrorDesc string `json:"error_description"`
-		}{ErrorType: err, ErrorDesc: description}
-		json, _ := json.Marshal(outputStruct)
-		fmt.Println(string(json))
+		if collectingAll {
+			// won't be exiting, so add to the warning array
+			dgWarningArray = append(dgWarningArray, dgWarning{WarningType: err, WarningDesc: description})
+		} else {
+			outputStruct := struct {
+				ErrorType string `json:"error"`
+				ErrorDesc string `json:"error_description"`
+			}{ErrorType: err, ErrorDesc: description}
+			json, _ := json.Marshal(outputStruct)
+			fmt.Println(string(json))
+		}
 	} else {
 		logDG(err + ": " + description + "\n")
 	}
@@ -177,7 +182,7 @@ func dgRemoteCommand(c *cli.Context) {
 		}
 		cwBasePods, nspErr := clientset.CoreV1().Pods(kubeNameSpace).List(metav1.ListOptions{LabelSelector: "codewindWorkspace=" + workspaceID})
 		if nspErr != nil {
-			errDG("kube_podlist_error", "Unable to retrieve Kubernetes Pods: "+nspErr.Error())
+			errDG("kube_podlist_error", "Unable to retrieve Kubernetes Codewind Pods: "+nspErr.Error())
 			mkWorkspaceDir = false
 			exitDGUnlessAll()
 		}
@@ -189,15 +194,14 @@ func dgRemoteCommand(c *cli.Context) {
 				errors.CheckErr(connDirErr, 205, "")
 			}
 		}
-		collectPodInfo(clientset, cwBasePods.Items)
+		collectPodInfo(clientset, cwBasePods.Items, cwWorkspaceID)
 		if c.Bool("projects") {
-			logDG("Collecting project containers")
 			cwProjPods, cwPPErr := clientset.CoreV1().Pods(kubeNameSpace).List(metav1.ListOptions{FieldSelector: "spec.serviceAccountName=" + codewindPodPrefix + workspaceID, LabelSelector: "codewindWorkspace!=" + workspaceID})
 			if cwPPErr != nil {
-				errDG("kube_podlist_error", "Unable to retrieve Kubernetes Pods: "+cwPPErr.Error())
+				errDG("kube_podlist_error", "Unable to retrieve Kubernetes Project Pods: "+cwPPErr.Error())
 				exitDGUnlessAll()
 			}
-			collectPodInfo(clientset, cwProjPods.Items)
+			collectPodInfo(clientset, cwProjPods.Items, filepath.Join(cwWorkspaceID, dgProjectDirName))
 		}
 	}
 }
@@ -236,13 +240,13 @@ func findWorkspaceIDsByConnection(c *cli.Context) []string {
 	return workspaceIDs
 }
 
-func collectPodInfo(clientset *kubernetes.Clientset, podArray []corev1.Pod) {
+func collectPodInfo(clientset *kubernetes.Clientset, podArray []corev1.Pod, workspaceDirName string) {
 	for _, pod := range podArray {
 		podName := pod.ObjectMeta.Name
 		logDG("Collecting information from pod " + podName + " ... ")
 		// Pod struct contains all details to be found in kubectl describe
-		writeJSONStructToFile(pod, podName+".describe")
-		writePodLogToFile(clientset, pod, podName)
+		writeJSONStructToFile(pod, filepath.Join(workspaceDirName, podName+".describe"))
+		writePodLogToFile(clientset, pod, filepath.Join(workspaceDirName, podName))
 		logDG("done\n")
 	}
 }
