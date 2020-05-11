@@ -495,6 +495,7 @@ func createZipAndRemoveCollectedFiles() {
 
 func gatherCodewindVersions(connectionID string) {
 	logDG("Collecting version information ... ")
+	dockerClientVersion, dockerServerVersion := getDockerVersions()
 	containerVersions, cvErr := GetContainerVersions(connectionID)
 	errorString := ""
 	if cvErr != nil {
@@ -509,7 +510,9 @@ func gatherCodewindVersions(connectionID string) {
 	versionsByteArray := []byte(
 		"CWCTL VERSION: " + containerVersions.CwctlVersion + errorString + "\n" +
 			"PFE VERSION: " + containerVersions.PFEVersion + errorString + "\n" +
-			"PERFORMANCE VERSION: " + containerVersions.PerformanceVersion + errorString)
+			"PERFORMANCE VERSION: " + containerVersions.PerformanceVersion + errorString + "\n" +
+			"DOCKER CLIENT VERSION: " + dockerClientVersion + "\n" +
+			"DOCKER SERVER VERSION: " + dockerServerVersion)
 	versionfileDir := diagnosticsLocalDirName
 	if connectionID != "local" {
 		versionsByteArray = []byte(
@@ -524,6 +527,21 @@ func gatherCodewindVersions(connectionID string) {
 		errors.CheckErr(versionsErr, 201, "")
 	}
 	logDG("done\n")
+}
+
+func getDockerVersions() (clientVersion, serverVersion string) {
+	dockerClient, dockerErr := docker.NewDockerClient()
+	if dockerErr != nil {
+		HandleDockerError(dockerErr)
+		os.Exit(1)
+	}
+	dockerClientVersion := docker.GetClientVersion(dockerClient)
+	dockerServerVersion, gsvErr := docker.GetServerVersion(dockerClient)
+	if gsvErr != nil {
+		HandleDockerError(gsvErr)
+		os.Exit(1)
+	}
+	return dockerClientVersion, dockerServerVersion.Version
 }
 
 //getContainerID - returns the ID of the container filtered by name
