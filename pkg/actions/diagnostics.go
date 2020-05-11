@@ -532,14 +532,14 @@ func gatherCodewindVersions(connectionID string) {
 func getDockerVersions() (clientVersion, serverVersion string) {
 	dockerClient, dockerErr := docker.NewDockerClient()
 	if dockerErr != nil {
-		HandleDockerError(dockerErr)
-		os.Exit(1)
+		warnDG("Problems getting docker client", dockerErr.Error())
+		return "Unknown", "Unknown"
 	}
 	dockerClientVersion := docker.GetClientVersion(dockerClient)
 	dockerServerVersion, gsvErr := docker.GetServerVersion(dockerClient)
 	if gsvErr != nil {
-		HandleDockerError(gsvErr)
-		os.Exit(1)
+		warnDG("Problems getting docker server version", gsvErr.Error())
+		return dockerClientVersion, "Unknown"
 	}
 	return dockerClientVersion, dockerServerVersion.Version
 }
