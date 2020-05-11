@@ -82,8 +82,6 @@ func DoRemoteInstall(c *cli.Context) {
 	// Since remote will always use Self Signed Certificates initially, turn on insecure flag
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
-	printAsJSON := c.GlobalBool("json")
-
 	session := c.String("session")
 	if session == "" {
 		session = strings.ToUpper(strconv.FormatInt(utils.CreateTimestamp(), 36))

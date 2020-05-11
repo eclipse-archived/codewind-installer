@@ -90,7 +90,6 @@ func DoRemoteRemove(c *cli.Context) {
 
 // DoRemoteKeycloakRemove : Delete a remote Keycloak deployment
 func DoRemoteKeycloakRemove(c *cli.Context) {
-	printAsJSON := c.GlobalBool("json")
 	removeOptions := remote.RemoveDeploymentOptions{
 		Namespace:   c.String("namespace"),
 		WorkspaceID: c.String("workspace"),

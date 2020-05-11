@@ -21,6 +21,7 @@ import (
 	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/utils"
+	logr "github.com/sirupsen/logrus"
 
 	"github.com/eclipse/codewind-installer/pkg/apiroutes"
 	"github.com/eclipse/codewind-installer/pkg/remote"
@@ -42,6 +43,11 @@ func GetSingleConnectionVersion(c *cli.Context) {
 
 	containerVersions, cvErr := GetContainerVersions(connectionID)
 	if cvErr != nil {
+		if printAsJSON {
+			fmt.Println(cvErr.Error())
+		} else {
+			logr.Error(cvErr.Error())
+		}
 		os.Exit(1)
 	}
 
@@ -63,19 +69,16 @@ func GetContainerVersions(connectionID string) (apiroutes.ContainerVersions, err
 	errorVersions := apiroutes.ContainerVersions{CwctlVersion: "Unknown", PerformanceVersion: "Unknown", GatekeeperVersion: "Unknown", PFEVersion: "Unknown"}
 	conInfo, conInfoErr := connections.GetConnectionByID(connectionID)
 	if conInfoErr != nil {
-		HandleConnectionError(conInfoErr)
 		return errorVersions, conInfoErr
 	}
 
 	conURL, conErr := config.PFEOriginFromConnection(conInfo)
 	if conErr != nil {
-		HandleConfigError(conErr)
 		return errorVersions, conErr
 	}
 
 	containerVersions, err := apiroutes.GetContainerVersions(conURL, appconstants.VersionNum, conInfo, http.DefaultClient)
 	if err != nil {
-		fmt.Println(err.Error())
 		return errorVersions, err
 	}
 	return containerVersions, nil

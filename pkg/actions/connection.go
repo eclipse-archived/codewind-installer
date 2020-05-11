@@ -32,14 +32,13 @@ func ConnectionAddToList(c *cli.Context) {
 		os.Exit(1)
 	}
 
-	type Result struct {
-		Status        string `json:"status"`
-		StatusMessage string `json:"status_message"`
-		ConID         string `json:"id"`
-	}
-
-	response, _ := json.Marshal(Result{Status: "OK", StatusMessage: "Connection added", ConID: strings.ToUpper(connection.ID)})
 	if printAsJSON {
+		type Result struct {
+			Status        string `json:"status"`
+			StatusMessage string `json:"status_message"`
+			ConID         string `json:"id"`
+		}
+		response, _ := json.Marshal(Result{Status: "OK", StatusMessage: "Connection added", ConID: strings.ToUpper(connection.ID)})
 		fmt.Println(string(response))
 	} else {
 		logr.Printf("Connection %v added successfully", strings.ToUpper(connection.ID))
@@ -100,22 +99,38 @@ func ConnectionRemoveFromList(c *cli.Context) {
 
 	// Try to remove secrets from keychain for the specific connection.
 	// Report warnings if removal of secrets failed, (eg: secret does not exist) but allowed to resume.
+
+	secErrArray := []string{}
+	secDescArray := []string{}
+
 	secErr := security.DeleteSecretFromKeyring(connectionID, connection.Username)
 	if secErr != nil {
-		HandleKeyringWarning(secErr)
+		secErrArray = append(secErrArray, secErr.Error())
+		secDescArray = append(secDescArray, secErr.Desc)
 	}
 	secErr = security.DeleteSecretFromKeyring(connectionID, "access_token")
 	if secErr != nil {
-		HandleKeyringWarning(secErr)
+		secErrArray = append(secErrArray, secErr.Error())
+		secDescArray = append(secDescArray, secErr.Desc)
 	}
 	secErr = security.DeleteSecretFromKeyring(connectionID, "refresh_token")
 	if secErr != nil {
-		HandleKeyringWarning(secErr)
+		secErrArray = append(secErrArray, secErr.Error())
+		secDescArray = append(secDescArray, secErr.Desc)
 	}
-	response, _ := json.Marshal(connections.Result{Status: "OK", StatusMessage: "Connection removed"})
+
 	if printAsJSON {
+		type RemoveResult struct {
+			Status        string   `json:"status"`
+			StatusMessage string   `json:"status_message"`
+			Warnings      []string `json:"warnings_encountered"`
+		}
+		response, _ := json.Marshal(RemoveResult{Status: "OK", StatusMessage: "Connection removed", Warnings: secErrArray})
 		fmt.Println(string(response))
 	} else {
+		for _, desc := range secDescArray {
+			logr.Warnf("%s", desc)
+		}
 		logr.Printf("Connection removed successfully")
 	}
 	os.Exit(0)
@@ -140,8 +155,8 @@ func ConnectionResetList(c *cli.Context) {
 		HandleConnectionError(conErr)
 		os.Exit(1)
 	}
-	response, _ := json.Marshal(connections.Result{Status: "OK", StatusMessage: "Connection list reset"})
 	if printAsJSON {
+		response, _ := json.Marshal(connections.Result{Status: "OK", StatusMessage: "Connection list reset"})
 		fmt.Println(string(response))
 	} else {
 		logr.Printf("Connection list reset successfully")
