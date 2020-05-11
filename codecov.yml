@@ -6,3 +6,6 @@ coverage:
     patch:
       default:
         enabled: no
+
+ignore:
+  - "pkg/docker/fakeclient"
