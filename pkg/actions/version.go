@@ -66,7 +66,7 @@ func GetSingleConnectionVersion(c *cli.Context) {
 // GetContainerVersions : Gets the cwctl and container versions for a single connection
 func GetContainerVersions(connectionID string) (apiroutes.ContainerVersions, error) {
 	// dummy ContainerVersions to send back if there is an error
-	errorVersions := apiroutes.ContainerVersions{CwctlVersion: "Unknown", PerformanceVersion: "Unknown", GatekeeperVersion: "Unknown", PFEVersion: "Unknown"}
+	errorVersions := apiroutes.ContainerVersions{CwctlVersion: "Unable to determine version - ", PerformanceVersion: "Unable to determine version - ", GatekeeperVersion: "Unable to determine version - ", PFEVersion: "Unable to determine version - "}
 	conInfo, conInfoErr := connections.GetConnectionByID(connectionID)
 	if conInfoErr != nil {
 		return errorVersions, conInfoErr
