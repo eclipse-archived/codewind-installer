@@ -42,7 +42,7 @@ var diagnosticsMasterDirName = filepath.Join(codewindHome, "diagnostics")
 var diagnosticsDirName = filepath.Join(diagnosticsMasterDirName, nowTime)
 var diagnosticsLocalDirName = filepath.Join(diagnosticsDirName, "local")
 
-const codewindPodPrefix = "codewind-"
+const codewindPrefix = "codewind-"
 const codewindProjectPrefix = "cw-"
 const dgProjectDirName = "projects"
 
@@ -140,31 +140,31 @@ func DiagnosticsCommand(c *cli.Context) {
 }
 
 func dgRemoteCommand(c *cli.Context) {
-	workspaceIDArray := findWorkspaceIDsByConnection(c)
+	workspaceIDMap := findWorkspaceIDsByConnection(c)
 	mkWorkspaceDir := true
-	if len(workspaceIDArray) < 1 {
+	if len(workspaceIDMap) < 1 {
 		logDG("No remote connections found")
 		return
 	}
 	existingDeployments, edErr := remote.GetExistingDeployments("")
 	if edErr != nil {
-		errDG("existing_deployment_error", "Unable to get existing deployments "+edErr.Error())
+		errDG("existing_deployment_error", edErr.Error())
 		mkWorkspaceDir = false
 		exitDGUnlessAll()
 	}
 	config, err := remote.GetKubeConfig()
 	if err != nil {
-		errDG("kube_config_error", "Unable to retrieve Kubernetes Config: "+err.Error())
+		errDG("kube_config_error", err.Error())
 		mkWorkspaceDir = false
 		exitDGUnlessAll()
 	}
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		errDG("kube_client_error", "Unable to retrieve Kubernetes clientset: "+err.Error())
+		errDG("kube_client_error", err.Error())
 		mkWorkspaceDir = false
 		exitDGUnlessAll()
 	}
-	for _, workspaceID := range workspaceIDArray {
+	for connectionID, workspaceID := range workspaceIDMap {
 		found := false
 		kubeNameSpace := ""
 		for _, existingDeployment := range existingDeployments {
@@ -182,11 +182,11 @@ func dgRemoteCommand(c *cli.Context) {
 		}
 		cwBasePods, nspErr := clientset.CoreV1().Pods(kubeNameSpace).List(metav1.ListOptions{LabelSelector: "codewindWorkspace=" + workspaceID})
 		if nspErr != nil {
-			errDG("kube_podlist_error", "Unable to retrieve Kubernetes Codewind Pods: "+nspErr.Error())
+			errDG("kube_podlist_error", "Unable to retrieve Kubernetes Pods: "+nspErr.Error())
 			mkWorkspaceDir = false
 			exitDGUnlessAll()
 		}
-		cwWorkspaceID := codewindPodPrefix + workspaceID
+		cwWorkspaceID := codewindPrefix + connectionID
 		diagnosticsRemoteDirName := filepath.Join(diagnosticsDirName, cwWorkspaceID)
 		if mkWorkspaceDir {
 			connDirErr := os.MkdirAll(filepath.Join(diagnosticsRemoteDirName, dgProjectDirName), 0755)
@@ -196,27 +196,28 @@ func dgRemoteCommand(c *cli.Context) {
 		}
 		collectPodInfo(clientset, cwBasePods.Items, cwWorkspaceID)
 		if c.Bool("projects") {
-			cwProjPods, cwPPErr := clientset.CoreV1().Pods(kubeNameSpace).List(metav1.ListOptions{FieldSelector: "spec.serviceAccountName=" + codewindPodPrefix + workspaceID, LabelSelector: "codewindWorkspace!=" + workspaceID})
+			cwProjPods, cwPPErr := clientset.CoreV1().Pods(kubeNameSpace).List(metav1.ListOptions{FieldSelector: "spec.serviceAccountName=" + codewindPrefix + workspaceID, LabelSelector: "codewindWorkspace!=" + workspaceID})
 			if cwPPErr != nil {
-				errDG("kube_podlist_error", "Unable to retrieve Kubernetes Project Pods: "+cwPPErr.Error())
+				errDG("kube_podlist_error", "Unable to retrieve Kubernetes Pods: "+cwPPErr.Error())
 				exitDGUnlessAll()
 			}
 			collectPodInfo(clientset, cwProjPods.Items, filepath.Join(cwWorkspaceID, dgProjectDirName))
 		}
+		gatherCodewindVersions(connectionID)
 	}
 }
 
-func findWorkspaceIDsByConnection(c *cli.Context) []string {
+func findWorkspaceIDsByConnection(c *cli.Context) map[string]string {
 	connectionList, conErr := connections.GetAllConnections()
 	if conErr != nil {
 		errDG("connections_error", "Unable to get Connections "+conErr.Error())
 		exitDGUnlessAll()
 	}
-	workspaceIDs := []string{}
+	workspaceIDs := make(map[string]string)
 	if collectingAll {
 		for _, connection := range connectionList {
 			if connection.ClientID != "" {
-				workspaceIDs = append(workspaceIDs, strings.Replace(connection.ClientID, codewindPodPrefix, "", 1))
+				workspaceIDs[connection.ID] = strings.Replace(connection.ClientID, codewindPrefix, "", 1)
 			}
 		}
 	} else {
@@ -228,7 +229,7 @@ func findWorkspaceIDsByConnection(c *cli.Context) []string {
 			}
 			if strings.ToUpper(connectionID) == strings.ToUpper(connection.ID) {
 				found = true
-				workspaceIDs = append(workspaceIDs, strings.Replace(connection.ClientID, codewindPodPrefix, "", 1))
+				workspaceIDs[connection.ID] = strings.Replace(connection.ClientID, codewindPrefix, "", 1)
 				break
 			}
 		}
@@ -535,14 +536,16 @@ func gatherCodewindVersions(connectionID string) {
 		"CWCTL VERSION: " + containerVersions.CwctlVersion + errorString + "\n" +
 			"PFE VERSION: " + containerVersions.PFEVersion + errorString + "\n" +
 			"PERFORMANCE VERSION: " + containerVersions.PerformanceVersion + errorString)
+	versionfileDir := diagnosticsLocalDirName
 	if connectionID != "local" {
 		versionsByteArray = []byte(
 			"CWCTL VERSION: " + containerVersions.CwctlVersion + errorString + "\n" +
 				"PFE VERSION: " + containerVersions.PFEVersion + errorString + "\n" +
 				"PERFORMANCE VERSION: " + containerVersions.PerformanceVersion + errorString + "\n" +
 				"GATEKEEPER VERSION: " + containerVersions.GatekeeperVersion + errorString)
+		versionfileDir = filepath.Join(diagnosticsDirName, codewindPrefix+connectionID)
 	}
-	versionsErr := ioutil.WriteFile(filepath.Join(diagnosticsDirName, "codewind.versions"), versionsByteArray, 0644)
+	versionsErr := ioutil.WriteFile(filepath.Join(versionfileDir, "codewind.versions"), versionsByteArray, 0644)
 	if versionsErr != nil {
 		errors.CheckErr(versionsErr, 201, "")
 	}
