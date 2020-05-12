@@ -464,6 +464,7 @@ func createZipAndRemoveCollectedFiles() {
 func gatherCodewindVersions(connectionID string) {
 	logDG("Collecting version information ... ")
 	containerVersions, cvErr := GetContainerVersions(connectionID)
+	errorString := ""
 	if cvErr != nil {
 		if strings.Contains(cvErr.Error(), "certificate signed by unknown authority") {
 			warnDG("Problems getting Codewind container versions - please run command again specifying global option '--insecure'", cvErr.Error())
@@ -471,17 +472,18 @@ func gatherCodewindVersions(connectionID string) {
 			//just log and continue; version file will have "Unknown" values
 			warnDG("Problems getting Codewind container versions", cvErr.Error())
 		}
+		errorString = cvErr.Error()
 	}
 	versionsByteArray := []byte(
-		"CWCTL VERSION: " + containerVersions.CwctlVersion + "\n" +
-			"PFE VERSION: " + containerVersions.PFEVersion + "\n" +
-			"PERFORMANCE VERSION: " + containerVersions.PerformanceVersion)
+		"CWCTL VERSION: " + containerVersions.CwctlVersion + errorString + "\n" +
+			"PFE VERSION: " + containerVersions.PFEVersion + errorString + "\n" +
+			"PERFORMANCE VERSION: " + containerVersions.PerformanceVersion + errorString)
 	if connectionID != "local" {
 		versionsByteArray = []byte(
-			"CWCTL VERSION: " + containerVersions.CwctlVersion + "\n" +
-				"PFE VERSION: " + containerVersions.PFEVersion + "\n" +
-				"PERFORMANCE VERSION: " + containerVersions.PerformanceVersion + "\n" +
-				"GATEKEEPER VERSION: " + containerVersions.GatekeeperVersion)
+			"CWCTL VERSION: " + containerVersions.CwctlVersion + errorString + "\n" +
+				"PFE VERSION: " + containerVersions.PFEVersion + errorString + "\n" +
+				"PERFORMANCE VERSION: " + containerVersions.PerformanceVersion + errorString + "\n" +
+				"GATEKEEPER VERSION: " + containerVersions.GatekeeperVersion + errorString)
 	}
 	versionsErr := ioutil.WriteFile(filepath.Join(diagnosticsDirName, "codewind.versions"), versionsByteArray, 0644)
 	if versionsErr != nil {
