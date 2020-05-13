@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"time"
 
@@ -139,6 +140,28 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 
 	// Sync all the necessary project files
 	syncInfo, syncErr := syncFiles(&http.Client{}, projectPath, projectID, conURL, synctime, conInfo)
+
+	// Add a check here for files that have been imported into the project
+
+	BeforeFileList, err := GetProjectFileList(&http.Client{}, conInfo, conURL, projectID)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(BeforeFileList)
+	}
+	str1 := []string{"1", "4", "3"}
+	str2 := []string{"1", "2", "3"}
+	if reflect.DeepEqual(str1, str2) {
+		fmt.Println(`NUMBER LISTS ARE THE SAME`)
+	} else {
+		fmt.Println(`NUMBER LISTS ARE DIFFERENT`)
+	}
+
+	if reflect.DeepEqual(BeforeFileList, syncInfo.fileList) {
+		fmt.Println(`FILE LISTS ARE THE SAME`)
+	} else {
+		fmt.Println(`FILE LISTS ARE DIFFERENT`)
+	}
 
 	// Complete the upload
 	completeRequest := CompleteRequest{
