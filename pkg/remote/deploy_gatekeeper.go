@@ -36,7 +36,7 @@ func DeployGatekeeper(config *restclient.Config, clientset *kubernetes.Clientset
 	gatekeeperDeploy := generateGatekeeperDeploy(codewindInstance, deployOptions)
 	gatekeeperSessionSecret := generateGatekeeperSessionSecret(codewindInstance, deployOptions)
 
-	serverKey, serverCert, _ := generateCertificate(GatekeeperPrefix+codewindInstance.Ingress, "Codewind Gatekeeper")
+	serverKey, serverCert, _ := generateCertificate(GatekeeperPrefix+codewindInstance.Ingress, "Codewind Gatekeeper "+codewindInstance.WorkspaceID)
 	gatekeeperTLSSecret := generateGatekeeperTLSSecret(codewindInstance, serverKey, serverCert)
 
 	logr.Infoln("Deploying Codewind Gatekeeper Secrets")
@@ -145,8 +145,21 @@ func generateGatekeeperDeploy(codewind Codewind, deployOptions *DeployOptions) a
 		"codewindWorkspace": codewind.WorkspaceID,
 	}
 
-	volumes := []corev1.Volume{}
-	volumeMounts := []corev1.VolumeMount{}
+	volumes := []corev1.Volume{{
+		Name: "tls-certs",
+		VolumeSource: corev1.VolumeSource{
+			Secret: &corev1.SecretVolumeSource{
+				SecretName: "secret-codewind-tls" + "-" + codewind.WorkspaceID,
+			},
+		},
+	}}
+
+	volumeMounts := []corev1.VolumeMount{{
+		MountPath: "/tlscerts",
+		Name:      "tls-certs",
+		ReadOnly:  true,
+	}}
+
 	envVars := setGatekeeperEnvVars(codewind, deployOptions)
 	return generateDeployment(codewind, GatekeeperPrefix, codewind.GatekeeperImage, GatekeeperContainerPort, volumes, volumeMounts, envVars, labels, codewind.ServiceAccountName, false)
 }
