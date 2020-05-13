@@ -14,6 +14,7 @@ package actions
 import (
 	"archive/tar"
 	"encoding/json"
+	goErr "errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -60,6 +61,12 @@ type dgWarning struct {
 	WarningDesc string `json:"warning_description"`
 }
 
+type dgResultStruct struct {
+	DgSuccess             bool        `json:"success"`
+	DgOutputDir           string      `json:"outputdir"`
+	DgWarningsEncountered []dgWarning `json:"warnings_encountered"`
+}
+
 var dgWarningArray = []dgWarning{}
 
 func warnDG(warning, description string) {
@@ -70,39 +77,10 @@ func warnDG(warning, description string) {
 	}
 }
 
-func errDG(err, description string) {
-	if printAsJSON {
-		if collectingAll {
-			// won't be exiting, so add to the warning array
-			dgWarningArray = append(dgWarningArray, dgWarning{WarningType: err, WarningDesc: description})
-		} else {
-			outputStruct := struct {
-				ErrorType string `json:"error"`
-				ErrorDesc string `json:"error_description"`
-			}{ErrorType: err, ErrorDesc: description}
-			json, _ := json.Marshal(outputStruct)
-			fmt.Println(string(json))
-		}
-	} else {
-		logDG(err + ": " + description + "\n")
-	}
-}
-
-func exitDGUnlessAll() {
-	if !collectingAll {
-		if entries, _ := ioutil.ReadDir(diagnosticsDirName); len(entries) == 0 {
-			err := os.RemoveAll(diagnosticsDirName)
-			if err != nil {
-				errors.CheckErr(err, 206, "")
-			}
-		}
-		os.Exit(1)
-	}
-}
-
 //DiagnosticsCommand to gather logs and project files to aid diagnosis of Codewind errors
 func DiagnosticsCommand(c *cli.Context) {
 	collectingAll = c.Bool("all")
+	connectionID := c.String("conid")
 	if c.Bool("quiet") || printAsJSON {
 		isLoud = false
 	}
@@ -120,125 +98,137 @@ func DiagnosticsCommand(c *cli.Context) {
 		}
 		logDG("Diagnostics files will be written to " + diagnosticsDirName + "\n")
 		if collectingAll {
-			dgRemoteCommand(c)
+			connectionList, conErr := connections.GetAllConnections()
+			if conErr != nil {
+				warnDG("connections_error", "Unable to get Connections "+conErr.Error())
+			} else {
+				for _, connection := range connectionList {
+					if connection.ClientID != "" {
+						dgRemoteCommand(connection.ID, c.Bool("projects"))
+					}
+				}
+			}
 			dgLocalCommand(c)
-		} else if c.String("conid") != "local" {
-			dgRemoteCommand(c)
+		} else if connectionID != "local" {
+			dgRemoteCommand(connectionID, c.Bool("projects"))
 		} else {
 			dgLocalCommand(c)
 		}
-		dgSharedCommand(c)
+		// Attempt to gather Eclipse logs
+		gatherCodewindEclipseLogs(c.String("eclipseWorkspaceDir"))
+
+		// Attempt to gather VSCode logs
+		gatherCodewindVSCodeLogs()
+
+		// Attempt to gather IntelliJ logs
+		gatherCodewindIntellijLogs(c.String("intellijLogsDir"))
+		if !c.Bool("nozip") {
+			createZipAndRemoveCollectedFiles()
+		}
+		// check to see if we got any data back
+		entries, _ := ioutil.ReadDir(diagnosticsDirName)
+		if len(entries) == 0 {
+			// clean up and output failure message
+			err := os.RemoveAll(diagnosticsDirName)
+			if err != nil {
+				errors.CheckErr(err, 206, "")
+			}
+			if printAsJSON {
+				result := dgResultStruct{DgSuccess: false, DgOutputDir: "has been deleted", DgWarningsEncountered: dgWarningArray}
+				json, _ := json.Marshal(result)
+				fmt.Println(string(json))
+			} else {
+				logDG("No diagnostics data was able to be collected - empty directory " + diagnosticsDirName + " has been deleted.")
+			}
+			os.Exit(1)
+		}
 		if printAsJSON {
-			outputStruct := struct {
-				DgOutputDir           string      `json:"outputdir"`
-				DgWarningsEncountered []dgWarning `json:"warnings_encountered"`
-			}{DgOutputDir: diagnosticsDirName, DgWarningsEncountered: dgWarningArray}
-			json, _ := json.Marshal(outputStruct)
+			result := dgResultStruct{DgSuccess: true, DgOutputDir: diagnosticsDirName, DgWarningsEncountered: dgWarningArray}
+			json, _ := json.Marshal(result)
 			fmt.Println(string(json))
 		}
 	}
 }
 
-func dgRemoteCommand(c *cli.Context) {
-	workspaceIDMap := findWorkspaceIDsByConnection(c)
-	mkWorkspaceDir := true
-	if len(workspaceIDMap) < 1 {
-		logDG("No remote connections found")
+func dgRemoteCommand(conid string, collectProjects bool) {
+	connectionID, workspaceID := confirmConnectionIDAndWorkspaceID(conid)
+	if connectionID == "" {
 		return
 	}
 	existingDeployments, edErr := remote.GetExistingDeployments("")
 	if edErr != nil {
-		errDG("existing_deployment_error", edErr.Error())
-		mkWorkspaceDir = false
-		exitDGUnlessAll()
+		warnDG("existing_deployment_error", edErr.Error())
+		return
 	}
 	config, err := remote.GetKubeConfig()
 	if err != nil {
-		errDG("kube_config_error", err.Error())
-		mkWorkspaceDir = false
-		exitDGUnlessAll()
+		warnDG("kube_config_error", err.Error())
+		return
 	}
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		errDG("kube_client_error", err.Error())
-		mkWorkspaceDir = false
-		exitDGUnlessAll()
+		warnDG("kube_client_error", err.Error())
+		return
 	}
-	for connectionID, workspaceID := range workspaceIDMap {
-		found := false
-		kubeNameSpace := ""
-		for _, existingDeployment := range existingDeployments {
-			if strings.ToUpper(existingDeployment.WorkspaceID) == strings.ToUpper(workspaceID) {
-				kubeNameSpace = existingDeployment.Namespace
-				found = true
-				break
-			}
+	found := false
+	kubeNameSpace := ""
+	for _, existingDeployment := range existingDeployments {
+		if strings.ToUpper(existingDeployment.WorkspaceID) == strings.ToUpper(workspaceID) {
+			kubeNameSpace = existingDeployment.Namespace
+			found = true
+			break
 		}
-		if !found {
-			errDG("existing_deployment_error", "Unable to locate existing deployment with Workspace ID "+workspaceID)
-			mkWorkspaceDir = false
-			exitDGUnlessAll()
-
+	}
+	if !found {
+		warnDG("existing_deployment_error", "Unable to locate existing deployment with Workspace ID "+workspaceID)
+		return
+	}
+	cwWorkspaceID := codewindPrefix + connectionID
+	diagnosticsRemoteDirName := filepath.Join(diagnosticsDirName, cwWorkspaceID)
+	cwBasePods, cwBPErr := clientset.CoreV1().Pods(kubeNameSpace).List(metav1.ListOptions{LabelSelector: "codewindWorkspace=" + workspaceID})
+	if cwBPErr != nil {
+		warnDG("kube_podlist_error", "Unable to retrieve Kubernetes Pods: "+cwBPErr.Error())
+	} else {
+		connDirErr := os.MkdirAll(diagnosticsRemoteDirName, 0755)
+		if connDirErr != nil {
+			errors.CheckErr(connDirErr, 205, "")
 		}
-		cwBasePods, nspErr := clientset.CoreV1().Pods(kubeNameSpace).List(metav1.ListOptions{LabelSelector: "codewindWorkspace=" + workspaceID})
-		if nspErr != nil {
-			errDG("kube_podlist_error", "Unable to retrieve Kubernetes Pods: "+nspErr.Error())
-			mkWorkspaceDir = false
-			exitDGUnlessAll()
-		}
-		cwWorkspaceID := codewindPrefix + connectionID
-		diagnosticsRemoteDirName := filepath.Join(diagnosticsDirName, cwWorkspaceID)
-		if mkWorkspaceDir {
+		collectPodInfo(clientset, cwBasePods.Items, cwWorkspaceID)
+	}
+	if collectProjects {
+		cwProjPods, cwPPErr := clientset.CoreV1().Pods(kubeNameSpace).List(metav1.ListOptions{FieldSelector: "spec.serviceAccountName=" + codewindPrefix + workspaceID, LabelSelector: "codewindWorkspace!=" + workspaceID})
+		if cwPPErr != nil {
+			warnDG("kube_podlist_error", "Unable to retrieve Kubernetes Pods: "+cwPPErr.Error())
+		} else {
 			connDirErr := os.MkdirAll(filepath.Join(diagnosticsRemoteDirName, dgProjectDirName), 0755)
 			if connDirErr != nil {
 				errors.CheckErr(connDirErr, 205, "")
 			}
-		}
-		collectPodInfo(clientset, cwBasePods.Items, cwWorkspaceID)
-		if c.Bool("projects") {
-			cwProjPods, cwPPErr := clientset.CoreV1().Pods(kubeNameSpace).List(metav1.ListOptions{FieldSelector: "spec.serviceAccountName=" + codewindPrefix + workspaceID, LabelSelector: "codewindWorkspace!=" + workspaceID})
-			if cwPPErr != nil {
-				errDG("kube_podlist_error", "Unable to retrieve Kubernetes Pods: "+cwPPErr.Error())
-				exitDGUnlessAll()
-			}
 			collectPodInfo(clientset, cwProjPods.Items, filepath.Join(cwWorkspaceID, dgProjectDirName))
 		}
-		gatherCodewindVersions(connectionID)
 	}
+	gatherCodewindVersions(connectionID)
 }
 
-func findWorkspaceIDsByConnection(c *cli.Context) map[string]string {
+func confirmConnectionIDAndWorkspaceID(conid string) (string, string) {
 	connectionList, conErr := connections.GetAllConnections()
 	if conErr != nil {
-		errDG("connections_error", "Unable to get Connections "+conErr.Error())
-		exitDGUnlessAll()
+		warnDG("connections_error", "Unable to get Connections "+conErr.Error())
+		return "", ""
 	}
-	workspaceIDs := make(map[string]string)
-	if collectingAll {
-		for _, connection := range connectionList {
-			if connection.ClientID != "" {
-				workspaceIDs[connection.ID] = strings.Replace(connection.ClientID, codewindPrefix, "", 1)
-			}
+	connectionID := strings.TrimSpace(strings.ToLower(conid))
+	for _, connection := range connectionList {
+		// could have been passed a remote connection label instead of an ID
+		if strings.ToUpper(connectionID) == strings.ToUpper(connection.Label) {
+			connectionID = connection.ID
 		}
-	} else {
-		connectionID := strings.TrimSpace(strings.ToLower(c.String("conid")))
-		found := false
-		for _, connection := range connectionList {
-			if strings.ToUpper(connectionID) == strings.ToUpper(connection.Label) {
-				connectionID = connection.ID
-			}
-			if strings.ToUpper(connectionID) == strings.ToUpper(connection.ID) {
-				found = true
-				workspaceIDs[connection.ID] = strings.Replace(connection.ClientID, codewindPrefix, "", 1)
-				break
-			}
-		}
-		if !found {
-			errDG("connection_not_found", "Unable to associate "+connectionID+" with existing connection")
-			exitDGUnlessAll()
+		if strings.ToUpper(connectionID) == strings.ToUpper(connection.ID) {
+			return connection.ID, strings.Replace(connection.ClientID, codewindPrefix, "", 1)
 		}
 	}
-	return workspaceIDs
+	// if we reach here it means we couldn't find a connection
+	warnDG("connection_not_found", "Unable to associate "+connectionID+" with existing connection")
+	return "", ""
 }
 
 func collectPodInfo(clientset *kubernetes.Clientset, podArray []corev1.Pod, workspaceDirName string) {
@@ -291,22 +281,6 @@ func dgLocalCommand(c *cli.Context) {
 	logDG("done\n")
 }
 
-func dgSharedCommand(c *cli.Context) {
-
-	// Attempt to gather Eclipse logs
-	gatherCodewindEclipseLogs(c.String("eclipseWorkspaceDir"))
-
-	// Attempt to gather VSCode logs
-	gatherCodewindVSCodeLogs()
-
-	// Attempt to gather IntelliJ logs
-	gatherCodewindIntellijLogs(c.String("intellijLogsDir"))
-
-	if !c.Bool("nozip") {
-		createZipAndRemoveCollectedFiles()
-	}
-}
-
 // Collect Codewind container inspection & logs
 func collectCodewindContainers() {
 	for _, cwContainerName := range docker.LocalCWContainerNames {
@@ -322,14 +296,14 @@ func collectCodewindProjectContainers() {
 	// Collect project container inspection & logs
 	dockerClient, dockerErr := docker.NewDockerClient()
 	if dockerErr != nil {
-		errDG("Unable to get Docker client", dockerErr.Error())
-		exitDGUnlessAll()
+		warnDG("Unable to get Docker client", dockerErr.Error())
+		return
 	}
 	// using getContainerListWithOptions to pick up all containers, including stopped ones
 	allContainers, cListErr := docker.GetContainerListWithOptions(dockerClient, types.ContainerListOptions{All: true})
 	if cListErr != nil {
-		errDG("Unable to get Docker container list", cListErr.Error())
-		exitDGUnlessAll()
+		warnDG("Unable to get Docker container list", cListErr.Error())
+		return
 	}
 	for _, cwContainer := range docker.GetCodewindProjectContainers(allContainers) {
 		logDG("Collecting information from container " + cwContainer.Names[0] + " ... ")
@@ -556,14 +530,14 @@ func gatherCodewindVersions(connectionID string) {
 func getContainerID(containerName string) string {
 	dockerClient, dockerErr := docker.NewDockerClient()
 	if dockerErr != nil {
-		errDG("Unable to get Docker client", dockerErr.Error())
-		exitDGUnlessAll()
+		warnDG("Unable to get Docker client", dockerErr.Error())
+		return ""
 	}
 	nameFilter := filters.NewArgs(filters.Arg("name", containerName))
 	container, getErr := docker.GetContainerListWithOptions(dockerClient, types.ContainerListOptions{All: true, Filters: nameFilter})
 	if getErr != nil {
-		errDG("Unable to get Docker container list", getErr.Error())
-		exitDGUnlessAll()
+		warnDG("Unable to get Docker container list", getErr.Error())
+		return ""
 	}
 	if len(container) > 0 {
 		return container[0].ID
@@ -575,17 +549,17 @@ func getContainerID(containerName string) string {
 func writeContainerInspectToFile(containerID, containerName string) error {
 	if containerID == "" {
 		warnDG("Unable to find "+containerName+" container", "could not get container ID")
-		return nil
+		return goErr.New("Unable to find " + containerName + " container - could not get container ID")
 	}
 	dockerClient, dockerErr := docker.NewDockerClient()
 	if dockerErr != nil {
-		errDG("Unable to get Docker client", dockerErr.Error())
-		exitDGUnlessAll()
+		warnDG("Unable to get Docker client", dockerErr.Error())
+		return dockerErr
 	}
 	inspectedContents, inspectErr := docker.InspectContainer(dockerClient, containerID)
 	if inspectErr != nil {
-		errDG("Unable to inspect Container ID "+containerID, inspectErr.Error())
-		exitDGUnlessAll()
+		warnDG("Unable to inspect Container ID "+containerID, inspectErr.Error())
+		return inspectErr
 	}
 	return writeJSONStructToFile(inspectedContents, containerName+".inspect")
 }
@@ -594,17 +568,17 @@ func writeContainerInspectToFile(containerID, containerName string) error {
 func writeContainerLogToFile(containerID, containerName string) error {
 	if containerID == "" {
 		warnDG("Unable to find "+containerName+" container", "could not get container ID")
-		return nil
+		return goErr.New("Unable to find " + containerName + " container - could not get container ID")
 	}
 	dockerClient, dockerErr := docker.NewDockerClient()
 	if dockerErr != nil {
-		errDG("Unable to get Docker client", dockerErr.Error())
-		exitDGUnlessAll()
+		warnDG("Unable to get Docker client", dockerErr.Error())
+		return dockerErr
 	}
 	logStream, logErr := docker.GetContainerLogs(dockerClient, containerID)
 	if logErr != nil {
-		errDG("Unable to get container logs for container "+containerID, logErr.Error())
-		exitDGUnlessAll()
+		warnDG("Unable to get container logs for container "+containerID, logErr.Error())
+		return logErr
 	}
 	return writeStreamToFile(logStream, containerName+".log")
 }
@@ -613,19 +587,19 @@ func writeContainerLogToFile(containerID, containerName string) error {
 func copyCodewindWorkspace(containerID string) error {
 	if containerID == "" {
 		warnDG("Unable to find Codewind PFE container", "could not get container ID")
-		return nil
+		return goErr.New("Unable to find Codewind PFE container - could not get container ID")
 	}
 	dockerClient, dockerErr := docker.NewDockerClient()
 	if dockerErr != nil {
-		errDG("Unable to get Docker client", dockerErr.Error())
-		exitDGUnlessAll()
+		warnDG("Unable to get Docker client", dockerErr.Error())
+		return dockerErr
 	}
 	codewindWorkspace := "codewind-workspace"
 	for _, path := range []string{".appsody", ".config", ".extensions", ".logs", ".projects"} {
 		tarFileStream, fileErr := docker.GetFilesFromContainer(dockerClient, containerID, "/"+codewindWorkspace+"/"+path)
 		if fileErr != nil {
-			errDG("Unable to get files from container ID "+containerID, dockerErr.Error())
-			exitDGUnlessAll()
+			warnDG("Unable to get files from container ID "+containerID, fileErr.Error())
+			return fileErr
 		}
 		defer tarFileStream.Close()
 		// Extracting tarred files
