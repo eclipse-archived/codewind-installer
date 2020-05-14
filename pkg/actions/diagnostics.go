@@ -495,7 +495,11 @@ func createZipAndRemoveCollectedFiles() {
 
 func gatherCodewindVersions(connectionID string) {
 	logDG("Collecting version information ... ")
-	dockerClientVersion, dockerServerVersion := getDockerVersions()
+	dockerClientVersion := ""
+	dockerServerVersion := ""
+	if connectionID == "local" {
+		dockerClientVersion, dockerServerVersion = getDockerVersions()
+	}
 	containerVersions, cvErr := GetContainerVersions(connectionID)
 	errorString := ""
 	if cvErr != nil {
@@ -533,13 +537,13 @@ func getDockerVersions() (clientVersion, serverVersion string) {
 	dockerClient, dockerErr := docker.NewDockerClient()
 	if dockerErr != nil {
 		warnDG("Problems getting docker client", dockerErr.Error())
-		return "Unknown", "Unknown"
+		return "Unable to determine version - " + dockerErr.Error(), "Unable to determine version - " + dockerErr.Error()
 	}
 	dockerClientVersion := docker.GetClientVersion(dockerClient)
 	dockerServerVersion, gsvErr := docker.GetServerVersion(dockerClient)
 	if gsvErr != nil {
 		warnDG("Problems getting docker server version", gsvErr.Error())
-		return dockerClientVersion, "Unknown"
+		return dockerClientVersion, "Unable to determine version - " + gsvErr.Error()
 	}
 	return dockerClientVersion, dockerServerVersion.Version
 }
