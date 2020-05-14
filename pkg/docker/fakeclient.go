@@ -79,50 +79,60 @@ var mockContainerListWithoutCwContainers = []types.Container{
 	},
 }
 
-// This mock client will return container and images lists, with Codewind items included
-type mockDockerClientWithCw struct {
+//MockDockerClientWithCw - This mock client will return container and images lists, with Codewind items included
+type MockDockerClientWithCw struct {
 }
 
-func (m *mockDockerClientWithCw) ImagePull(ctx context.Context, image string, imagePullOptions types.ImagePullOptions) (io.ReadCloser, error) {
+//ImagePull - returns empty ReadCloser
+func (m *MockDockerClientWithCw) ImagePull(ctx context.Context, image string, imagePullOptions types.ImagePullOptions) (io.ReadCloser, error) {
 	r := ioutil.NopCloser(bytes.NewReader([]byte("")))
 	return r, nil
 }
 
-func (m *mockDockerClientWithCw) ImageList(ctx context.Context, imageListOptions types.ImageListOptions) ([]types.ImageSummary, error) {
+//ImageList - reutrns some mock images
+func (m *MockDockerClientWithCw) ImageList(ctx context.Context, imageListOptions types.ImageListOptions) ([]types.ImageSummary, error) {
 	return mockImageSummaryWithCwImages, nil
 }
 
-func (m *mockDockerClientWithCw) ContainerList(ctx context.Context, containerListOptions types.ContainerListOptions) ([]types.Container, error) {
+//ContainerList - returns some mock containers
+func (m *MockDockerClientWithCw) ContainerList(ctx context.Context, containerListOptions types.ContainerListOptions) ([]types.Container, error) {
 	return mockContainerListWithCwContainers, nil
 }
 
-func (m *mockDockerClientWithCw) ContainerStop(ctx context.Context, containerID string, timeout *time.Duration) error {
+//ContainerStop - returns no errors
+func (m *MockDockerClientWithCw) ContainerStop(ctx context.Context, containerID string, timeout *time.Duration) error {
 	return nil
 }
 
-func (m *mockDockerClientWithCw) ContainerRemove(ctx context.Context, containerID string, options types.ContainerRemoveOptions) error {
+//ContainerRemove - returns no errors
+func (m *MockDockerClientWithCw) ContainerRemove(ctx context.Context, containerID string, options types.ContainerRemoveOptions) error {
 	return nil
 }
 
-func (m *mockDockerClientWithCw) ClientVersion() string {
+//ClientVersion - returns empty string
+func (m *MockDockerClientWithCw) ClientVersion() string {
 	return ""
 }
 
-func (m *mockDockerClientWithCw) ContainerLogs(ctx context.Context, containerID string, options types.ContainerLogsOptions) (io.ReadCloser, error) {
+//ContainerLogs - returns empty ReadCloser
+func (m *MockDockerClientWithCw) ContainerLogs(ctx context.Context, containerID string, options types.ContainerLogsOptions) (io.ReadCloser, error) {
 	r := ioutil.NopCloser(bytes.NewReader([]byte("")))
 	return r, nil
 }
 
-func (m *mockDockerClientWithCw) CopyFromContainer(ctx context.Context, containerID, srcPath string) (io.ReadCloser, types.ContainerPathStat, error) {
+//CopyFromContainer - returns empty ReadCloser, empty ContainerPathStat
+func (m *MockDockerClientWithCw) CopyFromContainer(ctx context.Context, containerID, srcPath string) (io.ReadCloser, types.ContainerPathStat, error) {
 	r := ioutil.NopCloser(bytes.NewReader([]byte("")))
 	return r, types.ContainerPathStat{Name: "", Size: 0, Mode: 0, Mtime: time.Now(), LinkTarget: ""}, nil
 }
 
-func (m *mockDockerClientWithCw) ServerVersion(ctx context.Context) (types.Version, error) {
+//ServerVersion - returns empty Version struct
+func (m *MockDockerClientWithCw) ServerVersion(ctx context.Context) (types.Version, error) {
 	return types.Version{Platform: struct{ Name string }{""}, Components: []types.ComponentVersion{}, Version: "", APIVersion: "", MinAPIVersion: "", GitCommit: "", GoVersion: "", Os: "", Arch: "", KernelVersion: "", Experimental: true, BuildTime: ""}, nil
 }
 
-func (m *mockDockerClientWithCw) ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error) {
+//ContainerInspect - returns basic ContainerJSON
+func (m *MockDockerClientWithCw) ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error) {
 	return types.ContainerJSON{
 		ContainerJSONBase: &types.ContainerJSONBase{
 			HostConfig: &container.HostConfig{
@@ -132,11 +142,13 @@ func (m *mockDockerClientWithCw) ContainerInspect(ctx context.Context, container
 	}, nil
 }
 
-func (m *mockDockerClientWithCw) DaemonHost() string {
+//DaemonHost - returns empty string
+func (m *MockDockerClientWithCw) DaemonHost() string {
 	return ""
 }
 
-func (m *mockDockerClientWithCw) DistributionInspect(ctx context.Context, image, encodedRegistryAuth string) (registry.DistributionInspect, error) {
+//DistributionInspect - returns a basic DistributionInspect
+func (m *MockDockerClientWithCw) DistributionInspect(ctx context.Context, image, encodedRegistryAuth string) (registry.DistributionInspect, error) {
 	return registry.DistributionInspect{
 		Descriptor: v1.Descriptor{
 			Digest: "sha256:7173b809",
@@ -144,7 +156,8 @@ func (m *mockDockerClientWithCw) DistributionInspect(ctx context.Context, image,
 	}, nil
 }
 
-func (m *mockDockerClientWithCw) RegistryLogin(ctx context.Context, auth types.AuthConfig) (registry.AuthenticateOKBody, error) {
+//RegistryLogin - returns basic AuthenticateOKBody
+func (m *MockDockerClientWithCw) RegistryLogin(ctx context.Context, auth types.AuthConfig) (registry.AuthenticateOKBody, error) {
 	return registry.AuthenticateOKBody{}, nil
 }
 

@@ -20,7 +20,7 @@ import (
 
 func TestPullImage(t *testing.T) {
 	t.Run("does not error when docker ImagePull succeeds", func(t *testing.T) {
-		client := &mockDockerClientWithCw{}
+		client := &MockDockerClientWithCw{}
 		err := PullImage(client, "dummyImage", true)
 		assert.Nil(t, err)
 	})
@@ -35,7 +35,7 @@ func TestPullImage(t *testing.T) {
 
 func TestGetImageList(t *testing.T) {
 	t.Run("gets the image list that is returned by the docker client", func(t *testing.T) {
-		client := &mockDockerClientWithCw{}
+		client := &MockDockerClientWithCw{}
 
 		imageList, err := GetImageList(client)
 		assert.Nil(t, err)
@@ -52,7 +52,7 @@ func TestGetImageList(t *testing.T) {
 
 func TestGetContainerList(t *testing.T) {
 	t.Run("gets the container list that is returned by the docker client", func(t *testing.T) {
-		client := &mockDockerClientWithCw{}
+		client := &MockDockerClientWithCw{}
 
 		containerList, err := GetContainerList(client)
 		assert.Nil(t, err)
@@ -69,7 +69,7 @@ func TestGetContainerList(t *testing.T) {
 
 func TestCheckImageStatus(t *testing.T) {
 	t.Run("returns true when correct images are returned by the docker client", func(t *testing.T) {
-		client := &mockDockerClientWithCw{}
+		client := &MockDockerClientWithCw{}
 
 		imageStatus, err := CheckImageStatus(client)
 		assert.Nil(t, err)
@@ -94,7 +94,7 @@ func TestCheckImageStatus(t *testing.T) {
 
 func TestCheckContainerStatus(t *testing.T) {
 	t.Run("returns true when correct containers are returned by the docker client", func(t *testing.T) {
-		client := &mockDockerClientWithCw{}
+		client := &MockDockerClientWithCw{}
 
 		containerStatus, err := CheckContainerStatus(client, LocalCWContainerNames)
 		assert.Nil(t, err)
@@ -102,7 +102,7 @@ func TestCheckContainerStatus(t *testing.T) {
 	})
 
 	t.Run("returns true when checking for only PFE", func(t *testing.T) {
-		client := &mockDockerClientWithCw{}
+		client := &MockDockerClientWithCw{}
 
 		containerStatus, err := CheckContainerStatus(client, []string{PfeContainerName})
 		assert.Nil(t, err)
@@ -136,7 +136,7 @@ func TestCheckContainerStatus(t *testing.T) {
 
 func TestGetImageTags(t *testing.T) {
 	t.Run("returns the image tags set in the ImageList mock", func(t *testing.T) {
-		client := &mockDockerClientWithCw{}
+		client := &MockDockerClientWithCw{}
 
 		imageTags, err := GetImageTags(client)
 		assert.Nil(t, err)
@@ -153,7 +153,7 @@ func TestGetImageTags(t *testing.T) {
 
 func TestGetContainerTags(t *testing.T) {
 	t.Run("returns the container tags set in the ContainerList mock", func(t *testing.T) {
-		client := &mockDockerClientWithCw{}
+		client := &MockDockerClientWithCw{}
 
 		imageTags, err := GetContainerTags(client)
 		assert.Nil(t, err)
@@ -170,7 +170,7 @@ func TestGetContainerTags(t *testing.T) {
 
 func TestGetPFEHostAndPort(t *testing.T) {
 	t.Run("returns the PFE host and port set in the ContainerList mock", func(t *testing.T) {
-		client := &mockDockerClientWithCw{}
+		client := &MockDockerClientWithCw{}
 
 		host, port, err := GetPFEHostAndPort(client)
 		assert.Nil(t, err)
@@ -197,7 +197,7 @@ func TestGetPFEHostAndPort(t *testing.T) {
 
 func TestValidateImageDigest(t *testing.T) {
 	t.Run("no error returned when image digests match those from dockerhub", func(t *testing.T) {
-		client := &mockDockerClientWithCw{}
+		client := &MockDockerClientWithCw{}
 		_, err := ValidateImageDigest(client, "test:0.0.9")
 		assert.Nil(t, err)
 	})
@@ -212,7 +212,7 @@ func TestValidateImageDigest(t *testing.T) {
 
 func TestGetAutoRemovePolicy(t *testing.T) {
 	t.Run("no error returned when image digests match those from dockerhub", func(t *testing.T) {
-		client := &mockDockerClientWithCw{}
+		client := &MockDockerClientWithCw{}
 		autoremovePolicy, err := getContainerAutoRemovePolicy(client, "pfe")
 		assert.Nil(t, err)
 		assert.True(t, autoremovePolicy)
@@ -228,7 +228,7 @@ func TestGetAutoRemovePolicy(t *testing.T) {
 
 func TestStopContainer(t *testing.T) {
 	t.Run("no error returned when container is stopped", func(t *testing.T) {
-		client := &mockDockerClientWithCw{}
+		client := &MockDockerClientWithCw{}
 		err := StopContainer(client, types.Container{
 			Names: []string{"/codewind-pfe"},
 			ID:    "pfe",

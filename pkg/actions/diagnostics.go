@@ -49,6 +49,9 @@ const dgProjectDirName = "projects"
 
 var collectingAll = false
 
+// use a variable for getting Docker client so it can be mocked for unit testing
+var getDockerClient = docker.NewDockerClient
+
 func logDG(input string) {
 	if !printAsJSON {
 		fmt.Print(input)
@@ -260,8 +263,8 @@ func dgLocalCommand(c *cli.Context) {
 	// Collect Codewind PFE workspace
 	logDG("Collecting local Codewind workspace ... ")
 
-	pfeContainerID := getContainerID(docker.PfeContainerName)
-	copyCodewindWorkspace(pfeContainerID)
+	pfeContainerID := getContainerID(docker.PfeContainerName, getDockerClient)
+	copyCodewindWorkspace(pfeContainerID, getDockerClient)
 	logDG("done\n")
 
 	if c.Bool("projects") {
@@ -281,9 +284,9 @@ func dgLocalCommand(c *cli.Context) {
 func collectCodewindContainers() {
 	for _, cwContainerName := range docker.LocalCWContainerNames {
 		logDG("Collecting information from container " + cwContainerName + " ... ")
-		containerID := getContainerID(cwContainerName)
-		writeContainerInspectToFile(containerID, filepath.Join("local", cwContainerName))
-		writeContainerLogToFile(containerID, filepath.Join("local", cwContainerName))
+		containerID := getContainerID(cwContainerName, getDockerClient)
+		writeContainerInspectToFile(containerID, filepath.Join("local", cwContainerName), getDockerClient)
+		writeContainerLogToFile(containerID, filepath.Join("local", cwContainerName), getDockerClient)
 		logDG("done\n")
 	}
 }
@@ -310,8 +313,8 @@ func collectCodewindProjectContainers() {
 		for _, cwContainer := range cwProjContainers {
 			logDG("Collecting information from container " + cwContainer.Names[0] + " ... ")
 			relativeFilePath := filepath.Join("local", dgProjectDirName, cwContainer.Names[0])
-			writeContainerInspectToFile(cwContainer.ID, relativeFilePath)
-			writeContainerLogToFile(cwContainer.ID, relativeFilePath)
+			writeContainerInspectToFile(cwContainer.ID, relativeFilePath, getDockerClient)
+			writeContainerLogToFile(cwContainer.ID, relativeFilePath, getDockerClient)
 			logDG("done\n")
 		}
 	} else {
@@ -532,8 +535,8 @@ func getDockerVersions() (clientVersion, serverVersion string) {
 }
 
 //getContainerID - returns the ID of the container filtered by name
-func getContainerID(containerName string) string {
-	dockerClient, dockerErr := docker.NewDockerClient()
+func getContainerID(containerName string, dockerNewClientFunc func() (docker.DockerClient, *docker.DockerError)) string {
+	dockerClient, dockerErr := dockerNewClientFunc()
 	if dockerErr != nil {
 		warnDG("Unable to get Docker client", dockerErr.Error())
 		return ""
@@ -551,12 +554,12 @@ func getContainerID(containerName string) string {
 }
 
 //writeContainerInspectToFile - writes the results of `docker inspect containerId` to a file
-func writeContainerInspectToFile(containerID, containerName string) error {
+func writeContainerInspectToFile(containerID, containerName string, dockerNewClientFunc func() (docker.DockerClient, *docker.DockerError)) error {
 	if containerID == "" {
 		warnDG("Unable to find "+containerName+" container", "could not get container ID")
 		return goErr.New("Unable to find " + containerName + " container - could not get container ID")
 	}
-	dockerClient, dockerErr := docker.NewDockerClient()
+	dockerClient, dockerErr := dockerNewClientFunc()
 	if dockerErr != nil {
 		warnDG("Unable to get Docker client", dockerErr.Error())
 		return dockerErr
@@ -570,12 +573,12 @@ func writeContainerInspectToFile(containerID, containerName string) error {
 }
 
 //writeContainerLogToFile - writes the results of `docker logs containerId` to a file
-func writeContainerLogToFile(containerID, containerName string) error {
+func writeContainerLogToFile(containerID, containerName string, dockerNewClientFunc func() (docker.DockerClient, *docker.DockerError)) error {
 	if containerID == "" {
 		warnDG("Unable to find "+containerName+" container", "could not get container ID")
 		return goErr.New("Unable to find " + containerName + " container - could not get container ID")
 	}
-	dockerClient, dockerErr := docker.NewDockerClient()
+	dockerClient, dockerErr := dockerNewClientFunc()
 	if dockerErr != nil {
 		warnDG("Unable to get Docker client", dockerErr.Error())
 		return dockerErr
@@ -589,12 +592,12 @@ func writeContainerLogToFile(containerID, containerName string) error {
 }
 
 //copyCodewindWorkspace - copies the Codewind PFE container's workspace to diagnostics
-func copyCodewindWorkspace(containerID string) error {
+func copyCodewindWorkspace(containerID string, dockerNewClientFunc func() (docker.DockerClient, *docker.DockerError)) error {
 	if containerID == "" {
 		warnDG("Unable to find Codewind PFE container", "could not get container ID")
 		return goErr.New("Unable to find Codewind PFE container - could not get container ID")
 	}
-	dockerClient, dockerErr := docker.NewDockerClient()
+	dockerClient, dockerErr := dockerNewClientFunc()
 	if dockerErr != nil {
 		warnDG("Unable to get Docker client", dockerErr.Error())
 		return dockerErr
@@ -621,6 +624,7 @@ func copyCodewindWorkspace(containerID string) error {
 //writeJSONStructToFile - writes the given struct to file as JSON
 func writeJSONStructToFile(structure interface{}, targetFilePath string) error {
 	fileContents, _ := json.MarshalIndent(structure, "", " ")
+	logDG(string(fileContents))
 	err := ioutil.WriteFile(filepath.Join(diagnosticsDirName, targetFilePath), fileContents, 0644)
 	return err
 }
