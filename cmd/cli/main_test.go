@@ -124,6 +124,18 @@ func testCreateProjectFromTemplate(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, "{\"status\":\"success\",\"projectPath\":\"./testDir\",\"result\":{\"language\":\"javascript\",\"projectType\":\"nodejs\"}}\n", string(out))
 	})
+	t.Run("cwctl --json project create --url <insecureTemplateRepo> --path <testDir>", func(t *testing.T) {
+		os.RemoveAll(testDir)
+		defer os.RemoveAll(testDir)
+
+		cmd := exec.Command(cwctl, "--json", "project", "create",
+			"--url="+test.PublicGHRepoURL,
+			"--path="+testDir,
+		)
+		out, err := cmd.Output()
+		assert.Nil(t, err)
+		assert.Equal(t, "{\"status\":\"success\",\"projectPath\":\"./testDir\",\"result\":{\"language\":\"javascript\",\"projectType\":\"nodejs\"}}\n", string(out))
+	})
 	t.Run("cwctl project create --url <secureTemplateRepo> --path <testDir> --username <test.GHEUsername> --password <test.GHEPassword>", func(t *testing.T) {
 		if !test.UsingOwnGHECredentials {
 			t.Skip("skipping this test because you haven't set GitHub credentials needed for this test")
