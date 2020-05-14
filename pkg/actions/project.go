@@ -56,13 +56,30 @@ func ProjectCreate(c *cli.Context) {
 		HandleProjectError(err)
 		os.Exit(1)
 	}
-	if printAsJSON {
-		jsonResponse, _ := json.Marshal(result)
-		logr.Tracef(string(jsonResponse)) // won't result in multiple JSON object output unless tracing
-	} else {
+
+	if !printAsJSON {
 		logr.Tracef("Project downloaded to %v", destination)
 	}
-	ProjectValidate(c)
+	// validate the new project
+	response, projectErr := project.ValidateProject(c)
+	if projectErr != nil {
+		fmt.Println(projectErr.Error())
+		os.Exit(1)
+	}
+
+	if printAsJSON {
+		type CreateResult struct {
+			Status           string                      `json:"status"`
+			StatusMessage    string                      `json:"status_message"`
+			ValidationResult *project.ValidationResponse `json:"validation_result"`
+		}
+		jsonResponse, _ := json.Marshal(CreateResult{Status: result.Status, StatusMessage: result.StatusMessage, ValidationResult: response})
+		logr.Tracef(string(jsonResponse))
+	} else {
+		projectInfo, _ := json.Marshal(response)
+		fmt.Println(string(projectInfo))
+	}
+	os.Exit(0)
 }
 
 // ProjectSync : Does a project Sync

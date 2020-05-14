@@ -22,7 +22,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strings"
 	"time"
 
@@ -105,12 +104,12 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 		return nil, projErr
 	}
 
-	conInfo, conInfoErr := connections.GetConnectionByID(conID)
-	if conInfoErr != nil {
-		return nil, &ProjectError{errOpConNotFound, conInfoErr, conInfoErr.Desc}
+	connection, connectionErr := connections.GetConnectionByID(conID)
+	if connectionErr != nil {
+		return nil, &ProjectError{errOpConNotFound, connectionErr, connectionErr.Desc}
 	}
 
-	conURL, conURLErr := config.PFEOriginFromConnection(conInfo)
+	conURL, conURLErr := config.PFEOriginFromConnection(connection)
 	if conURLErr != nil {
 		return nil, &ProjectError{errOpConNotFound, conURLErr.Err, conURLErr.Desc}
 	}
@@ -120,7 +119,7 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	pathExists := utils.PathExists(projectPath)
 
 	if !pathExists {
-		projectInfo, err := GetProjectFromID(&http.Client{}, conInfo, conURL, projectID)
+		projectInfo, err := GetProjectFromID(&http.Client{}, connection, conURL, projectID)
 		if err != nil {
 			return nil, err
 		}
@@ -130,7 +129,7 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 			return nil, &ProjectError{errBadPath, newErr, newErr.Error()}
 		}
 
-		err = handleMissingProjectDir(&http.Client{}, conInfo, conURL, projectID)
+		err = handleMissingProjectDir(&http.Client{}, connection, conURL, projectID)
 		if err != nil {
 			return nil, &ProjectError{errBadPath, err, err.Error()}
 		}
@@ -139,29 +138,30 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	}
 
 	// Sync all the necessary project files
-	syncInfo, syncErr := syncFiles(&http.Client{}, projectPath, projectID, conURL, synctime, conInfo)
+	syncInfo, syncErr := syncFiles(&http.Client{}, projectPath, projectID, conURL, synctime, connection)
 
 	// Add a check here for files that have been imported into the project
 
-	BeforeFileList, err := GetProjectFileList(&http.Client{}, conInfo, conURL, projectID)
+	BeforeFileList, err := GetProjectFileList(&http.Client{}, connection, conURL, projectID)
 	if err != nil {
 		fmt.Println(err)
 	} else {
-		fmt.Println(BeforeFileList)
+		//		fmt.Println(BeforeFileList)
 	}
-	str1 := []string{"1", "4", "3"}
-	str2 := []string{"1", "2", "3"}
-	if reflect.DeepEqual(str1, str2) {
-		fmt.Println(`NUMBER LISTS ARE THE SAME`)
-	} else {
-		fmt.Println(`NUMBER LISTS ARE DIFFERENT`)
-	}
+	// str1 := []string{"1", "2", "3"}
+	// str2 := []string{"1", "2", "3"}
+	// if reflect.DeepEqual(str1, str2) {
+	// 	fmt.Println(`NUMBER LISTS ARE THE SAME`)
+	// } else {
+	// 	fmt.Println(`NUMBER LISTS ARE DIFFERENT`)
+	// }
 
-	if reflect.DeepEqual(BeforeFileList, syncInfo.fileList) {
-		fmt.Println(`FILE LISTS ARE THE SAME`)
-	} else {
-		fmt.Println(`FILE LISTS ARE DIFFERENT`)
-	}
+	// if reflect.DeepEqual(BeforeFileList, syncInfo.fileList) {
+	// 	fmt.Println(`FILE LISTS ARE THE SAME`)
+	// } else {
+	// 	fmt.Println(`FILE LISTS ARE DIFFERENT`)
+	// }
+	checkForNewFiles(BeforeFileList, syncInfo.fileList, projectPath, connection)
 
 	// Complete the upload
 	completeRequest := CompleteRequest{
@@ -170,7 +170,7 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 		ModifiedList:  syncInfo.modifiedList,
 		TimeStamp:     currentSyncTime,
 	}
-	completeStatus, completeStatusCode := completeUpload(&http.Client{}, projectID, completeRequest, conInfo, conURL)
+	completeStatus, completeStatusCode := completeUpload(&http.Client{}, projectID, completeRequest, connection, conURL)
 	response := SyncResponse{
 		UploadedFiles: syncInfo.UploadedFileList,
 		Status:        completeStatus,
@@ -180,13 +180,98 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	return &response, syncErr
 }
 
+func checkForNewFiles(beforefiles []string, afterfiles []string, projectPath string, connection *connections.Connection) {
+
+	for _, filename := range afterfiles {
+		if !existsIn(filename, beforefiles) {
+			fmt.Println("FOUND A NEW FILE " + filename)
+			syncFile(filename, projectPath, connection)
+
+		} else {
+			fmt.Println(filename + " is not new")
+		}
+	}
+
+}
+
+func existsIn(value string, slice []string) bool {
+	for _, item := range slice {
+		if item == value {
+			return true
+		}
+	}
+	return false
+}
+
+func syncFile(projectID string, path string, projectPath string, connection *connections.Connection) UploadedFile {
+	// use ToSlash to try and get both Windows and *NIX paths to be *NIX for pfe
+	relativePath := filepath.ToSlash(path[(len(projectPath) + 1):])
+	fileStat, err := os.Stat(path)
+	if err != nil {
+
+	}
+	projectUploadURL := connection.URL + "/api/v1/projects/" + projectID + "/upload"
+
+	uploadResponse := UploadedFile{
+		FilePath:   relativePath,
+		Status:     "Failed",
+		StatusCode: 0,
+	}
+	fileContent, err := ioutil.ReadFile(path)
+	// Skip this file if there is an error reading it.
+	if err != nil {
+		//return nil
+		return uploadResponse
+	}
+
+	// Create list of all modfied files
+	//	modifiedList = append(modifiedList, relativePath)
+
+	fileUploadBody := FileUploadMsg{
+		IsDirectory:  fileStat.IsDir(),
+		Mode:         uint(fileStat.Mode().Perm()),
+		RelativePath: relativePath,
+		Message:      "",
+	}
+
+	var buffer bytes.Buffer
+	zWriter := zlib.NewWriter(&buffer)
+	zWriter.Write([]byte(fileContent))
+
+	zWriter.Close()
+	encoded := base64.StdEncoding.EncodeToString(buffer.Bytes())
+	fileUploadBody.Message = encoded
+
+	buf := new(bytes.Buffer)
+	json.NewEncoder(buf).Encode(fileUploadBody)
+
+	// TODO - How do we handle partial success?
+	request, err := http.NewRequest("PUT", projectUploadURL, bytes.NewReader(buf.Bytes()))
+	request.Header.Set("Content-Type", "application/json")
+	resp, httpSecError := sechttp.DispatchHTTPRequest(&http.Client{}, request, connection)
+	// uploadedFiles = append(uploadedFiles, UploadedFile{
+	// 	FilePath:   relativePath,
+	// 	Status:     resp.Status,
+	// 	StatusCode: resp.StatusCode,
+	// })
+	if httpSecError != nil {
+		return uploadResponse
+	}
+	defer resp.Body.Close()
+	return UploadedFile{
+		FilePath:   relativePath,
+		Status:     resp.Status,
+		StatusCode: resp.StatusCode,
+	}
+}
+
 func syncFiles(client utils.HTTPClient, projectPath string, projectID string, conURL string, synctime int64, connection *connections.Connection) (*SyncInfo, *ProjectError) {
 	var fileList []string
 	var directoryList []string
 	var modifiedList []string
 	var uploadedFiles []UploadedFile
 
-	projectUploadURL := conURL + "/api/v1/projects/" + projectID + "/upload"
+	//	projectUploadURL := conURL + "/api/v1/projects/" + projectID + "/upload"
 
 	refPathsChanged := false
 
@@ -216,47 +301,16 @@ func syncFiles(client utils.HTTPClient, projectPath string, projectID string, co
 			// get time file was modified in milliseconds since epoch
 			modifiedmillis := info.ModTime().UnixNano() / 1000000
 
-			fileUploadBody := FileUploadMsg{
-				IsDirectory:  info.IsDir(),
-				Mode:         uint(info.Mode().Perm()),
-				RelativePath: relativePath,
-				Message:      "",
-			}
-
 			// Has this file been modified since last sync
 			if modifiedmillis > info.LastSync {
-				fileContent, err := ioutil.ReadFile(info.Path)
-				// Skip this file if there is an error reading it.
-				if err != nil {
-					return nil
-				}
-				// Create list of all modfied files
-				modifiedList = append(modifiedList, relativePath)
 
-				var buffer bytes.Buffer
-				zWriter := zlib.NewWriter(&buffer)
-				zWriter.Write([]byte(fileContent))
+				uploadedFiles = append(uploadedFiles, syncFile(path, info, projectPath, connection))
 
-				zWriter.Close()
-				encoded := base64.StdEncoding.EncodeToString(buffer.Bytes())
-				fileUploadBody.Message = encoded
-
-				buf := new(bytes.Buffer)
-				json.NewEncoder(buf).Encode(fileUploadBody)
-
-				// TODO - How do we handle partial success?
-				request, err := http.NewRequest("PUT", projectUploadURL, bytes.NewReader(buf.Bytes()))
-				request.Header.Set("Content-Type", "application/json")
-				resp, httpSecError := sechttp.DispatchHTTPRequest(client, request, connection)
-				uploadedFiles = append(uploadedFiles, UploadedFile{
-					FilePath:   relativePath,
-					Status:     resp.Status,
-					StatusCode: resp.StatusCode,
-				})
-				if httpSecError != nil {
-					return nil
-				}
-				defer resp.Body.Close()
+				// uploadedFiles = append(uploadedFiles, UploadedFile{
+				// 	FilePath:   relativePath,
+				// 	Status:     resp.Status,
+				// 	StatusCode: resp.StatusCode,
+				// })
 
 				// if this file changed, it should force referenced files to re-sync
 				if relativePath == ".cw-refpaths.json" {
