@@ -926,6 +926,7 @@ func Commands() {
 						cli.StringFlag{Name: "address,a", Usage: "Registry address", Required: true},
 						cli.StringFlag{Name: "username,u", Usage: "Registry username", Required: true},
 						cli.StringFlag{Name: "password,p", Usage: "Registry password", Required: true},
+						cli.BoolTFlag{Name: "locallogin", Usage: "Perform a local docker login to the registry", Required: false},
 					},
 					Action: func(c *cli.Context) error {
 						AddRegistrySecret(c)

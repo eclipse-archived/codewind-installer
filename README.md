@@ -509,6 +509,7 @@ Subcommands:</br>
 > --address value The address of the docker registry
 > --username value The username for the docker registry
 > --password value The password for the docker registry
+> --locallogin=[true|false] Whether to perform a local docker login to the registry. Defaults to true.
 
 `list/ls` - List the docker secrets (registries and usernames)
 
