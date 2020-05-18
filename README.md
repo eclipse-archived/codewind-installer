@@ -265,6 +265,7 @@ Subcommands:</br>
 `--eclipseWorkspaceDir/-e <value>` - The location of your Eclipse workspace directory if using the Eclipse IDE (default: "")</br>
 `--intellijLogsDir/-i <value>` - The location of your IntelliJ logs directory if using the IntelliJ IDE (default: "")</br>
 `--quiet/-q` - Turn off console messages</br>
+`--all/-a` - Collects diagnostics for all defined connections, remote and local</br>
 `--projects/-p` - Collect project containers information</br>
 `--nozip/-n` - Does not create collection zip and leaves individual collected files in place</br>
 `--clean` - Removes the diagnostics directory and all its contents from the Codewind home directory
