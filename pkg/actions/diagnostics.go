@@ -183,8 +183,7 @@ func dgRemoteCommand(conid string, collectProjects bool) {
 		warnDG("existing_deployment_error", "Unable to locate existing deployment with Workspace ID "+workspaceID)
 		return
 	}
-	cwWorkspaceID := codewindPrefix + connectionID
-	diagnosticsRemoteDirName := filepath.Join(diagnosticsDirName, cwWorkspaceID)
+	diagnosticsRemoteDirName := filepath.Join(diagnosticsDirName, connectionID)
 	cwBasePods, cwBPErr := clientset.CoreV1().Pods(kubeNameSpace).List(metav1.ListOptions{LabelSelector: "codewindWorkspace=" + workspaceID})
 	if cwBPErr != nil {
 		warnDG("kube_podlist_error", "Unable to retrieve Kubernetes Pods: "+cwBPErr.Error())
@@ -193,7 +192,7 @@ func dgRemoteCommand(conid string, collectProjects bool) {
 		if connDirErr != nil {
 			errors.CheckErr(connDirErr, 205, "")
 		}
-		collectPodInfo(clientset, cwBasePods.Items, cwWorkspaceID)
+		collectPodInfo(clientset, cwBasePods.Items, connectionID)
 	}
 	if collectProjects {
 		cwProjPods, cwPPErr := clientset.CoreV1().Pods(kubeNameSpace).List(metav1.ListOptions{FieldSelector: "spec.serviceAccountName=" + codewindPrefix + workspaceID, LabelSelector: "codewindWorkspace!=" + workspaceID})
@@ -204,7 +203,7 @@ func dgRemoteCommand(conid string, collectProjects bool) {
 			if connDirErr != nil {
 				errors.CheckErr(connDirErr, 205, "")
 			}
-			collectPodInfo(clientset, cwProjPods.Items, filepath.Join(cwWorkspaceID, dgProjectDirName))
+			collectPodInfo(clientset, cwProjPods.Items, filepath.Join(connectionID, dgProjectDirName))
 		}
 	}
 	gatherCodewindVersions(connectionID)
@@ -509,21 +508,38 @@ func gatherCodewindVersions(connectionID string) {
 	versionsByteArray := []byte(
 		"CWCTL VERSION: " + containerVersions.CwctlVersion + errorString + "\n" +
 			"PFE VERSION: " + containerVersions.PFEVersion + errorString + "\n" +
-			"PERFORMANCE VERSION: " + containerVersions.PerformanceVersion + errorString)
-	versionfileDir := diagnosticsLocalDirName
-	if connectionID != "local" {
-		versionsByteArray = []byte(
-			"CWCTL VERSION: " + containerVersions.CwctlVersion + errorString + "\n" +
-				"PFE VERSION: " + containerVersions.PFEVersion + errorString + "\n" +
-				"PERFORMANCE VERSION: " + containerVersions.PerformanceVersion + errorString + "\n" +
-				"GATEKEEPER VERSION: " + containerVersions.GatekeeperVersion + errorString)
-		versionfileDir = filepath.Join(diagnosticsDirName, codewindPrefix+connectionID)
+			"PERFORMANCE VERSION: " + containerVersions.PerformanceVersion + errorString + "\n")
+	if connectionID == "local" {
+		dockerClientVersion, dockerServerVersion := getDockerVersions()
+		versionsByteArray = append(versionsByteArray, []byte(
+			"DOCKER CLIENT VERSION: "+dockerClientVersion+"\n"+
+				"DOCKER SERVER VERSION: "+dockerServerVersion+"\n")...,
+		)
+	} else {
+		versionsByteArray = append(versionsByteArray, []byte(
+			"GATEKEEPER VERSION: "+containerVersions.GatekeeperVersion+errorString+"\n")...,
+		)
 	}
-	versionsErr := ioutil.WriteFile(filepath.Join(versionfileDir, "codewind.versions"), versionsByteArray, 0644)
+	versionsErr := ioutil.WriteFile(filepath.Join(diagnosticsDirName, connectionID, "codewind.versions"), versionsByteArray, 0644)
 	if versionsErr != nil {
 		errors.CheckErr(versionsErr, 201, "")
 	}
 	logDG("done\n")
+}
+
+func getDockerVersions() (clientVersion, serverVersion string) {
+	dockerClient, dockerErr := docker.NewDockerClient()
+	if dockerErr != nil {
+		warnDG("Problems getting docker client", dockerErr.Error())
+		return "Unable to determine version - " + dockerErr.Error(), "Unable to determine version - " + dockerErr.Error()
+	}
+	dockerClientVersion := docker.GetClientVersion(dockerClient)
+	dockerServerVersion, gsvErr := docker.GetServerVersion(dockerClient)
+	if gsvErr != nil {
+		warnDG("Problems getting docker server version", gsvErr.Error())
+		return dockerClientVersion, "Unable to determine version - " + gsvErr.Error()
+	}
+	return dockerClientVersion, dockerServerVersion.Version
 }
 
 //getContainerID - returns the ID of the container filtered by name
