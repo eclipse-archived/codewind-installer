@@ -47,6 +47,9 @@ var mockContainerListWithCwContainers = []types.Container{
 	types.Container{
 		Names: []string{"/codewind-performance"},
 		Image: "eclipse/codewind-performance:0.0.9"},
+	types.Container{
+		Names: []string{"/cw-testProject"},
+		Image: "eclipse/codewind-performance:0.0.9"},
 }
 
 var mockContainerListWithOnlyPFEContainer = []types.Container{
@@ -299,69 +302,93 @@ func (m *mockDockerClientWithoutCw) ServerVersion(ctx context.Context) (types.Ve
 	return types.Version{Platform: struct{ Name string }{""}, Components: []types.ComponentVersion{}, Version: "", APIVersion: "", MinAPIVersion: "", GitCommit: "", GoVersion: "", Os: "", Arch: "", KernelVersion: "", Experimental: true, BuildTime: ""}, nil
 }
 
-// This mock client will return errors for each call to a docker function
-type mockDockerErrorClient struct {
+//MockDockerErrorClient - This mock client will return errors for each call to a docker function
+type MockDockerErrorClient struct {
 }
 
 var errImagePull = errors.New("error pulling image")
 var errImageList = errors.New("error listing images")
-var errContainerList = errors.New("error listing containers")
+
+//ErrContainerInspect - exported for testing purposes
+var ErrContainerList = errors.New("error listing containers")
 var errContainerStop = errors.New("error stopping container")
 var errContainerRemove = errors.New("error removing container")
-var errContainerInspect = errors.New("error inspecting container")
+
+//ErrContainerInspect - exported for testing purposes
+var ErrContainerInspect = errors.New("error inspecting container")
 var errDistributionInspect = errors.New("error inspecting distribution")
 
-func (m *mockDockerErrorClient) ImageList(ctx context.Context, imageListOptions types.ImageListOptions) ([]types.ImageSummary, error) {
+//ErrContainerLogs - exported for testing purposes
+var ErrContainerLogs = errors.New("error getting container logs")
+
+//ErrCopyFromContainer - exported for testing purposes
+var ErrCopyFromContainer = errors.New("error copying files from container")
+var errServerVersion = errors.New("error getting server version")
+
+//ImageList - returns an error
+func (m *MockDockerErrorClient) ImageList(ctx context.Context, imageListOptions types.ImageListOptions) ([]types.ImageSummary, error) {
 	return nil, errImageList
 }
 
-func (m *mockDockerErrorClient) ImagePull(ctx context.Context, image string, imagePullOptions types.ImagePullOptions) (io.ReadCloser, error) {
+//ImagePull - returns an error
+func (m *MockDockerErrorClient) ImagePull(ctx context.Context, image string, imagePullOptions types.ImagePullOptions) (io.ReadCloser, error) {
 	r := ioutil.NopCloser(bytes.NewReader([]byte("")))
 	return r, errImagePull
 }
 
-func (m *mockDockerErrorClient) ContainerList(ctx context.Context, containerListOptions types.ContainerListOptions) ([]types.Container, error) {
-	return []types.Container{}, errContainerList
+//ContainerList - returns an error
+func (m *MockDockerErrorClient) ContainerList(ctx context.Context, containerListOptions types.ContainerListOptions) ([]types.Container, error) {
+	return []types.Container{}, ErrContainerList
 }
 
-func (m *mockDockerErrorClient) ContainerStop(ctx context.Context, containerID string, timeout *time.Duration) error {
+//ContainerStop - returns an error
+func (m *MockDockerErrorClient) ContainerStop(ctx context.Context, containerID string, timeout *time.Duration) error {
 	return errContainerStop
 }
 
-func (m *mockDockerErrorClient) ContainerRemove(ctx context.Context, containerID string, options types.ContainerRemoveOptions) error {
+//ContainerRemove - returns an error
+func (m *MockDockerErrorClient) ContainerRemove(ctx context.Context, containerID string, options types.ContainerRemoveOptions) error {
 	return errContainerRemove
 }
 
-func (m *mockDockerErrorClient) ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error) {
-	return types.ContainerJSON{}, errContainerInspect
+//ContainerInspect - returns an error
+func (m *MockDockerErrorClient) ContainerInspect(ctx context.Context, containerID string) (types.ContainerJSON, error) {
+	return types.ContainerJSON{}, ErrContainerInspect
 }
 
-func (m *mockDockerErrorClient) DaemonHost() string {
+//DaemonHost - returns an empty string
+func (m *MockDockerErrorClient) DaemonHost() string {
 	return ""
 }
 
-func (m *mockDockerErrorClient) DistributionInspect(ctx context.Context, image, encodedRegistryAuth string) (registry.DistributionInspect, error) {
+//DistributionInspect - returns an error
+func (m *MockDockerErrorClient) DistributionInspect(ctx context.Context, image, encodedRegistryAuth string) (registry.DistributionInspect, error) {
 	return registry.DistributionInspect{}, errDistributionInspect
 }
 
-func (m *mockDockerErrorClient) RegistryLogin(ctx context.Context, auth types.AuthConfig) (registry.AuthenticateOKBody, error) {
+//RegistryLogin - returns an error
+func (m *MockDockerErrorClient) RegistryLogin(ctx context.Context, auth types.AuthConfig) (registry.AuthenticateOKBody, error) {
 	return registry.AuthenticateOKBody{}, nil
 }
 
-func (m *mockDockerErrorClient) ClientVersion() string {
+//ClientVersion - returns an empty string
+func (m *MockDockerErrorClient) ClientVersion() string {
 	return ""
 }
 
-func (m *mockDockerErrorClient) ContainerLogs(ctx context.Context, containerID string, options types.ContainerLogsOptions) (io.ReadCloser, error) {
+//ContainerLogs - returns an error
+func (m *MockDockerErrorClient) ContainerLogs(ctx context.Context, containerID string, options types.ContainerLogsOptions) (io.ReadCloser, error) {
 	r := ioutil.NopCloser(bytes.NewReader([]byte("")))
-	return r, nil
+	return r, ErrContainerLogs
 }
 
-func (m *mockDockerErrorClient) CopyFromContainer(ctx context.Context, containerID, srcPath string) (io.ReadCloser, types.ContainerPathStat, error) {
+//CopyFromContainer - returns an error
+func (m *MockDockerErrorClient) CopyFromContainer(ctx context.Context, containerID, srcPath string) (io.ReadCloser, types.ContainerPathStat, error) {
 	r := ioutil.NopCloser(bytes.NewReader([]byte("")))
-	return r, types.ContainerPathStat{Name: "", Size: 0, Mode: 0, Mtime: time.Now(), LinkTarget: ""}, nil
+	return r, types.ContainerPathStat{Name: "", Size: 0, Mode: 0, Mtime: time.Now(), LinkTarget: ""}, ErrCopyFromContainer
 }
 
-func (m *mockDockerErrorClient) ServerVersion(ctx context.Context) (types.Version, error) {
-	return types.Version{Platform: struct{ Name string }{""}, Components: []types.ComponentVersion{}, Version: "", APIVersion: "", MinAPIVersion: "", GitCommit: "", GoVersion: "", Os: "", Arch: "", KernelVersion: "", Experimental: true, BuildTime: ""}, nil
+//ServerVersion - returns an error
+func (m *MockDockerErrorClient) ServerVersion(ctx context.Context) (types.Version, error) {
+	return types.Version{Platform: struct{ Name string }{""}, Components: []types.ComponentVersion{}, Version: "", APIVersion: "", MinAPIVersion: "", GitCommit: "", GoVersion: "", Os: "", Arch: "", KernelVersion: "", Experimental: true, BuildTime: ""}, errServerVersion
 }

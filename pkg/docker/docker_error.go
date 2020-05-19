@@ -21,11 +21,14 @@ type DockerError struct {
 }
 
 const (
-	errOpValidate                = "DOCKER_VALIDATE"
-	errOpClientCreate            = "CLIENT_CREATE_ERROR"
-	errOpContainerInspect        = "CONTAINER_INSPECT_ERROR"
-	errOpContainerLogs           = "CONTAINER_LOGS_ERROR"
-	errOpContainerError          = "CONTAINER_ERROR"
+	errOpValidate     = "DOCKER_VALIDATE"
+	errOpClientCreate = "CLIENT_CREATE_ERROR"
+	// ErrOpContainerInspect exported for test purposes
+	ErrOpContainerInspect = "CONTAINER_INSPECT_ERROR"
+	// ErrOpContainerLogs exported for test purposes
+	ErrOpContainerLogs = "CONTAINER_LOGS_ERROR"
+	// ErrOpContainerError exported for test purposes
+	ErrOpContainerError          = "CONTAINER_ERROR"
 	errOpStopContainer           = "CONTAINER_STOP_ERROR"
 	errOpDockerComposeFileCreate = "DOCKER_COMPOSE_FILE_CREATE_ERROR"
 	errOpDockerComposeStart      = "DOCKER_COMPOSE_START_ERROR"
@@ -36,10 +39,11 @@ const (
 	errOpImageTag                = "IMAGE_TAG_ERROR"
 	errOpImageRemove             = "IMAGE_REMOVE_ERROR"
 	errOpImageDigest             = "IMAGE_DIGEST_ERROR"
-	errOpContainerList           = "CONTAINER_LIST_ERROR"
-	errOpImageList               = "IMAGE_LIST_ERROR"
-	errDockerCredential          = "DOCKER_CREDENTIAL_ERROR"
-	errDockerVersion             = "DOCKER_VERSION_ERROR"
+	// ErrOpContainerList exported for test purposes
+	ErrOpContainerList  = "CONTAINER_LIST_ERROR"
+	errOpImageList      = "IMAGE_LIST_ERROR"
+	errDockerCredential = "DOCKER_CREDENTIAL_ERROR"
+	errDockerVersion    = "DOCKER_VERSION_ERROR"
 )
 
 const (

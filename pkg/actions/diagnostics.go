@@ -268,7 +268,7 @@ func dgLocalCommand(c *cli.Context) {
 	logDG("done\n")
 
 	if c.Bool("projects") {
-		collectCodewindProjectContainers()
+		collectCodewindProjectContainers(getDockerClient)
 	}
 
 	// Collect codewind versions
@@ -291,9 +291,9 @@ func collectCodewindContainers() {
 	}
 }
 
-func collectCodewindProjectContainers() {
+func collectCodewindProjectContainers(dockerNewClientFunc func() (docker.DockerClient, *docker.DockerError)) {
 	// Collect project container inspection & logs
-	dockerClient, dockerErr := docker.NewDockerClient()
+	dockerClient, dockerErr := dockerNewClientFunc()
 	if dockerErr != nil {
 		warnDG("Unable to get Docker client", dockerErr.Error())
 		return
@@ -624,7 +624,6 @@ func copyCodewindWorkspace(containerID string, dockerNewClientFunc func() (docke
 //writeJSONStructToFile - writes the given struct to file as JSON
 func writeJSONStructToFile(structure interface{}, targetFilePath string) error {
 	fileContents, _ := json.MarshalIndent(structure, "", " ")
-	logDG(string(fileContents))
 	err := ioutil.WriteFile(filepath.Join(diagnosticsDirName, targetFilePath), fileContents, 0644)
 	return err
 }

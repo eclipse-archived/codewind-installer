@@ -460,7 +460,7 @@ func GetContainerListWithOptions(dockerClient DockerClient, options types.Contai
 
 	containers, err := dockerClient.ContainerList(ctx, options)
 	if err != nil {
-		return nil, &DockerError{errOpContainerList, err, err.Error()}
+		return nil, &DockerError{ErrOpContainerList, err, err.Error()}
 	}
 	return containers, nil
 }
@@ -508,7 +508,7 @@ func getContainerAutoRemovePolicy(dockerClient DockerClient, containerID string)
 
 	containerInfo, err := dockerClient.ContainerInspect(ctx, containerID)
 	if err != nil {
-		return false, &DockerError{errOpContainerInspect, err, err.Error()}
+		return false, &DockerError{ErrOpContainerInspect, err, err.Error()}
 	}
 
 	return containerInfo.HostConfig.AutoRemove, nil
@@ -715,7 +715,7 @@ func InspectContainer(dockerClient DockerClient, containerID string) (types.Cont
 
 	containerInfo, err := dockerClient.ContainerInspect(ctx, containerID)
 	if err != nil {
-		return types.ContainerJSON{nil, nil, nil, nil}, &DockerError{errOpContainerInspect, err, err.Error()}
+		return types.ContainerJSON{nil, nil, nil, nil}, &DockerError{ErrOpContainerInspect, err, err.Error()}
 	}
 	return containerInfo, nil
 }
@@ -726,7 +726,7 @@ func GetContainerLogs(dockerClient DockerClient, containerID string) (io.ReadClo
 
 	containerLogStream, err := dockerClient.ContainerLogs(ctx, containerID, types.ContainerLogsOptions{ShowStdout: true, ShowStderr: true})
 	if err != nil {
-		return nil, &DockerError{errOpContainerLogs, err, err.Error()}
+		return nil, &DockerError{ErrOpContainerLogs, err, err.Error()}
 	}
 
 	return containerLogStream, nil
@@ -738,7 +738,7 @@ func GetFilesFromContainer(dockerClient DockerClient, containerID, path string) 
 
 	fileTarStream, _, err := dockerClient.CopyFromContainer(ctx, containerID, path)
 	if err != nil {
-		return nil, &DockerError{errOpContainerError, err, err.Error()}
+		return nil, &DockerError{ErrOpContainerError, err, err.Error()}
 	}
 
 	return fileTarStream, nil
