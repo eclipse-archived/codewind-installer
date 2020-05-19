@@ -612,4 +612,62 @@ func Test_dgLocalCommand(t *testing.T) {
 	})
 }
 
-// can't test writePodLogToFile because kubernetes.fake doesn't support streams and panics.
+func Test_writePodLogToFile(t *testing.T) {
+	printAsJSON = false
+	t.Run("writePodLogToFile", func(t *testing.T) {
+		//kubernetes.fake panics if you try to use streams
+		defer func() {
+			if err := recover(); err != nil {
+				t.Log("Got expected panic")
+			} else {
+				t.Error("Did not panic as expected")
+			}
+		}()
+		writePodLogToFile(mockClientset, *mockPFEPod, mockPFEPod.GetName())
+	})
+}
+
+func Test_collectPodInfo(t *testing.T) {
+	printAsJSON = false
+	diagnosticsDirName = testDir
+	t.Run("collectPodInfo", func(t *testing.T) {
+		//kubernetes.fake panics if you try to use streams
+		defer func() {
+			if err := recover(); err != nil {
+				t.Log("Got expected panic")
+				assert.FileExists(t, filepath.Join(testDir, "local", mockPFEPod.GetName()+".describe"), "Unable to find expected file "+filepath.Join(testDir, "local", mockPFEPod.GetName()+".describe"))
+			} else {
+				t.Error("Did not panic as expected")
+			}
+		}()
+		collectPodInfo(mockClientset, []v1.Pod{*mockPFEPod}, "local")
+	})
+}
+
+func Test_confirmConnectionIDAndWorkspaceID(t *testing.T) {
+	t.Run("confirmConnectionIDAndWorkspaceID - connection not found", func(t *testing.T) {
+		expectedConsoleOutput := "connection_not_found: Unable to associate  with existing connection\n"
+		originalStdout := os.Stdout
+		r, w, _ := os.Pipe()
+		os.Stdout = w
+		connectionID, workspaceID := confirmConnectionIDAndWorkspaceID("")
+		os.Stdout = w
+		dgLocalCommand(true)
+		w.Close()
+		out, _ := ioutil.ReadAll(r)
+		os.Stdout = originalStdout
+		assert.Contains(t, string(out), expectedConsoleOutput)
+		assert.Equal(t, "", connectionID)
+		assert.Equal(t, "", workspaceID)
+	})
+	t.Run("confirmConnectionIDAndWorkspaceID - correct ID", func(t *testing.T) {
+		connectionID, workspaceID := confirmConnectionIDAndWorkspaceID("local")
+		assert.Equal(t, "local", connectionID)
+		assert.Equal(t, "", workspaceID)
+	})
+	t.Run("confirmConnectionIDAndWorkspaceID - correct Label", func(t *testing.T) {
+		connectionID, workspaceID := confirmConnectionIDAndWorkspaceID("Codewind local connection")
+		assert.Equal(t, "local", connectionID)
+		assert.Equal(t, "", workspaceID)
+	})
+}

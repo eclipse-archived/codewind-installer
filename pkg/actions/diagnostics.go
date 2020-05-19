@@ -230,7 +230,7 @@ func confirmConnectionIDAndWorkspaceID(conid string) (string, string) {
 	return "", ""
 }
 
-func collectPodInfo(clientset *kubernetes.Clientset, podArray []corev1.Pod, workspaceDirName string) {
+func collectPodInfo(clientset kubernetes.Interface, podArray []corev1.Pod, workspaceDirName string) {
 	for _, pod := range podArray {
 		podName := pod.ObjectMeta.Name
 		logDG("Collecting information from pod " + podName + " ... ")
