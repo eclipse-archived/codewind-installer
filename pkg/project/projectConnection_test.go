@@ -17,17 +17,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Test_ProjectConnection :  Tests
+const IDOfNonExistentProject = "1234-abcd"
+
 func Test_ProjectConnection(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping testing in short mode")
 	}
 
-	t.Run("Asserts no connectionID is found for non-existant project", func(t *testing.T) {
-		connectionID, projError := GetConnectionID("1234-abcd")
-		if projError != nil {
-			t.Fail()
-		}
+	t.Run("Asserts no connectionID is found for non-existent project", func(t *testing.T) {
+		connectionID, err := GetConnectionID(IDOfNonExistentProject)
 		assert.Equal(t, "", connectionID)
+		assert.Equal(t, "Active connection not found for project "+IDOfNonExistentProject, err.Desc)
 	})
 }
