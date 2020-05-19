@@ -11,6 +11,8 @@
 
 package utils
 
+import "fmt"
+
 type (
 	// TemplateRepo represents a template repository.
 	TemplateRepo struct {
@@ -101,4 +103,29 @@ func OnDeleteTemplateRepo(extensions []Extension, url string, repos []TemplateRe
 			break
 		}
 	}
+}
+
+// ExtractGitCredentials extracts and formats git credentials from the provided arguments
+func ExtractGitCredentials(username, password, personalAccessToken string) (*GitCredentials, error) {
+	if personalAccessToken != "" && (username != "" || password != "") {
+		return nil, fmt.Errorf("received credentials for multiple authentication methods")
+	}
+	if username != "" && password == "" {
+		return nil, fmt.Errorf("received username but no password")
+	}
+	if password != "" && username == "" {
+		return nil, fmt.Errorf("received password but no username")
+	}
+	if username != "" && password != "" {
+		return &GitCredentials{
+			Username: username,
+			Password: password,
+		}, nil
+	}
+	if personalAccessToken != "" {
+		return &GitCredentials{
+			PersonalAccessToken: personalAccessToken,
+		}, nil
+	}
+	return nil, nil
 }

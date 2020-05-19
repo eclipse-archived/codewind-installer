@@ -483,6 +483,11 @@ func Commands() {
 									Usage:    "GitHub password",
 									Required: false,
 								},
+								cli.StringFlag{
+									Name:     "personalAccessToken",
+									Usage:    "GitHub personal access token",
+									Required: false,
+								},
 							},
 							Action: func(c *cli.Context) error {
 								AddTemplateRepo(c)

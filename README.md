@@ -311,8 +311,9 @@ Subcommands:</br>
 > --url - URL to template repository index.json
 > --name - Custom name for template repository
 > --description - Custom description for template repository
-> --username - GitHub username (required if accessing the provided URL requires GitHub authentication)
-> --password - GitHub password (required if accessing the provided URL requires GitHub authentication)
+> --username - GitHub username (required if accessing the provided URL requires GitHub authentication and you do not provide --personalAccessToken)
+> --password - GitHub password (required if accessing the provided URL requires GitHub authentication and you do not provide --personalAccessToken)
+> --personalAccessToken - GitHub personal access token (required if accessing the provided URL requires GitHub authentication and you do not provide --username and --password)
 
 ### version
 
