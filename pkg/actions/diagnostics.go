@@ -98,12 +98,12 @@ func DiagnosticsCollect(c *cli.Context) {
 					dgRemoteCommand(connection.ID, c.Bool("projects"))
 				}
 			}
+			dgLocalCommand(c.Bool("projects"))
 		}
-		dgLocalCommand(c)
 	} else if connectionID != "local" {
 		dgRemoteCommand(connectionID, c.Bool("projects"))
 	} else {
-		dgLocalCommand(c)
+		dgLocalCommand(c.Bool("projects"))
 	}
 	// Attempt to gather Eclipse logs
 	gatherCodewindEclipseLogs(c.String("eclipseWorkspaceDir"))
@@ -241,7 +241,7 @@ func collectPodInfo(clientset *kubernetes.Clientset, podArray []corev1.Pod, work
 	}
 }
 
-func writePodLogToFile(clientset *kubernetes.Clientset, pod corev1.Pod, podName string) error {
+func writePodLogToFile(clientset kubernetes.Interface, pod corev1.Pod, podName string) error {
 	podLogOpts := corev1.PodLogOptions{}
 	// get pod logs
 	req := clientset.CoreV1().Pods(pod.Namespace).GetLogs(pod.Name, &podLogOpts)
@@ -253,12 +253,12 @@ func writePodLogToFile(clientset *kubernetes.Clientset, pod corev1.Pod, podName 
 	return writeStreamToFile(podLogs, podName+".log")
 }
 
-func dgLocalCommand(c *cli.Context) {
+func dgLocalCommand(collectProjects bool) {
 	localDirErr := os.MkdirAll(filepath.Join(diagnosticsLocalDirName), 0755)
 	if localDirErr != nil {
 		errors.CheckErr(localDirErr, 205, "")
 	}
-	collectCodewindContainers()
+	collectCodewindContainers(getDockerClient)
 
 	// Collect Codewind PFE workspace
 	logDG("Collecting local Codewind workspace ... ")
@@ -267,7 +267,7 @@ func dgLocalCommand(c *cli.Context) {
 	copyCodewindWorkspace(pfeContainerID, getDockerClient)
 	logDG("done\n")
 
-	if c.Bool("projects") {
+	if collectProjects {
 		collectCodewindProjectContainers(getDockerClient)
 	}
 
@@ -281,10 +281,10 @@ func dgLocalCommand(c *cli.Context) {
 }
 
 // Collect Codewind container inspection & logs
-func collectCodewindContainers() {
+func collectCodewindContainers(dockerNewClientFunc func() (docker.DockerClient, *docker.DockerError)) {
 	for _, cwContainerName := range docker.LocalCWContainerNames {
 		logDG("Collecting information from container " + cwContainerName + " ... ")
-		containerID := getContainerID(cwContainerName, getDockerClient)
+		containerID := getContainerID(cwContainerName, dockerNewClientFunc)
 		writeContainerInspectToFile(containerID, filepath.Join("local", cwContainerName), getDockerClient)
 		writeContainerLogToFile(containerID, filepath.Join("local", cwContainerName), getDockerClient)
 		logDG("done\n")

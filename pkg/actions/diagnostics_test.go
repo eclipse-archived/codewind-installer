@@ -15,7 +15,6 @@ import (
 	"archive/zip"
 	"encoding/json"
 	"errors"
-	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -29,25 +28,27 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/eclipse/codewind-installer/pkg/docker"
 	"github.com/stretchr/testify/assert"
-	"github.com/urfave/cli"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes/fake"
 )
 
-const parentTestDir = "./testDir"
-
-var testDir = filepath.Join(parentTestDir, "diagnostics")
+var testDir = filepath.Join(".", "testDir", "diagnostics")
 
 type testStruct struct {
 	Status  string `json:"status"`
 	Message string `json:"message"`
 }
 
-func clearAllDiagnostics() {
-	app := cli.NewApp()
-	flagSet := flag.NewFlagSet("userFlags", flag.ContinueOnError)
-	flagSet.Bool("clean", true, "")
-	context := cli.NewContext(app, flagSet, nil)
-	DiagnosticsCommand(context)
-}
+// func clearAllDiagnostics() {
+// 	app := cli.NewApp()
+// 	flagSet := flag.NewFlagSet("userFlags", flag.ContinueOnError)
+// 	flagSet.Bool("clean", true, "")
+// 	context := cli.NewContext(app, flagSet, nil)
+// 	DiagnosticsCommand(context)
+// }
+
+// mock docker clients
 
 func getMockDockerClient() (docker.DockerClient, *docker.DockerError) {
 	return &docker.MockDockerClientWithCw{}, nil
@@ -62,6 +63,26 @@ var dockerClientError = docker.DockerError{Op: "Error", Err: errors.New("error")
 func getDockerClientError() (docker.DockerClient, *docker.DockerError) {
 	return nil, &dockerClientError
 }
+
+// mock kubernetes pods & client
+
+var mockPFEPod = &v1.Pod{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:        "codewind-pfe-somename",
+		Namespace:   "default",
+		Annotations: map[string]string{},
+	},
+}
+
+var mockProjectPod = &v1.Pod{
+	ObjectMeta: metav1.ObjectMeta{
+		Name:        "cw-myproj-something",
+		Namespace:   "default",
+		Annotations: map[string]string{},
+	},
+}
+
+var mockClientset = fake.NewSimpleClientset(mockPFEPod, mockProjectPod)
 
 //unzip file needed as utils.UnZip is not a straight unzipper of zips
 func unzipFile(filePath, destination string) error {
@@ -532,7 +553,7 @@ func Test_collectCodewindProjectContainers(t *testing.T) {
 
 	})
 	t.Run("collectCodewindProjectContainers - success but can't find containers", func(t *testing.T) {
-		expectedConsoleOutput := "Collecting information from container /cw-testProject ... Unable to find local\\projects\\cw-testProject container: could not get container ID\nUnable to find local\\projects\\cw-testProject container: could not get container ID\ndone\n"
+		expectedConsoleOutput := "Collecting information from container /cw-testProject ... Unable to find"
 		os.MkdirAll(testDir, 0755)
 		diagnosticsDirName = testDir
 		originalStdout := os.Stdout
@@ -542,6 +563,53 @@ func Test_collectCodewindProjectContainers(t *testing.T) {
 		w.Close()
 		out, _ := ioutil.ReadAll(r)
 		os.Stdout = originalStdout
-		assert.Equal(t, expectedConsoleOutput, string(out))
+		assert.Contains(t, string(out), expectedConsoleOutput)
 	})
 }
+
+func Test_collectCodewindContainers(t *testing.T) {
+	printAsJSON = false
+	t.Run("collectCodewindContainers - success but can't find containers", func(t *testing.T) {
+		expectedConsoleOutput := "Collecting information from container codewind-pfe ... Unable to inspect Container ID"
+		os.MkdirAll(testDir, 0755)
+		diagnosticsDirName = testDir
+		originalStdout := os.Stdout
+		r, w, _ := os.Pipe()
+		os.Stdout = w
+		collectCodewindContainers(getMockDockerClient)
+		w.Close()
+		out, _ := ioutil.ReadAll(r)
+		os.Stdout = originalStdout
+		assert.Contains(t, string(out), expectedConsoleOutput)
+	})
+}
+
+func Test_dgLocalCommand(t *testing.T) {
+	printAsJSON = false
+	t.Run("dgLocalCommand - success collecting projects", func(t *testing.T) {
+		expectedConsoleOutput := "Collecting local Codewind workspace ... "
+		expectedYamlFileContent := "Expected yaml file content"
+		yamlFileName := "docker-compose.yaml"
+		diagnosticsLocalDirName = filepath.Join(testDir, "local")
+		expectedYamlOutputPath := filepath.Join(diagnosticsLocalDirName, yamlFileName)
+		os.MkdirAll(testDir, 0755)
+		codewindHome = testDir
+		ioutil.WriteFile(filepath.Join(codewindHome, yamlFileName), []byte(expectedYamlFileContent), 0666)
+		originalStdout := os.Stdout
+		r, w, _ := os.Pipe()
+		os.Stdout = w
+		dgLocalCommand(true)
+		w.Close()
+		out, _ := ioutil.ReadAll(r)
+		os.Stdout = originalStdout
+		assert.Contains(t, string(out), expectedConsoleOutput)
+		assert.FileExists(t, expectedYamlOutputPath, "Unable to find expected yaml file "+expectedYamlOutputPath)
+		contents, rfErr := ioutil.ReadFile(expectedYamlOutputPath)
+		if rfErr != nil {
+			t.Error("Error encountered - " + rfErr.Error())
+		}
+		assert.Equal(t, expectedYamlFileContent, string(contents))
+	})
+}
+
+// can't test writePodLogToFile because kubernetes.fake doesn't support streams and panics.
