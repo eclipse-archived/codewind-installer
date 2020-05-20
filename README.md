@@ -261,13 +261,21 @@ Subcommands:</br>
 
 ### diagnostics/dg
 
-` --conid <value>` -  Triggers diagnostics collection for the remote codewind connection ID (must have currently configured Kubectl connection)</br>
-`--eclipseWorkspaceDir/-e <value>` - The location of your Eclipse workspace directory if using the Eclipse IDE (default: "")</br>
-`--intellijLogsDir/-i <value>` - The location of your IntelliJ logs directory if using the IntelliJ IDE (default: "")</br>
-`--all/-a` - Collects diagnostics for all defined connections, remote and local</br>
-`--projects/-p` - Collect project containers information</br>
-`--nozip/-n` - Does not create collection zip and leaves individual collected files in place</br>
-`--clean` - Removes the diagnostics directory and all its contents from the Codewind home directory
+> **Note:** No additional flags
+
+Subcommands:</br>
+
+`collect` - Gathers logs and project files to aid diagnosis of Codewind errors
+> **Flags:**
+> --conid <value> -  Triggers diagnostics collection for the remote codewind connection ID (must have currently configured Kubectl connection)</br>
+> --eclipseWorkspaceDir/-e <value> - The location of your Eclipse workspace directory if using the Eclipse IDE (default: "")</br>
+> --intellijLogsDir/-i <value>` - The location of your IntelliJ logs directory if using the IntelliJ IDE (default: "")</br>
+> --all/-a - Collects diagnostics for all defined connections, remote and local</br>
+> --projects/-p - Collect project containers information</br>
+> --nozip/-n - Does not create collection zip and leaves individual collected files in place</br>
+
+`remove` - Removes the diagnostics directory and all its contents from the Codewind home directory
+> **Note:** No additional flags
 
 ### stop-all
 
