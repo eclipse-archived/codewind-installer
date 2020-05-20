@@ -345,13 +345,11 @@ func gatherCodewindEclipseLogs(codewindEclipseWSDir string) {
 		} else {
 			warnDG("Unable to collect Eclipse logs", "workspace metadata directory not found")
 		}
-	} else {
-		warnDG("Unable to collect Eclipse logs", "workspace not specified")
 	}
 }
 
 func gatherCodewindVSCodeLogs() {
-	logDG("Collecting VSCode logs ... ")
+	logDG("Attempting to collecting VSCode logs from default location ... ")
 	vsCodeDir := ""
 	switch runtime.GOOS {
 	case "darwin":
@@ -415,10 +413,9 @@ func findIntellijDirectory(inDir string) string {
 }
 
 func gatherCodewindIntellijLogs(codewindIntellijLogDir string) {
-	logDG("Collecting Intellij logs ... ")
 	intellijLogsDir := codewindIntellijLogDir
 	if intellijLogsDir == "" {
-		// attempt to use default path
+		logDG("Attempting to collect Intellij logs from default location ... ")
 		switch runtime.GOOS {
 		case "darwin":
 			libraryLogsDir := filepath.Join(homeDir, "Library", "Logs", "JetBrains")
