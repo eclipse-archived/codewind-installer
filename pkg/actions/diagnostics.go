@@ -254,7 +254,7 @@ func writePodLogToFile(clientset *kubernetes.Clientset, pod corev1.Pod, podName 
 }
 
 func dgLocalCommand(c *cli.Context) {
-	localDirErr := os.MkdirAll(filepath.Join(diagnosticsLocalDirName, dgProjectDirName), 0755)
+	localDirErr := os.MkdirAll(filepath.Join(diagnosticsLocalDirName), 0755)
 	if localDirErr != nil {
 		errors.CheckErr(localDirErr, 205, "")
 	}
@@ -304,12 +304,21 @@ func collectCodewindProjectContainers() {
 		warnDG("Unable to get Docker container list", cListErr.Error())
 		return
 	}
-	for _, cwContainer := range docker.GetCodewindProjectContainers(allContainers) {
-		logDG("Collecting information from container " + cwContainer.Names[0] + " ... ")
-		relativeFilePath := filepath.Join("local", dgProjectDirName, cwContainer.Names[0])
-		writeContainerInspectToFile(cwContainer.ID, relativeFilePath)
-		writeContainerLogToFile(cwContainer.ID, relativeFilePath)
-		logDG("done\n")
+	cwProjContainers := docker.GetCodewindProjectContainers(allContainers)
+	if len(cwProjContainers) > 0 {
+		projDirErr := os.MkdirAll(filepath.Join(diagnosticsLocalDirName, dgProjectDirName), 0755)
+		if projDirErr != nil {
+			errors.CheckErr(projDirErr, 205, "")
+		}
+		for _, cwContainer := range cwProjContainers {
+			logDG("Collecting information from container " + cwContainer.Names[0] + " ... ")
+			relativeFilePath := filepath.Join("local", dgProjectDirName, cwContainer.Names[0])
+			writeContainerInspectToFile(cwContainer.ID, relativeFilePath)
+			writeContainerLogToFile(cwContainer.ID, relativeFilePath)
+			logDG("done\n")
+		}
+	} else {
+		warnDG("Unable to collect Codewind project containers", "no project containers found")
 	}
 }
 
