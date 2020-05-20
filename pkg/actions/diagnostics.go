@@ -76,74 +76,75 @@ func warnDG(warning, description string) {
 	}
 }
 
-//DiagnosticsCommand to gather logs and project files to aid diagnosis of Codewind errors
-func DiagnosticsCommand(c *cli.Context) {
+//DiagnosticsCollect to gather logs and project files to aid diagnosis of Codewind errors
+func DiagnosticsCollect(c *cli.Context) {
 	collectingAll = c.Bool("all")
 	connectionID := c.String("conid")
-	if c.Bool("clean") {
-		logDG("Deleting all collected diagnostics files ... ")
-		err := os.RemoveAll(diagnosticsMasterDirName)
+	dirErr := os.MkdirAll(diagnosticsDirName, 0755)
+	if dirErr != nil {
+		errors.CheckErr(dirErr, 205, "")
+	}
+	logDG("Diagnostics files will be written to " + diagnosticsDirName + "\n")
+	if collectingAll {
+		connectionList, conErr := connections.GetAllConnections()
+		if conErr != nil {
+			warnDG("connections_error", "Unable to get Connections "+conErr.Error())
+		} else {
+			for _, connection := range connectionList {
+				if connection.ClientID != "" {
+					dgRemoteCommand(connection.ID, c.Bool("projects"))
+				}
+			}
+		}
+		dgLocalCommand(c)
+	} else if connectionID != "local" {
+		dgRemoteCommand(connectionID, c.Bool("projects"))
+	} else {
+		dgLocalCommand(c)
+	}
+	// Attempt to gather Eclipse logs
+	gatherCodewindEclipseLogs(c.String("eclipseWorkspaceDir"))
+
+	// Attempt to gather VSCode logs
+	gatherCodewindVSCodeLogs()
+
+	// Attempt to gather IntelliJ logs
+	gatherCodewindIntellijLogs(c.String("intellijLogsDir"))
+	if !c.Bool("nozip") {
+		createZipAndRemoveCollectedFiles()
+	}
+	// check to see if we got any data back
+	entries, _ := ioutil.ReadDir(diagnosticsDirName)
+	if len(entries) == 0 {
+		// clean up and output failure message
+		err := os.RemoveAll(diagnosticsDirName)
 		if err != nil {
 			errors.CheckErr(err, 206, "")
 		}
-		logDG("done\n")
-	} else {
-		dirErr := os.MkdirAll(diagnosticsDirName, 0755)
-		if dirErr != nil {
-			errors.CheckErr(dirErr, 205, "")
-		}
-		logDG("Diagnostics files will be written to " + diagnosticsDirName + "\n")
-		if collectingAll {
-			connectionList, conErr := connections.GetAllConnections()
-			if conErr != nil {
-				warnDG("connections_error", "Unable to get Connections "+conErr.Error())
-			} else {
-				for _, connection := range connectionList {
-					if connection.ClientID != "" {
-						dgRemoteCommand(connection.ID, c.Bool("projects"))
-					}
-				}
-			}
-			dgLocalCommand(c)
-		} else if connectionID != "local" {
-			dgRemoteCommand(connectionID, c.Bool("projects"))
-		} else {
-			dgLocalCommand(c)
-		}
-		// Attempt to gather Eclipse logs
-		gatherCodewindEclipseLogs(c.String("eclipseWorkspaceDir"))
-
-		// Attempt to gather VSCode logs
-		gatherCodewindVSCodeLogs()
-
-		// Attempt to gather IntelliJ logs
-		gatherCodewindIntellijLogs(c.String("intellijLogsDir"))
-		if !c.Bool("nozip") {
-			createZipAndRemoveCollectedFiles()
-		}
-		// check to see if we got any data back
-		entries, _ := ioutil.ReadDir(diagnosticsDirName)
-		if len(entries) == 0 {
-			// clean up and output failure message
-			err := os.RemoveAll(diagnosticsDirName)
-			if err != nil {
-				errors.CheckErr(err, 206, "")
-			}
-			if printAsJSON {
-				result := dgResultStruct{DgSuccess: false, DgOutputDir: "has been deleted", DgWarningsEncountered: dgWarningArray}
-				json, _ := json.Marshal(result)
-				fmt.Println(string(json))
-			} else {
-				logDG("No diagnostics data was able to be collected - empty directory " + diagnosticsDirName + " has been deleted.")
-			}
-			os.Exit(1)
-		}
 		if printAsJSON {
-			result := dgResultStruct{DgSuccess: true, DgOutputDir: diagnosticsDirName, DgWarningsEncountered: dgWarningArray}
+			result := dgResultStruct{DgSuccess: false, DgOutputDir: "has been deleted", DgWarningsEncountered: dgWarningArray}
 			json, _ := json.Marshal(result)
 			fmt.Println(string(json))
+		} else {
+			logDG("No diagnostics data was able to be collected - empty directory " + diagnosticsDirName + " has been deleted.")
 		}
+		os.Exit(1)
 	}
+	if printAsJSON {
+		result := dgResultStruct{DgSuccess: true, DgOutputDir: diagnosticsDirName, DgWarningsEncountered: dgWarningArray}
+		json, _ := json.Marshal(result)
+		fmt.Println(string(json))
+	}
+}
+
+//DiagnosticsRemove to remove the diagnostics directory and all its contents
+func DiagnosticsRemove(c *cli.Context) {
+	logDG("Deleting all collected diagnostics files ... ")
+	err := os.RemoveAll(diagnosticsMasterDirName)
+	if err != nil {
+		errors.CheckErr(err, 206, "")
+	}
+	logDG("done\n")
 }
 
 func dgRemoteCommand(conid string, collectProjects bool) {
