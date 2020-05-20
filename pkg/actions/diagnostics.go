@@ -47,11 +47,10 @@ const codewindPrefix = "codewind-"
 const codewindProjectPrefix = "cw-"
 const dgProjectDirName = "projects"
 
-var isLoud = true
 var collectingAll = false
 
 func logDG(input string) {
-	if isLoud {
+	if !printAsJSON {
 		fmt.Print(input)
 	}
 }
@@ -81,9 +80,6 @@ func warnDG(warning, description string) {
 func DiagnosticsCommand(c *cli.Context) {
 	collectingAll = c.Bool("all")
 	connectionID := c.String("conid")
-	if c.Bool("quiet") || printAsJSON {
-		isLoud = false
-	}
 	if c.Bool("clean") {
 		logDG("Deleting all collected diagnostics files ... ")
 		err := os.RemoveAll(diagnosticsMasterDirName)

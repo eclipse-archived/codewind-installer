@@ -264,7 +264,6 @@ Subcommands:</br>
 ` --conid <value>` -  Triggers diagnostics collection for the remote codewind connection ID (must have currently configured Kubectl connection)</br>
 `--eclipseWorkspaceDir/-e <value>` - The location of your Eclipse workspace directory if using the Eclipse IDE (default: "")</br>
 `--intellijLogsDir/-i <value>` - The location of your IntelliJ logs directory if using the IntelliJ IDE (default: "")</br>
-`--quiet/-q` - Turn off console messages</br>
 `--all/-a` - Collects diagnostics for all defined connections, remote and local</br>
 `--projects/-p` - Collect project containers information</br>
 `--nozip/-n` - Does not create collection zip and leaves individual collected files in place</br>
