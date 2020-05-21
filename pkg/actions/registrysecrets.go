@@ -44,12 +44,13 @@ func AddRegistrySecret(c *cli.Context) {
 	address := strings.TrimSpace(c.String("address"))
 	username := strings.TrimSpace(c.String("username"))
 	password := strings.TrimSpace(c.String("password"))
+	localLogin := c.Bool("locallogin")
 
 	// Log in to local docker to support extensions such as appsody.
 	// Do this first as it will validate the credentials.
 	// Otherwise we have to undo everything else if they are wrong.
 	_, foundChe := os.LookupEnv("CHE_API_EXTERNAL")
-	if !foundChe {
+	if !foundChe && localLogin {
 		dockerErr := docker.LoginToRegistry(address, username, password)
 		if dockerErr != nil {
 			HandleDockerError(dockerErr)
