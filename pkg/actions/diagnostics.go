@@ -343,13 +343,31 @@ func gatherCodewindEclipseLogs(codewindEclipseWSDir string) {
 			}
 			logDG("done\n")
 		} else {
-			warnDG("Unable to collect Eclipse logs", "workspace metadata directory not found")
+			warnDG("Unable to collect Eclipse logs", "workspace metadata directory not found in "+codewindEclipseWSDir)
 		}
 	}
 }
 
+func gatherEntireLogDirectory(logDirPath, collectionDirPath, parentLogDirPath string) {
+	err := filepath.Walk(logDirPath, func(path string, info os.FileInfo, err error) error {
+		localPath := filepath.Join(collectionDirPath, strings.Replace(path, parentLogDirPath, "", 1))
+		if info.IsDir() {
+			logDirErr := os.MkdirAll(localPath, 0755)
+			if logDirErr != nil {
+				errors.CheckErr(logDirErr, 205, "")
+			}
+		}
+		if info.Mode().IsRegular() {
+			utils.CopyFile(path, localPath)
+		}
+		return nil
+	})
+	if err != nil {
+		warnDG("walk error ", err.Error())
+	}
+}
+
 func gatherCodewindVSCodeLogs() {
-	logDG("Attempting to collecting VSCode logs from default location ... ")
 	vsCodeDir := ""
 	switch runtime.GOOS {
 	case "darwin":
@@ -361,31 +379,17 @@ func gatherCodewindVSCodeLogs() {
 	}
 	if len(vsCodeDir) > 0 {
 		vsCodeLogsDir := filepath.Join(vsCodeDir, "logs")
-		diagnosticsVsCodeLogPath := filepath.Join(diagnosticsDirName, "vsCodeLogs")
-		dirErr := os.MkdirAll(diagnosticsVsCodeLogPath, 0755)
-		if dirErr != nil {
-			errors.CheckErr(dirErr, 205, "")
-		}
+		logDG("Collecting VSCode logs from " + vsCodeLogsDir + " ... ")
 		if _, err := os.Stat(vsCodeLogsDir); !os.IsNotExist(err) {
-			err := filepath.Walk(vsCodeLogsDir, func(path string, info os.FileInfo, err error) error {
-				localPath := filepath.Join(diagnosticsVsCodeLogPath, strings.Replace(path, vsCodeDir, "", 1))
-				if info.IsDir() {
-					logDirErr := os.MkdirAll(localPath, 0755)
-					if logDirErr != nil {
-						errors.CheckErr(logDirErr, 205, "")
-					}
-				}
-				if info.Mode().IsRegular() {
-					utils.CopyFile(path, localPath)
-				}
-				return nil
-			})
-			if err != nil {
-				warnDG("walk error ", err.Error())
+			diagnosticsVsCodeLogPath := filepath.Join(diagnosticsDirName, "vsCodeLogs")
+			dirErr := os.MkdirAll(diagnosticsVsCodeLogPath, 0755)
+			if dirErr != nil {
+				errors.CheckErr(dirErr, 205, "")
 			}
+			gatherEntireLogDirectory(vsCodeLogsDir, diagnosticsVsCodeLogPath, vsCodeDir)
 			logDG("done\n")
 		} else {
-			warnDG("Unable to collect VSCode logs", "cannot find logs directory")
+			warnDG("Unable to collect VSCode logs", "cannot find logs directory "+vsCodeLogsDir)
 		}
 	} else {
 		warnDG("Unable to collect VSCode logs", "cannot find logs directory")
@@ -414,54 +418,36 @@ func findIntellijDirectory(inDir string) string {
 
 func gatherCodewindIntellijLogs(codewindIntellijLogDir string) {
 	intellijLogsDir := codewindIntellijLogDir
+	jetBrainsDir, optionalLogDir := "", ""
 	if intellijLogsDir == "" {
-		logDG("Attempting to collect Intellij logs from default location ... ")
+		logDG("Determining Intellij logs default location ... ")
 		switch runtime.GOOS {
 		case "darwin":
-			libraryLogsDir := filepath.Join(homeDir, "Library", "Logs", "JetBrains")
-			intellijDirName := findIntellijDirectory(libraryLogsDir)
-			if intellijDirName != "" {
-				intellijLogsDir = filepath.Join(libraryLogsDir, intellijDirName)
-			}
+			jetBrainsDir = filepath.Join(homeDir, "Library", "Logs", "JetBrains")
 		case "linux":
-			jetBrainsDir := filepath.Join(homeDir, ".cache", "JetBrains")
-			intellijDirName := findIntellijDirectory(jetBrainsDir)
-			if intellijDirName != "" {
-				intellijLogsDir = filepath.Join(jetBrainsDir, intellijDirName, "log")
-			}
+			jetBrainsDir = filepath.Join(homeDir, ".cache", "JetBrains")
+			optionalLogDir = "log"
 		case "windows":
-			jetBrainsDir := filepath.Join(homeDir, "AppData", "Local", "JetBrains")
-			intellijDirName := findIntellijDirectory(jetBrainsDir)
-			if intellijDirName != "" {
-				intellijLogsDir = filepath.Join(jetBrainsDir, intellijDirName, "log")
-			}
+			jetBrainsDir = filepath.Join(homeDir, "AppData", "Local", "JetBrains")
+			optionalLogDir = "log"
 		}
+		intellijDirName := findIntellijDirectory(jetBrainsDir)
+		if intellijDirName != "" {
+			intellijLogsDir = filepath.Join(jetBrainsDir, intellijDirName, optionalLogDir)
+		}
+		logDG("done\n")
 	}
 	if len(intellijLogsDir) > 0 {
-		diagnosticsIntellijLogPath := filepath.Join(diagnosticsDirName, "intellijLogs")
+		logDG("Collecting Intellij logs from " + intellijLogsDir + " ... ")
 		if _, err := os.Stat(intellijLogsDir); !os.IsNotExist(err) {
-			err := filepath.Walk(intellijLogsDir, func(path string, info os.FileInfo, err error) error {
-				localPath := filepath.Join(diagnosticsIntellijLogPath, strings.Replace(path, intellijLogsDir, "", 1))
-				if info.IsDir() {
-					logDirErr := os.MkdirAll(localPath, 0755)
-					if logDirErr != nil {
-						errors.CheckErr(logDirErr, 205, "")
-					}
-				}
-				if info.Mode().IsRegular() {
-					utils.CopyFile(path, localPath)
-				}
-				return nil
-			})
-			if err != nil {
-				warnDG("walk error ", err.Error())
-			}
+			diagnosticsIntellijLogPath := filepath.Join(diagnosticsDirName, "intellijLogs")
+			gatherEntireLogDirectory(intellijLogsDir, diagnosticsIntellijLogPath, intellijLogsDir)
 			logDG("done\n")
 		} else {
-			warnDG("Unable to collect Intellij logs", "cannot find logs directory")
+			warnDG("Unable to collect Intellij logs", "cannot find logs directory "+intellijLogsDir)
 		}
 	} else {
-		warnDG("Unable to collect Intellij logs", "cannot find logs directory")
+		warnDG("Unable to collect Intellij logs", "cannot find IntelliJ directory in "+jetBrainsDir)
 	}
 }
 
