@@ -85,23 +85,25 @@ func GetServerInfo(keycloakHostname string, accesstoken string) (*ServerInfo, *S
 	return &serverInfo, nil
 }
 
-// GetSuggestedTheme - Recommends the Codewind theme, else Che, else keycloak default
-func GetSuggestedTheme(keycloakHostname string, accesstoken string) (string, *SecError) {
+// GetSuggestedThemes - Recommends the Codewind theme, else Che, else keycloak default
+// Returns the loginTheme, accountTheme, optionalError
+func GetSuggestedThemes(keycloakHostname string, accesstoken string) (string, string, *SecError) {
 	serverInfo, secErr := GetServerInfo(keycloakHostname, accesstoken)
 	if secErr != nil {
-		return "", secErr
+		return "", "", secErr
 	}
 
 	loginThemes := serverInfo.Themes.Login
 	if len(loginThemes) == 0 {
-		return "", nil
+		return "", "", nil
 	}
 
 	themeCodewind := ""
 	themeChe := ""
 	themeKeycloak := ""
+	themeCodewindAccount := ""
 
-	for _, theme := range loginThemes {
+	for _, theme := range serverInfo.Themes.Login {
 		switch strings.ToLower(theme.Name) {
 		case "codewind":
 			{
@@ -121,15 +123,25 @@ func GetSuggestedTheme(keycloakHostname string, accesstoken string) (string, *Se
 		}
 	}
 
+	for _, theme := range serverInfo.Themes.Account {
+		switch strings.ToLower(theme.Name) {
+		case "codewind":
+			{
+				themeCodewindAccount = theme.Name
+				break
+			}
+		}
+	}
+
 	if themeCodewind != "" {
-		return themeCodewind, nil
+		return themeCodewind, themeCodewindAccount, nil
 	}
 	if themeChe != "" {
-		return themeChe, nil
+		return themeChe, themeCodewindAccount, nil
 	}
 	if themeKeycloak != "" {
-		return themeKeycloak, nil
+		return themeKeycloak, themeCodewindAccount, nil
 	}
-	return "", nil
+	return "", "", nil
 
 }
