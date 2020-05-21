@@ -358,23 +358,24 @@ func Test_gatherCodewindVersions(t *testing.T) {
 	localConID := "local"
 	remoteConID := "remote"
 	t.Run("gatherCodewindVersions - local success", func(t *testing.T) {
-		diagnosticsLocalDirName = testDir
+		diagnosticsDirName = testDir
 		gatherCodewindVersions(localConID)
-		contents, rfErr := ioutil.ReadFile(filepath.Join(testDir, "codewind.versions"))
+		contents, rfErr := ioutil.ReadFile(filepath.Join(testDir, localConID, "codewind.versions"))
 		if rfErr != nil {
 			t.Error("Error encountered - " + rfErr.Error())
 		}
 		assert.Contains(t, string(contents), "CWCTL VERSION: ")
 		assert.Contains(t, string(contents), "PFE VERSION: ")
 		assert.Contains(t, string(contents), "PERFORMANCE VERSION: ")
+		assert.Contains(t, string(contents), "DOCKER CLIENT VERSION: ")
+		assert.Contains(t, string(contents), "DOCKER SERVER VERSION: ")
 		assert.NotContains(t, string(contents), "GATEKEEPER VERSION: ")
 	})
 	t.Run("gatherCodewindVersions - remote success", func(t *testing.T) {
 		diagnosticsDirName = testDir
-		remoteDirName := codewindPrefix + remoteConID
-		os.MkdirAll(filepath.Join(testDir, remoteDirName), 0755)
+		os.MkdirAll(filepath.Join(testDir, remoteConID), 0755)
 		gatherCodewindVersions(remoteConID)
-		contents, rfErr := ioutil.ReadFile(filepath.Join(testDir, codewindPrefix+remoteConID, "codewind.versions"))
+		contents, rfErr := ioutil.ReadFile(filepath.Join(testDir, remoteConID, "codewind.versions"))
 		if rfErr != nil {
 			t.Error("Error encountered - " + rfErr.Error())
 		}
@@ -382,6 +383,8 @@ func Test_gatherCodewindVersions(t *testing.T) {
 		assert.Contains(t, string(contents), "PFE VERSION: ")
 		assert.Contains(t, string(contents), "PERFORMANCE VERSION: ")
 		assert.Contains(t, string(contents), "GATEKEEPER VERSION: ")
+		assert.NotContains(t, string(contents), "DOCKER CLIENT VERSION: ")
+		assert.NotContains(t, string(contents), "DOCKER SERVER VERSION: ")
 	})
 }
 
