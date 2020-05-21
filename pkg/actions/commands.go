@@ -982,19 +982,32 @@ func Commands() {
 		{
 			Name:    "diagnostics",
 			Aliases: []string{"dg"},
-			Usage:   "Gathers logs and project files to aid diagnosis of Codewind errors",
-			Flags: []cli.Flag{
-				cli.StringFlag{Name: "conid", Value: "local", Usage: "Triggers diagnostics collection for the `remote` codewind instance (_must_ have currently configured Kubectl connection!)", Required: false},
-				cli.StringFlag{Name: "eclipseWorkspaceDir, e", Usage: "The location of your Eclipse workspace `directory` if using the Eclipse IDE", Required: false},
-				cli.StringFlag{Name: "intellijLogsDir, i", Usage: "The location of your IntelliJ logs `directory` if using the IntelliJ IDE", Required: false},
-				cli.BoolFlag{Name: "all, a", Usage: "Collects diagnostics for all defined connections, remote and local", Required: false},
-				cli.BoolFlag{Name: "projects, p", Usage: "Collect project containers information", Required: false},
-				cli.BoolFlag{Name: "nozip, n", Usage: "Does not create collection zip and leaves individual collected files in place", Required: false},
-				cli.BoolFlag{Name: "clean", Usage: "Removes the diagnostics directory and all its contents from the Codewind home directory", Required: false},
-			},
-			Action: func(c *cli.Context) error {
-				DiagnosticsCommand(c)
-				return nil
+			Usage:   "Collect and remove diagnostic reports on Codewind errors",
+			Subcommands: []cli.Command{
+				{
+					Name:  "collect",
+					Usage: "Gathers logs and project files to aid diagnosis of Codewind errors",
+					Flags: []cli.Flag{
+						cli.StringFlag{Name: "conid", Value: "local", Usage: "Triggers diagnostics collection for the `remote` codewind instance (_must_ have currently configured Kubectl connection!)", Required: false},
+						cli.StringFlag{Name: "eclipseWorkspaceDir, e", Usage: "The location of your Eclipse workspace `directory` if using the Eclipse IDE", Required: false},
+						cli.StringFlag{Name: "intellijLogsDir, i", Usage: "The location of your IntelliJ logs `directory` if using the IntelliJ IDE", Required: false},
+						cli.BoolFlag{Name: "all, a", Usage: "Collects diagnostics for all defined connections, remote and local", Required: false},
+						cli.BoolFlag{Name: "projects, p", Usage: "Collect project containers information", Required: false},
+						cli.BoolFlag{Name: "nozip, n", Usage: "Does not create collection zip and leaves individual collected files in place", Required: false},
+					},
+					Action: func(c *cli.Context) error {
+						DiagnosticsCollect(c)
+						return nil
+					},
+				},
+				{
+					Name:  "remove",
+					Usage: "Removes the diagnostics directory and all its contents from the Codewind home directory",
+					Action: func(c *cli.Context) error {
+						DiagnosticsRemove(c)
+						return nil
+					},
+				},
 			},
 		},
 	}
