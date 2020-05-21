@@ -141,27 +141,16 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	syncInfo, syncErr := syncFiles(&http.Client{}, projectPath, projectID, conURL, synctime, connection)
 
 	// Add a check here for files that have been imported into the project
-
 	BeforeFileList, err := GetProjectFileList(&http.Client{}, connection, conURL, projectID)
 	if err != nil {
 		fmt.Println(err)
-	} else {
-		//		fmt.Println(BeforeFileList)
 	}
-	// str1 := []string{"1", "2", "3"}
-	// str2 := []string{"1", "2", "3"}
-	// if reflect.DeepEqual(str1, str2) {
-	// 	fmt.Println(`NUMBER LISTS ARE THE SAME`)
-	// } else {
-	// 	fmt.Println(`NUMBER LISTS ARE DIFFERENT`)
-	// }
 
-	// if reflect.DeepEqual(BeforeFileList, syncInfo.fileList) {
-	// 	fmt.Println(`FILE LISTS ARE THE SAME`)
-	// } else {
-	// 	fmt.Println(`FILE LISTS ARE DIFFERENT`)
-	// }
-	checkForNewFiles(BeforeFileList, syncInfo.fileList, projectPath, connection)
+	added := checkForNewFiles(projectID, BeforeFileList, syncInfo.fileList, projectPath, connection, conURL)
+
+	for _, file := range added {
+		syncInfo.modifiedList = append(syncInfo.modifiedList, file)
+	}
 
 	// Complete the upload
 	completeRequest := CompleteRequest{
@@ -180,17 +169,20 @@ func SyncProject(c *cli.Context) (*SyncResponse, *ProjectError) {
 	return &response, syncErr
 }
 
-func checkForNewFiles(beforefiles []string, afterfiles []string, projectPath string, connection *connections.Connection) {
-
+func checkForNewFiles(projectID string, beforefiles []string, afterfiles []string, projectPath string, connection *connections.Connection, conURL string) []string {
+	var newfiles []string
 	for _, filename := range afterfiles {
 		if !existsIn(filename, beforefiles) {
 			fmt.Println("FOUND A NEW FILE " + filename)
-			syncFile(filename, projectPath, connection)
+			syncFile(projectID, filename, projectPath, connection, conURL)
+			newfiles = append(newfiles, filename)
 
 		} else {
-			fmt.Println(filename + " is not new")
+			//			fmt.Println(filename + " is not new")
 		}
 	}
+
+	return newfiles
 
 }
 
@@ -203,25 +195,33 @@ func existsIn(value string, slice []string) bool {
 	return false
 }
 
-func syncFile(projectID string, path string, projectPath string, connection *connections.Connection) UploadedFile {
+func syncFile(projectID string, path string, projectPath string, connection *connections.Connection, conURL string) UploadedFile {
 	// use ToSlash to try and get both Windows and *NIX paths to be *NIX for pfe
-	relativePath := filepath.ToSlash(path[(len(projectPath) + 1):])
-	fileStat, err := os.Stat(path)
+	fmt.Println(`path=` + path)
+	fmt.Println(`projectPath=` + projectPath)
+	fullPath := projectPath + "/" + path
+	fmt.Println(fullPath)
+	//	relativePath := filepath.ToSlash(path[(len(projectPath) + 1):])
+	fileStat, err := os.Stat(fullPath)
 	if err != nil {
 
 	}
-	projectUploadURL := connection.URL + "/api/v1/projects/" + projectID + "/upload"
+
+	projectUploadURL := conURL + "/api/v1/projects/" + projectID + "/upload"
 
 	uploadResponse := UploadedFile{
-		FilePath:   relativePath,
+		FilePath:   path,
 		Status:     "Failed",
 		StatusCode: 0,
 	}
-	fileContent, err := ioutil.ReadFile(path)
+	fileContent, err := ioutil.ReadFile(fullPath)
 	// Skip this file if there is an error reading it.
 	if err != nil {
+		fmt.Println(`file read failed`)
 		//return nil
 		return uploadResponse
+	} else {
+		fmt.Println(`file read succeeded`)
 	}
 
 	// Create list of all modfied files
@@ -230,7 +230,7 @@ func syncFile(projectID string, path string, projectPath string, connection *con
 	fileUploadBody := FileUploadMsg{
 		IsDirectory:  fileStat.IsDir(),
 		Mode:         uint(fileStat.Mode().Perm()),
-		RelativePath: relativePath,
+		RelativePath: path,
 		Message:      "",
 	}
 
@@ -245,6 +245,8 @@ func syncFile(projectID string, path string, projectPath string, connection *con
 	buf := new(bytes.Buffer)
 	json.NewEncoder(buf).Encode(fileUploadBody)
 
+	fmt.Println(projectUploadURL)
+
 	// TODO - How do we handle partial success?
 	request, err := http.NewRequest("PUT", projectUploadURL, bytes.NewReader(buf.Bytes()))
 	request.Header.Set("Content-Type", "application/json")
@@ -255,11 +257,15 @@ func syncFile(projectID string, path string, projectPath string, connection *con
 	// 	StatusCode: resp.StatusCode,
 	// })
 	if httpSecError != nil {
+		fmt.Println(`File upload failed`)
+		fmt.Println(httpSecError)
 		return uploadResponse
+	} else {
+		fmt.Println(`File upload succeeded`)
 	}
 	defer resp.Body.Close()
 	return UploadedFile{
-		FilePath:   relativePath,
+		FilePath:   path,
 		Status:     resp.Status,
 		StatusCode: resp.StatusCode,
 	}
@@ -304,7 +310,7 @@ func syncFiles(client utils.HTTPClient, projectPath string, projectID string, co
 			// Has this file been modified since last sync
 			if modifiedmillis > info.LastSync {
 
-				uploadedFiles = append(uploadedFiles, syncFile(path, info, projectPath, connection))
+				uploadedFiles = append(uploadedFiles, syncFile(projectID, path, projectPath, connection, conURL))
 
 				// uploadedFiles = append(uploadedFiles, UploadedFile{
 				// 	FilePath:   relativePath,
