@@ -222,9 +222,9 @@ func AddTemplateRepo(conID, URL, description, name string, gitCredentials *utils
 	}
 	defer resp.Body.Close()
 
-	byteArray, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
+	byteArray, readErr := ioutil.ReadAll(resp.Body)
+	if readErr != nil {
+		return nil, readErr
 	}
 
 	if resp.StatusCode != 200 {
@@ -232,9 +232,9 @@ func AddTemplateRepo(conID, URL, description, name string, gitCredentials *utils
 	}
 
 	var repos []utils.TemplateRepo
-	err = json.Unmarshal(byteArray, &repos)
-	if err != nil {
-		return nil, err
+	unmarshalErr := json.Unmarshal(byteArray, &repos)
+	if unmarshalErr != nil {
+		return nil, unmarshalErr
 	}
 
 	return repos, nil

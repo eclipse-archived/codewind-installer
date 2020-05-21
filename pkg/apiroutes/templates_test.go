@@ -17,7 +17,6 @@ import (
 	"testing"
 
 	"github.com/eclipse/codewind-installer/pkg/connections"
-	"github.com/eclipse/codewind-installer/pkg/test"
 	cwTest "github.com/eclipse/codewind-installer/pkg/test"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/stretchr/testify/assert"
@@ -88,7 +87,7 @@ func TestGetTemplates(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := GetTemplates("local", test.inProjectStyle, test.inShowEnabledOnly)
+			got, err := GetTemplates(cwTest.ConID, test.inProjectStyle, test.inShowEnabledOnly)
 			assert.IsType(t, test.wantedType, got)
 			assert.True(t, len(got) >= test.wantedLength, "wanted len(got) >= %d but len(got) was %d", test.wantedLength, len(got))
 			assert.Nil(t, err)
@@ -111,7 +110,7 @@ func TestGetTemplateStyles(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := GetTemplateStyles("local")
+			got, err := GetTemplateStyles(cwTest.ConID)
 			assert.Equal(t, test.want, got)
 			assert.IsType(t, test.wantedErr, err)
 		})
@@ -135,7 +134,7 @@ func TestGetTemplateRepos(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := GetTemplateRepos("local")
+			got, err := GetTemplateRepos(cwTest.ConID)
 			assert.IsType(t, test.wantedType, got)
 			assert.True(t, len(got) >= test.wantedLength, "wanted len(got) >= %d but len(got) was %d", test.wantedLength, len(got))
 			assert.Equal(t, test.wantedErr, err)
@@ -168,7 +167,7 @@ func TestFailuresAddTemplateRepo(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := AddTemplateRepo("local", test.inURL, test.inDescription, "template-name", nil)
+			got, err := AddTemplateRepo(cwTest.ConID, test.inURL, test.inDescription, "template-name", nil)
 			assert.IsType(t, test.wantedType, got, "got: %v", got)
 			assert.Equal(t, test.wantedErr, err)
 		})
@@ -192,7 +191,7 @@ func TestFailuresDeleteTemplateRepo(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := DeleteTemplateRepo("local", test.inURL)
+			got, err := DeleteTemplateRepo(cwTest.ConID, test.inURL)
 			assert.IsType(t, test.wantedType, got, "got: %v", got)
 			assert.Equal(t, test.wantedErr, err)
 		})
@@ -215,15 +214,15 @@ func TestSuccessfulAddAndDeleteTemplateRepos(t *testing.T) {
 			skip:  !cwTest.UsingOwnGHECredentials,
 			inURL: cwTest.GHEDevfileURL,
 			inGitCredentials: &utils.GitCredentials{
-				Username: test.GHEUsername,
-				Password: test.GHEPassword,
+				Username: cwTest.GHEUsername,
+				Password: cwTest.GHEPassword,
 			},
 		},
 		"GHE devfile URL with GHE personal access token": {
 			skip:  !cwTest.UsingOwnGHECredentials,
 			inURL: cwTest.GHEDevfileURL,
 			inGitCredentials: &utils.GitCredentials{
-				PersonalAccessToken: test.GHEPersonalAccessToken,
+				PersonalAccessToken: cwTest.GHEPersonalAccessToken,
 			},
 		},
 	}
@@ -232,7 +231,7 @@ func TestSuccessfulAddAndDeleteTemplateRepos(t *testing.T) {
 			t.Skip()
 		}
 
-		originalRepos, err := GetTemplateRepos("local")
+		originalRepos, err := GetTemplateRepos(cwTest.ConID)
 		require.Nilf(t, err, "Error getting template repos: %s", err)
 		originalNumRepos := len(originalRepos)
 
@@ -240,7 +239,7 @@ func TestSuccessfulAddAndDeleteTemplateRepos(t *testing.T) {
 			t.Run("Add template repo", func(t *testing.T) {
 				wantedNumRepos := originalNumRepos + 1
 
-				got, err := AddTemplateRepo("local", test.inURL, "description", "name", test.inGitCredentials)
+				got, err := AddTemplateRepo(cwTest.ConID, test.inURL, "description", "name", test.inGitCredentials)
 
 				assert.IsType(t, []utils.TemplateRepo{}, got)
 				assert.Equal(t, wantedNumRepos, len(got), "got: %v", got)
@@ -250,14 +249,13 @@ func TestSuccessfulAddAndDeleteTemplateRepos(t *testing.T) {
 			t.Run("Delete template repo", func(t *testing.T) {
 				wantedNumRepos := originalNumRepos
 
-				got, err := DeleteTemplateRepo("local", test.inURL)
+				got, err := DeleteTemplateRepo(cwTest.ConID, test.inURL)
 
 				assert.IsType(t, []utils.TemplateRepo{}, got)
 				assert.Equal(t, wantedNumRepos, len(got), "got: %v", got)
 				assert.Nil(t, err)
 			})
 		})
-		// This test block cleans up after itself
 	}
 }
 
@@ -293,7 +291,7 @@ func TestFailuresEnableTemplateRepos(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := EnableTemplateRepos("local", test.in)
+			got, err := EnableTemplateRepos(cwTest.ConID, test.in)
 			assert.IsType(t, test.wantedType, got, "got: %v", got)
 			assert.Equal(t, test.wantedErr, err)
 		})
@@ -332,7 +330,7 @@ func TestFailuresDisableTemplateRepos(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := DisableTemplateRepos("local", test.in)
+			got, err := DisableTemplateRepos(cwTest.ConID, test.in)
 			assert.IsType(t, test.wantedType, got, "got: %v", got)
 			assert.Equal(t, test.wantedErr, err)
 		})
@@ -346,7 +344,7 @@ func TestSuccessfulEnableAndDisableTemplateRepos(t *testing.T) {
 	testRepoURL := URLOfExistingRepo
 
 	t.Run("Successfully disable 1 template repo", func(t *testing.T) {
-		got, err := DisableTemplateRepos("local", []string{testRepoURL})
+		got, err := DisableTemplateRepos(cwTest.ConID, []string{testRepoURL})
 
 		assert.IsType(t, []utils.TemplateRepo{}, got)
 		assert.Nil(t, err)
@@ -358,7 +356,7 @@ func TestSuccessfulEnableAndDisableTemplateRepos(t *testing.T) {
 	})
 
 	t.Run("Successfully enable 1 template repo", func(t *testing.T) {
-		got, err := EnableTemplateRepos("local", []string{testRepoURL})
+		got, err := EnableTemplateRepos(cwTest.ConID, []string{testRepoURL})
 
 		assert.IsType(t, []utils.TemplateRepo{}, got)
 		assert.Nil(t, err)
@@ -383,14 +381,14 @@ func TestBatchPatchTemplateRepos(t *testing.T) {
 	}{
 		"enable 1 valid repo": {
 			in: []RepoOperation{
-				RepoOperation{
+				{
 					Operation: "enable",
 					URL:       URLOfExistingRepo,
 					Value:     "true",
 				},
 			},
 			want: []SubResponseFromBatchOperation{
-				SubResponseFromBatchOperation{
+				{
 					Status: 200,
 					RequestedOperation: RepoOperation{
 						Operation: "enable",
@@ -403,14 +401,14 @@ func TestBatchPatchTemplateRepos(t *testing.T) {
 		},
 		"enable 1 unknown repo": {
 			in: []RepoOperation{
-				RepoOperation{
+				{
 					Operation: "enable",
 					URL:       URLOfUnknownRepo,
 					Value:     "true",
 				},
 			},
 			want: []SubResponseFromBatchOperation{
-				SubResponseFromBatchOperation{
+				{
 					Status: 404,
 					RequestedOperation: RepoOperation{
 						Operation: "enable",
@@ -424,14 +422,14 @@ func TestBatchPatchTemplateRepos(t *testing.T) {
 		},
 		"disable 1 valid repo": {
 			in: []RepoOperation{
-				RepoOperation{
+				{
 					Operation: "enable",
 					URL:       URLOfExistingRepo,
 					Value:     "false",
 				},
 			},
 			want: []SubResponseFromBatchOperation{
-				SubResponseFromBatchOperation{
+				{
 					Status: 200,
 					RequestedOperation: RepoOperation{
 						Operation: "enable",
@@ -444,14 +442,14 @@ func TestBatchPatchTemplateRepos(t *testing.T) {
 		},
 		"disable 1 unknown repo": {
 			in: []RepoOperation{
-				RepoOperation{
+				{
 					Operation: "enable",
 					URL:       URLOfUnknownRepo,
 					Value:     "false",
 				},
 			},
 			want: []SubResponseFromBatchOperation{
-				SubResponseFromBatchOperation{
+				{
 					Status: 404,
 					RequestedOperation: RepoOperation{
 						Operation: "enable",
@@ -465,19 +463,19 @@ func TestBatchPatchTemplateRepos(t *testing.T) {
 		},
 		"enable/disable multiple repos": {
 			in: []RepoOperation{
-				RepoOperation{
+				{
 					Operation: "enable",
 					URL:       URLOfExistingRepo,
 					Value:     "true",
 				},
-				RepoOperation{
+				{
 					Operation: "enable",
 					URL:       URLOfUnknownRepo,
 					Value:     "false",
 				},
 			},
 			want: []SubResponseFromBatchOperation{
-				SubResponseFromBatchOperation{
+				{
 					Status: 200,
 					RequestedOperation: RepoOperation{
 						Operation: "enable",
@@ -485,7 +483,7 @@ func TestBatchPatchTemplateRepos(t *testing.T) {
 						Value:     "true",
 					},
 				},
-				SubResponseFromBatchOperation{
+				{
 					Status: 404,
 					RequestedOperation: RepoOperation{
 						Operation: "enable",
@@ -500,7 +498,7 @@ func TestBatchPatchTemplateRepos(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := BatchPatchTemplateRepos("local", test.in)
+			got, err := BatchPatchTemplateRepos(cwTest.ConID, test.in)
 			assert.Equal(t, test.want, got)
 			assert.Equal(t, test.wantedErr, err)
 		})
@@ -512,7 +510,7 @@ func TestBatchPatchTemplateRepos(t *testing.T) {
 func TestHTTPRequestWithRetryOnLock(t *testing.T) {
 	t.Run("Checks 423 is returned if the response StatusCode is always 423", func(t *testing.T) {
 		mockClient := &MockResponse{StatusCode: http.StatusLocked}
-		mockConnection := connections.Connection{ID: "local"}
+		mockConnection := connections.Connection{ID: cwTest.ConID}
 		mockReq, _ := http.NewRequest("", "", nil)
 
 		resp, httpSecError := HTTPRequestWithRetryOnLock(mockClient, mockReq, &mockConnection)
@@ -524,7 +522,7 @@ func TestHTTPRequestWithRetryOnLock(t *testing.T) {
 	})
 	t.Run("Checks that a non 423 StatusCode can be returned", func(t *testing.T) {
 		mockClient := &MockResponse{StatusCode: http.StatusInternalServerError}
-		mockConnection := connections.Connection{ID: "local"}
+		mockConnection := connections.Connection{ID: cwTest.ConID}
 		mockReq, _ := http.NewRequest("", "", nil)
 
 		resp, httpSecError := HTTPRequestWithRetryOnLock(mockClient, mockReq, &mockConnection)
@@ -535,7 +533,7 @@ func TestHTTPRequestWithRetryOnLock(t *testing.T) {
 		assert.Nil(t, httpSecError)
 	})
 	t.Run("Checks secError is returned by not using a mocked client (URL doesn't exist)", func(t *testing.T) {
-		mockConnection := connections.Connection{ID: "local"}
+		mockConnection := connections.Connection{ID: cwTest.ConID}
 		req, _ := http.NewRequest("GET", "nonexistanturl", nil)
 
 		resp, httpSecError := HTTPRequestWithRetryOnLock(http.DefaultClient, req, &mockConnection)
