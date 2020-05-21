@@ -502,7 +502,7 @@ func gatherCodewindVersions(connectionID string) {
 			"PFE VERSION: " + containerVersions.PFEVersion + errorString + "\n" +
 			"PERFORMANCE VERSION: " + containerVersions.PerformanceVersion + errorString + "\n")
 	if connectionID == "local" {
-		dockerClientVersion, dockerServerVersion := getDockerVersions()
+		dockerClientVersion, dockerServerVersion := getDockerVersions(getDockerClient)
 		versionsByteArray = append(versionsByteArray, []byte(
 			"DOCKER CLIENT VERSION: "+dockerClientVersion+"\n"+
 				"DOCKER SERVER VERSION: "+dockerServerVersion+"\n")...,
@@ -519,8 +519,8 @@ func gatherCodewindVersions(connectionID string) {
 	logDG("done\n")
 }
 
-func getDockerVersions() (clientVersion, serverVersion string) {
-	dockerClient, dockerErr := docker.NewDockerClient()
+func getDockerVersions(dockerNewClientFunc func() (docker.DockerClient, *docker.DockerError)) (clientVersion, serverVersion string) {
+	dockerClient, dockerErr := dockerNewClientFunc()
 	if dockerErr != nil {
 		warnDG("Problems getting docker client", dockerErr.Error())
 		return "Unable to determine version - " + dockerErr.Error(), "Unable to determine version - " + dockerErr.Error()

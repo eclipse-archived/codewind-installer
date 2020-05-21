@@ -750,7 +750,7 @@ func GetServerVersion(dockerClient DockerClient) (types.Version, *DockerError) {
 
 	version, err := dockerClient.ServerVersion(ctx)
 	if err != nil {
-		return version, &DockerError{errDockerVersion, err, err.Error()}
+		return version, &DockerError{ErrDockerVersion, err, err.Error()}
 	}
 
 	return version, nil

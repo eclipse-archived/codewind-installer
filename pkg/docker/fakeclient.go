@@ -309,7 +309,7 @@ type MockDockerErrorClient struct {
 var errImagePull = errors.New("error pulling image")
 var errImageList = errors.New("error listing images")
 
-//ErrContainerInspect - exported for testing purposes
+//ErrContainerList - exported for testing purposes
 var ErrContainerList = errors.New("error listing containers")
 var errContainerStop = errors.New("error stopping container")
 var errContainerRemove = errors.New("error removing container")
@@ -323,7 +323,9 @@ var ErrContainerLogs = errors.New("error getting container logs")
 
 //ErrCopyFromContainer - exported for testing purposes
 var ErrCopyFromContainer = errors.New("error copying files from container")
-var errServerVersion = errors.New("error getting server version")
+
+//ErrServerVersion - exported for testing purposes
+var ErrServerVersion = errors.New("error getting server version")
 
 //ImageList - returns an error
 func (m *MockDockerErrorClient) ImageList(ctx context.Context, imageListOptions types.ImageListOptions) ([]types.ImageSummary, error) {
@@ -390,5 +392,5 @@ func (m *MockDockerErrorClient) CopyFromContainer(ctx context.Context, container
 
 //ServerVersion - returns an error
 func (m *MockDockerErrorClient) ServerVersion(ctx context.Context) (types.Version, error) {
-	return types.Version{Platform: struct{ Name string }{""}, Components: []types.ComponentVersion{}, Version: "", APIVersion: "", MinAPIVersion: "", GitCommit: "", GoVersion: "", Os: "", Arch: "", KernelVersion: "", Experimental: true, BuildTime: ""}, errServerVersion
+	return types.Version{Platform: struct{ Name string }{""}, Components: []types.ComponentVersion{}, Version: "", APIVersion: "", MinAPIVersion: "", GitCommit: "", GoVersion: "", Os: "", Arch: "", KernelVersion: "", Experimental: true, BuildTime: ""}, ErrServerVersion
 }

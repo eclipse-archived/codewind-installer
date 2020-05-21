@@ -359,6 +359,7 @@ func Test_gatherCodewindVersions(t *testing.T) {
 	remoteConID := "remote"
 	t.Run("gatherCodewindVersions - local success", func(t *testing.T) {
 		diagnosticsDirName = testDir
+		os.MkdirAll(filepath.Join(testDir, localConID), 0755)
 		gatherCodewindVersions(localConID)
 		contents, rfErr := ioutil.ReadFile(filepath.Join(testDir, localConID, "codewind.versions"))
 		if rfErr != nil {
@@ -403,7 +404,8 @@ func Test_createZipAndRemoveCollectedFiles(t *testing.T) {
 		testDgDir, _ = os.Open(testDir)
 		testfilenamesAfter, _ := testDgDir.Readdirnames(-1)
 		testDgDir.Close()
-		assert.ElementsMatch(t, append(testfilenames, expectedZipFileName), testfilenamesAfter)
+		expectedFileNamesAfter := append(testfilenames, expectedZipFileName)
+		assert.ElementsMatch(t, expectedFileNamesAfter, testfilenamesAfter)
 		os.Remove(expectedZipFilePath)
 	})
 }
@@ -654,8 +656,6 @@ func Test_confirmConnectionIDAndWorkspaceID(t *testing.T) {
 		r, w, _ := os.Pipe()
 		os.Stdout = w
 		connectionID, workspaceID := confirmConnectionIDAndWorkspaceID("")
-		os.Stdout = w
-		dgLocalCommand(true)
 		w.Close()
 		out, _ := ioutil.ReadAll(r)
 		os.Stdout = originalStdout
@@ -672,5 +672,49 @@ func Test_confirmConnectionIDAndWorkspaceID(t *testing.T) {
 		connectionID, workspaceID := confirmConnectionIDAndWorkspaceID("Codewind local connection")
 		assert.Equal(t, "local", connectionID)
 		assert.Equal(t, "", workspaceID)
+	})
+}
+
+func Test_getDockerVersions(t *testing.T) {
+	printAsJSON = false
+	t.Run("getDockerVersions - docker client error", func(t *testing.T) {
+		warning := "Problems getting docker client"
+		description := dockerClientError.Error()
+		versionText := "Unable to determine version - "
+		expectedConsoleOutput := warning + ": " + description + "\n"
+		expectedVersionOutput := versionText + description
+		originalStdout := os.Stdout
+		r, w, _ := os.Pipe()
+		os.Stdout = w
+		clientVersion, serverVersion := getDockerVersions(getDockerClientError)
+		w.Close()
+		out, _ := ioutil.ReadAll(r)
+		os.Stdout = originalStdout
+		assert.Equal(t, expectedConsoleOutput, string(out))
+		assert.Equal(t, expectedVersionOutput, clientVersion)
+		assert.Equal(t, expectedVersionOutput, serverVersion)
+	})
+	t.Run("getDockerVersions - error from docker client", func(t *testing.T) {
+		expectedError := docker.DockerError{Op: docker.ErrDockerVersion, Err: docker.ErrServerVersion, Desc: docker.ErrServerVersion.Error()}
+		expectedConsoleOutput := "Problems getting docker server version: " + expectedError.Error() + "\n"
+		versionText := "Unable to determine version - "
+		expectedVersionOutput := versionText + expectedError.Error()
+		originalStdout := os.Stdout
+		r, w, _ := os.Pipe()
+		os.Stdout = w
+		clientVersion, serverVersion := getDockerVersions(getMockDockerErrorClient)
+		w.Close()
+		out, _ := ioutil.ReadAll(r)
+		os.Stdout = originalStdout
+		assert.Equal(t, expectedConsoleOutput, string(out))
+		assert.Equal(t, "", clientVersion)
+		assert.Equal(t, expectedVersionOutput, serverVersion)
+
+	})
+	t.Run("getDockerVersions - success but can't find containers", func(t *testing.T) {
+		clientVersion, serverVersion := getDockerVersions(getMockDockerClient)
+		assert.Equal(t, "", clientVersion)
+		assert.Equal(t, "", serverVersion)
+
 	})
 }
