@@ -22,6 +22,7 @@ import (
 	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/project"
+	"github.com/eclipse/codewind-installer/pkg/templates"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
@@ -43,12 +44,21 @@ func ProjectValidate(c *cli.Context) {
 func ProjectCreate(c *cli.Context) {
 	destination := c.String("path")
 	url := c.String("url")
+	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 	username := c.String("username")
 	password := c.String("password")
 	var gitCredentials utils.GitCredentials
 	if username != "" && password != "" {
 		gitCredentials.Username = username
 		gitCredentials.Password = password
+	} else {
+		savedGitCredentials, templateErr := templates.GetGitCredentialsFromKeychain(conID, url)
+		if templateErr != nil {
+			err := &TemplateError{errOpGetGitCredsFromKeychain, templateErr, templateErr.Error()}
+			HandleTemplateError(err)
+			os.Exit(1)
+		}
+		gitCredentials = savedGitCredentials
 	}
 
 	result, err := project.DownloadTemplate(destination, url, gitCredentials)

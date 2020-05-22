@@ -185,9 +185,9 @@ func GetTemplateRepos(conID string) ([]utils.TemplateRepo, error) {
 	return repos, nil
 }
 
-// AddTemplateRepo adds a template repo to PFE and
+// AddTemplateRepoToPFE adds a template repo to PFE and
 // returns the new list of existing repos
-func AddTemplateRepo(conID, URL, description, name string, gitCredentials *utils.GitCredentials) ([]utils.TemplateRepo, error) {
+func AddTemplateRepoToPFE(conID, URL, description, name string, gitCredentials *utils.GitCredentials) ([]utils.TemplateRepo, error) {
 	if _, err := url.ParseRequestURI(URL); err != nil {
 		return nil, fmt.Errorf("Error: '%s' is not a valid URL", URL)
 	}
@@ -240,9 +240,9 @@ func AddTemplateRepo(conID, URL, description, name string, gitCredentials *utils
 	return repos, nil
 }
 
-// DeleteTemplateRepo deletes a template repo from PFE and
+// DeleteTemplateRepoFromPFE deletes a template repo from PFE and
 // returns the new list of existing repos
-func DeleteTemplateRepo(conID, URL string) ([]utils.TemplateRepo, error) {
+func DeleteTemplateRepoFromPFE(conID, URL string) ([]utils.TemplateRepo, error) {
 	if _, err := url.ParseRequestURI(URL); err != nil {
 		return nil, fmt.Errorf("Error: '%s' is not a valid URL", URL)
 	}

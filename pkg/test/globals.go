@@ -11,6 +11,9 @@
 
 package test
 
+// ConID is the default connection ID
+const ConID = "local"
+
 // PublicGHRepoURL is a URL to a public GitHub repo (not requiring auth to access)
 const PublicGHRepoURL = "https://github.com/microclimate-dev2ops/nodeExpressTemplate"
 
@@ -21,7 +24,7 @@ const PublicGHDevfileURL = "https://raw.githubusercontent.com/kabanero-io/codewi
 const GHERepoURL = "https://github.ibm.com/DevCamp2018/git-basics"
 
 // GHEDevfileURL is a URL to a devfiles/index.json in a GitHub Enterprise repo
-const GHEDevfileURL = "https://raw.github.ibm.com/Richard-Waller/sampleGHETemplateRepo/415ece47958250175f182c095af7da6cfe40e58a/devfiles/index.json"
+const GHEDevfileURL = "https://raw.github.ibm.com/Richard-Waller/sampleGHETemplateRepo/2a0cb5e1accfc077e375f6582f7ee27015c4005b/devfiles/index.json"
 
 // GHEUsername is a username that passes the auth required to access a GHERepoURL
 const GHEUsername = "INSERT YOUR OWN: e.g. foo.bar@foobar.com"

@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	"github.com/eclipse/codewind-installer/pkg/apiroutes"
+	"github.com/eclipse/codewind-installer/pkg/templates"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 	"github.com/urfave/cli"
 )
@@ -80,7 +81,7 @@ func AddTemplateRepo(c *cli.Context) {
 	}
 
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
-	repos, err := apiroutes.AddTemplateRepo(conID, url, desc, name, gitCredentials)
+	repos, err := templates.AddTemplateRepo(conID, url, desc, name, gitCredentials)
 	if err != nil {
 		templateErr := &TemplateError{errOpAddRepo, err, err.Error()}
 		HandleTemplateError(templateErr)
@@ -104,7 +105,7 @@ func DeleteTemplateRepo(c *cli.Context) {
 			utils.OnDeleteTemplateRepo(extensions, url, repos)
 		}
 	}
-	repos, err := apiroutes.DeleteTemplateRepo(conID, url)
+	repos, err := templates.DeleteTemplateRepo(conID, url)
 	if err != nil {
 		templateErr := &TemplateError{errOpDeleteRepo, err, err.Error()}
 		HandleTemplateError(templateErr)

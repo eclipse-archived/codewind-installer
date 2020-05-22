@@ -167,7 +167,7 @@ func TestFailuresAddTemplateRepo(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := AddTemplateRepo(cwTest.ConID, test.inURL, test.inDescription, "template-name", nil)
+			got, err := AddTemplateRepoToPFE(cwTest.ConID, test.inURL, test.inDescription, "template-name", nil)
 			assert.IsType(t, test.wantedType, got, "got: %v", got)
 			assert.Equal(t, test.wantedErr, err)
 		})
@@ -191,7 +191,7 @@ func TestFailuresDeleteTemplateRepo(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := DeleteTemplateRepo(cwTest.ConID, test.inURL)
+			got, err := DeleteTemplateRepoFromPFE(cwTest.ConID, test.inURL)
 			assert.IsType(t, test.wantedType, got, "got: %v", got)
 			assert.Equal(t, test.wantedErr, err)
 		})
@@ -239,7 +239,7 @@ func TestSuccessfulAddAndDeleteTemplateRepos(t *testing.T) {
 			t.Run("Add template repo", func(t *testing.T) {
 				wantedNumRepos := originalNumRepos + 1
 
-				got, err := AddTemplateRepo(cwTest.ConID, test.inURL, "description", "name", test.inGitCredentials)
+				got, err := AddTemplateRepoToPFE(cwTest.ConID, test.inURL, "description", "name", test.inGitCredentials)
 
 				assert.IsType(t, []utils.TemplateRepo{}, got)
 				assert.Equal(t, wantedNumRepos, len(got), "got: %v", got)
@@ -249,7 +249,7 @@ func TestSuccessfulAddAndDeleteTemplateRepos(t *testing.T) {
 			t.Run("Delete template repo", func(t *testing.T) {
 				wantedNumRepos := originalNumRepos
 
-				got, err := DeleteTemplateRepo(cwTest.ConID, test.inURL)
+				got, err := DeleteTemplateRepoFromPFE(cwTest.ConID, test.inURL)
 
 				assert.IsType(t, []utils.TemplateRepo{}, got)
 				assert.Equal(t, wantedNumRepos, len(got), "got: %v", got)
