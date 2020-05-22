@@ -45,7 +45,7 @@ func TestDownloadTemplate(t *testing.T) {
 		assert.Equal(t, "success", out.Status)
 		assert.Nil(t, err)
 	})
-	t.Run("secure template repo (good credentials)", func(t *testing.T) {
+	t.Run("secure template repo (good username-password)", func(t *testing.T) {
 		if !test.UsingOwnGHECredentials {
 			t.Skip("skipping this test because you haven't set GitHub credentials needed for this test")
 		}

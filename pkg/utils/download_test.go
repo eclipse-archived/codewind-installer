@@ -56,7 +56,7 @@ func TestDownloadFromURLThenExtract(t *testing.T) {
 			wantedType:     nil,
 			wantedNumFiles: 17,
 		},
-		"success case: input good secure Git URL and credentials": {
+		"success case: input good GHE URL and username-password": {
 			skip:             !test.UsingOwnGHECredentials,
 			inURL:            test.GHERepoURL,
 			inDestination:    filepath.Join(testDir, "git"),
@@ -84,7 +84,7 @@ func TestDownloadFromURLThenExtract(t *testing.T) {
 			wantedType:     nil,
 			wantedNumFiles: 6,
 		},
-		"success case: input good private tar.gz URL and credentials": {
+		"success case: input good private tar.gz URL and username-password": {
 			skip:             !usingOwnPrivateGHCredentials,
 			inURL:            privateGHTarGzURL,
 			inDestination:    filepath.Join(testDir, "privateTarGz"),
@@ -92,10 +92,10 @@ func TestDownloadFromURLThenExtract(t *testing.T) {
 			wantedType:       nil,
 			wantedNumFiles:   5,
 		},
-		"success case: input good GHE tar.gz URL and credentials": {
+		"success case: input good GHE tar.gz URL and username-password": {
 			skip:             !test.UsingOwnGHECredentials,
 			inURL:            GHETarGzURL,
-			inDestination:    filepath.Join(testDir, "privateTarGz"),
+			inDestination:    filepath.Join(testDir, "GHETarGz"),
 			inGitCredentials: &GitCredentials{Username: test.GHEUsername, Password: test.GHEPassword},
 			wantedType:       nil,
 			wantedNumFiles:   6,
@@ -307,7 +307,7 @@ func TestDownloadFromTarGzURL(t *testing.T) {
 			wantedNumFiles:   0,
 		},
 		"fail case: input Git credentials with GHE URL that isn't to a release asset": {
-			inURL:            toURL("https://github.ibm.com/Richard-Waller/sampleGHERepo/foo"),
+			inURL:            toURL(test.GHERepoURL),
 			inDestination:    filepath.Join(testDir, "badURL"),
 			inGitCredentials: &GitCredentials{Username: test.GHEUsername, Password: test.GHEPassword},
 			wantedType:       errors.New(""),
@@ -327,8 +327,14 @@ func TestDownloadFromTarGzURL(t *testing.T) {
 			}
 
 			createdFiles, _ := ioutil.ReadDir(test.inDestination)
-			assert.Truef(t, len(createdFiles) == test.wantedNumFiles, "len(createdFiles) was %d but should have been %d. createdFiles: %s", len(createdFiles), test.wantedNumFiles, getFilenames(createdFiles))
-
+			assert.Truef(
+				t,
+				len(createdFiles) == test.wantedNumFiles,
+				"len(createdFiles) was %d but should have been %d. createdFiles: %s",
+				len(createdFiles),
+				test.wantedNumFiles,
+				getFilenames(createdFiles),
+			)
 		})
 		os.RemoveAll(testDir)
 		fmt.Println()

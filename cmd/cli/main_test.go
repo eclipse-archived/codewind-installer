@@ -256,8 +256,8 @@ func testSuccessfulAddAndRemoveTemplateRepos(t *testing.T) {
 		assert.Nil(t, removeErr)
 		assert.NotContains(t, string(removeOut), test.GHEDevfileURL)
 	})
-	t.Run("success case: create GHE template project using stored GHE creds"+
-		"\ncwctl templates repos add --url <GHEDevfile> --username --password"+
+	t.Run("success case: create GHE template project using stored GHE username-password"+
+		"\ncwctl templates repos add --url <GHEDevfile> --username <goodUsername> --password <goodPassword>"+
 		"\ncwctl project create --url <GHETemplateRepo>"+
 		"\ncwctl templates repos remove --url", func(t *testing.T) {
 		if !test.UsingOwnGHECredentials {
