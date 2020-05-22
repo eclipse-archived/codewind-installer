@@ -64,7 +64,15 @@ func TestDownloadFromURLThenExtract(t *testing.T) {
 			wantedType:       nil,
 			wantedNumFiles:   7,
 		},
-		"success case: input good private Git URL and credentials": {
+		"success case: input good GHE URL and personalAccessToken": {
+			skip:             !test.UsingOwnGHECredentials,
+			inURL:            test.GHERepoURL,
+			inDestination:    filepath.Join(testDir, "git"),
+			inGitCredentials: &GitCredentials{PersonalAccessToken: test.GHEPersonalAccessToken},
+			wantedType:       nil,
+			wantedNumFiles:   7,
+		},
+		"success case: input good private Git URL and username-password": {
 			skip:             !usingOwnPrivateGHCredentials,
 			inURL:            privateGHRepoURL,
 			inDestination:    filepath.Join(testDir, "git"),
@@ -97,6 +105,14 @@ func TestDownloadFromURLThenExtract(t *testing.T) {
 			inURL:            GHETarGzURL,
 			inDestination:    filepath.Join(testDir, "GHETarGz"),
 			inGitCredentials: &GitCredentials{Username: test.GHEUsername, Password: test.GHEPassword},
+			wantedType:       nil,
+			wantedNumFiles:   6,
+		},
+		"success case: input good GHE tar.gz URL and personalAccessToken": {
+			skip:             !test.UsingOwnGHECredentials,
+			inURL:            GHETarGzURL,
+			inDestination:    filepath.Join(testDir, "GHETarGz"),
+			inGitCredentials: &GitCredentials{PersonalAccessToken: test.GHEPersonalAccessToken},
 			wantedType:       nil,
 			wantedNumFiles:   6,
 		},

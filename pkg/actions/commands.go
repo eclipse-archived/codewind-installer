@@ -75,8 +75,9 @@ func Commands() {
 						cli.StringFlag{Name: "url, u", Usage: "URL of project to download", Required: true},
 						cli.StringFlag{Name: "path, p", Usage: "The path at which to create the new project", Required: true},
 						cli.StringFlag{Name: "conid", Value: "local", Usage: "The connection id of PFE which will be used to validate the project", Required: false},
-						cli.StringFlag{Name: "username", Usage: "Username for GitHub account authorized to download the provided GitHub repo", Required: false},
-						cli.StringFlag{Name: "password", Usage: "Password for GitHub account authorized to download the provided GitHub repo", Required: false},
+						cli.StringFlag{Name: "username", Usage: "Username for GitHub account authorized to download the provided URL. Takes precedence over git credentials stored in keychain", Required: false},
+						cli.StringFlag{Name: "password", Usage: "Password for GitHub account authorized to download the provided URL. Takes precedence over git credentials stored in keychain", Required: false},
+						cli.StringFlag{Name: "personalAccessToken", Usage: "PersonalAccessToken authorized to download the provided URL. Takes precedence over git credentials stored in keychain", Required: false},
 					},
 					Action: func(c *cli.Context) error {
 						ProjectCreate(c)

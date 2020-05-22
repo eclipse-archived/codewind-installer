@@ -36,6 +36,13 @@ func TestSuccessfulAddAndDeleteTemplateRepos(t *testing.T) {
 				Password: cwTest.GHEPassword,
 			},
 		},
+		"GHE devfile URL with GHE personal access token": {
+			skip:  !cwTest.UsingOwnGHECredentials,
+			inURL: cwTest.GHEDevfileURL,
+			inGitCredentials: &utils.GitCredentials{
+				PersonalAccessToken: cwTest.GHEPersonalAccessToken,
+			},
+		},
 	}
 	for name, test := range tests {
 		if test.skip {

@@ -157,6 +157,24 @@ func testCreateProjectFromTemplate(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, "{\"status\":\"success\",\"projectPath\":\"./testDir\",\"result\":{\"language\":\"unknown\",\"projectType\":\"docker\"}}\n", string(out))
 	})
+	t.Run("success case: create GHE project with good personalAccessToken"+
+		"\ncwctl project create --url <secureTemplateRepo> --path <testDir> --personalAccessToken <test.GHEPersonalAccessToken>", func(t *testing.T) {
+		if !test.UsingOwnGHECredentials {
+			t.Skip("skipping this test because you haven't set GitHub credentials needed for this test")
+		}
+
+		os.RemoveAll(testDir)
+		defer os.RemoveAll(testDir)
+
+		cmd := exec.Command(cwctl, "project", "create",
+			"--url="+test.GHERepoURL,
+			"--path="+testDir,
+			"--personalAccessToken="+test.GHEPersonalAccessToken,
+		)
+		out, err := cmd.Output()
+		assert.Nil(t, err)
+		assert.Equal(t, "{\"status\":\"success\",\"projectPath\":\"./testDir\",\"result\":{\"language\":\"unknown\",\"projectType\":\"docker\"}}\n", string(out))
+	})
 	t.Run("fail case: create GHE project with good username but bad password"+
 		"\ncwctl project create --url <secureTemplateRepo> --path <testDir> --username <goodUsername> --password <badPassword>", func(t *testing.T) {
 		os.RemoveAll(testDir)
@@ -292,6 +310,41 @@ func testSuccessfulAddAndRemoveTemplateRepos(t *testing.T) {
 		assert.Nil(t, removeErr)
 		assert.NotContains(t, string(removeOut), test.GHEDevfileURL)
 	})
+	t.Run("success case: create GHE template project using stored GHE personalAccessToken"+
+		"\ncwctl templates repos add --url <GHEDevfile> --personalAccessToken <goodToken>"+
+		"\ncwctl project create --url <GHETemplateRepo>"+
+		"\ncwctl templates repos remove --url", func(t *testing.T) {
+		if !test.UsingOwnGHECredentials {
+			t.Skip("skipping this test because you haven't set GitHub credentials needed for this test")
+		}
+
+		os.RemoveAll(testDir)
+		defer os.RemoveAll(testDir)
+
+		cmd := exec.Command(cwctl, "templates", "repos", "add",
+			"--url="+test.GHEDevfileURL,
+			"--personalAccessToken="+test.GHEPersonalAccessToken,
+		)
+		out, err := cmd.Output()
+		assert.Nil(t, err)
+		assert.Contains(t, string(out), test.GHEDevfileURL)
+
+		createCmd := exec.Command(cwctl, "project", "create",
+			"--url="+test.GHERepoURL,
+			"--path="+testDir,
+		)
+		createOut, createErr := createCmd.Output()
+		assert.Nil(t, createErr)
+		assert.Contains(t, string(createOut), "success")
+		assert.Contains(t, string(createOut), testDir)
+
+		removeCmd := exec.Command(cwctl, "templates", "repos", "remove",
+			"--url="+test.GHEDevfileURL,
+		)
+		removeOut, removeErr := removeCmd.Output()
+		assert.Nil(t, removeErr)
+		assert.NotContains(t, string(removeOut), test.GHEDevfileURL)
+	})
 	t.Run("fail case: create GHE template project with bad password, overriding good stored GHE creds"+
 		"\ncwctl templates repos add --url <GHEDevfile> --username --password"+
 		"\ncwctl project create --url <GHETemplateRepo> --username <goodUsername> --password <badPassword>"+
@@ -317,6 +370,41 @@ func testSuccessfulAddAndRemoveTemplateRepos(t *testing.T) {
 			"--path="+testDir,
 			"--username="+test.GHEUsername,
 			"--password=badpassword",
+		)
+		createOut, createErr := createCmd.CombinedOutput()
+		assert.NotNil(t, createErr)
+		assert.Contains(t, string(createOut), "401 Unauthorized")
+
+		removeCmd := exec.Command(cwctl, "templates", "repos", "remove",
+			"--url="+test.GHEDevfileURL,
+		)
+		removeOut, removeErr := removeCmd.Output()
+		assert.Nil(t, removeErr)
+		assert.NotContains(t, string(removeOut), test.GHEDevfileURL)
+	})
+	t.Run("fail case: create GHE template project with bad personalAccessToken, overriding good stored GHE creds"+
+		"\ncwctl templates repos add --url <GHEDevfile> --personalAccessToken <goodToken>"+
+		"\ncwctl project create --url <GHETemplateRepo> --personalAccessToken <badToken>"+
+		"\ncwctl templates repos remove --url", func(t *testing.T) {
+		if !test.UsingOwnGHECredentials {
+			t.Skip("skipping this test because you haven't set GitHub credentials needed for this test")
+		}
+
+		os.RemoveAll(testDir)
+		defer os.RemoveAll(testDir)
+
+		cmd := exec.Command(cwctl, "templates", "repos", "add",
+			"--url="+test.GHEDevfileURL,
+			"--personalAccessToken="+test.GHEPersonalAccessToken,
+		)
+		out, err := cmd.Output()
+		assert.Nil(t, err)
+		assert.Contains(t, string(out), test.GHEDevfileURL)
+
+		createCmd := exec.Command(cwctl, "project", "create",
+			"--url="+test.GHERepoURL,
+			"--path="+testDir,
+			"--personalAccessToken=badtoken",
 		)
 		createOut, createErr := createCmd.CombinedOutput()
 		assert.NotNil(t, createErr)

@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/google/go-github/github"
+	"golang.org/x/oauth2"
 )
 
 type (
@@ -160,6 +161,16 @@ func DownloadFromRepoURL(URL *url.URL, destination string, gitCredentials *GitCr
 func getGitHubClient(domain string, gitCredentials *GitCredentials) (*github.Client, error) {
 	if gitCredentials == nil {
 		return github.NewClient(nil), nil
+	}
+
+	if gitCredentials.PersonalAccessToken != "" {
+		ctx := context.Background()
+		tokenSource := oauth2.StaticTokenSource(
+			&oauth2.Token{AccessToken: gitCredentials.PersonalAccessToken},
+		)
+		tokenClient := oauth2.NewClient(ctx, tokenSource)
+		baseURL := "https://" + domain
+		return github.NewEnterpriseClient(baseURL, baseURL, tokenClient)
 	}
 
 	tp := github.BasicAuthTransport{
