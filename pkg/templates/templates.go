@@ -105,22 +105,22 @@ func findTemplateRepoSourceID(conID, repoURL string) (string, error) {
 }
 
 // GetGitCredentialsFromKeychain gets GitHub credentials for a template from the keychain
-func GetGitCredentialsFromKeychain(conID, templateURL string) (utils.GitCredentials, error) {
-	gitCredentials := utils.GitCredentials{}
+func GetGitCredentialsFromKeychain(conID, templateURL string) (*utils.GitCredentials, error) {
 	sourceID, findErr := findTemplateSourceID(conID, templateURL)
 	if findErr != nil {
-		return utils.GitCredentials{}, findErr
+		return nil, findErr
 	}
-	if sourceID != "" {
-		savedGitCredentials, err := security.GetSecretFromKeyring(conID, "gitcredentials-"+sourceID)
-		if err != nil {
-			return utils.GitCredentials{}, err
-		}
-
-		unmarshalErr := json.Unmarshal([]byte(savedGitCredentials), &gitCredentials)
-		if unmarshalErr != nil {
-			return utils.GitCredentials{}, err
-		}
+	if sourceID == "" {
+		return nil, nil
+	}
+	savedGitCredentials, err := security.GetSecretFromKeyring(conID, "gitcredentials-"+sourceID)
+	if err != nil {
+		return nil, err
+	}
+	var gitCredentials *utils.GitCredentials
+	unmarshalErr := json.Unmarshal([]byte(savedGitCredentials), &gitCredentials)
+	if unmarshalErr != nil {
+		return nil, err
 	}
 	return gitCredentials, nil
 }

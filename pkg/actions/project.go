@@ -47,10 +47,12 @@ func ProjectCreate(c *cli.Context) {
 	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 	username := c.String("username")
 	password := c.String("password")
-	var gitCredentials utils.GitCredentials
+	var gitCredentials *utils.GitCredentials
 	if username != "" && password != "" {
-		gitCredentials.Username = username
-		gitCredentials.Password = password
+		gitCredentials = &utils.GitCredentials{
+			Username: username,
+			Password: password,
+		}
 	} else {
 		savedGitCredentials, templateErr := templates.GetGitCredentialsFromKeychain(conID, url)
 		if templateErr != nil {

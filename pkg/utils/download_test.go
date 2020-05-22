@@ -45,7 +45,7 @@ func TestDownloadFromURLThenExtract(t *testing.T) {
 		skip             bool
 		inURL            string
 		inDestination    string
-		inGitCredentials GitCredentials
+		inGitCredentials *GitCredentials
 		wantedType       error
 		wantedErrMsg     string
 		wantedNumFiles   int
@@ -60,7 +60,7 @@ func TestDownloadFromURLThenExtract(t *testing.T) {
 			skip:             !test.UsingOwnGHECredentials,
 			inURL:            test.GHERepoURL,
 			inDestination:    filepath.Join(testDir, "git"),
-			inGitCredentials: GitCredentials{Username: test.GHEUsername, Password: test.GHEPassword},
+			inGitCredentials: &GitCredentials{Username: test.GHEUsername, Password: test.GHEPassword},
 			wantedType:       nil,
 			wantedNumFiles:   7,
 		},
@@ -68,7 +68,7 @@ func TestDownloadFromURLThenExtract(t *testing.T) {
 			skip:             !usingOwnPrivateGHCredentials,
 			inURL:            privateGHRepoURL,
 			inDestination:    filepath.Join(testDir, "git"),
-			inGitCredentials: GitCredentials{Username: privateGHUsername, Password: privateGHPassword},
+			inGitCredentials: &GitCredentials{Username: privateGHUsername, Password: privateGHPassword},
 			wantedType:       nil,
 			wantedNumFiles:   15,
 		},
@@ -88,7 +88,7 @@ func TestDownloadFromURLThenExtract(t *testing.T) {
 			skip:             !usingOwnPrivateGHCredentials,
 			inURL:            privateGHTarGzURL,
 			inDestination:    filepath.Join(testDir, "privateTarGz"),
-			inGitCredentials: GitCredentials{Username: privateGHUsername, Password: privateGHPassword},
+			inGitCredentials: &GitCredentials{Username: privateGHUsername, Password: privateGHPassword},
 			wantedType:       nil,
 			wantedNumFiles:   5,
 		},
@@ -96,7 +96,7 @@ func TestDownloadFromURLThenExtract(t *testing.T) {
 			skip:             !test.UsingOwnGHECredentials,
 			inURL:            GHETarGzURL,
 			inDestination:    filepath.Join(testDir, "privateTarGz"),
-			inGitCredentials: GitCredentials{Username: test.GHEUsername, Password: test.GHEPassword},
+			inGitCredentials: &GitCredentials{Username: test.GHEUsername, Password: test.GHEPassword},
 			wantedType:       nil,
 			wantedNumFiles:   6,
 		},
@@ -118,7 +118,7 @@ func TestDownloadFromURLThenExtract(t *testing.T) {
 			skip:             !test.UsingOwnGHECredentials,
 			inURL:            test.GHERepoURL,
 			inDestination:    filepath.Join(testDir, "failCase"),
-			inGitCredentials: GitCredentials{Username: test.GHEUsername, Password: "bad password"},
+			inGitCredentials: &GitCredentials{Username: test.GHEUsername, Password: "bad password"},
 			wantedType:       errors.New(""),
 			wantedErrMsg:     "401 Unauthorized",
 			wantedNumFiles:   0,
@@ -127,7 +127,7 @@ func TestDownloadFromURLThenExtract(t *testing.T) {
 			skip:             !test.UsingOwnGHECredentials,
 			inURL:            GHETarGzURLToNonExistentRepo,
 			inDestination:    filepath.Join(testDir, "failCase"),
-			inGitCredentials: GitCredentials{Username: test.GHEUsername, Password: test.GHEPassword},
+			inGitCredentials: &GitCredentials{Username: test.GHEUsername, Password: test.GHEPassword},
 			wantedType:       errors.New(""),
 			wantedErrMsg:     "GitHub responded with status code 404",
 			wantedNumFiles:   0,
@@ -136,7 +136,7 @@ func TestDownloadFromURLThenExtract(t *testing.T) {
 			skip:             !test.UsingOwnGHECredentials,
 			inURL:            GHETarGzURLToNonExistentRelease,
 			inDestination:    filepath.Join(testDir, "failCase"),
-			inGitCredentials: GitCredentials{Username: test.GHEUsername, Password: test.GHEPassword},
+			inGitCredentials: &GitCredentials{Username: test.GHEUsername, Password: test.GHEPassword},
 			wantedType:       errors.New(""),
 			wantedErrMsg:     "Cannot find release ",
 			wantedNumFiles:   0,
@@ -145,7 +145,7 @@ func TestDownloadFromURLThenExtract(t *testing.T) {
 			skip:             !test.UsingOwnGHECredentials,
 			inURL:            GHETarGzURLToNonExistentReleaseAsset,
 			inDestination:    filepath.Join(testDir, "failCase"),
-			inGitCredentials: GitCredentials{Username: test.GHEUsername, Password: test.GHEPassword},
+			inGitCredentials: &GitCredentials{Username: test.GHEUsername, Password: test.GHEPassword},
 			wantedType:       errors.New(""),
 			wantedErrMsg:     "Cannot find matching assets for release ",
 			wantedNumFiles:   0,
@@ -184,7 +184,7 @@ func TestDownloadFromRepoURL(t *testing.T) {
 	tests := map[string]struct {
 		inURL            *url.URL
 		inDestination    string
-		inGitCredentials GitCredentials
+		inGitCredentials *GitCredentials
 		wantedType       error
 		wantedErrMsg     string
 		wantedNumFiles   int
@@ -262,8 +262,14 @@ func TestDownloadAndExtractZip(t *testing.T) {
 			assert.IsType(t, test.wantedType, got, "Got: %s", got)
 
 			createdFiles, _ := ioutil.ReadDir(test.inDestination)
-			assert.Truef(t, len(createdFiles) == test.wantedNumFiles, "len(createdFiles) was %d but should have been %d. createdFiles: %s", len(createdFiles), test.wantedNumFiles, getFilenames(createdFiles))
-
+			assert.Truef(
+				t,
+				len(createdFiles) == test.wantedNumFiles,
+				"len(createdFiles) was %d but should have been %d. createdFiles: %s",
+				len(createdFiles),
+				test.wantedNumFiles,
+				getFilenames(createdFiles),
+			)
 		})
 		os.RemoveAll(testDir)
 		fmt.Println()
@@ -274,7 +280,7 @@ func TestDownloadFromTarGzURL(t *testing.T) {
 	tests := map[string]struct {
 		inURL            *url.URL
 		inDestination    string
-		inGitCredentials GitCredentials
+		inGitCredentials *GitCredentials
 		wantedType       error
 		wantedErrMsg     string
 		wantedNumFiles   int
@@ -295,7 +301,7 @@ func TestDownloadFromTarGzURL(t *testing.T) {
 		"fail case: input Git credentials with URL that isn't GitHub": {
 			inURL:            toURL("https://www.google.com/"),
 			inDestination:    filepath.Join(testDir, "badURL"),
-			inGitCredentials: GitCredentials{Username: test.GHEUsername, Password: test.GHEPassword},
+			inGitCredentials: &GitCredentials{Username: test.GHEUsername, Password: test.GHEPassword},
 			wantedType:       errors.New(""),
 			wantedErrMsg:     "URL must point to a GitHub repository release asset",
 			wantedNumFiles:   0,
@@ -303,7 +309,7 @@ func TestDownloadFromTarGzURL(t *testing.T) {
 		"fail case: input Git credentials with GHE URL that isn't to a release asset": {
 			inURL:            toURL("https://github.ibm.com/Richard-Waller/sampleGHERepo/foo"),
 			inDestination:    filepath.Join(testDir, "badURL"),
-			inGitCredentials: GitCredentials{Username: test.GHEUsername, Password: test.GHEPassword},
+			inGitCredentials: &GitCredentials{Username: test.GHEUsername, Password: test.GHEPassword},
 			wantedType:       errors.New(""),
 			wantedErrMsg:     "URL must point to a GitHub repository release asset",
 			wantedNumFiles:   0,
@@ -332,7 +338,7 @@ func TestDownloadFromTarGzURL(t *testing.T) {
 func TestDownloadFile(t *testing.T) {
 	t.Run("fail case - response status code is not 200", func(t *testing.T) {
 		testURL := "https://github.com/nonexistentrepo"
-		err := DownloadFile(toURL(testURL), testDir, GitCredentials{})
+		err := DownloadFile(toURL(testURL), testDir)
 		assert.NotNil(t, err)
 		assert.Contains(t, err.Error(), "File download failed for "+testURL+", status code ")
 	})

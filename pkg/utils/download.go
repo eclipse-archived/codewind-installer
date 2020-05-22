@@ -36,7 +36,7 @@ type (
 
 // DownloadFromURLThenExtract downloads files from a URL
 // to a destination, extracting them if necessary
-func DownloadFromURLThenExtract(inURL, destination string, gitCredentials GitCredentials) error {
+func DownloadFromURLThenExtract(inURL, destination string, gitCredentials *GitCredentials) error {
 	URL, err := url.ParseRequestURI(inURL)
 	if err != nil {
 		return err
@@ -53,12 +53,12 @@ func DownloadFromURLThenExtract(inURL, destination string, gitCredentials GitCre
 
 // DownloadFromTarGzURL downloads a tar.gz file from a URL
 // and extracts it to a destination
-func DownloadFromTarGzURL(URL *url.URL, destination string, gitCredentials GitCredentials) error {
+func DownloadFromTarGzURL(URL *url.URL, destination string, gitCredentials *GitCredentials) error {
 	time := time.Now().Format(time.RFC3339)
 	time = strings.Replace(time, ":", "-", -1) // ":" is illegal char in windows
 	pathToTempFile := path.Join(os.TempDir(), "_"+time+"temp.tar.gz")
 
-	if gitCredentials != (GitCredentials{}) {
+	if gitCredentials != nil {
 		downloadURL, err := getURLToDownloadReleaseAsset(URL, gitCredentials)
 		if err != nil {
 			return err
@@ -66,7 +66,7 @@ func DownloadFromTarGzURL(URL *url.URL, destination string, gitCredentials GitCr
 		URL = downloadURL
 	}
 
-	err := DownloadFile(URL, pathToTempFile, gitCredentials)
+	err := DownloadFile(URL, pathToTempFile)
 	if err != nil {
 		return err
 	}
@@ -75,7 +75,7 @@ func DownloadFromTarGzURL(URL *url.URL, destination string, gitCredentials GitCr
 	return err
 }
 
-func getURLToDownloadReleaseAsset(URL *url.URL, gitCredentials GitCredentials) (*url.URL, error) {
+func getURLToDownloadReleaseAsset(URL *url.URL, gitCredentials *GitCredentials) (*url.URL, error) {
 	URLPathSlice := strings.Split(URL.Path, "/")
 
 	if !strings.Contains(URL.Host, "github") || len(URLPathSlice) < 6 {
@@ -135,7 +135,7 @@ func findAssetID(releases []*github.RepositoryRelease, releaseName string, URL *
 }
 
 // DownloadFromRepoURL downloads a repo from a URL to a destination
-func DownloadFromRepoURL(URL *url.URL, destination string, gitCredentials GitCredentials) error {
+func DownloadFromRepoURL(URL *url.URL, destination string, gitCredentials *GitCredentials) error {
 	URLPathSlice := strings.Split(URL.Path, "/")
 
 	if !strings.Contains(URL.Host, "github") || len(URLPathSlice) < 3 {
@@ -157,8 +157,8 @@ func DownloadFromRepoURL(URL *url.URL, destination string, gitCredentials GitCre
 	return DownloadAndExtractZip(zipURL, destination)
 }
 
-func getGitHubClient(domain string, gitCredentials GitCredentials) (*github.Client, error) {
-	if gitCredentials == (GitCredentials{}) {
+func getGitHubClient(domain string, gitCredentials *GitCredentials) (*github.Client, error) {
+	if gitCredentials == nil {
 		return github.NewClient(nil), nil
 	}
 
@@ -191,7 +191,7 @@ func DownloadAndExtractZip(zipURL *url.URL, destination string) error {
 	time = strings.Replace(time, ":", "-", -1) // ":" is illegal char in windows
 	pathToTempZipFile := path.Join(os.TempDir(), "_"+time+".zip")
 
-	err := DownloadFile(zipURL, pathToTempZipFile, GitCredentials{})
+	err := DownloadFile(zipURL, pathToTempZipFile)
 	if err != nil {
 		return err
 	}
@@ -206,7 +206,7 @@ func DownloadAndExtractZip(zipURL *url.URL, destination string) error {
 }
 
 // DownloadFile from URL to file destination
-func DownloadFile(URL *url.URL, destination string, gitCredentials GitCredentials) error {
+func DownloadFile(URL *url.URL, destination string) error {
 	resp, err := http.Get(URL.String())
 	if err != nil {
 		return err

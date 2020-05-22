@@ -82,7 +82,7 @@ func TestSuccessfulAddAndDeleteTemplateRepos(t *testing.T) {
 				}
 				gitCredentials, err := GetGitCredentialsFromKeychain(cwTest.ConID, URLOfAddedTemplate)
 				assert.Nil(t, err)
-				assert.NotNil(t, gitCredentials)
+				assert.Equal(t, test.inGitCredentials, gitCredentials)
 
 				result, err := project.DownloadTemplate(testDir, URLOfAddedTemplate, gitCredentials)
 				assert.Nil(t, err)

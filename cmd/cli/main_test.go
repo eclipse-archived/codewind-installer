@@ -112,7 +112,8 @@ func testUseInsecureKeyring(t *testing.T) {
 }
 
 func testCreateProjectFromTemplate(t *testing.T) {
-	t.Run("cwctl project create --url <insecureTemplateRepo> --path <testDir>", func(t *testing.T) {
+	t.Run("success case: create project"+
+		"\ncwctl project create --url <insecureTemplateRepo> --path <testDir>", func(t *testing.T) {
 		os.RemoveAll(testDir)
 		defer os.RemoveAll(testDir)
 
@@ -124,7 +125,8 @@ func testCreateProjectFromTemplate(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, "{\"status\":\"success\",\"projectPath\":\"./testDir\",\"result\":{\"language\":\"javascript\",\"projectType\":\"nodejs\"}}\n", string(out))
 	})
-	t.Run("cwctl --json project create --url <insecureTemplateRepo> --path <testDir>", func(t *testing.T) {
+	t.Run("success case: create project and output JSON"+
+		"\ncwctl --json project create --url <insecureTemplateRepo> --path <testDir>", func(t *testing.T) {
 		os.RemoveAll(testDir)
 		defer os.RemoveAll(testDir)
 
@@ -136,7 +138,8 @@ func testCreateProjectFromTemplate(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, "{\"status\":\"success\",\"projectPath\":\"./testDir\",\"result\":{\"language\":\"javascript\",\"projectType\":\"nodejs\"}}\n", string(out))
 	})
-	t.Run("cwctl project create --url <secureTemplateRepo> --path <testDir> --username <test.GHEUsername> --password <test.GHEPassword>", func(t *testing.T) {
+	t.Run("success case: create GHE project with good username and password"+
+		"\ncwctl project create --url <secureTemplateRepo> --path <testDir> --username <test.GHEUsername> --password <test.GHEPassword>", func(t *testing.T) {
 		if !test.UsingOwnGHECredentials {
 			t.Skip("skipping this test because you haven't set GitHub credentials needed for this test")
 		}
@@ -154,7 +157,8 @@ func testCreateProjectFromTemplate(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, "{\"status\":\"success\",\"projectPath\":\"./testDir\",\"result\":{\"language\":\"unknown\",\"projectType\":\"docker\"}}\n", string(out))
 	})
-	t.Run("cwctl project create --url <secureTemplateRepo> --path <testDir> --username <goodUsername> --password <badPassword>", func(t *testing.T) {
+	t.Run("fail case: create GHE project with good username but bad password"+
+		"\ncwctl project create --url <secureTemplateRepo> --path <testDir> --username <goodUsername> --password <badPassword>", func(t *testing.T) {
 		os.RemoveAll(testDir)
 		defer os.RemoveAll(testDir)
 

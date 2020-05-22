@@ -39,9 +39,8 @@ func TestDownloadTemplate(t *testing.T) {
 
 		dest := filepath.Join(testDir, "insecureTemplateRepo")
 		url := test.PublicGHRepoURL
-		gitCredentials := utils.GitCredentials{}
 
-		out, err := DownloadTemplate(dest, url, gitCredentials)
+		out, err := DownloadTemplate(dest, url, nil)
 
 		assert.Equal(t, "success", out.Status)
 		assert.Nil(t, err)
@@ -56,7 +55,7 @@ func TestDownloadTemplate(t *testing.T) {
 
 		dest := filepath.Join(testDir, "secureTemplateRepoGoodCredentials")
 		url := test.GHERepoURL
-		gitCredentials := utils.GitCredentials{
+		gitCredentials := &utils.GitCredentials{
 			Username: test.GHEUsername,
 			Password: test.GHEPassword,
 		}
@@ -72,7 +71,7 @@ func TestDownloadTemplate(t *testing.T) {
 
 		dest := filepath.Join(testDir, "secureTemplateRepoBadCredentials")
 		url := test.GHERepoURL
-		gitCredentials := utils.GitCredentials{
+		gitCredentials := &utils.GitCredentials{
 			Username: test.GHEUsername,
 			Password: "badpassword",
 		}
