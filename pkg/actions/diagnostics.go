@@ -47,11 +47,10 @@ const codewindPrefix = "codewind-"
 const codewindProjectPrefix = "cw-"
 const dgProjectDirName = "projects"
 
-var isLoud = true
 var collectingAll = false
 
 func logDG(input string) {
-	if isLoud {
+	if !printAsJSON {
 		fmt.Print(input)
 	}
 }
@@ -77,77 +76,75 @@ func warnDG(warning, description string) {
 	}
 }
 
-//DiagnosticsCommand to gather logs and project files to aid diagnosis of Codewind errors
-func DiagnosticsCommand(c *cli.Context) {
+//DiagnosticsCollect to gather logs and project files to aid diagnosis of Codewind errors
+func DiagnosticsCollect(c *cli.Context) {
 	collectingAll = c.Bool("all")
 	connectionID := c.String("conid")
-	if c.Bool("quiet") || printAsJSON {
-		isLoud = false
+	dirErr := os.MkdirAll(diagnosticsDirName, 0755)
+	if dirErr != nil {
+		errors.CheckErr(dirErr, 205, "")
 	}
-	if c.Bool("clean") {
-		logDG("Deleting all collected diagnostics files ... ")
-		err := os.RemoveAll(diagnosticsMasterDirName)
+	logDG("Diagnostics files will be written to " + diagnosticsDirName + "\n")
+	if collectingAll {
+		connectionList, conErr := connections.GetAllConnections()
+		if conErr != nil {
+			warnDG("connections_error", "Unable to get Connections "+conErr.Error())
+		} else {
+			for _, connection := range connectionList {
+				if connection.ClientID != "" {
+					dgRemoteCommand(connection.ID, c.Bool("projects"))
+				}
+			}
+		}
+		dgLocalCommand(c)
+	} else if connectionID != "local" {
+		dgRemoteCommand(connectionID, c.Bool("projects"))
+	} else {
+		dgLocalCommand(c)
+	}
+	// Attempt to gather Eclipse logs
+	gatherCodewindEclipseLogs(c.String("eclipseWorkspaceDir"))
+
+	// Attempt to gather VSCode logs
+	gatherCodewindVSCodeLogs()
+
+	// Attempt to gather IntelliJ logs
+	gatherCodewindIntellijLogs(c.String("intellijLogsDir"))
+	if !c.Bool("nozip") {
+		createZipAndRemoveCollectedFiles()
+	}
+	// check to see if we got any data back
+	entries, _ := ioutil.ReadDir(diagnosticsDirName)
+	if len(entries) == 0 {
+		// clean up and output failure message
+		err := os.RemoveAll(diagnosticsDirName)
 		if err != nil {
 			errors.CheckErr(err, 206, "")
 		}
-		logDG("done\n")
-	} else {
-		dirErr := os.MkdirAll(diagnosticsDirName, 0755)
-		if dirErr != nil {
-			errors.CheckErr(dirErr, 205, "")
-		}
-		logDG("Diagnostics files will be written to " + diagnosticsDirName + "\n")
-		if collectingAll {
-			connectionList, conErr := connections.GetAllConnections()
-			if conErr != nil {
-				warnDG("connections_error", "Unable to get Connections "+conErr.Error())
-			} else {
-				for _, connection := range connectionList {
-					if connection.ClientID != "" {
-						dgRemoteCommand(connection.ID, c.Bool("projects"))
-					}
-				}
-			}
-			dgLocalCommand(c)
-		} else if connectionID != "local" {
-			dgRemoteCommand(connectionID, c.Bool("projects"))
-		} else {
-			dgLocalCommand(c)
-		}
-		// Attempt to gather Eclipse logs
-		gatherCodewindEclipseLogs(c.String("eclipseWorkspaceDir"))
-
-		// Attempt to gather VSCode logs
-		gatherCodewindVSCodeLogs()
-
-		// Attempt to gather IntelliJ logs
-		gatherCodewindIntellijLogs(c.String("intellijLogsDir"))
-		if !c.Bool("nozip") {
-			createZipAndRemoveCollectedFiles()
-		}
-		// check to see if we got any data back
-		entries, _ := ioutil.ReadDir(diagnosticsDirName)
-		if len(entries) == 0 {
-			// clean up and output failure message
-			err := os.RemoveAll(diagnosticsDirName)
-			if err != nil {
-				errors.CheckErr(err, 206, "")
-			}
-			if printAsJSON {
-				result := dgResultStruct{DgSuccess: false, DgOutputDir: "has been deleted", DgWarningsEncountered: dgWarningArray}
-				json, _ := json.Marshal(result)
-				fmt.Println(string(json))
-			} else {
-				logDG("No diagnostics data was able to be collected - empty directory " + diagnosticsDirName + " has been deleted.")
-			}
-			os.Exit(1)
-		}
 		if printAsJSON {
-			result := dgResultStruct{DgSuccess: true, DgOutputDir: diagnosticsDirName, DgWarningsEncountered: dgWarningArray}
+			result := dgResultStruct{DgSuccess: false, DgOutputDir: "has been deleted", DgWarningsEncountered: dgWarningArray}
 			json, _ := json.Marshal(result)
 			fmt.Println(string(json))
+		} else {
+			logDG("No diagnostics data was able to be collected - empty directory " + diagnosticsDirName + " has been deleted.")
 		}
+		os.Exit(1)
 	}
+	if printAsJSON {
+		result := dgResultStruct{DgSuccess: true, DgOutputDir: diagnosticsDirName, DgWarningsEncountered: dgWarningArray}
+		json, _ := json.Marshal(result)
+		fmt.Println(string(json))
+	}
+}
+
+//DiagnosticsRemove to remove the diagnostics directory and all its contents
+func DiagnosticsRemove(c *cli.Context) {
+	logDG("Deleting all collected diagnostics files ... ")
+	err := os.RemoveAll(diagnosticsMasterDirName)
+	if err != nil {
+		errors.CheckErr(err, 206, "")
+	}
+	logDG("done\n")
 }
 
 func dgRemoteCommand(conid string, collectProjects bool) {
@@ -254,7 +251,7 @@ func writePodLogToFile(clientset *kubernetes.Clientset, pod corev1.Pod, podName 
 }
 
 func dgLocalCommand(c *cli.Context) {
-	localDirErr := os.MkdirAll(filepath.Join(diagnosticsLocalDirName, dgProjectDirName), 0755)
+	localDirErr := os.MkdirAll(filepath.Join(diagnosticsLocalDirName), 0755)
 	if localDirErr != nil {
 		errors.CheckErr(localDirErr, 205, "")
 	}
@@ -304,12 +301,21 @@ func collectCodewindProjectContainers() {
 		warnDG("Unable to get Docker container list", cListErr.Error())
 		return
 	}
-	for _, cwContainer := range docker.GetCodewindProjectContainers(allContainers) {
-		logDG("Collecting information from container " + cwContainer.Names[0] + " ... ")
-		relativeFilePath := filepath.Join("local", dgProjectDirName, cwContainer.Names[0])
-		writeContainerInspectToFile(cwContainer.ID, relativeFilePath)
-		writeContainerLogToFile(cwContainer.ID, relativeFilePath)
-		logDG("done\n")
+	cwProjContainers := docker.GetCodewindProjectContainers(allContainers)
+	if len(cwProjContainers) > 0 {
+		projDirErr := os.MkdirAll(filepath.Join(diagnosticsLocalDirName, dgProjectDirName), 0755)
+		if projDirErr != nil {
+			errors.CheckErr(projDirErr, 205, "")
+		}
+		for _, cwContainer := range cwProjContainers {
+			logDG("Collecting information from container " + cwContainer.Names[0] + " ... ")
+			relativeFilePath := filepath.Join("local", dgProjectDirName, cwContainer.Names[0])
+			writeContainerInspectToFile(cwContainer.ID, relativeFilePath)
+			writeContainerLogToFile(cwContainer.ID, relativeFilePath)
+			logDG("done\n")
+		}
+	} else {
+		warnDG("Unable to collect Codewind project containers", "no project containers found")
 	}
 }
 
@@ -337,15 +343,31 @@ func gatherCodewindEclipseLogs(codewindEclipseWSDir string) {
 			}
 			logDG("done\n")
 		} else {
-			warnDG("Unable to collect Eclipse logs", "workspace metadata directory not found")
+			warnDG("Unable to collect Eclipse logs", "workspace metadata directory not found in "+codewindEclipseWSDir)
 		}
-	} else {
-		warnDG("Unable to collect Eclipse logs", "workspace not specified")
+	}
+}
+
+func gatherEntireLogDirectory(logDirPath, collectionDirPath, parentLogDirPath string) {
+	err := filepath.Walk(logDirPath, func(path string, info os.FileInfo, err error) error {
+		localPath := filepath.Join(collectionDirPath, strings.Replace(path, parentLogDirPath, "", 1))
+		if info.IsDir() {
+			logDirErr := os.MkdirAll(localPath, 0755)
+			if logDirErr != nil {
+				errors.CheckErr(logDirErr, 205, "")
+			}
+		}
+		if info.Mode().IsRegular() {
+			utils.CopyFile(path, localPath)
+		}
+		return nil
+	})
+	if err != nil {
+		warnDG("walk error ", err.Error())
 	}
 }
 
 func gatherCodewindVSCodeLogs() {
-	logDG("Collecting VSCode logs ... ")
 	vsCodeDir := ""
 	switch runtime.GOOS {
 	case "darwin":
@@ -357,31 +379,17 @@ func gatherCodewindVSCodeLogs() {
 	}
 	if len(vsCodeDir) > 0 {
 		vsCodeLogsDir := filepath.Join(vsCodeDir, "logs")
-		diagnosticsVsCodeLogPath := filepath.Join(diagnosticsDirName, "vsCodeLogs")
-		dirErr := os.MkdirAll(diagnosticsVsCodeLogPath, 0755)
-		if dirErr != nil {
-			errors.CheckErr(dirErr, 205, "")
-		}
+		logDG("Collecting VSCode logs from " + vsCodeLogsDir + " ... ")
 		if _, err := os.Stat(vsCodeLogsDir); !os.IsNotExist(err) {
-			err := filepath.Walk(vsCodeLogsDir, func(path string, info os.FileInfo, err error) error {
-				localPath := filepath.Join(diagnosticsVsCodeLogPath, strings.Replace(path, vsCodeDir, "", 1))
-				if info.IsDir() {
-					logDirErr := os.MkdirAll(localPath, 0755)
-					if logDirErr != nil {
-						errors.CheckErr(logDirErr, 205, "")
-					}
-				}
-				if info.Mode().IsRegular() {
-					utils.CopyFile(path, localPath)
-				}
-				return nil
-			})
-			if err != nil {
-				warnDG("walk error ", err.Error())
+			diagnosticsVsCodeLogPath := filepath.Join(diagnosticsDirName, "vsCodeLogs")
+			dirErr := os.MkdirAll(diagnosticsVsCodeLogPath, 0755)
+			if dirErr != nil {
+				errors.CheckErr(dirErr, 205, "")
 			}
+			gatherEntireLogDirectory(vsCodeLogsDir, diagnosticsVsCodeLogPath, vsCodeDir)
 			logDG("done\n")
 		} else {
-			warnDG("Unable to collect VSCode logs", "cannot find logs directory")
+			warnDG("Unable to collect VSCode logs", "cannot find logs directory "+vsCodeLogsDir)
 		}
 	} else {
 		warnDG("Unable to collect VSCode logs", "cannot find logs directory")
@@ -409,56 +417,37 @@ func findIntellijDirectory(inDir string) string {
 }
 
 func gatherCodewindIntellijLogs(codewindIntellijLogDir string) {
-	logDG("Collecting Intellij logs ... ")
 	intellijLogsDir := codewindIntellijLogDir
+	jetBrainsDir, optionalLogDir := "", ""
 	if intellijLogsDir == "" {
-		// attempt to use default path
+		logDG("Determining Intellij logs default location ... ")
 		switch runtime.GOOS {
 		case "darwin":
-			libraryLogsDir := filepath.Join(homeDir, "Library", "Logs", "JetBrains")
-			intellijDirName := findIntellijDirectory(libraryLogsDir)
-			if intellijDirName != "" {
-				intellijLogsDir = filepath.Join(libraryLogsDir, intellijDirName)
-			}
+			jetBrainsDir = filepath.Join(homeDir, "Library", "Logs", "JetBrains")
 		case "linux":
-			jetBrainsDir := filepath.Join(homeDir, ".cache", "JetBrains")
-			intellijDirName := findIntellijDirectory(jetBrainsDir)
-			if intellijDirName != "" {
-				intellijLogsDir = filepath.Join(jetBrainsDir, intellijDirName, "log")
-			}
+			jetBrainsDir = filepath.Join(homeDir, ".cache", "JetBrains")
+			optionalLogDir = "log"
 		case "windows":
-			jetBrainsDir := filepath.Join(homeDir, "AppData", "Local", "JetBrains")
-			intellijDirName := findIntellijDirectory(jetBrainsDir)
-			if intellijDirName != "" {
-				intellijLogsDir = filepath.Join(jetBrainsDir, intellijDirName, "log")
-			}
+			jetBrainsDir = filepath.Join(homeDir, "AppData", "Local", "JetBrains")
+			optionalLogDir = "log"
 		}
+		intellijDirName := findIntellijDirectory(jetBrainsDir)
+		if intellijDirName != "" {
+			intellijLogsDir = filepath.Join(jetBrainsDir, intellijDirName, optionalLogDir)
+		}
+		logDG("done\n")
 	}
 	if len(intellijLogsDir) > 0 {
-		diagnosticsIntellijLogPath := filepath.Join(diagnosticsDirName, "intellijLogs")
+		logDG("Collecting Intellij logs from " + intellijLogsDir + " ... ")
 		if _, err := os.Stat(intellijLogsDir); !os.IsNotExist(err) {
-			err := filepath.Walk(intellijLogsDir, func(path string, info os.FileInfo, err error) error {
-				localPath := filepath.Join(diagnosticsIntellijLogPath, strings.Replace(path, intellijLogsDir, "", 1))
-				if info.IsDir() {
-					logDirErr := os.MkdirAll(localPath, 0755)
-					if logDirErr != nil {
-						errors.CheckErr(logDirErr, 205, "")
-					}
-				}
-				if info.Mode().IsRegular() {
-					utils.CopyFile(path, localPath)
-				}
-				return nil
-			})
-			if err != nil {
-				warnDG("walk error ", err.Error())
-			}
+			diagnosticsIntellijLogPath := filepath.Join(diagnosticsDirName, "intellijLogs")
+			gatherEntireLogDirectory(intellijLogsDir, diagnosticsIntellijLogPath, intellijLogsDir)
 			logDG("done\n")
 		} else {
-			warnDG("Unable to collect Intellij logs", "cannot find logs directory")
+			warnDG("Unable to collect Intellij logs", "cannot find logs directory "+intellijLogsDir)
 		}
 	} else {
-		warnDG("Unable to collect Intellij logs", "cannot find logs directory")
+		warnDG("Unable to collect Intellij logs", "cannot find IntelliJ directory in "+jetBrainsDir)
 	}
 }
 

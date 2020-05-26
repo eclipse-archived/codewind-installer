@@ -261,14 +261,21 @@ Subcommands:</br>
 
 ### diagnostics/dg
 
-` --conid <value>` -  Triggers diagnostics collection for the remote codewind connection ID (must have currently configured Kubectl connection)</br>
-`--eclipseWorkspaceDir/-e <value>` - The location of your Eclipse workspace directory if using the Eclipse IDE (default: "")</br>
-`--intellijLogsDir/-i <value>` - The location of your IntelliJ logs directory if using the IntelliJ IDE (default: "")</br>
-`--quiet/-q` - Turn off console messages</br>
-`--all/-a` - Collects diagnostics for all defined connections, remote and local</br>
-`--projects/-p` - Collect project containers information</br>
-`--nozip/-n` - Does not create collection zip and leaves individual collected files in place</br>
-`--clean` - Removes the diagnostics directory and all its contents from the Codewind home directory
+> **Note:** No additional flags
+
+Subcommands:</br>
+
+`collect` - Gathers logs and project files to aid diagnosis of Codewind errors
+> **Flags:**
+> --conid <value> -  Triggers diagnostics collection for the remote codewind connection ID (must have currently configured Kubectl connection)</br>
+> --eclipseWorkspaceDir/-e <value> - The location of your Eclipse workspace directory if using the Eclipse IDE</br>
+> --intellijLogsDir/-i <value>` - The location of your IntelliJ logs directory if not using the IntelliJ IDE default location</br>
+> --all/-a - Collects diagnostics for all defined connections, remote and local</br>
+> --projects/-p - Collect project containers information</br>
+> --nozip/-n - Does not create collection zip and leaves individual collected files in place</br>
+
+`remove` - Removes the diagnostics directory and all its contents from the Codewind home directory
+> **Note:** No additional flags
 
 ### stop-all
 
@@ -311,8 +318,9 @@ Subcommands:</br>
 > --url - URL to template repository index.json
 > --name - Custom name for template repository
 > --description - Custom description for template repository
-> --username - GitHub username (required if accessing the provided URL requires GitHub authentication)
-> --password - GitHub password (required if accessing the provided URL requires GitHub authentication)
+> --username - GitHub username (required if accessing the provided URL requires GitHub authentication and you do not provide --personalAccessToken)
+> --password - GitHub password (required if accessing the provided URL requires GitHub authentication and you do not provide --personalAccessToken)
+> --personalAccessToken - GitHub personal access token (required if accessing the provided URL requires GitHub authentication and you do not provide --username and --password)
 
 ### version
 
@@ -509,6 +517,7 @@ Subcommands:</br>
 > --address value The address of the docker registry
 > --username value The username for the docker registry
 > --password value The password for the docker registry
+> --locallogin=[true|false] Whether to perform a local docker login to the registry. Defaults to true.
 
 `list/ls` - List the docker secrets (registries and usernames)
 

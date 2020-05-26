@@ -37,7 +37,7 @@ func SecRealmCreate(c *cli.Context) *SecError {
 	newRealm := strings.TrimSpace(c.String("newrealm"))
 	accesstoken := strings.TrimSpace(c.String("accesstoken"))
 
-	themeToUse, secErr := GetSuggestedTheme(hostname, accesstoken)
+	themeLoginName, themeAccountName, secErr := GetSuggestedThemes(hostname, accesstoken)
 	if secErr != nil {
 		return secErr
 	}
@@ -51,6 +51,7 @@ func SecRealmCreate(c *cli.Context) *SecError {
 		DisplayName           string `json:"displayName"`
 		Enabled               bool   `json:"enabled"`
 		LoginTheme            string `json:"loginTheme"`
+		AccountTheme          string `json:"accountTheme"`
 		AccessTokenLifespan   int    `json:"accessTokenLifespan"`
 		SSOSessionIdleTimeout int    `json:"ssoSessionIdleTimeout"`
 		SSOSessionMaxLifespan int    `json:"ssoSessionMaxLifespan"`
@@ -59,7 +60,8 @@ func SecRealmCreate(c *cli.Context) *SecError {
 		Realm:                 newRealm,
 		DisplayName:           newRealm,
 		Enabled:               true,
-		LoginTheme:            themeToUse,
+		LoginTheme:            themeLoginName,
+		AccountTheme:          themeAccountName,
 		AccessTokenLifespan:   (1 * 24 * 60 * 60), // access tokens last 1 day
 		SSOSessionIdleTimeout: (5 * 24 * 60 * 60), // refresh tokens last 5 days
 		SSOSessionMaxLifespan: (5 * 24 * 60 * 60), // refresh tokens last 5 days

@@ -29,5 +29,8 @@ const GHEUsername = "INSERT YOUR OWN: e.g. foo.bar@foobar.com"
 // GHEPassword is a password that passes the auth required to access a GHERepoURL
 const GHEPassword = "INSERT YOUR OWN: e.g. 1234kljfdsjfaleru29348spodkfj445"
 
+// GHEPersonalAccessToken is a personal access token that passes the auth required to access a GHERepoURL
+const GHEPersonalAccessToken = "INSERT YOUR OWN"
+
 // UsingOwnGHECredentials should be set to true if you want to run tests using the credentials above
 const UsingOwnGHECredentials = false
