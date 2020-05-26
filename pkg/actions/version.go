@@ -122,7 +122,7 @@ func GetAllConnectionVersions() {
 // RemoteListAll prints information for all remote installations in the given namespace
 func RemoteListAll(c *cli.Context) {
 	namespace := c.String("namespace")
-	remoteInstalls, err := remote.GetExistingDeployments(namespace)
+	remoteInstalls, err := remote.GetExistingDeployments(namespace, nil)
 	if err != nil {
 		HandleRemInstError(err)
 		os.Exit(1)

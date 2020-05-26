@@ -58,15 +58,23 @@ func logDG(input string) {
 	}
 }
 
-type dgWarning struct {
-	WarningType string `json:"warning"`
-	WarningDesc string `json:"warning_description"`
-}
-
 type dgResultStruct struct {
 	DgSuccess             bool        `json:"success"`
 	DgOutputDir           string      `json:"outputdir"`
 	DgWarningsEncountered []dgWarning `json:"warnings_encountered"`
+}
+
+// used so that unit testing can mock
+type dgFunctions struct {
+	Local  func(bool)
+	Remote func(string, bool, kubernetes.Interface)
+}
+
+var dgCommands = dgFunctions{Local: dgLocalCommand, Remote: dgRemoteCommand}
+
+type dgWarning struct {
+	WarningType string `json:"warning"`
+	WarningDesc string `json:"warning_description"`
 }
 
 var dgWarningArray = []dgWarning{}
@@ -94,16 +102,36 @@ func DiagnosticsCollect(c *cli.Context) {
 			warnDG("connections_error", "Unable to get Connections "+conErr.Error())
 		} else {
 			for _, connection := range connectionList {
+				config, err := remote.GetKubeConfig()
+				if err != nil {
+					warnDG("kube_config_error", err.Error())
+					break
+				}
+				clientset, err := kubernetes.NewForConfig(config)
+				if err != nil {
+					warnDG("kube_client_error", err.Error())
+					break
+				}
 				if connection.ClientID != "" {
-					dgRemoteCommand(connection.ID, c.Bool("projects"))
+					dgCommands.Remote(connection.ID, c.Bool("projects"), clientset)
 				}
 			}
-			dgLocalCommand(c.Bool("projects"))
+			dgCommands.Local(c.Bool("projects"))
 		}
-	} else if connectionID != "local" {
-		dgRemoteCommand(connectionID, c.Bool("projects"))
+	} else if connectionID != "local" && connectionID != "" {
+		config, err := remote.GetKubeConfig()
+		if err != nil {
+			warnDG("kube_config_error", err.Error())
+		} else {
+			clientset, err := kubernetes.NewForConfig(config)
+			if err != nil {
+				warnDG("kube_client_error", err.Error())
+			} else {
+				dgCommands.Remote(connectionID, c.Bool("projects"), clientset)
+			}
+		}
 	} else {
-		dgLocalCommand(c.Bool("projects"))
+		dgCommands.Local(c.Bool("projects"))
 	}
 	// Attempt to gather Eclipse logs
 	gatherCodewindEclipseLogs(c.String("eclipseWorkspaceDir"))
@@ -150,24 +178,14 @@ func DiagnosticsRemove(c *cli.Context) {
 	logDG("done\n")
 }
 
-func dgRemoteCommand(conid string, collectProjects bool) {
+func dgRemoteCommand(conid string, collectProjects bool, clientset kubernetes.Interface) {
 	connectionID, workspaceID := confirmConnectionIDAndWorkspaceID(conid)
 	if connectionID == "" {
 		return
 	}
-	existingDeployments, edErr := remote.GetExistingDeployments("")
+	existingDeployments, edErr := remote.GetExistingDeployments("", clientset)
 	if edErr != nil {
 		warnDG("existing_deployment_error", edErr.Error())
-		return
-	}
-	config, err := remote.GetKubeConfig()
-	if err != nil {
-		warnDG("kube_config_error", err.Error())
-		return
-	}
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		warnDG("kube_client_error", err.Error())
 		return
 	}
 	found := false

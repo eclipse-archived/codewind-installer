@@ -15,6 +15,7 @@ import (
 	"archive/zip"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -28,8 +29,11 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/eclipse/codewind-installer/pkg/docker"
 	"github.com/stretchr/testify/assert"
+	"github.com/urfave/cli"
+	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 )
 
@@ -71,6 +75,9 @@ var mockPFEPod = &v1.Pod{
 		Name:        "codewind-pfe-somename",
 		Namespace:   "default",
 		Annotations: map[string]string{},
+		Labels: map[string]string{
+			"app": "codewind-pfe",
+		},
 	},
 }
 
@@ -79,6 +86,20 @@ var mockProjectPod = &v1.Pod{
 		Name:        "cw-myproj-something",
 		Namespace:   "default",
 		Annotations: map[string]string{},
+	},
+}
+
+var initialReplicas = int32(1)
+
+var mockDeployment = &appsv1.Deployment{
+	ObjectMeta: metav1.ObjectMeta{
+		Name: "test-deployment",
+		Labels: map[string]string{
+			"app": "codewind-pfe",
+		},
+	},
+	Spec: appsv1.DeploymentSpec{
+		Replicas: &initialReplicas,
 	},
 }
 
@@ -126,6 +147,30 @@ func unzipFile(filePath, destination string) error {
 	}
 	zipReader.Close()
 	return nil
+}
+
+// function to tell if a directory is empty
+func isEmptyDir(name string) bool {
+	f, err := os.Open(name)
+	if err != nil {
+		return false
+	}
+	defer f.Close()
+
+	info, staterr := f.Stat()
+	if staterr != nil {
+		return false
+	}
+
+	if !info.IsDir() {
+		return false
+	}
+
+	_, err = f.Readdirnames(1)
+	if err == io.EOF {
+		return true
+	}
+	return false
 }
 
 // clearAllDiagnostics()
@@ -394,18 +439,28 @@ func Test_createZipAndRemoveCollectedFiles(t *testing.T) {
 		diagnosticsDirName = testDir
 		testDgDir, _ := os.Open(testDir)
 		testfilenames, _ := testDgDir.Readdirnames(-1)
+		// end zip won't contain empty dirs, so remove those from expected output
+		expectedFilenames := []string{}
+		for _, fileName := range testfilenames {
+			if !isEmptyDir(filepath.Join(testDir, fileName)) {
+				expectedFilenames = append(expectedFilenames, fileName)
+			}
+		}
 		testDgDir.Close()
+		fmt.Println(testfilenames)
 		nowTime = time.Now().Format("20060102150405")
 		expectedZipFileName := "diagnostics." + nowTime + ".zip"
 		expectedZipFilePath := filepath.Join(diagnosticsDirName, expectedZipFileName)
 		createZipAndRemoveCollectedFiles()
 		assert.FileExists(t, expectedZipFilePath, "Unable to find "+expectedZipFileName)
 		unzipFile(expectedZipFilePath, testDir)
-		testDgDir, _ = os.Open(testDir)
-		testfilenamesAfter, _ := testDgDir.Readdirnames(-1)
-		testDgDir.Close()
-		expectedFileNamesAfter := append(testfilenames, expectedZipFileName)
-		assert.ElementsMatch(t, expectedFileNamesAfter, testfilenamesAfter)
+		testDgAfterDir, _ := os.Open(testDir)
+		testfilenamesAfter, _ := testDgAfterDir.Readdirnames(-1)
+		testDgAfterDir.Close()
+		fmt.Println(testfilenamesAfter)
+		for _, fileName := range expectedFilenames {
+			assert.Contains(t, testfilenamesAfter, fileName)
+		}
 		os.Remove(expectedZipFilePath)
 	})
 }
@@ -717,4 +772,94 @@ func Test_getDockerVersions(t *testing.T) {
 		assert.Equal(t, "", serverVersion)
 
 	})
+}
+
+func Test_dgRemoteCommand(t *testing.T) {
+	printAsJSON = false
+	t.Run("dgRemoteCommand - success ", func(t *testing.T) {
+		diagnosticsDirName = testDir
+		dgRemoteCommand("local", true, mockClientset)
+	})
+}
+
+func Test_DiagnosticsCollect(t *testing.T) {
+	printAsJSON = false
+	localCommandCalled := "Local Commmand function was called\n"
+	remoteCommandCalled := "Remote Command function was called\n"
+	olddgCommands := dgCommands
+	dgCommands = dgFunctions{
+		Local: func(flag bool) {
+			logDG(localCommandCalled)
+		},
+		Remote: func(str string, flag bool, clientset kubernetes.Interface) {
+			logDG(remoteCommandCalled)
+		},
+	}
+	t.Run("DiagnosticsCollect - collect all ", func(t *testing.T) {
+		diagnosticsDirName = testDir
+		app := cli.NewApp()
+		flagSet := flag.NewFlagSet("userFlags", flag.ContinueOnError)
+		flagSet.Bool("all", true, "")
+		context := cli.NewContext(app, flagSet, nil)
+		originalStdout := os.Stdout
+		r, w, _ := os.Pipe()
+		os.Stdout = w
+		DiagnosticsCollect(context)
+		w.Close()
+		out, _ := ioutil.ReadAll(r)
+		os.Stdout = originalStdout
+		assert.Contains(t, string(out), localCommandCalled)
+		assert.Contains(t, string(out), remoteCommandCalled)
+	})
+	t.Run("DiagnosticsCollect - collect remote ", func(t *testing.T) {
+		diagnosticsDirName = testDir
+		app := cli.NewApp()
+		flagSet := flag.NewFlagSet("userFlags", flag.ContinueOnError)
+		flagSet.String("conid", "remote", "")
+		context := cli.NewContext(app, flagSet, nil)
+		originalStdout := os.Stdout
+		r, w, _ := os.Pipe()
+		os.Stdout = w
+		DiagnosticsCollect(context)
+		w.Close()
+		out, _ := ioutil.ReadAll(r)
+		os.Stdout = originalStdout
+		assert.NotContains(t, string(out), localCommandCalled)
+		assert.Contains(t, string(out), remoteCommandCalled)
+	})
+	t.Run("DiagnosticsCollect - collect local ", func(t *testing.T) {
+		diagnosticsDirName = testDir
+		app := cli.NewApp()
+		flagSet := flag.NewFlagSet("userFlags", flag.ContinueOnError)
+		context := cli.NewContext(app, flagSet, nil)
+		originalStdout := os.Stdout
+		r, w, _ := os.Pipe()
+		os.Stdout = w
+		DiagnosticsCollect(context)
+		w.Close()
+		out, _ := ioutil.ReadAll(r)
+		os.Stdout = originalStdout
+		assert.Contains(t, string(out), localCommandCalled)
+		assert.NotContains(t, string(out), remoteCommandCalled)
+	})
+	t.Run("DiagnosticsCollect - json output ", func(t *testing.T) {
+		diagnosticsDirName = testDir
+		app := cli.NewApp()
+		flagSet := flag.NewFlagSet("userFlags", flag.ContinueOnError)
+		context := cli.NewContext(app, flagSet, nil)
+		printAsJSON = true
+		originalStdout := os.Stdout
+		r, w, _ := os.Pipe()
+		os.Stdout = w
+		DiagnosticsCollect(context)
+		w.Close()
+		out, _ := ioutil.ReadAll(r)
+		os.Stdout = originalStdout
+		readStructure := dgResultStruct{}
+		_ = json.Unmarshal(out, &readStructure)
+		assert.Equal(t, true, readStructure.DgSuccess)
+		assert.Equal(t, testDir, readStructure.DgOutputDir)
+		printAsJSON = false
+	})
+	dgCommands = olddgCommands
 }
