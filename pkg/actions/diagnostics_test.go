@@ -76,7 +76,8 @@ var mockPFEPod = &v1.Pod{
 		Namespace:   "default",
 		Annotations: map[string]string{},
 		Labels: map[string]string{
-			"app": "codewind-pfe",
+			"app":               "codewind-pfe",
+			"codewindWorkspace": "",
 		},
 	},
 }
@@ -87,6 +88,9 @@ var mockProjectPod = &v1.Pod{
 		Namespace:   "default",
 		Annotations: map[string]string{},
 	},
+	Spec: v1.PodSpec{
+		ServiceAccountName: "codewind-",
+	},
 }
 
 var initialReplicas = int32(1)
@@ -95,7 +99,8 @@ var mockDeployment = &appsv1.Deployment{
 	ObjectMeta: metav1.ObjectMeta{
 		Name: "test-deployment",
 		Labels: map[string]string{
-			"app": "codewind-pfe",
+			"app":               "codewind-pfe",
+			"codewindWorkspace": "",
 		},
 	},
 	Spec: appsv1.DeploymentSpec{
@@ -103,7 +108,7 @@ var mockDeployment = &appsv1.Deployment{
 	},
 }
 
-var mockClientset = fake.NewSimpleClientset(mockPFEPod, mockProjectPod)
+var mockClientset = fake.NewSimpleClientset(mockPFEPod, mockProjectPod, mockDeployment)
 
 //unzip file needed as utils.UnZip is not a straight unzipper of zips
 func unzipFile(filePath, destination string) error {
@@ -775,9 +780,32 @@ func Test_getDockerVersions(t *testing.T) {
 }
 
 func Test_dgRemoteCommand(t *testing.T) {
+	// this runs collectPodInfo, which panics - so success is collecting the panic
 	printAsJSON = false
-	t.Run("dgRemoteCommand - success ", func(t *testing.T) {
+	t.Run("dgRemoteCommand - codewind pod panic", func(t *testing.T) {
+		mockClientset = fake.NewSimpleClientset(mockPFEPod, mockDeployment)
 		diagnosticsDirName = testDir
+		defer func() {
+			if err := recover(); err != nil {
+				t.Log("Got expected panic")
+				assert.FileExists(t, filepath.Join(testDir, "local", mockPFEPod.GetName()+".describe"), "Unable to find expected file "+filepath.Join(testDir, "local", mockPFEPod.GetName()+".describe"))
+			} else {
+				t.Error("Did not panic as expected")
+			}
+		}()
+		dgRemoteCommand("local", true, mockClientset)
+	})
+	t.Run("dgRemoteCommand - codewind pod panic", func(t *testing.T) {
+		mockClientset = fake.NewSimpleClientset(mockProjectPod, mockDeployment)
+		diagnosticsDirName = testDir
+		defer func() {
+			if err := recover(); err != nil {
+				t.Log("Got expected panic")
+				assert.FileExists(t, filepath.Join(testDir, "local", "projects", mockProjectPod.GetName()+".describe"), "Unable to find expected file "+filepath.Join(testDir, "local", "projects", mockPFEPod.GetName()+".describe"))
+			} else {
+				t.Error("Did not panic as expected")
+			}
+		}()
 		dgRemoteCommand("local", true, mockClientset)
 	})
 }
@@ -861,5 +889,63 @@ func Test_DiagnosticsCollect(t *testing.T) {
 		assert.Equal(t, testDir, readStructure.DgOutputDir)
 		printAsJSON = false
 	})
+	t.Run("DiagnosticsCollect - no collection with JSON ", func(t *testing.T) {
+		dirToDelete := filepath.Join(testDir, "dgCollectDir")
+		expectedOutput := "No diagnostics data was able to be collected - empty directory " + dirToDelete + " has been deleted."
+		expectedExitValue := 1
+		observedExitValue := 0
+		os.MkdirAll(dirToDelete, 0755)
+		oldExitFunc := exitFunction
+		exitFunction = func(code int) {
+			observedExitValue = code
+		}
+		oldDGDir := diagnosticsDirName
+		diagnosticsDirName = dirToDelete
+		oldHomeDir := homeDir
+		homeDir = dirToDelete
+		app := cli.NewApp()
+		flagSet := flag.NewFlagSet("userFlags", flag.ContinueOnError)
+		flagSet.Bool("nozip", true, "")
+		context := cli.NewContext(app, flagSet, nil)
+		printAsJSON = false
+		originalStdout := os.Stdout
+		r, w, _ := os.Pipe()
+		os.Stdout = w
+		DiagnosticsCollect(context)
+		w.Close()
+		os.Stdout = originalStdout
+		out, _ := ioutil.ReadAll(r)
+		homeDir = oldHomeDir
+		diagnosticsDirName = oldDGDir
+		exitFunction = oldExitFunc
+		_, err := os.Stat(dirToDelete)
+		assert.Contains(t, string(out), expectedOutput)
+		assert.Equal(t, observedExitValue, expectedExitValue)
+		assert.True(t, os.IsNotExist(err), dirToDelete+" still exists")
+	})
 	dgCommands = olddgCommands
+}
+
+func Test_DiagnosticsRemove(t *testing.T) {
+	t.Run("confirmConnectionIDAndWorkspaceID - connection not found", func(t *testing.T) {
+		dirToDelete := filepath.Join(testDir, "dgRemoveDir")
+		os.MkdirAll(dirToDelete, 0755)
+		oldDGMDir := diagnosticsMasterDirName
+		diagnosticsMasterDirName = dirToDelete
+		expectedConsoleOutput := "Deleting all collected diagnostics files ... done\n"
+		originalStdout := os.Stdout
+		r, w, _ := os.Pipe()
+		os.Stdout = w
+		app := cli.NewApp()
+		flagSet := flag.NewFlagSet("userFlags", flag.ContinueOnError)
+		context := cli.NewContext(app, flagSet, nil)
+		DiagnosticsRemove(context)
+		w.Close()
+		out, _ := ioutil.ReadAll(r)
+		os.Stdout = originalStdout
+		_, err := os.Stat(dirToDelete)
+		assert.True(t, os.IsNotExist(err), dirToDelete+" still exists")
+		assert.Contains(t, string(out), expectedConsoleOutput)
+		diagnosticsMasterDirName = oldDGMDir
+	})
 }

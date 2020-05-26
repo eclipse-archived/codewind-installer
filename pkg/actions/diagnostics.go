@@ -65,6 +65,10 @@ type dgResultStruct struct {
 }
 
 // used so that unit testing can mock
+var exitFunction = func(code int) {
+	os.Exit(code)
+}
+
 type dgFunctions struct {
 	Local  func(bool)
 	Remote func(string, bool, kubernetes.Interface)
@@ -159,7 +163,7 @@ func DiagnosticsCollect(c *cli.Context) {
 		} else {
 			logDG("No diagnostics data was able to be collected - empty directory " + diagnosticsDirName + " has been deleted.")
 		}
-		os.Exit(1)
+		exitFunction(1)
 	}
 	if printAsJSON {
 		result := dgResultStruct{DgSuccess: true, DgOutputDir: diagnosticsDirName, DgWarningsEncountered: dgWarningArray}
