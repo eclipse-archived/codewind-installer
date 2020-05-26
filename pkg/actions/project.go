@@ -49,28 +49,24 @@ func ProjectCreate(c *cli.Context) {
 	password := c.String("password")
 	personalAccessToken := c.String("personalAccessToken")
 
-	var gitCredentials *utils.GitCredentials
-	if username != "" || password != "" || personalAccessToken != "" {
-		inputGitCredentials, err := utils.ExtractGitCredentials(username, password, personalAccessToken)
+	gitCredentials, err := utils.ExtractGitCredentials(username, password, personalAccessToken)
+	if err != nil {
+		templateErr := &TemplateError{errOpAddRepo, err, err.Error()}
+		HandleTemplateError(templateErr)
+		os.Exit(1)
+	}
+	if gitCredentials == nil {
+		gitCredentials, err = templates.GetGitCredentialsFromKeychain(conID, url)
 		if err != nil {
-			templateErr := &TemplateError{errOpAddRepo, err, err.Error()}
-			HandleTemplateError(templateErr)
-			os.Exit(1)
-		}
-		gitCredentials = inputGitCredentials
-	} else {
-		savedGitCredentials, templateErr := templates.GetGitCredentialsFromKeychain(conID, url)
-		if templateErr != nil {
-			err := &TemplateError{errOpGetGitCredsFromKeychain, templateErr, templateErr.Error()}
+			err := &TemplateError{errOpGetGitCredsFromKeychain, err, err.Error()}
 			HandleTemplateError(err)
 			os.Exit(1)
 		}
-		gitCredentials = savedGitCredentials
 	}
 
-	result, err := project.DownloadTemplate(destination, url, gitCredentials)
-	if err != nil {
-		HandleProjectError(err)
+	result, projErr := project.DownloadTemplate(destination, url, gitCredentials)
+	if projErr != nil {
+		HandleProjectError(projErr)
 		os.Exit(1)
 	}
 	if printAsJSON {
