@@ -44,14 +44,6 @@ type testStruct struct {
 	Message string `json:"message"`
 }
 
-// func clearAllDiagnostics() {
-// 	app := cli.NewApp()
-// 	flagSet := flag.NewFlagSet("userFlags", flag.ContinueOnError)
-// 	flagSet.Bool("clean", true, "")
-// 	context := cli.NewContext(app, flagSet, nil)
-// 	DiagnosticsCommand(context)
-// }
-
 // mock docker clients
 
 func getMockDockerClient() (docker.DockerClient, *docker.DockerError) {
@@ -177,24 +169,6 @@ func isEmptyDir(name string) bool {
 	}
 	return false
 }
-
-// clearAllDiagnostics()
-// app := cli.NewApp()
-// flagSet := flag.NewFlagSet("userFlags", flag.ContinueOnError)
-// flagSet.String("conid", "local", "")
-// context := cli.NewContext(app, flagSet, nil)
-// t.Run("local success case - no arguments specified", func(t *testing.T) {
-// 	originalStdout := os.Stdout
-// 	r, w, _ := os.Pipe()
-// 	os.Stdout = w
-// 	DiagnosticsCommand(context)
-// 	w.Close()
-// 	out, _ := ioutil.ReadAll(r)
-// 	os.Stdout = originalStdout
-// 	fmt.Println("Spitting out output")
-// 	fmt.Println(string(out))
-// 	assert.DirExists(t, filepath.Join(homeDir, ".codewind", "diagnostics"))
-//  })
 
 func Test_warnDG(t *testing.T) {
 	warning := "test_warn"
