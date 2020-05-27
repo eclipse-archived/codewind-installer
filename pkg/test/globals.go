@@ -15,6 +15,7 @@ package test
 const ConID = "local"
 
 // PublicGHRepoURL is a URL to a public GitHub repo (not requiring auth to access)
+// that PFE does not have on startup. It is linked to by the `PublicGHDevfileURL`
 const PublicGHRepoURL = "https://github.com/microclimate-dev2ops/nodeExpressTemplate"
 
 // PublicGHDevfileURL is a URL to a devfiles/index.json in a public GitHub repo (not requiring auth to access)

@@ -56,10 +56,10 @@ func TestSuccessfulAddAndDeleteTemplateRepos(t *testing.T) {
 			defer os.RemoveAll(testDir)
 
 			t.Run("Add template repo", func(t *testing.T) {
-				got, err := AddTemplateRepo(cwTest.ConID, test.inURL, "description", "name", test.inGitCredentials)
+				got, templateErr := AddTemplateRepo(cwTest.ConID, test.inURL, "description", "name", test.inGitCredentials)
 
 				assert.IsType(t, []utils.TemplateRepo{}, got)
-				require.Nil(t, err)
+				require.Nil(t, templateErr)
 
 				if test.inGitCredentials != nil {
 					for _, repo := range got {
@@ -78,8 +78,8 @@ func TestSuccessfulAddAndDeleteTemplateRepos(t *testing.T) {
 			})
 
 			t.Run("Create project from template from added repo", func(t *testing.T) {
-				templates, err := apiroutes.GetTemplates(cwTest.ConID, "", false)
-				require.Nilf(t, err, "Error getting template repos: %s", err)
+				templates, templateErr := apiroutes.GetTemplates(cwTest.ConID, "", false)
+				require.Nilf(t, templateErr, "Error getting template repos: %s", templateErr)
 
 				var URLOfAddedTemplate string
 				for _, template := range templates {
@@ -87,29 +87,29 @@ func TestSuccessfulAddAndDeleteTemplateRepos(t *testing.T) {
 						URLOfAddedTemplate = template.URL
 					}
 				}
-				gitCredentials, err := GetGitCredentialsFromKeychain(cwTest.ConID, URLOfAddedTemplate)
-				assert.Nil(t, err)
+				gitCredentials, keychainErr := GetGitCredentialsFromKeychain(cwTest.ConID, URLOfAddedTemplate)
+				assert.Nil(t, keychainErr)
 				assert.Equal(t, test.inGitCredentials, gitCredentials)
 
-				result, err := project.DownloadTemplate(testDir, URLOfAddedTemplate, gitCredentials)
-				assert.Nil(t, err)
+				result, projectErr := project.DownloadTemplate(testDir, URLOfAddedTemplate, gitCredentials)
+				assert.Nil(t, projectErr)
 				if result != nil {
 					assert.Equal(t, result.Status, "success")
 				}
 			})
 
 			t.Run("Delete template repo", func(t *testing.T) {
-				got, err := DeleteTemplateRepo(cwTest.ConID, test.inURL)
+				got, templateErr := DeleteTemplateRepo(cwTest.ConID, test.inURL)
 
 				assert.IsType(t, []utils.TemplateRepo{}, got)
-				assert.Nil(t, err)
+				assert.Nil(t, templateErr)
 
 				if test.inGitCredentials != nil {
-					gitCredsString, err := security.GetSecretFromKeyring(cwTest.ConID, "gitcredentials-"+IDOfAddedRepo)
+					gitCredsString, keychainErr := security.GetSecretFromKeyring(cwTest.ConID, "gitcredentials-"+IDOfAddedRepo)
 					assert.Equal(t, "", gitCredsString)
-					require.NotNil(t, err)
-					assert.Equal(t, "sec_keyring_secret_not_found", err.Op)
-					assert.Contains(t, err.Desc, "not found in keyring")
+					require.NotNil(t, keychainErr)
+					assert.Equal(t, "sec_keyring_secret_not_found", keychainErr.Op)
+					assert.Contains(t, keychainErr.Desc, "not found in keyring")
 				}
 			})
 		})

@@ -113,14 +113,14 @@ func GetGitCredentialsFromKeychain(conID, templateURL string) (*utils.GitCredent
 	if sourceID == "" {
 		return nil, nil
 	}
-	savedGitCredentials, err := security.GetSecretFromKeyring(conID, "gitcredentials-"+sourceID)
-	if err != nil {
-		return nil, err
+	gitCredentialsString, keychainErr := security.GetSecretFromKeyring(conID, "gitcredentials-"+sourceID)
+	if keychainErr != nil {
+		return nil, keychainErr
 	}
 	var gitCredentials *utils.GitCredentials
-	unmarshalErr := json.Unmarshal([]byte(savedGitCredentials), &gitCredentials)
+	unmarshalErr := json.Unmarshal([]byte(gitCredentialsString), &gitCredentials)
 	if unmarshalErr != nil {
-		return nil, err
+		return nil, unmarshalErr
 	}
 	return gitCredentials, nil
 }
