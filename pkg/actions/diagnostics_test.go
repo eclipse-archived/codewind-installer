@@ -631,7 +631,7 @@ func Test_dgLocalCommand(t *testing.T) {
 		yamlFileName := "docker-compose.yaml"
 		diagnosticsLocalDirName = filepath.Join(testDir, "local")
 		expectedYamlOutputPath := filepath.Join(diagnosticsLocalDirName, yamlFileName)
-		os.MkdirAll(testDir, 0755)
+		os.MkdirAll(diagnosticsLocalDirName, 0755)
 		codewindHome = testDir
 		ioutil.WriteFile(filepath.Join(codewindHome, yamlFileName), []byte(expectedYamlFileContent), 0666)
 		originalStdout := os.Stdout

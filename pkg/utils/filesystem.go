@@ -60,7 +60,7 @@ func UnZip(filePath, destination string) error {
 		errors.CheckErr(err, 402, "")
 		defer zippedFile.Close()
 
-		fileNameArr := strings.Split(file.Name, string(os.PathSeparator))
+		fileNameArr := strings.Split(file.Name, "/")
 		extractedFilePath = destination
 
 		for i := 1; i < len(fileNameArr); i++ {

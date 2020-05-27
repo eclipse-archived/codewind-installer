@@ -221,7 +221,7 @@ func TestGetAutoRemovePolicy(t *testing.T) {
 	t.Run("returns DockerError when docker ImageList errors", func(t *testing.T) {
 		client := &MockDockerErrorClient{}
 		_, err := getContainerAutoRemovePolicy(client, "pfe")
-		wantErr := &DockerError{ErrOpContainerInspect, errContainerInspect, errContainerInspect.Error()}
+		wantErr := &DockerError{ErrOpContainerInspect, ErrContainerInspect, ErrContainerInspect.Error()}
 		assert.Equal(t, wantErr, err)
 	})
 }
@@ -240,7 +240,7 @@ func TestStopContainer(t *testing.T) {
 	t.Run("returns DockerError when docker ContainerStop errors", func(t *testing.T) {
 		client := &MockDockerErrorClient{}
 		err := StopContainer(client, types.Container{})
-		containerInspectErr := &DockerError{ErrOpContainerInspect, errContainerInspect, errContainerInspect.Error()}
+		containerInspectErr := &DockerError{ErrOpContainerInspect, ErrContainerInspect, ErrContainerInspect.Error()}
 		wantErr := &DockerError{errOpStopContainer, containerInspectErr, containerInspectErr.Desc}
 		assert.Equal(t, wantErr, err)
 	})
