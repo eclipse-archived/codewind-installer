@@ -14,6 +14,10 @@ package test
 // ConID is the default connection ID
 const ConID = "local"
 
+// DefaultPublicGHRepoURL is a URL to a public GitHub repo (not requiring auth to access)
+// that PFE already has on startup
+const DefaultPublicGHRepoURL = "https://github.com/codewind-resources/nodeExpressTemplate"
+
 // PublicGHRepoURL is a URL to a public GitHub repo (not requiring auth to access)
 // that PFE does not have on startup. It is linked to by the `PublicGHDevfileURL`
 const PublicGHRepoURL = "https://github.com/microclimate-dev2ops/nodeExpressTemplate"

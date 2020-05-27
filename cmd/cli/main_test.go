@@ -125,6 +125,19 @@ func testCreateProjectFromTemplate(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, "{\"status\":\"success\",\"projectPath\":\"./testDir\",\"result\":{\"language\":\"javascript\",\"projectType\":\"nodejs\"}}\n", string(out))
 	})
+	t.Run("success case: create default template project"+
+		"\ncwctl project create --url <insecureTemplateRepo> --path <testDir>", func(t *testing.T) {
+		os.RemoveAll(testDir)
+		defer os.RemoveAll(testDir)
+
+		cmd := exec.Command(cwctl, "project", "create",
+			"--url="+test.DefaultPublicGHRepoURL,
+			"--path="+testDir,
+		)
+		out, err := cmd.Output()
+		assert.Nil(t, err)
+		assert.Equal(t, "{\"status\":\"success\",\"projectPath\":\"./testDir\",\"result\":{\"language\":\"javascript\",\"projectType\":\"nodejs\"}}\n", string(out))
+	})
 	t.Run("success case: create project and output JSON"+
 		"\ncwctl --json project create --url <insecureTemplateRepo> --path <testDir>", func(t *testing.T) {
 		os.RemoveAll(testDir)

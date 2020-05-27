@@ -115,7 +115,7 @@ func GetGitCredentialsFromKeychain(conID, templateURL string) (*utils.GitCredent
 	}
 	gitCredentialsString, keychainErr := security.GetSecretFromKeyring(conID, "gitcredentials-"+sourceID)
 	if keychainErr != nil {
-		return nil, keychainErr
+		return nil, nil
 	}
 	var gitCredentials *utils.GitCredentials
 	unmarshalErr := json.Unmarshal([]byte(gitCredentialsString), &gitCredentials)
