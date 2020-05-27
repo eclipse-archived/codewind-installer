@@ -395,6 +395,7 @@ func Test_gatherCodewindVersions(t *testing.T) {
 		assert.Contains(t, string(contents), "DOCKER CLIENT VERSION: ")
 		assert.Contains(t, string(contents), "DOCKER SERVER VERSION: ")
 		assert.NotContains(t, string(contents), "GATEKEEPER VERSION: ")
+		os.RemoveAll(filepath.Join(testDir, localConID))
 	})
 	t.Run("gatherCodewindVersions - remote success", func(t *testing.T) {
 		diagnosticsDirName = testDir
