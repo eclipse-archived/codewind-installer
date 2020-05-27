@@ -61,13 +61,16 @@ func TestSuccessfulAddAndDeleteTemplateRepos(t *testing.T) {
 				assert.IsType(t, []utils.TemplateRepo{}, got)
 				require.Nil(t, templateErr)
 
-				if test.inGitCredentials != nil {
-					for _, repo := range got {
-						if repo.ID != "" && repo.URL == test.inURL {
-							IDOfAddedRepo = repo.ID
-						}
+				for _, repo := range got {
+					if repo.ID != "" && repo.URL == test.inURL {
+						IDOfAddedRepo = repo.ID
 					}
-					gitCredsString, keyringErr := security.GetSecretFromKeyring(cwTest.ConID, "gitcredentials-"+IDOfAddedRepo)
+				}
+
+				gitCredsString, keyringErr := security.GetSecretFromKeyring(cwTest.ConID, "gitcredentials-"+IDOfAddedRepo)
+				if test.inGitCredentials == nil {
+					assert.NotNil(t, keyringErr)
+				} else {
 					assert.Nil(t, keyringErr)
 
 					var gitCredentials *utils.GitCredentials

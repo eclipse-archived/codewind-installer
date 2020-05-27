@@ -22,9 +22,11 @@ func AddTemplateRepo(conID, URL, description, name string, gitCredentials *utils
 		return nil, addErr
 	}
 
-	keyringErr := storeGitCredentialsInKeyring(URL, repos, conID, gitCredentials)
-	if keyringErr != nil {
-		return nil, keyringErr
+	if gitCredentials != nil {
+		keyringErr := storeGitCredentialsInKeyring(URL, repos, conID, gitCredentials)
+		if keyringErr != nil {
+			return nil, keyringErr
+		}
 	}
 	return repos, nil
 }
@@ -68,9 +70,13 @@ func DeleteTemplateRepo(conID, URL string) ([]utils.TemplateRepo, error) {
 		return nil, findErr
 	}
 	if sourceID != "" {
-		keyringErr := security.DeleteSecretFromKeyring(conID, "gitcredentials-"+sourceID)
-		if keyringErr != nil {
-			return nil, keyringErr
+		nameOfGitCredentialsSecret := "gitcredentials-" + sourceID
+		_, getKeyringErr := security.GetSecretFromKeyring(conID, nameOfGitCredentialsSecret)
+		if getKeyringErr == nil {
+			keyringErr := security.DeleteSecretFromKeyring(conID, nameOfGitCredentialsSecret)
+			if keyringErr != nil {
+				return nil, keyringErr
+			}
 		}
 	}
 	return apiroutes.DeleteTemplateRepoFromPFE(conID, URL)
