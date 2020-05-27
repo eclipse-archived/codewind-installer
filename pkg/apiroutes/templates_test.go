@@ -162,7 +162,7 @@ func TestFailuresAddTemplateRepo(t *testing.T) {
 			inURL:         URLOfExistingRepo,
 			inDescription: "example repository containing links to templates",
 			wantedType:    nil,
-			wantedErr:     errors.New("Error: Bad Request - " + URLOfExistingRepo + " is already a template repository"),
+			wantedErr:     errors.New("Error: Bad Request - URL " + URLOfExistingRepo + " is already a template repository"),
 		},
 	}
 	for name, test := range tests {

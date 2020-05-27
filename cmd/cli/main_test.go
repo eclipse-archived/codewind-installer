@@ -426,7 +426,7 @@ func testFailToAddTemplateRepo(t *testing.T) {
 		)
 		out, err := cmd.CombinedOutput()
 		assert.Nil(t, err)
-		assert.Contains(t, string(out), "does not point to a JSON file of the correct form")
+		assert.Contains(t, string(out), "Unexpected HTTP status")
 	})
 	t.Run("fail case: cwctl templates repos add --url <GHEDevfile> --personalAccessToken --username", func(t *testing.T) {
 		cmd := exec.Command(cwctl, "templates", "repos", "add",
