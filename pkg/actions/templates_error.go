@@ -21,13 +21,14 @@ type TemplateError struct {
 }
 
 const (
-	errOpListTemplates = "LIST_TEMPLATES_ERROR"
-	errOpListStyles    = "LIST_STYLES_ERROR"
-	errOpListRepos     = "LIST_REPOS_ERROR"
-	errOpAddRepo       = "ADD_REPO_ERROR"
-	errOpDeleteRepo    = "DELETE_REPO_ERROR"
-	errOpEnableRepo    = "ENABLE_REPO_ERROR"
-	errOpDisableRepo   = "DISABLE_REPO_ERROR"
+	errOpListTemplates           = "LIST_TEMPLATES_ERROR"
+	errOpListStyles              = "LIST_STYLES_ERROR"
+	errOpListRepos               = "LIST_REPOS_ERROR"
+	errOpAddRepo                 = "ADD_REPO_ERROR"
+	errOpDeleteRepo              = "DELETE_REPO_ERROR"
+	errOpEnableRepo              = "ENABLE_REPO_ERROR"
+	errOpDisableRepo             = "DISABLE_REPO_ERROR"
+	errOpGetGitCredsFromKeychain = "GET_CREDS_KEYCHAIN_ERROR"
 )
 
 // TemplateError : Error formatted in JSON containing an errorOp and a description
