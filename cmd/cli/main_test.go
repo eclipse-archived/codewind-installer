@@ -287,7 +287,37 @@ func testSuccessfulAddAndRemoveTemplateRepos(t *testing.T) {
 		assert.Nil(t, removeErr)
 		assert.NotContains(t, string(removeOut), test.GHEDevfileURL)
 	})
-	t.Run("success case: create GHE template project using stored GHE username-password"+
+	t.Run("success case: add public GH template repo and create one of its projects"+
+		"\ncwctl templates repos add --url <PublicGHDevfileURL>"+
+		"\ncwctl project create --url <PublicGHRepoURL>"+
+		"\ncwctl templates repos remove --url", func(t *testing.T) {
+		os.RemoveAll(testDir)
+		defer os.RemoveAll(testDir)
+
+		cmd := exec.Command(cwctl, "templates", "repos", "add",
+			"--url="+test.PublicGHDevfileURL,
+		)
+		out, err := cmd.Output()
+		assert.Nil(t, err)
+		assert.Contains(t, string(out), test.PublicGHDevfileURL)
+
+		createCmd := exec.Command(cwctl, "project", "create",
+			"--url="+test.PublicGHRepoURL,
+			"--path="+testDir,
+		)
+		createOut, createErr := createCmd.Output()
+		assert.Nil(t, createErr)
+		assert.Contains(t, string(createOut), "success")
+		assert.Contains(t, string(createOut), testDir)
+
+		removeCmd := exec.Command(cwctl, "templates", "repos", "remove",
+			"--url="+test.PublicGHDevfileURL,
+		)
+		removeOut, removeErr := removeCmd.Output()
+		assert.Nil(t, removeErr)
+		assert.NotContains(t, string(removeOut), test.PublicGHDevfileURL)
+	})
+	t.Run("success case: add GHE template repo and create one of its projects using stored GHE username-password"+
 		"\ncwctl templates repos add --url <GHEDevfile> --username <goodUsername> --password <goodPassword>"+
 		"\ncwctl project create --url <GHETemplateRepo>"+
 		"\ncwctl templates repos remove --url", func(t *testing.T) {
