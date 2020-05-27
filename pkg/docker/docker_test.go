@@ -20,13 +20,13 @@ import (
 
 func TestPullImage(t *testing.T) {
 	t.Run("does not error when docker ImagePull succeeds", func(t *testing.T) {
-		client := &mockDockerClientWithCw{}
+		client := &MockDockerClientWithCw{}
 		err := PullImage(client, "dummyImage", true)
 		assert.Nil(t, err)
 	})
 
 	t.Run("returns DockerError when docker ImagePull errors", func(t *testing.T) {
-		client := &mockDockerErrorClient{}
+		client := &MockDockerErrorClient{}
 		err := PullImage(client, "dummyImage", true)
 		wantErr := &DockerError{errOpImagePull, errImagePull, errImagePull.Error()}
 		assert.Equal(t, wantErr, err)
@@ -35,7 +35,7 @@ func TestPullImage(t *testing.T) {
 
 func TestGetImageList(t *testing.T) {
 	t.Run("gets the image list that is returned by the docker client", func(t *testing.T) {
-		client := &mockDockerClientWithCw{}
+		client := &MockDockerClientWithCw{}
 
 		imageList, err := GetImageList(client)
 		assert.Nil(t, err)
@@ -43,7 +43,7 @@ func TestGetImageList(t *testing.T) {
 	})
 
 	t.Run("returns DockerError when docker ImageList errors", func(t *testing.T) {
-		client := &mockDockerErrorClient{}
+		client := &MockDockerErrorClient{}
 		_, err := GetImageList(client)
 		wantErr := &DockerError{errOpImageList, errImageList, errImageList.Error()}
 		assert.Equal(t, wantErr, err)
@@ -52,7 +52,7 @@ func TestGetImageList(t *testing.T) {
 
 func TestGetContainerList(t *testing.T) {
 	t.Run("gets the container list that is returned by the docker client", func(t *testing.T) {
-		client := &mockDockerClientWithCw{}
+		client := &MockDockerClientWithCw{}
 
 		containerList, err := GetContainerList(client)
 		assert.Nil(t, err)
@@ -60,16 +60,16 @@ func TestGetContainerList(t *testing.T) {
 	})
 
 	t.Run("returns error when docker ContainerList returns error", func(t *testing.T) {
-		client := &mockDockerErrorClient{}
+		client := &MockDockerErrorClient{}
 		_, err := GetContainerList(client)
-		wantErr := &DockerError{errOpContainerList, errContainerList, errContainerList.Error()}
+		wantErr := &DockerError{ErrOpContainerList, ErrContainerList, ErrContainerList.Error()}
 		assert.Equal(t, wantErr, err)
 	})
 }
 
 func TestCheckImageStatus(t *testing.T) {
 	t.Run("returns true when correct images are returned by the docker client", func(t *testing.T) {
-		client := &mockDockerClientWithCw{}
+		client := &MockDockerClientWithCw{}
 
 		imageStatus, err := CheckImageStatus(client)
 		assert.Nil(t, err)
@@ -85,7 +85,7 @@ func TestCheckImageStatus(t *testing.T) {
 	})
 
 	t.Run("returns DockerError when docker ImageList errors", func(t *testing.T) {
-		client := &mockDockerErrorClient{}
+		client := &MockDockerErrorClient{}
 		_, err := CheckImageStatus(client)
 		wantErr := &DockerError{errOpImageList, errImageList, errImageList.Error()}
 		assert.Equal(t, wantErr, err)
@@ -94,7 +94,7 @@ func TestCheckImageStatus(t *testing.T) {
 
 func TestCheckContainerStatus(t *testing.T) {
 	t.Run("returns true when correct containers are returned by the docker client", func(t *testing.T) {
-		client := &mockDockerClientWithCw{}
+		client := &MockDockerClientWithCw{}
 
 		containerStatus, err := CheckContainerStatus(client, LocalCWContainerNames)
 		assert.Nil(t, err)
@@ -102,7 +102,7 @@ func TestCheckContainerStatus(t *testing.T) {
 	})
 
 	t.Run("returns true when checking for only PFE", func(t *testing.T) {
-		client := &mockDockerClientWithCw{}
+		client := &MockDockerClientWithCw{}
 
 		containerStatus, err := CheckContainerStatus(client, []string{PfeContainerName})
 		assert.Nil(t, err)
@@ -126,17 +126,17 @@ func TestCheckContainerStatus(t *testing.T) {
 	})
 
 	t.Run("returns DockerError when docker ContainerList errors", func(t *testing.T) {
-		client := &mockDockerErrorClient{}
+		client := &MockDockerErrorClient{}
 
 		_, err := CheckContainerStatus(client, LocalCWContainerNames)
-		wantErr := &DockerError{errOpContainerList, errContainerList, errContainerList.Error()}
+		wantErr := &DockerError{ErrOpContainerList, ErrContainerList, ErrContainerList.Error()}
 		assert.Equal(t, wantErr, err)
 	})
 }
 
 func TestGetImageTags(t *testing.T) {
 	t.Run("returns the image tags set in the ImageList mock", func(t *testing.T) {
-		client := &mockDockerClientWithCw{}
+		client := &MockDockerClientWithCw{}
 
 		imageTags, err := GetImageTags(client)
 		assert.Nil(t, err)
@@ -144,7 +144,7 @@ func TestGetImageTags(t *testing.T) {
 	})
 
 	t.Run("returns DockerError when docker ImageList errors", func(t *testing.T) {
-		client := &mockDockerErrorClient{}
+		client := &MockDockerErrorClient{}
 		_, err := GetImageTags(client)
 		wantErr := &DockerError{errOpImageList, errImageList, errImageList.Error()}
 		assert.Equal(t, wantErr, err)
@@ -153,7 +153,7 @@ func TestGetImageTags(t *testing.T) {
 
 func TestGetContainerTags(t *testing.T) {
 	t.Run("returns the container tags set in the ContainerList mock", func(t *testing.T) {
-		client := &mockDockerClientWithCw{}
+		client := &MockDockerClientWithCw{}
 
 		imageTags, err := GetContainerTags(client)
 		assert.Nil(t, err)
@@ -161,16 +161,16 @@ func TestGetContainerTags(t *testing.T) {
 	})
 
 	t.Run("returns DockerError when docker ContainerList errors", func(t *testing.T) {
-		client := &mockDockerErrorClient{}
+		client := &MockDockerErrorClient{}
 		_, err := GetContainerTags(client)
-		wantErr := &DockerError{errOpContainerList, errContainerList, errContainerList.Error()}
+		wantErr := &DockerError{ErrOpContainerList, ErrContainerList, ErrContainerList.Error()}
 		assert.Equal(t, err, wantErr)
 	})
 }
 
 func TestGetPFEHostAndPort(t *testing.T) {
 	t.Run("returns the PFE host and port set in the ContainerList mock", func(t *testing.T) {
-		client := &mockDockerClientWithCw{}
+		client := &MockDockerClientWithCw{}
 
 		host, port, err := GetPFEHostAndPort(client)
 		assert.Nil(t, err)
@@ -188,22 +188,22 @@ func TestGetPFEHostAndPort(t *testing.T) {
 	})
 
 	t.Run("returns DockerError when docker ContainerList errors", func(t *testing.T) {
-		client := &mockDockerErrorClient{}
+		client := &MockDockerErrorClient{}
 		_, _, err := GetPFEHostAndPort(client)
-		wantErr := &DockerError{errOpContainerList, errContainerList, errContainerList.Error()}
+		wantErr := &DockerError{ErrOpContainerList, ErrContainerList, ErrContainerList.Error()}
 		assert.Equal(t, wantErr, err)
 	})
 }
 
 func TestValidateImageDigest(t *testing.T) {
 	t.Run("no error returned when image digests match those from dockerhub", func(t *testing.T) {
-		client := &mockDockerClientWithCw{}
+		client := &MockDockerClientWithCw{}
 		_, err := ValidateImageDigest(client, "test:0.0.9")
 		assert.Nil(t, err)
 	})
 
 	t.Run("returns DockerError when docker ImageList errors", func(t *testing.T) {
-		client := &mockDockerErrorClient{}
+		client := &MockDockerErrorClient{}
 		_, err := ValidateImageDigest(client, "test:0.0.9")
 		wantErr := &DockerError{errOpImageList, errImageList, errImageList.Error()}
 		assert.Equal(t, wantErr, err)
@@ -212,23 +212,23 @@ func TestValidateImageDigest(t *testing.T) {
 
 func TestGetAutoRemovePolicy(t *testing.T) {
 	t.Run("no error returned when image digests match those from dockerhub", func(t *testing.T) {
-		client := &mockDockerClientWithCw{}
+		client := &MockDockerClientWithCw{}
 		autoremovePolicy, err := getContainerAutoRemovePolicy(client, "pfe")
 		assert.Nil(t, err)
 		assert.True(t, autoremovePolicy)
 	})
 
 	t.Run("returns DockerError when docker ImageList errors", func(t *testing.T) {
-		client := &mockDockerErrorClient{}
+		client := &MockDockerErrorClient{}
 		_, err := getContainerAutoRemovePolicy(client, "pfe")
-		wantErr := &DockerError{errOpContainerInspect, errContainerInspect, errContainerInspect.Error()}
+		wantErr := &DockerError{ErrOpContainerInspect, ErrContainerInspect, ErrContainerInspect.Error()}
 		assert.Equal(t, wantErr, err)
 	})
 }
 
 func TestStopContainer(t *testing.T) {
 	t.Run("no error returned when container is stopped", func(t *testing.T) {
-		client := &mockDockerClientWithCw{}
+		client := &MockDockerClientWithCw{}
 		err := StopContainer(client, types.Container{
 			Names: []string{"/codewind-pfe"},
 			ID:    "pfe",
@@ -238,9 +238,9 @@ func TestStopContainer(t *testing.T) {
 	})
 
 	t.Run("returns DockerError when docker ContainerStop errors", func(t *testing.T) {
-		client := &mockDockerErrorClient{}
+		client := &MockDockerErrorClient{}
 		err := StopContainer(client, types.Container{})
-		containerInspectErr := &DockerError{errOpContainerInspect, errContainerInspect, errContainerInspect.Error()}
+		containerInspectErr := &DockerError{ErrOpContainerInspect, ErrContainerInspect, ErrContainerInspect.Error()}
 		wantErr := &DockerError{errOpStopContainer, containerInspectErr, containerInspectErr.Desc}
 		assert.Equal(t, wantErr, err)
 	})
