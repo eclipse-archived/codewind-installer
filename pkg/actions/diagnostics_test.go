@@ -415,6 +415,9 @@ func Test_gatherCodewindVersions(t *testing.T) {
 }
 
 func Test_createZipAndRemoveCollectedFiles(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
 	t.Run("createZipAndRemoveCollectedFiles - success", func(t *testing.T) {
 		diagnosticsDirName = testDir
 		testDgDir, _ := os.Open(testDir)
@@ -685,6 +688,9 @@ func Test_collectPodInfo(t *testing.T) {
 }
 
 func Test_confirmConnectionIDAndWorkspaceID(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
 	t.Run("confirmConnectionIDAndWorkspaceID - connection not found", func(t *testing.T) {
 		expectedConsoleOutput := "connection_not_found: Unable to associate  with existing connection\n"
 		originalStdout := os.Stdout
@@ -755,6 +761,9 @@ func Test_getDockerVersions(t *testing.T) {
 }
 
 func Test_dgRemoteCommand(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping testing in short mode")
+	}
 	// this runs collectPodInfo, which panics - so success is collecting the panic
 	printAsJSON = false
 	t.Run("dgRemoteCommand - codewind pod panic", func(t *testing.T) {
@@ -770,7 +779,7 @@ func Test_dgRemoteCommand(t *testing.T) {
 		}()
 		dgRemoteCommand("local", true, mockClientset)
 	})
-	t.Run("dgRemoteCommand - codewind pod panic", func(t *testing.T) {
+	t.Run("dgRemoteCommand - project pod panic", func(t *testing.T) {
 		mockClientset = fake.NewSimpleClientset(mockProjectPod, mockDeployment)
 		diagnosticsDirName = testDir
 		defer func() {
@@ -799,6 +808,9 @@ func Test_DiagnosticsCollect(t *testing.T) {
 		},
 	}
 	t.Run("DiagnosticsCollect - collect all ", func(t *testing.T) {
+		if testing.Short() {
+			t.Skip("skipping testing in short mode")
+		}
 		diagnosticsDirName = testDir
 		app := cli.NewApp()
 		flagSet := flag.NewFlagSet("userFlags", flag.ContinueOnError)
