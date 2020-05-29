@@ -127,11 +127,9 @@ func returnMockConnections() ([]connections.Connection, *connections.ConError) {
 }
 
 //unzip file needed as utils.UnZip is not a straight unzipper of zips
-func unzipFile(t *testing.T, filePath, destination string) error {
-	t.Log("Unzipping " + filePath + " to " + destination)
+func unzipFile(filePath, destination string) error {
 	zipReader, _ := zip.OpenReader(filePath)
 	if zipReader == nil {
-		t.Log("Error - zipreader is empty")
 		return fmt.Errorf("file '%s' is empty", filePath)
 	}
 	defer zipReader.Close()
@@ -141,19 +139,18 @@ func unzipFile(t *testing.T, filePath, destination string) error {
 
 		zippedFile, err := file.Open()
 		if err != nil {
-			t.Log("Unable to open zipped file " + file.Name)
-			return errors.New("Unable to open zipped file")
+			return errors.New("Unable to open zipped file " + file.Name)
 		}
 
 		extractedFilePath := filepath.Join(destination, file.Name)
-		t.Log("extractedFilePath = " + extractedFilePath)
 
 		if file.FileInfo().IsDir() {
-			t.Log("file is dir")
-			os.MkdirAll(extractedFilePath, 0755)
+			dirErr := os.MkdirAll(extractedFilePath, 0755)
 			zippedFile.Close()
+			if dirErr != nil {
+				return errors.New("unable to create directory " + extractedFilePath + ": " + dirErr.Error())
+			}
 		} else {
-			t.Log("file is file")
 			dirErr := os.MkdirAll(filepath.Dir(extractedFilePath), 0755)
 			if dirErr != nil {
 				zippedFile.Close()
@@ -464,14 +461,7 @@ func Test_createZipAndRemoveCollectedFiles(t *testing.T) {
 		expectedZipFilePath := filepath.Join(diagnosticsDirName, expectedZipFileName)
 		createZipAndRemoveCollectedFiles()
 		assert.FileExists(t, expectedZipFilePath, "Unable to find "+expectedZipFileName)
-		// Jenkins test - what's in the zip file
-		t.Log("Contents of " + expectedZipFilePath)
-		read, _ := zip.OpenReader(expectedZipFilePath)
-		for _, file := range read.File {
-			t.Log(file.Name)
-		}
-		read.Close()
-		unzipErr := unzipFile(t, expectedZipFilePath, testDir)
+		unzipErr := unzipFile(expectedZipFilePath, testDir)
 		if unzipErr != nil {
 			t.Error("Problems encountered unzipping " + expectedZipFilePath + ": " + unzipErr.Error())
 		}
