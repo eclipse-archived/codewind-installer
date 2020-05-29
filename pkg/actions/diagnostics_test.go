@@ -128,7 +128,7 @@ func returnMockConnections() ([]connections.Connection, *connections.ConError) {
 
 //unzip file needed as utils.UnZip is not a straight unzipper of zips
 func unzipFile(t *testing.T, filePath, destination string) error {
-	t.Log("Unzipping "+filePath+" to "+destination)
+	t.Log("Unzipping " + filePath + " to " + destination)
 	zipReader, _ := zip.OpenReader(filePath)
 	if zipReader == nil {
 		t.Log("Error - zipreader is empty")
@@ -145,7 +145,7 @@ func unzipFile(t *testing.T, filePath, destination string) error {
 		}
 
 		extractedFilePath := filepath.Join(destination, file.Name)
-		t.Log("extractedFilePath = "+extractedFilePath)
+		t.Log("extractedFilePath = " + extractedFilePath)
 
 		if file.FileInfo().IsDir() {
 			// For debug:
@@ -164,7 +164,7 @@ func unzipFile(t *testing.T, filePath, destination string) error {
 				file.Mode(),
 			)
 			if err != nil {
-			    zippedFile.Close()
+				zippedFile.Close()
 				return errors.New("unable to open file " + file.Name)
 			}
 
@@ -472,9 +472,9 @@ func Test_createZipAndRemoveCollectedFiles(t *testing.T) {
 		}
 		read.Close()
 		unzipErr := unzipFile(t, expectedZipFilePath, testDir)
-		if unzipErr != nil (
-			t.Error("Problems encountered unzipping "+expectedZipFilePath+": "+unzipErr.Error())
-		)
+		if unzipErr != nil {
+			t.Error("Problems encountered unzipping " + expectedZipFilePath + ": " + unzipErr.Error())
+		}
 		testDgAfterDir, _ := os.Open(testDir)
 		testfilenamesAfter, _ := testDgAfterDir.Readdirnames(-1)
 		testDgAfterDir.Close()
