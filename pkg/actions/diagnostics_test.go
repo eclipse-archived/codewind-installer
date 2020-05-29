@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/docker/docker/api/types"
+	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/docker"
 	"github.com/stretchr/testify/assert"
 	"github.com/urfave/cli"
@@ -101,6 +102,29 @@ var mockDeployment = &appsv1.Deployment{
 }
 
 var mockClientset = fake.NewSimpleClientset(mockPFEPod, mockProjectPod, mockDeployment)
+
+func returnMockConnections() ([]connections.Connection, *connections.ConError) {
+	return []connections.Connection{
+		{
+			ID:       "local",
+			Label:    "Codewind local connection",
+			URL:      "",
+			AuthURL:  "",
+			Realm:    "",
+			ClientID: "",
+			Username: "",
+		},
+		{
+			ID:       "KA5GC1JF",
+			Label:    "remote",
+			URL:      "https://codewind-gatekeeper-something.apps.somewhere.com",
+			AuthURL:  "https://codewind-keycloak-something.apps.somewhere.com",
+			Realm:    "codewind",
+			ClientID: "codewind-remote",
+			Username: "developer",
+		},
+	}, nil
+}
 
 //unzip file needed as utils.UnZip is not a straight unzipper of zips
 func unzipFile(filePath, destination string) error {
@@ -688,9 +712,8 @@ func Test_collectPodInfo(t *testing.T) {
 }
 
 func Test_confirmConnectionIDAndWorkspaceID(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping testing in short mode")
-	}
+	oldGetAllConnections := getAllConnections
+	getAllConnections = returnMockConnections
 	t.Run("confirmConnectionIDAndWorkspaceID - connection not found", func(t *testing.T) {
 		expectedConsoleOutput := "connection_not_found: Unable to associate  with existing connection\n"
 		originalStdout := os.Stdout
@@ -714,6 +737,7 @@ func Test_confirmConnectionIDAndWorkspaceID(t *testing.T) {
 		assert.Equal(t, "local", connectionID)
 		assert.Equal(t, "", workspaceID)
 	})
+	getAllConnections = oldGetAllConnections
 }
 
 func Test_getDockerVersions(t *testing.T) {
@@ -761,9 +785,8 @@ func Test_getDockerVersions(t *testing.T) {
 }
 
 func Test_dgRemoteCommand(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping testing in short mode")
-	}
+	oldGetAllConnections := getAllConnections
+	getAllConnections = returnMockConnections
 	// this runs collectPodInfo, which panics - so success is collecting the panic
 	printAsJSON = false
 	t.Run("dgRemoteCommand - codewind pod panic", func(t *testing.T) {
@@ -792,21 +815,18 @@ func Test_dgRemoteCommand(t *testing.T) {
 		}()
 		dgRemoteCommand("local", true, mockClientset)
 	})
+	getAllConnections = oldGetAllConnections
 }
 
 func Test_DiagnosticsCollect(t *testing.T) {
 	printAsJSON = false
 	localCommandCalled := "Local Commmand function was called\n"
 	remoteCommandCalled := "Remote Command function was called\n"
-	olddgCommands := dgCommands
-	dgCommands = dgFunctions{
-		Local: func(flag bool) {
-			logDG(localCommandCalled)
-		},
-		Remote: func(str string, flag bool, clientset kubernetes.Interface) {
-			logDG(remoteCommandCalled)
-		},
-	}
+	oldDgFunctions := dgFunctions
+	dgFunctions.CollectLocal = func(flag bool) { logDG(localCommandCalled) }
+	dgFunctions.CollectRemote = func(str string, flag bool, clientset kubernetes.Interface) { logDG(remoteCommandCalled) }
+	oldGetAllConnections := getAllConnections
+	getAllConnections = returnMockConnections
 	t.Run("DiagnosticsCollect - collect all ", func(t *testing.T) {
 		if testing.Short() {
 			t.Skip("skipping testing in short mode")
@@ -882,10 +902,8 @@ func Test_DiagnosticsCollect(t *testing.T) {
 		expectedExitValue := 1
 		observedExitValue := 0
 		os.MkdirAll(dirToDelete, 0755)
-		oldExitFunc := exitFunction
-		exitFunction = func(code int) {
-			observedExitValue = code
-		}
+		oldExitFunc := dgFunctions.Exit
+		dgFunctions.Exit = func(code int) { observedExitValue = code }
 		oldDGDir := diagnosticsDirName
 		diagnosticsDirName = dirToDelete
 		oldHomeDir := homeDir
@@ -904,17 +922,18 @@ func Test_DiagnosticsCollect(t *testing.T) {
 		out, _ := ioutil.ReadAll(r)
 		homeDir = oldHomeDir
 		diagnosticsDirName = oldDGDir
-		exitFunction = oldExitFunc
+		dgFunctions.Exit = oldExitFunc
 		_, err := os.Stat(dirToDelete)
 		assert.Contains(t, string(out), expectedOutput)
 		assert.Equal(t, observedExitValue, expectedExitValue)
 		assert.True(t, os.IsNotExist(err), dirToDelete+" still exists")
 	})
-	dgCommands = olddgCommands
+	dgFunctions = oldDgFunctions
+	getAllConnections = oldGetAllConnections
 }
 
 func Test_DiagnosticsRemove(t *testing.T) {
-	t.Run("confirmConnectionIDAndWorkspaceID - connection not found", func(t *testing.T) {
+	t.Run("DiagnosticsRemove - success", func(t *testing.T) {
 		dirToDelete := filepath.Join(testDir, "dgRemoveDir")
 		os.MkdirAll(dirToDelete, 0755)
 		oldDGMDir := diagnosticsMasterDirName

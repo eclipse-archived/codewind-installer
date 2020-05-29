@@ -65,16 +65,18 @@ type dgResultStruct struct {
 }
 
 // used so that unit testing can mock
-var exitFunction = func(code int) {
-	os.Exit(code)
+var dgFunctions = struct {
+	CollectLocal  func(bool)
+	CollectRemote func(string, bool, kubernetes.Interface)
+	Exit          func(int)
+}{
+	CollectLocal:  dgLocalCommand,
+	CollectRemote: dgRemoteCommand,
+	Exit:          os.Exit,
 }
 
-type dgFunctions struct {
-	Local  func(bool)
-	Remote func(string, bool, kubernetes.Interface)
-}
-
-var dgCommands = dgFunctions{Local: dgLocalCommand, Remote: dgRemoteCommand}
+// needed for mocking, but can't go above due to initialisation loops
+var getAllConnections = connections.GetAllConnections
 
 type dgWarning struct {
 	WarningType string `json:"warning"`
@@ -101,7 +103,7 @@ func DiagnosticsCollect(c *cli.Context) {
 	}
 	logDG("Diagnostics files will be written to " + diagnosticsDirName + "\n")
 	if collectingAll {
-		connectionList, conErr := connections.GetAllConnections()
+		connectionList, conErr := getAllConnections()
 		if conErr != nil {
 			warnDG("connections_error", "Unable to get Connections "+conErr.Error())
 		} else {
@@ -117,10 +119,10 @@ func DiagnosticsCollect(c *cli.Context) {
 					break
 				}
 				if connection.ClientID != "" {
-					dgCommands.Remote(connection.ID, c.Bool("projects"), clientset)
+					dgFunctions.CollectRemote(connection.ID, c.Bool("projects"), clientset)
 				}
 			}
-			dgCommands.Local(c.Bool("projects"))
+			dgFunctions.CollectLocal(c.Bool("projects"))
 		}
 	} else if connectionID != "local" && connectionID != "" {
 		config, err := remote.GetKubeConfig()
@@ -131,11 +133,11 @@ func DiagnosticsCollect(c *cli.Context) {
 			if err != nil {
 				warnDG("kube_client_error", err.Error())
 			} else {
-				dgCommands.Remote(connectionID, c.Bool("projects"), clientset)
+				dgFunctions.CollectRemote(connectionID, c.Bool("projects"), clientset)
 			}
 		}
 	} else {
-		dgCommands.Local(c.Bool("projects"))
+		dgFunctions.CollectLocal(c.Bool("projects"))
 	}
 	// Attempt to gather Eclipse logs
 	gatherCodewindEclipseLogs(c.String("eclipseWorkspaceDir"))
@@ -163,7 +165,7 @@ func DiagnosticsCollect(c *cli.Context) {
 		} else {
 			logDG("No diagnostics data was able to be collected - empty directory " + diagnosticsDirName + " has been deleted.")
 		}
-		exitFunction(1)
+		dgFunctions.Exit(1)
 	}
 	if printAsJSON {
 		result := dgResultStruct{DgSuccess: true, DgOutputDir: diagnosticsDirName, DgWarningsEncountered: dgWarningArray}
@@ -232,7 +234,7 @@ func dgRemoteCommand(conid string, collectProjects bool, clientset kubernetes.In
 }
 
 func confirmConnectionIDAndWorkspaceID(conid string) (string, string) {
-	connectionList, conErr := connections.GetAllConnections()
+	connectionList, conErr := getAllConnections()
 	if conErr != nil {
 		warnDG("connections_error", "Unable to get Connections "+conErr.Error())
 		return "", ""
