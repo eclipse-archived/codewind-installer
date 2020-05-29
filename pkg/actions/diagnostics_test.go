@@ -150,11 +150,11 @@ func unzipFile(t *testing.T, filePath, destination string) error {
 
 		if file.FileInfo().IsDir() {
 			t.Log("file is dir")
-			os.MkdirAll(extractedFilePath, file.Mode())
+			os.MkdirAll(extractedFilePath, 0755)
 			zippedFile.Close()
 		} else {
 			t.Log("file is file")
-			dirErr := os.MkdirAll(filepath.Dir(extractedFilePath), file.Mode())
+			dirErr := os.MkdirAll(filepath.Dir(extractedFilePath), 0755)
 			if dirErr != nil {
 				zippedFile.Close()
 				return errors.New("unable to create directory " + filepath.Dir(extractedFilePath) + ": " + dirErr.Error())
