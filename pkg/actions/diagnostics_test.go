@@ -127,9 +127,11 @@ func returnMockConnections() ([]connections.Connection, *connections.ConError) {
 }
 
 //unzip file needed as utils.UnZip is not a straight unzipper of zips
-func unzipFile(filePath, destination string) error {
+func unzipFile(t *testing.T, filePath, destination string) error {
+	t.Log("Unzipping "+filePath+" to "+destination)
 	zipReader, _ := zip.OpenReader(filePath)
 	if zipReader == nil {
+		t.Log("Error - zipreader is empty")
 		return fmt.Errorf("file '%s' is empty", filePath)
 	}
 
@@ -138,19 +140,23 @@ func unzipFile(filePath, destination string) error {
 
 		zippedFile, err := file.Open()
 		if err != nil {
+			t.Log("Unable to open zipped file " + file.Name))
 			return errors.New("Unable to open zipped file")
 		}
 
 		extractedFilePath := filepath.Join(destination, file.Name)
+		t.Log("extractedFilePath = "+extractedFilePath)
 
 		if file.FileInfo().IsDir() {
 			// For debug:
 			// fmt.Println("Directory Created:", extractedFilePath)
+			t.Log("file is dir")
 			os.MkdirAll(extractedFilePath, file.Mode())
 			zippedFile.Close()
 		} else {
 			// For debug:
 			// fmt.Println("File extracted:", file.Name)
+			t.Log("file is file")
 			os.MkdirAll(filepath.Dir(extractedFilePath), file.Mode())
 			outputFile, err := os.OpenFile(
 				extractedFilePath,
@@ -158,12 +164,13 @@ func unzipFile(filePath, destination string) error {
 				file.Mode(),
 			)
 			if err != nil {
+			    zippedFile.Close()
 				return errors.New("unable to open file " + file.Name)
 			}
 
 			io.Copy(outputFile, zippedFile)
-			zippedFile.Close()
 			outputFile.Close()
+			zippedFile.Close()
 		}
 	}
 	zipReader.Close()
@@ -464,7 +471,10 @@ func Test_createZipAndRemoveCollectedFiles(t *testing.T) {
 			t.Log(file.Name)
 		}
 		read.Close()
-		unzipFile(expectedZipFilePath, testDir)
+		unzipErr := unzipFile(t, expectedZipFilePath, testDir)
+		if unzipErr != nil (
+			t.Error("Problems encountered unzipping "+expectedZipFilePath+": "+unzipErr.Error())
+		)
 		testDgAfterDir, _ := os.Open(testDir)
 		testfilenamesAfter, _ := testDgAfterDir.Readdirnames(-1)
 		testDgAfterDir.Close()
