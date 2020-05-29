@@ -134,6 +134,7 @@ func unzipFile(t *testing.T, filePath, destination string) error {
 		t.Log("Error - zipreader is empty")
 		return fmt.Errorf("file '%s' is empty", filePath)
 	}
+	defer zipReader.Close()
 
 	os.MkdirAll(destination, 0755)
 	for _, file := range zipReader.File {
@@ -141,7 +142,6 @@ func unzipFile(t *testing.T, filePath, destination string) error {
 		zippedFile, err := file.Open()
 		if err != nil {
 			t.Log("Unable to open zipped file " + file.Name)
-			zipReader.Close()
 			return errors.New("Unable to open zipped file")
 		}
 
@@ -149,19 +149,15 @@ func unzipFile(t *testing.T, filePath, destination string) error {
 		t.Log("extractedFilePath = " + extractedFilePath)
 
 		if file.FileInfo().IsDir() {
-			// For debug:
-			// fmt.Println("Directory Created:", extractedFilePath)
 			t.Log("file is dir")
 			os.MkdirAll(extractedFilePath, file.Mode())
 			zippedFile.Close()
 		} else {
-			// For debug:
-			// fmt.Println("File extracted:", file.Name)
 			t.Log("file is file")
 			dirErr := os.MkdirAll(filepath.Dir(extractedFilePath), file.Mode())
 			if dirErr != nil {
 				zippedFile.Close()
-				return errors.New("unable to open file " + file.Name + ": " + err.Error())
+				return errors.New("unable to create directory " + filepath.Dir(extractedFilePath) + ": " + dirErr.Error())
 			}
 			outputFile, err := os.OpenFile(
 				extractedFilePath,
@@ -178,7 +174,6 @@ func unzipFile(t *testing.T, filePath, destination string) error {
 			zippedFile.Close()
 		}
 	}
-	zipReader.Close()
 	return nil
 }
 
