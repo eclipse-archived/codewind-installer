@@ -459,7 +459,7 @@ func Test_createZipAndRemoveCollectedFiles(t *testing.T) {
 		assert.FileExists(t, expectedZipFilePath, "Unable to find "+expectedZipFileName)
 		// Jenkins test - what's in the zip file
 		t.Log("Contents of " + expectedZipFilePath)
-		read, _ := zip.OpenReader("test.zip")
+		read, _ := zip.OpenReader(expectedZipFilePath)
 		for _, file := range read.File {
 			t.Log(file.Name)
 		}
