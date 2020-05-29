@@ -439,9 +439,6 @@ func Test_gatherCodewindVersions(t *testing.T) {
 }
 
 func Test_createZipAndRemoveCollectedFiles(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping testing in short mode")
-	}
 	t.Run("createZipAndRemoveCollectedFiles - success", func(t *testing.T) {
 		diagnosticsDirName = testDir
 		testDgDir, _ := os.Open(testDir)
@@ -460,6 +457,13 @@ func Test_createZipAndRemoveCollectedFiles(t *testing.T) {
 		expectedZipFilePath := filepath.Join(diagnosticsDirName, expectedZipFileName)
 		createZipAndRemoveCollectedFiles()
 		assert.FileExists(t, expectedZipFilePath, "Unable to find "+expectedZipFileName)
+		// Jenkins test - what's in the zip file
+		t.Log("Contents of " + expectedZipFilePath)
+		read, _ := zip.OpenReader("test.zip")
+		for _, file := range read.File {
+			t.Log(file.Name)
+		}
+		read.Close()
 		unzipFile(expectedZipFilePath, testDir)
 		testDgAfterDir, _ := os.Open(testDir)
 		testfilenamesAfter, _ := testDgAfterDir.Readdirnames(-1)
@@ -828,9 +832,6 @@ func Test_DiagnosticsCollect(t *testing.T) {
 	oldGetAllConnections := getAllConnections
 	getAllConnections = returnMockConnections
 	t.Run("DiagnosticsCollect - collect all ", func(t *testing.T) {
-		if testing.Short() {
-			t.Skip("skipping testing in short mode")
-		}
 		diagnosticsDirName = testDir
 		app := cli.NewApp()
 		flagSet := flag.NewFlagSet("userFlags", flag.ContinueOnError)
