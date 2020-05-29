@@ -140,7 +140,7 @@ func unzipFile(t *testing.T, filePath, destination string) error {
 
 		zippedFile, err := file.Open()
 		if err != nil {
-			t.Log("Unable to open zipped file " + file.Name))
+			t.Log("Unable to open zipped file " + file.Name)
 			return errors.New("Unable to open zipped file")
 		}
 
