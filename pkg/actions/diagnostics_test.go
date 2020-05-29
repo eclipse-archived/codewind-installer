@@ -141,6 +141,7 @@ func unzipFile(t *testing.T, filePath, destination string) error {
 		zippedFile, err := file.Open()
 		if err != nil {
 			t.Log("Unable to open zipped file " + file.Name)
+			zipReader.Close()
 			return errors.New("Unable to open zipped file")
 		}
 
@@ -157,7 +158,11 @@ func unzipFile(t *testing.T, filePath, destination string) error {
 			// For debug:
 			// fmt.Println("File extracted:", file.Name)
 			t.Log("file is file")
-			os.MkdirAll(filepath.Dir(extractedFilePath), file.Mode())
+			dirErr := os.MkdirAll(filepath.Dir(extractedFilePath), file.Mode())
+			if dirErr != nil {
+				zippedFile.Close()
+				return errors.New("unable to open file " + file.Name + ": " + err.Error())
+			}
 			outputFile, err := os.OpenFile(
 				extractedFilePath,
 				os.O_WRONLY|os.O_CREATE|os.O_TRUNC,
@@ -165,7 +170,7 @@ func unzipFile(t *testing.T, filePath, destination string) error {
 			)
 			if err != nil {
 				zippedFile.Close()
-				return errors.New("unable to open file " + file.Name)
+				return errors.New("unable to open file " + file.Name + ": " + err.Error())
 			}
 
 			io.Copy(outputFile, zippedFile)
