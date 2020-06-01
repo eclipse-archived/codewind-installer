@@ -33,20 +33,19 @@ import (
 const testDir = "./testDir"
 
 func TestDownloadTemplate(t *testing.T) {
-	t.Run("insecure template repo", func(t *testing.T) {
+	t.Run("success case: download insecure template", func(t *testing.T) {
 		os.RemoveAll(testDir)
 		defer os.RemoveAll(testDir)
 
 		dest := filepath.Join(testDir, "insecureTemplateRepo")
 		url := test.PublicGHRepoURL
-		gitCredentials := utils.GitCredentials{}
 
-		out, err := DownloadTemplate(dest, url, gitCredentials)
+		out, err := DownloadTemplate(dest, url, nil)
 
 		assert.Equal(t, "success", out.Status)
 		assert.Nil(t, err)
 	})
-	t.Run("secure template repo (good credentials)", func(t *testing.T) {
+	t.Run("success case: download GHE template using good username-password", func(t *testing.T) {
 		if !test.UsingOwnGHECredentials {
 			t.Skip("skipping this test because you haven't set GitHub credentials needed for this test")
 		}
@@ -56,7 +55,7 @@ func TestDownloadTemplate(t *testing.T) {
 
 		dest := filepath.Join(testDir, "secureTemplateRepoGoodCredentials")
 		url := test.GHERepoURL
-		gitCredentials := utils.GitCredentials{
+		gitCredentials := &utils.GitCredentials{
 			Username: test.GHEUsername,
 			Password: test.GHEPassword,
 		}
@@ -66,15 +65,50 @@ func TestDownloadTemplate(t *testing.T) {
 		assert.NotNil(t, out)
 		assert.Nil(t, err)
 	})
-	t.Run("secure template repo (bad credentials)", func(t *testing.T) {
+	t.Run("success case: download GHE template using good personalAccessToken", func(t *testing.T) {
+		if !test.UsingOwnGHECredentials {
+			t.Skip("skipping this test because you haven't set GitHub credentials needed for this test")
+		}
+
+		os.RemoveAll(testDir)
+		defer os.RemoveAll(testDir)
+
+		dest := filepath.Join(testDir, "secureTemplateRepoGoodCredentials")
+		url := test.GHERepoURL
+		gitCredentials := &utils.GitCredentials{
+			PersonalAccessToken: test.GHEPersonalAccessToken,
+		}
+
+		out, err := DownloadTemplate(dest, url, gitCredentials)
+
+		assert.NotNil(t, out)
+		assert.Nil(t, err)
+	})
+	t.Run("fail case: download GHE template using bad password", func(t *testing.T) {
 		os.RemoveAll(testDir)
 		defer os.RemoveAll(testDir)
 
 		dest := filepath.Join(testDir, "secureTemplateRepoBadCredentials")
 		url := test.GHERepoURL
-		gitCredentials := utils.GitCredentials{
+		gitCredentials := &utils.GitCredentials{
 			Username: test.GHEUsername,
 			Password: "badpassword",
+		}
+
+		out, err := DownloadTemplate(dest, url, gitCredentials)
+
+		assert.Nil(t, out)
+		assert.Equal(t, err.Desc, "unexpected status code: 401 Unauthorized")
+	})
+	t.Run("fail case: download GHE template using bad personalAccessToken)", func(t *testing.T) {
+		os.RemoveAll(testDir)
+		defer os.RemoveAll(testDir)
+
+		dest := filepath.Join(testDir, "secureTemplateRepoBadCredentials")
+		url := test.GHERepoURL
+		gitCredentials := &utils.GitCredentials{
+			Username: test.GHEUsername,
+			Password: "badpersonalaccesstoken",
 		}
 
 		out, err := DownloadTemplate(dest, url, gitCredentials)

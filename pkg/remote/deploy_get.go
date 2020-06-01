@@ -35,18 +35,21 @@ type K8sAPI struct {
 }
 
 // GetExistingDeployments returns information about the remote installations of codewind, across all namespaces by default
-func GetExistingDeployments(namespace string) ([]ExistingDeployment, *RemInstError) {
-	config, err := GetKubeConfig()
-
-	if err != nil {
-		logr.Infof("Unable to retrieve Kubernetes Config %v\n", err)
-		return nil, &RemInstError{errOpNotFound, err, err.Error()}
-	}
-
+func GetExistingDeployments(namespace string, clientset kubernetes.Interface) ([]ExistingDeployment, *RemInstError) {
 	client := K8sAPI{}
-	client.clientset, err = kubernetes.NewForConfig(config)
-	if err != nil {
-		return nil, &RemInstError{errOpNotFound, err, err.Error()}
+	if clientset == nil {
+		config, err := GetKubeConfig()
+		if err != nil {
+			logr.Infof("Unable to retrieve Kubernetes Config %v\n", err)
+			return nil, &RemInstError{errOpNotFound, err, err.Error()}
+		}
+
+		client.clientset, err = kubernetes.NewForConfig(config)
+		if err != nil {
+			return nil, &RemInstError{errOpNotFound, err, err.Error()}
+		}
+	} else {
+		client.clientset = clientset
 	}
 
 	deployments, RemInstErr := client.findDeployments(namespace)

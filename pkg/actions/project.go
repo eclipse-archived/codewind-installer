@@ -22,6 +22,7 @@ import (
 	"github.com/eclipse/codewind-installer/pkg/config"
 	"github.com/eclipse/codewind-installer/pkg/connections"
 	"github.com/eclipse/codewind-installer/pkg/project"
+	"github.com/eclipse/codewind-installer/pkg/templates"
 	"github.com/eclipse/codewind-installer/pkg/utils"
 	logr "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
@@ -43,17 +44,29 @@ func ProjectValidate(c *cli.Context) {
 func ProjectCreate(c *cli.Context) {
 	destination := c.String("path")
 	url := c.String("url")
+	conID := strings.TrimSpace(strings.ToLower(c.String("conid")))
 	username := c.String("username")
 	password := c.String("password")
-	var gitCredentials utils.GitCredentials
-	if username != "" && password != "" {
-		gitCredentials.Username = username
-		gitCredentials.Password = password
+	personalAccessToken := c.String("personalAccessToken")
+
+	gitCredentials, err := utils.ExtractGitCredentials(username, password, personalAccessToken)
+	if err != nil {
+		templateErr := &TemplateError{errOpAddRepo, err, err.Error()}
+		HandleTemplateError(templateErr)
+		os.Exit(1)
+	}
+	if gitCredentials == nil {
+		gitCredentials, err = templates.GetGitCredentialsFromKeychain(conID, url)
+		if err != nil {
+			err := &TemplateError{errOpGetGitCredsFromKeychain, err, err.Error()}
+			HandleTemplateError(err)
+			os.Exit(1)
+		}
 	}
 
-	result, err := project.DownloadTemplate(destination, url, gitCredentials)
-	if err != nil {
-		HandleProjectError(err)
+	result, projErr := project.DownloadTemplate(destination, url, gitCredentials)
+	if projErr != nil {
+		HandleProjectError(projErr)
 		os.Exit(1)
 	}
 

@@ -54,7 +54,7 @@ type (
 )
 
 // DownloadTemplate using the url/link provided
-func DownloadTemplate(destination, url string, gitCredentials utils.GitCredentials) (*Result, *ProjectError) {
+func DownloadTemplate(destination, url string, gitCredentials *utils.GitCredentials) (*Result, *ProjectError) {
 	projErr := checkProjectDirIsEmpty(destination)
 	if projErr != nil {
 		return nil, projErr
