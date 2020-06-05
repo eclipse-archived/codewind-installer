@@ -387,7 +387,7 @@ func TestIsTarGzURL(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			got := IsTarGzURL(test.in)
-			assert.Equal(t, got, test.want)
+			assert.Equal(t, test.want, got)
 		})
 	}
 }

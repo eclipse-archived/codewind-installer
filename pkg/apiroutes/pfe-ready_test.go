@@ -25,7 +25,7 @@ func Test_IsPFEReady(t *testing.T) {
 		if err != nil {
 			t.Fail()
 		}
-		assert.Equal(t, PFEReady, true)
+		assert.True(t, PFEReady)
 	})
 	t.Run("Asserts PFE not ready", func(t *testing.T) {
 		mockClientFalse := &MockResponse{StatusCode: http.StatusNotFound, Body: nil}
@@ -33,6 +33,6 @@ func Test_IsPFEReady(t *testing.T) {
 		if err != nil {
 			t.Fail()
 		}
-		assert.Equal(t, PFENotReady, false)
+		assert.False(t, PFENotReady)
 	})
 }

@@ -71,7 +71,7 @@ func Test_Keychain_Secure(t *testing.T) {
 	t.Run("Test keyring returns an error when trying to delete a non-existent secret", func(t *testing.T) {
 		err := DeleteSecretFromKeyring(testConnection, testUsername)
 		assert.NotNil(t, err)
-		assert.Equal(t, err.Op, "sec_keyring_secret_not_found")
+		assert.Equal(t, "sec_keyring_secret_not_found", err.Op)
 		assert.Contains(t, err.Desc, "not found in keyring")
 	})
 
