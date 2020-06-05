@@ -22,7 +22,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/go-github/github"
+	"github.com/google/go-github/v32/github"
 	"golang.org/x/oauth2"
 )
 
@@ -79,6 +79,8 @@ func DownloadFromTarGzURL(URL *url.URL, destination string, gitCredentials *GitC
 func getURLToDownloadReleaseAsset(URL *url.URL, gitCredentials *GitCredentials) (*url.URL, error) {
 	URLPathSlice := strings.Split(URL.Path, "/")
 
+	var httpClient = &http.Client{}
+
 	if !strings.Contains(URL.Host, "github") || len(URLPathSlice) < 6 {
 		return nil, fmt.Errorf("URL must point to a GitHub repository release asset: %v", URL)
 	}
@@ -113,6 +115,7 @@ func getURLToDownloadReleaseAsset(URL *url.URL, gitCredentials *GitCredentials) 
 		owner,
 		repo,
 		assetID,
+		httpClient,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("Repositories.DownloadReleaseAsset returned error: %v", err)
@@ -188,7 +191,7 @@ func getGitHubClient(domain string, gitCredentials *GitCredentials) (*github.Cli
 func GetZipURL(owner, repo, branch string, client *github.Client) (*url.URL, error) {
 	ctx := context.Background()
 	opt := &github.RepositoryContentGetOptions{Ref: branch}
-	URL, _, err := client.Repositories.GetArchiveLink(ctx, owner, repo, "zipball", opt, true)
+	URL, _, err := client.Repositories.GetArchiveLink(ctx, owner, repo, github.Zipball, opt, true)
 	if err != nil {
 		return nil, err
 	}
