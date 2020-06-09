@@ -98,7 +98,7 @@ func TestDownloadTemplate(t *testing.T) {
 		out, err := DownloadTemplate(dest, url, gitCredentials)
 
 		assert.Nil(t, out)
-		assert.Equal(t, err.Desc, "unexpected status code: 401 Unauthorized")
+		assert.Equal(t, "unexpected status code: 401 Unauthorized", err.Desc)
 	})
 	t.Run("fail case: download GHE template using bad personalAccessToken)", func(t *testing.T) {
 		os.RemoveAll(testDir)
@@ -114,7 +114,7 @@ func TestDownloadTemplate(t *testing.T) {
 		out, err := DownloadTemplate(dest, url, gitCredentials)
 
 		assert.Nil(t, out)
-		assert.Equal(t, err.Desc, "unexpected status code: 401 Unauthorized")
+		assert.Equal(t, "unexpected status code: 401 Unauthorized", err.Desc)
 	})
 }
 
@@ -268,21 +268,21 @@ func TestWriteNewCwSettings(t *testing.T) {
 
 			cwSettings := readCwSettings(test.inProjectPath)
 
-			assert.Equal(t, cwSettings.ContextRoot, test.wantCwSettings.ContextRoot)
-			assert.Equal(t, cwSettings.InternalPort, test.wantCwSettings.InternalPort)
-			assert.Equal(t, cwSettings.HealthCheck, test.wantCwSettings.HealthCheck)
-			assert.Equal(t, cwSettings.IsHTTPS, test.wantCwSettings.IsHTTPS)
-			assert.Equal(t, cwSettings.StatusPingTimeout, test.wantCwSettings.StatusPingTimeout)
-			assert.Equal(t, cwSettings.IgnoredPaths, test.mockIgnoredPaths)
+			assert.Equal(t, test.wantCwSettings.ContextRoot, cwSettings.ContextRoot)
+			assert.Equal(t, test.wantCwSettings.InternalPort, cwSettings.InternalPort)
+			assert.Equal(t, test.wantCwSettings.HealthCheck, cwSettings.HealthCheck)
+			assert.Equal(t, test.wantCwSettings.IsHTTPS, cwSettings.IsHTTPS)
+			assert.Equal(t, test.wantCwSettings.StatusPingTimeout, cwSettings.StatusPingTimeout)
+			assert.Equal(t, test.mockIgnoredPaths, cwSettings.IgnoredPaths)
 
 			if test.wantCwSettings.InternalDebugPort != nil {
-				assert.Equal(t, cwSettings.InternalDebugPort, test.wantCwSettings.InternalDebugPort)
+				assert.Equal(t, test.wantCwSettings.InternalDebugPort, cwSettings.InternalDebugPort)
 			}
 			if test.wantCwSettings.MavenProfiles != nil {
-				assert.Equal(t, cwSettings.MavenProfiles, test.wantCwSettings.MavenProfiles)
+				assert.Equal(t, test.wantCwSettings.MavenProfiles, cwSettings.MavenProfiles)
 			}
 			if test.wantCwSettings.MavenProperties != nil {
-				assert.Equal(t, cwSettings.MavenProperties, test.wantCwSettings.MavenProperties)
+				assert.Equal(t, test.wantCwSettings.MavenProperties, cwSettings.MavenProperties)
 			}
 			os.Remove(test.inProjectPath)
 		})
@@ -312,7 +312,7 @@ func TestProjectPathExists(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			err := checkProjectPathExists(test.path)
-			assert.Equal(t, err, test.wantError)
+			assert.Equal(t, test.wantError, err)
 		})
 	}
 }
@@ -343,7 +343,7 @@ func TestCheckProjectDirIsEmpty(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			err := checkProjectDirIsEmpty(test.path)
-			assert.Equal(t, err, test.wantError)
+			assert.Equal(t, test.wantError, err)
 		})
 	}
 	os.RemoveAll(testFolder)
