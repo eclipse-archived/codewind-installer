@@ -70,9 +70,10 @@ spec:
                         cp -r $DEFAULT_CODE_DIRECTORY/* .
                         echo $DEFAULT_CODE_DIRECTORY >> $DEFAULT_WORKSPACE_DIR_FILE
 
-                        # run go mod tidy
-                        export GO111MODULE=on
-                        go mod tidy
+                        # get dep and run it
+                        wget -O - https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+                        dep status
+                        dep ensure -v
 
                         # go cache setup
                         mkdir .cache
