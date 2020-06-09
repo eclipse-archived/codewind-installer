@@ -1,5 +1,6 @@
 #!groovy​
 
+
 pipeline {
 
     agent {
@@ -70,10 +71,9 @@ spec:
                         cp -r $DEFAULT_CODE_DIRECTORY/* .
                         echo $DEFAULT_CODE_DIRECTORY >> $DEFAULT_WORKSPACE_DIR_FILE
 
-                        # get dep and run it
-                        wget -O - https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-                        dep status
-                        dep ensure -v
+                        # run go mod tidy
+                        export GO111MODULE=on
+                        go mod tidy
 
                         # go cache setup
                         mkdir .cache
@@ -134,6 +134,9 @@ spec:
                         export GOCACHE=/home/jenkins/agent/$CODE_DIRECTORY_FOR_GO/.cache/go-build
 
                         cd ../../$CODE_DIRECTORY_FOR_GO
+
+                        export GO111MODULE=on
+
                         go test ./... -short -coverprofile=coverage.txt -covermode=count
                         TEST_RESULT=$?
                         if [ $TEST_RESULT -ne 0 ]; then
