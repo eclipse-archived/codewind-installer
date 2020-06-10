@@ -98,8 +98,8 @@ func TestDownloadTemplate(t *testing.T) {
 		out, err := DownloadTemplate(dest, url, gitCredentials)
 
 		assert.Nil(t, out)
-		assert.Equal(t, err.Op, errOpInvalidCredentials)
-		assert.Equal(t, err.Desc, "unexpected status code: 401 Unauthorized")
+		assert.Equal(t, errOpInvalidCredentials, err.Op)
+		assert.Equal(t, "unexpected status code: 401 Unauthorized", err.Desc)
 	})
 	t.Run("fail case: download GHE template using bad personalAccessToken)", func(t *testing.T) {
 		os.RemoveAll(testDir)
@@ -115,8 +115,8 @@ func TestDownloadTemplate(t *testing.T) {
 		out, err := DownloadTemplate(dest, url, gitCredentials)
 
 		assert.Nil(t, out)
-		assert.Equal(t, err.Op, errOpInvalidCredentials)
-		assert.Equal(t, err.Desc, "unexpected status code: 401 Unauthorized")
+		assert.Equal(t, errOpInvalidCredentials, err.Op)
+		assert.Equal(t, "unexpected status code: 401 Unauthorized", err.Desc)
 	})
 }
 
