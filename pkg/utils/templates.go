@@ -16,13 +16,18 @@ import "fmt"
 type (
 	// TemplateRepo represents a template repository.
 	TemplateRepo struct {
-		Description   string   `json:"description"`
-		URL           string   `json:"url"`
-		Name          string   `json:"name"`
-		ID            string   `json:"id"`
-		Enabled       bool     `json:"enabled"`
-		Protected     bool     `json:"protected"`
-		ProjectStyles []string `json:"projectStyles"`
+		Description    string         `json:"description"`
+		URL            string         `json:"url"`
+		Name           string         `json:"name"`
+		ID             string         `json:"id"`
+		Enabled        bool           `json:"enabled"`
+		Protected      bool           `json:"protected"`
+		ProjectStyles  []string       `json:"projectStyles"`
+		Authentication Authentication `json:"authentication,omitempty"`
+	}
+	// Authentication represents a template respository's authentication.
+	Authentication struct {
+		Username string `json:"username,omitempty"`
 	}
 )
 
