@@ -33,8 +33,8 @@ func TestGetProjectLinks(t *testing.T) {
 	t.Run("Expect success - project links should be returned", func(t *testing.T) {
 		// construct mock response body and status code
 		links := []Link{
-			Link{ProjectID: "1234", ProjectURL: "URL1", EnvName: "ENV1"},
-			Link{ProjectID: "9999", ProjectURL: "URL2", EnvName: "ENV2"},
+			Link{ProjectID: "1234", ProjectName: "name1", ProjectURL: "URL1", EnvName: "ENV1"},
+			Link{ProjectID: "9999", ProjectName: "name2", ProjectURL: "URL2", EnvName: "ENV2"},
 		}
 		jsonResponse, _ := json.Marshal(links)
 		body := ioutil.NopCloser(bytes.NewReader([]byte(jsonResponse)))

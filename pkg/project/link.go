@@ -26,9 +26,10 @@ import (
 type (
 	// Link : The structure of a Link object returned from PFE
 	Link struct {
-		ProjectID  string `json:"projectID"`
-		EnvName    string `json:"envName"`
-		ProjectURL string `json:"projectURL"`
+		ProjectID   string `json:"projectID"`
+		ProjectName string `json:"projectName"`
+		EnvName     string `json:"envName"`
+		ProjectURL  string `json:"projectURL"`
 	}
 	// LinkParameters : The request structure to create a link
 	LinkParameters struct {
