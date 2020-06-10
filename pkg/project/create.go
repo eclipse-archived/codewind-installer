@@ -72,7 +72,12 @@ func DownloadTemplate(destination, url string, gitCredentials *utils.GitCredenti
 
 	err := utils.DownloadFromURLThenExtract(url, destination, gitCredentials)
 	if err != nil {
-		return nil, &ProjectError{errOpCreateProject, err, err.Error()}
+		errOp := errOpCreateProject
+		// if 401 error, use invalid credentials error code
+		if strings.Contains(err.Error(), "401 Unauthorized") {
+			errOp = errOpInvalidCredentials
+		}
+		return nil, &ProjectError{errOp, err, err.Error()}
 	}
 
 	err = utils.ReplaceInFiles(destination, "[PROJ_NAME_PLACEHOLDER]", projectName)
