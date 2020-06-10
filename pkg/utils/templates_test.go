@@ -47,7 +47,7 @@ func TestExtractGitCredentials_Fail(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			got, err := ExtractGitCredentials(test.inUsername, test.inPassword, test.inPersonalAccessToken)
 			assert.Nil(t, got)
-			assert.Equal(t, err.Error(), test.wantErrMsg)
+			assert.Equal(t, test.wantErrMsg, err.Error())
 		})
 	}
 }

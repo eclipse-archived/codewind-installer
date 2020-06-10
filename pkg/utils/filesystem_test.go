@@ -61,7 +61,7 @@ func TestCreateTempFile(t *testing.T) {
 
 		_, err = os.Stat(testPath)
 		assert.Nil(t, err)
-		assert.Equal(t, PathExists(testPath), true)
+		assert.True(t, PathExists(testPath))
 
 		os.Remove(testPath)
 	})

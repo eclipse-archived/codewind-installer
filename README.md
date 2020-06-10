@@ -59,22 +59,17 @@ Ensure that you are logged in to Docker. Type `docker login` into a command line
 ## Building and deploying locally on MacOS
 
 1. Ensure that you have a Go environment set up. If you don't yet have a Go environment, see [Install Go](https://golang.org/doc/install).
-2. If you have Brew, use the following commands to install `dep` for MacOS:
-
-```
-$ brew install dep
-$ brew upgrade dep
-```
-
-3. Create the directory tree expected `../go/src/github.com/eclipse`.
-4. Use the `cd` command to go to the `eclipse` directory that you previously created.
-5. After you go to this directory, clone the repository by typing `git clone https://github.com/eclipse/codewind-installer.git`.
-6. Use the `cd` command to go to the project directory and install the vendor packages with the `dep ensure -v` command.
-7. Using the `cd` command, navigate into `/cmd/cli/` within the project directory.
-8. Build the binary and give it a name with the `go build -o <binary-name>` command. To build a binary without the debug symbols, use the `go build -ldflags="-s -w" -o <binary-name>` command.
-9. Copy your `codewind-workspace` into your `/Users/<username>` home directory.
-10. Type `./<binary-name>` in the command line window to run the CLI.
-11. To run a command, enter `./<binary-name> <command>`.
+2. Create the directory tree expected `~/go/src/github.com/eclipse`
+3. Change to the eclipse directory:  `cd ~/go/src/github.com/eclipse`
+4. Clone the repository by typing `git clone https://github.com/eclipse/codewind-installer.git`
+5. Set the environment variable:  `export GO111MODULE=on`
+6. Change to the project directory: `cd codewind-installer`
+7. run  `go mod tidy`
+8. Change to the cli directory:  `cd cmd/cli`
+9. Build the binary and give it a name with the `go build -o <binary-name>` command. To build a binary without the debug symbols, use the `go build -ldflags="-s -w" -o <binary-name>` command.
+10. Copy your `codewind-workspace` into your `/Users/<username>/` home directory.
+11. Type `./<binary-name>` in the command line window to run the CLI.
+12. To run a sub command, enter `./<binary-name> <command>`.
 
 ## Creating a cross-platform binary
 

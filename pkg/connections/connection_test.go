@@ -82,7 +82,7 @@ func Test_GetAllConnections(t *testing.T) {
 			t.Fail()
 		}
 		assert.Len(t, result, 1)
-		assert.Equal(t, result[0].ID, "local")
+		assert.Equal(t, "local", result[0].ID)
 	})
 }
 
