@@ -42,6 +42,5 @@ func GetProjectFileList(httpClient utils.HTTPClient, connection *connections.Con
 	if jsonErr != nil {
 		return nil, &ProjectError{errOpRequest, jsonErr, jsonErr.Error()}
 	}
-	//	fmt.Println(list)
 	return list, nil
 }
