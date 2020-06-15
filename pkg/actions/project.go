@@ -304,9 +304,9 @@ func ProjectLinkList(c *cli.Context) {
 		} else {
 			w := new(tabwriter.Writer)
 			w.Init(os.Stdout, 0, 8, 2, '\t', 0)
-			fmt.Fprintln(w, "ENVIRONMENT VARIABLE \tPROJECT ID")
+			fmt.Fprintln(w, "TARGET PROJECT \tENVIRONMENT VARIABLE \t TARGET URL")
 			for _, project := range links {
-				fmt.Fprintln(w, project.EnvName+"\t"+project.ProjectID)
+				fmt.Fprintln(w, project.ProjectName+"\t"+project.EnvName+"\t"+project.ProjectURL)
 			}
 			fmt.Fprintln(w)
 			w.Flush()
