@@ -189,11 +189,11 @@ func testCreateProjectFromTemplate(t *testing.T) {
 		assert.Equal(t, "{\"status\":\"success\",\"projectPath\":\"./testDir\",\"result\":{\"language\":\"unknown\",\"projectType\":\"docker\"}}\n", string(out))
 	})
 	t.Run("fail case: create GHE project using good username but bad password"+
-		"\ncwctl project create --url <secureTemplateRepo> --path <testDir> --username <goodUsername> --password <badPassword>", func(t *testing.T) {
+		"\ncwctl --json project create --url <secureTemplateRepo> --path <testDir> --username <goodUsername> --password <badPassword>", func(t *testing.T) {
 		os.RemoveAll(testDir)
 		defer os.RemoveAll(testDir)
 
-		cmd := exec.Command(cwctl, "project", "create",
+		cmd := exec.Command(cwctl, "--json", "project", "create",
 			"--url="+test.GHERepoURL,
 			"--path="+testDir,
 			"--username="+test.GHEUsername,
@@ -201,6 +201,7 @@ func testCreateProjectFromTemplate(t *testing.T) {
 		)
 		out, err := cmd.CombinedOutput()
 		assert.NotNil(t, err)
+		assert.Contains(t, string(out), "invalid_git_credentials")
 		assert.Contains(t, string(out), "401 Unauthorized")
 	})
 }
@@ -390,7 +391,7 @@ func testSuccessfulAddAndRemoveTemplateRepos(t *testing.T) {
 	})
 	t.Run("fail case: add GHE template repo and create one of its projects using bad password, overriding good stored GHE creds"+
 		"\ncwctl templates repos add --url <GHEDevfile> --username --password"+
-		"\ncwctl project create --url <GHETemplateRepo> --username <goodUsername> --password <badPassword>"+
+		"\ncwctl --json project create --url <GHETemplateRepo> --username <goodUsername> --password <badPassword>"+
 		"\ncwctl templates repos remove --url", func(t *testing.T) {
 		if !test.UsingOwnGHECredentials {
 			t.Skip("skipping this test because you haven't set GitHub credentials needed for this test")
@@ -408,7 +409,7 @@ func testSuccessfulAddAndRemoveTemplateRepos(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Contains(t, string(out), test.GHEDevfileURL)
 
-		createCmd := exec.Command(cwctl, "project", "create",
+		createCmd := exec.Command(cwctl, "--json", "project", "create",
 			"--url="+test.GHERepoURL,
 			"--path="+testDir,
 			"--username="+test.GHEUsername,
@@ -416,6 +417,7 @@ func testSuccessfulAddAndRemoveTemplateRepos(t *testing.T) {
 		)
 		createOut, createErr := createCmd.CombinedOutput()
 		assert.NotNil(t, createErr)
+		assert.Contains(t, string(createOut), "invalid_git_credentials")
 		assert.Contains(t, string(createOut), "401 Unauthorized")
 
 		removeCmd := exec.Command(cwctl, "templates", "repos", "remove",
@@ -427,7 +429,7 @@ func testSuccessfulAddAndRemoveTemplateRepos(t *testing.T) {
 	})
 	t.Run("fail case: add GHE template repo and create one of its projects using bad personalAccessToken, overriding good stored GHE creds"+
 		"\ncwctl templates repos add --url <GHEDevfile> --personalAccessToken <goodToken>"+
-		"\ncwctl project create --url <GHETemplateRepo> --personalAccessToken <badToken>"+
+		"\ncwctl --json project create --url <GHETemplateRepo> --personalAccessToken <badToken>"+
 		"\ncwctl templates repos remove --url", func(t *testing.T) {
 		if !test.UsingOwnGHECredentials {
 			t.Skip("skipping this test because you haven't set GitHub credentials needed for this test")
@@ -444,13 +446,14 @@ func testSuccessfulAddAndRemoveTemplateRepos(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Contains(t, string(out), test.GHEDevfileURL)
 
-		createCmd := exec.Command(cwctl, "project", "create",
+		createCmd := exec.Command(cwctl, "--json", "project", "create",
 			"--url="+test.GHERepoURL,
 			"--path="+testDir,
 			"--personalAccessToken=badtoken",
 		)
 		createOut, createErr := createCmd.CombinedOutput()
 		assert.NotNil(t, createErr)
+		assert.Contains(t, string(createOut), "invalid_git_credentials")
 		assert.Contains(t, string(createOut), "401 Unauthorized")
 
 		removeCmd := exec.Command(cwctl, "templates", "repos", "remove",

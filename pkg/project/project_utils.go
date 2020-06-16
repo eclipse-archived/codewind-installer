@@ -46,6 +46,7 @@ const (
 	errOpSync            = "proj_sync"
 	errOpSyncRef         = "proj_sync_ref"
 	errOpWriteCwSettings = "proj_write_cw_settings"
+	errOpInvalidCredentials = "invalid_git_credentials"
 )
 
 const (
