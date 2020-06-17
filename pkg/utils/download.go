@@ -79,7 +79,6 @@ func DownloadFromTarGzURL(URL *url.URL, destination string, gitCredentials *GitC
 func getURLToDownloadReleaseAsset(URL *url.URL, gitCredentials *GitCredentials) (*url.URL, error) {
 	URLPathSlice := strings.Split(URL.Path, "/")
 
-	var httpClient = &http.Client{}
 
 	if !strings.Contains(URL.Host, "github") || len(URLPathSlice) < 6 {
 		return nil, fmt.Errorf("URL must point to a GitHub repository release asset: %v", URL)
@@ -115,7 +114,7 @@ func getURLToDownloadReleaseAsset(URL *url.URL, gitCredentials *GitCredentials) 
 		owner,
 		repo,
 		assetID,
-		httpClient,
+		nil,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("Repositories.DownloadReleaseAsset returned error: %v", err)
