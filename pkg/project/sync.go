@@ -344,59 +344,13 @@ func retrieveRefPathsList(projectPath string) []refPath {
 }
 
 func ignoreFileOrDirectory(name string, isDir bool, cwSettingsIgnoredPathsList []string) bool {
-	// List of files that will not be sent to PFE
-	ignoredFiles := []string{
-		".DS_Store",
-		"*.swp",
-		"*.swx",
-		"Jenkinsfile",
-		".cfignore",
-		"localm2cache.zip",
-		"libertyrepocache.zip",
-		"run-dev",
-		"run-debug",
-		"manifest.yml",
-		"idt.js",
-		".bluemix",
-		".build-ubuntu",
-		".yo-rc.json",
-		"*.iml",
-		".project",
-		".classpath",
-		".options",
-	}
-
-	// List of directories that will not be sent to PFE
-	ignoredDirectories := []string{
-		".project",
-		"node_modules*",
-		".git*",
-		"load-test*",
-		".settings",
-		"Dockerfile-tools",
-		"target",
-		"mc-target",
-		".m2",
-		"debian",
-		".bluemix",
-		"terraform",
-		".build-ubuntu",
-		".idea",
-		".vscode",
-	}
-
-	ignoredList := ignoredFiles
-	if isDir {
-		ignoredList = ignoredDirectories
-	}
-
-	if len(cwSettingsIgnoredPathsList) > 0 {
-		ignoredList = append(ignoredList, cwSettingsIgnoredPathsList...)
-	}
-
 	isFileInIgnoredList := false
-	for _, fileName := range ignoredList {
+	for _, fileName := range cwSettingsIgnoredPathsList {
 		fileName = filepath.Clean(fileName)
+		// remove preceding slash from older versions of cw-settings
+		if strings.HasPrefix(fileName, "/") {
+			fileName = string([]rune(fileName)[1:])
+		}
 		matched, err := filepath.Match(fileName, name)
 		if err != nil {
 			return false
