@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 
@@ -471,9 +472,13 @@ func syncFile(client utils.HTTPClient, projectID string, projectPath string, pat
 		return uploadResponse
 	}
 
+	mode := uint(fileStat.Mode().Perm())
+	if runtime.GOOS == "windows" {
+    mode = 775
+	}
 	fileUploadBody := FileUploadMsg{
 		IsDirectory:  fileStat.IsDir(),
-		Mode:         uint(fileStat.Mode().Perm()),
+		Mode:         mode,
 		RelativePath: relativePath,
 		Message:      "",
 	}
