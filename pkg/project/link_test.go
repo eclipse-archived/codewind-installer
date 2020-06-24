@@ -25,9 +25,21 @@ import (
 )
 
 var errInvalidRequest = errors.New(textInvalidRequest)
-var errTargetNotFound = errors.New(textProjectLinkTargetNotFound)
+var errUnknownNotFound = errors.New(textProjectLinkUnknownNotFound)
 var errConflict = errors.New(textProjectLinkConflict)
 var errUnknownHTTPCode = errors.New(textUnknownResponseCode)
+
+var projectLinkCreateUpdateDeleteTests = []struct {
+	name       string
+	statusCode int
+	want       *ProjectError
+}{
+	{name: "Expect success - request should be accepted", statusCode: http.StatusAccepted, want: nil},
+	{name: "Expect failure - rejected with 400", statusCode: http.StatusBadRequest, want: &ProjectError{errOpResponse, errInvalidRequest, errInvalidRequest.Error()}},
+	{name: "Expect failure - rejected with 404", statusCode: http.StatusNotFound, want: &ProjectError{errOpResponse, errUnknownNotFound, errUnknownNotFound.Error()}},
+	{name: "Expect failure - rejected with 409", statusCode: http.StatusConflict, want: &ProjectError{errOpResponse, errConflict, errConflict.Error()}},
+	{name: "Expect failure - rejected with unknown http code", statusCode: http.StatusPermanentRedirect, want: &ProjectError{errOpResponse, errUnknownHTTPCode, errUnknownHTTPCode.Error()}},
+}
 
 func TestGetProjectLinks(t *testing.T) {
 	t.Run("Expect success - project links should be returned", func(t *testing.T) {
@@ -49,7 +61,8 @@ func TestGetProjectLinks(t *testing.T) {
 		assert.Equal(t, links, returnedLinks)
 	})
 	t.Run("Expect failure - request returns unknown HTTP code", func(t *testing.T) {
-		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusPermanentRedirect, Body: nil}
+		emptyBody := ioutil.NopCloser(bytes.NewReader([]byte{}))
+		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusPermanentRedirect, Body: emptyBody}
 		mockConnection := connections.Connection{ID: "local"}
 
 		_, projectLinkErr := GetProjectLinks(mockClient, &mockConnection, "dummyurl", "dummyProjectID")
@@ -59,127 +72,37 @@ func TestGetProjectLinks(t *testing.T) {
 }
 
 func TestCreateProjectLinks(t *testing.T) {
-	t.Run("Expect success - project links should be created", func(t *testing.T) {
-		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusAccepted, Body: nil}
-		mockConnection := connections.Connection{ID: "local"}
-
-		projectLinkErr := CreateProjectLink(mockClient, &mockConnection, "dummyurl", "dummyProjectID", "dummyTargetProjectID", "dummyEnvName")
-		assert.Nil(t, projectLinkErr)
-	})
-	t.Run("Expect failure - request returns 400 Bad Request", func(t *testing.T) {
-		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusBadRequest, Body: nil}
-		mockConnection := connections.Connection{ID: "local"}
-
-		projectLinkErr := CreateProjectLink(mockClient, &mockConnection, "dummyurl", "dummyProjectID", "dummyTargetProjectID", "dummyEnvName")
-		wantedError := &ProjectError{errOpResponse, errInvalidRequest, errInvalidRequest.Error()}
-		assert.Equal(t, wantedError, projectLinkErr)
-	})
-	t.Run("Expect failure - request returns 404 Not Found", func(t *testing.T) {
-		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusNotFound, Body: nil}
-		mockConnection := connections.Connection{ID: "local"}
-
-		projectLinkErr := CreateProjectLink(mockClient, &mockConnection, "dummyurl", "dummyProjectID", "dummyTargetProjectID", "dummyEnvName")
-		wantedError := &ProjectError{errOpResponse, errTargetNotFound, errTargetNotFound.Error()}
-		assert.Equal(t, wantedError, projectLinkErr)
-	})
-	t.Run("Expect failure - request returns 409 Conflict", func(t *testing.T) {
-		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusConflict, Body: nil}
-		mockConnection := connections.Connection{ID: "local"}
-
-		projectLinkErr := CreateProjectLink(mockClient, &mockConnection, "dummyurl", "dummyProjectID", "dummyTargetProjectID", "dummyEnvName")
-		wantedError := &ProjectError{errOpResponse, errConflict, errConflict.Error()}
-		assert.Equal(t, wantedError, projectLinkErr)
-	})
-	t.Run("Expect failure - request returns unknown HTTP code", func(t *testing.T) {
-		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusPermanentRedirect, Body: nil}
-		mockConnection := connections.Connection{ID: "local"}
-
-		projectLinkErr := CreateProjectLink(mockClient, &mockConnection, "dummyurl", "dummyProjectID", "dummyTargetProjectID", "dummyEnvName")
-		wantedError := &ProjectError{errOpResponse, errUnknownHTTPCode, errUnknownHTTPCode.Error()}
-		assert.Equal(t, wantedError, projectLinkErr)
-	})
+	for _, tt := range projectLinkCreateUpdateDeleteTests {
+		t.Run(tt.name, func(t *testing.T) {
+			emptyBody := ioutil.NopCloser(bytes.NewReader([]byte{}))
+			mockClient := &security.ClientMockAuthenticate{StatusCode: tt.statusCode, Body: emptyBody}
+			mockConnection := connections.Connection{ID: "local"}
+			got := CreateProjectLink(mockClient, &mockConnection, "dummyurl", "dummyProjectID", "dummyTargetProjectID", "dummyEnvName")
+			assert.Equal(t, tt.want, got)
+		})
+	}
 }
 
 func TestUpdateProjectLinks(t *testing.T) {
-	t.Run("Expect success - project links should be updated", func(t *testing.T) {
-		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusAccepted, Body: nil}
-		mockConnection := connections.Connection{ID: "local"}
-
-		projectLinkErr := UpdateProjectLink(mockClient, &mockConnection, "dummyurl", "dummyProjectID", "dummyEnvName", "dummyUpdatedEnvName")
-		assert.Nil(t, projectLinkErr)
-	})
-	t.Run("Expect failure - request returns 400 Bad Request", func(t *testing.T) {
-		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusBadRequest, Body: nil}
-		mockConnection := connections.Connection{ID: "local"}
-
-		projectLinkErr := UpdateProjectLink(mockClient, &mockConnection, "dummyurl", "dummyProjectID", "dummyEnvName", "dummyUpdatedEnvName")
-		wantedError := &ProjectError{errOpResponse, errInvalidRequest, errInvalidRequest.Error()}
-		assert.Equal(t, wantedError, projectLinkErr)
-	})
-	t.Run("Expect failure - request returns 404 Not Found", func(t *testing.T) {
-		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusNotFound, Body: nil}
-		mockConnection := connections.Connection{ID: "local"}
-
-		projectLinkErr := UpdateProjectLink(mockClient, &mockConnection, "dummyurl", "dummyProjectID", "dummyEnvName", "dummyUpdatedEnvName")
-		wantedError := &ProjectError{errOpResponse, errTargetNotFound, errTargetNotFound.Error()}
-		assert.Equal(t, wantedError, projectLinkErr)
-	})
-	t.Run("Expect failure - request returns 409 Conflict", func(t *testing.T) {
-		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusConflict, Body: nil}
-		mockConnection := connections.Connection{ID: "local"}
-
-		projectLinkErr := UpdateProjectLink(mockClient, &mockConnection, "dummyurl", "dummyProjectID", "dummyEnvName", "dummyUpdatedEnvName")
-		wantedError := &ProjectError{errOpResponse, errConflict, errConflict.Error()}
-		assert.Equal(t, wantedError, projectLinkErr)
-	})
-	t.Run("Expect failure - request returns unknown HTTP code", func(t *testing.T) {
-		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusPermanentRedirect, Body: nil}
-		mockConnection := connections.Connection{ID: "local"}
-
-		projectLinkErr := UpdateProjectLink(mockClient, &mockConnection, "dummyurl", "dummyProjectID", "dummyEnvName", "dummyUpdatedEnvName")
-		wantedError := &ProjectError{errOpResponse, errUnknownHTTPCode, errUnknownHTTPCode.Error()}
-		assert.Equal(t, wantedError, projectLinkErr)
-	})
+	for _, tt := range projectLinkCreateUpdateDeleteTests {
+		t.Run(tt.name, func(t *testing.T) {
+			emptyBody := ioutil.NopCloser(bytes.NewReader([]byte{}))
+			mockClient := &security.ClientMockAuthenticate{StatusCode: tt.statusCode, Body: emptyBody}
+			mockConnection := connections.Connection{ID: "local"}
+			got := UpdateProjectLink(mockClient, &mockConnection, "dummyurl", "dummyProjectID", "dummyEnvName", "dummyUpdatedEnvName")
+			assert.Equal(t, tt.want, got)
+		})
+	}
 }
 
 func TestDeleteProjectLinks(t *testing.T) {
-	t.Run("Expect success - project links should be deleted", func(t *testing.T) {
-		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusAccepted, Body: nil}
-		mockConnection := connections.Connection{ID: "local"}
-
-		projectLinkErr := DeleteProjectLink(mockClient, &mockConnection, "dummyurl", "dummyProjectID", "dummyEnvName")
-		assert.Nil(t, projectLinkErr)
-	})
-	t.Run("Expect failure - request returns 400 Bad Request", func(t *testing.T) {
-		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusBadRequest, Body: nil}
-		mockConnection := connections.Connection{ID: "local"}
-
-		projectLinkErr := DeleteProjectLink(mockClient, &mockConnection, "dummyurl", "dummyProjectID", "dummyEnvName")
-		wantedError := &ProjectError{errOpResponse, errInvalidRequest, errInvalidRequest.Error()}
-		assert.Equal(t, wantedError, projectLinkErr)
-	})
-	t.Run("Expect failure - request returns 404 Not Found", func(t *testing.T) {
-		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusNotFound, Body: nil}
-		mockConnection := connections.Connection{ID: "local"}
-
-		projectLinkErr := DeleteProjectLink(mockClient, &mockConnection, "dummyurl", "dummyProjectID", "dummyEnvName")
-		wantedError := &ProjectError{errOpResponse, errTargetNotFound, errTargetNotFound.Error()}
-		assert.Equal(t, wantedError, projectLinkErr)
-	})
-	t.Run("Expect failure - request returns 409 Conflict", func(t *testing.T) {
-		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusConflict, Body: nil}
-		mockConnection := connections.Connection{ID: "local"}
-
-		projectLinkErr := DeleteProjectLink(mockClient, &mockConnection, "dummyurl", "dummyProjectID", "dummyEnvName")
-		wantedError := &ProjectError{errOpResponse, errConflict, errConflict.Error()}
-		assert.Equal(t, wantedError, projectLinkErr)
-	})
-	t.Run("Expect failure - request returns unknown HTTP code", func(t *testing.T) {
-		mockClient := &security.ClientMockAuthenticate{StatusCode: http.StatusPermanentRedirect, Body: nil}
-		mockConnection := connections.Connection{ID: "local"}
-
-		projectLinkErr := DeleteProjectLink(mockClient, &mockConnection, "dummyurl", "dummyProjectID", "dummyEnvName")
-		wantedError := &ProjectError{errOpResponse, errUnknownHTTPCode, errUnknownHTTPCode.Error()}
-		assert.Equal(t, wantedError, projectLinkErr)
-	})
+	for _, tt := range projectLinkCreateUpdateDeleteTests {
+		t.Run(tt.name, func(t *testing.T) {
+			emptyBody := ioutil.NopCloser(bytes.NewReader([]byte{}))
+			mockClient := &security.ClientMockAuthenticate{StatusCode: tt.statusCode, Body: emptyBody}
+			mockConnection := connections.Connection{ID: "local"}
+			got := DeleteProjectLink(mockClient, &mockConnection, "dummyurl", "dummyProjectID", "dummyEnvName")
+			assert.Equal(t, tt.want, got)
+		})
+	}
 }
