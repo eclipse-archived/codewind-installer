@@ -76,17 +76,17 @@ func TestIgnoreFileOrDirectory(t *testing.T) {
 		shouldBeIgnored  bool
 		ignoredPathsList []string
 	}{
-		"success case: directory called node_modules should be ignored": {
+		"success case: directory called node_modules should be ignored as it is in .cw-settings": {
 			name:             "node_modules",
 			isDir:            true,
 			shouldBeIgnored:  true,
-			ignoredPathsList: []string{},
+			ignoredPathsList: []string{"node_modules*"},
 		},
-		"success case: directory called load-test-23498729 should be ignored": {
+		"success case: directory called load-test-23498729 should be ignored as it is in .cw-settings": {
 			name:             "load-test-23498729",
 			isDir:            true,
 			shouldBeIgnored:  true,
-			ignoredPathsList: []string{},
+			ignoredPathsList: []string{"load-test*"},
 		},
 		"success case: directory called not-a-load-test-23498729 should not be ignored": {
 			name:             "not-a-load-test-23498729",
@@ -100,17 +100,17 @@ func TestIgnoreFileOrDirectory(t *testing.T) {
 			shouldBeIgnored:  false,
 			ignoredPathsList: []string{},
 		},
-		"success case: file called .DS_Store should be ignored": {
+		"success case: file called .DS_Store should be ignored as it is in .cw-settings": {
 			name:             ".DS_Store",
 			isDir:            false,
 			shouldBeIgnored:  true,
-			ignoredPathsList: []string{},
+			ignoredPathsList: []string{".DS_Store"},
 		},
-		"success case: file called something.swp should be ignored": {
+		"success case: file called something.swp should be ignored as it is in .cw-settings": {
 			name:             "something.swp",
 			isDir:            false,
 			shouldBeIgnored:  true,
-			ignoredPathsList: []string{},
+			ignoredPathsList: []string{"*.swp"},
 		},
 		"success case: file called something.swpnot should not be ignored": {
 			name:             "something.swpnot",
@@ -136,17 +136,17 @@ func TestIgnoreFileOrDirectory(t *testing.T) {
 			shouldBeIgnored:  true,
 			ignoredPathsList: []string{"noddy_modules"},
 		},
-		"success case: file called file.iml should be ignored (IntelliJ metadata file, *.iml)": {
+		"success case: file called file.iml should be ignored (IntelliJ metadata file, *.iml) as it is in .cw-settings": {
 			name:             "file.iml",
 			isDir:            false,
 			shouldBeIgnored:  true,
-			ignoredPathsList: []string{},
+			ignoredPathsList: []string{"*.iml"},
 		},
 		"success case: path containing .idea should be ignored (IntelliJ metadata directory, .idea)": {
 			name:             ".idea",
 			isDir:            true,
 			shouldBeIgnored:  true,
-			ignoredPathsList: []string{},
+			ignoredPathsList: []string{".idea"},
 		},
 	}
 	for name, test := range tests {
