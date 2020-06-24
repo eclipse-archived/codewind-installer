@@ -37,6 +37,13 @@ type (
 		TargetProjectID string `json:"targetProjectID,omitempty"`
 		UpdatedEnvName  string `json:"updatedEnvName,omitempty"`
 	}
+
+	// LinkError : The json error returned from PFE
+	LinkError struct {
+		Name    string `json:"name"`
+		Code    string `json:"code"`
+		Message string `json:"message"`
+	}
 )
 
 // GetProjectLinks calls the project links API on PFE with a POST request
@@ -121,25 +128,6 @@ func handleProjectLinkResponse(req *http.Request, conInfo *connections.Connectio
 		return nil, &ProjectError{errOpResponse, httpSecError, httpSecError.Error()}
 	}
 
-	if resp.StatusCode != successCode {
-		var respErr error
-		if resp.StatusCode == http.StatusBadRequest {
-			respErr = errors.New(textInvalidRequest)
-		} else if resp.StatusCode == http.StatusNotFound {
-			respErr = errors.New(textProjectLinkTargetNotFound)
-		} else if resp.StatusCode == http.StatusConflict {
-			respErr = errors.New(textProjectLinkConflict)
-		} else {
-			respErr = errors.New(textUnknownResponseCode)
-		}
-		return nil, &ProjectError{errOpResponse, respErr, respErr.Error()}
-	}
-
-	// POST, PUT and DELETE requests don't need a body
-	if resp.Body == nil {
-		return nil, nil
-	}
-
 	defer resp.Body.Close()
 
 	byteArray, byteError := ioutil.ReadAll(resp.Body)
@@ -147,5 +135,30 @@ func handleProjectLinkResponse(req *http.Request, conInfo *connections.Connectio
 		return nil, &ProjectError{errOpResponse, byteError, byteError.Error()}
 	}
 
+	if resp.StatusCode != successCode {
+		var respErr error
+		if resp.StatusCode == http.StatusBadRequest {
+			respErr = handlePFEErrorMessage(byteArray, textInvalidRequest)
+		} else if resp.StatusCode == http.StatusNotFound {
+			respErr = handlePFEErrorMessage(byteArray, textProjectLinkUnknownNotFound)
+		} else if resp.StatusCode == http.StatusConflict {
+			respErr = handlePFEErrorMessage(byteArray, textProjectLinkConflict)
+		} else {
+			respErr = errors.New(textUnknownResponseCode)
+		}
+		return nil, &ProjectError{errOpResponse, respErr, respErr.Error()}
+	}
+
 	return byteArray, nil
+}
+
+func handlePFEErrorMessage(byteArray []byte, defaultMessage string) error {
+	var projectLinkError LinkError
+	jsonErr := json.Unmarshal(byteArray, &projectLinkError)
+	if jsonErr != nil {
+		// if the message body is not a ProjectLinkError in PFE, send defaultMessage
+		return errors.New(defaultMessage)
+	}
+
+	return errors.New(projectLinkError.Message)
 }
