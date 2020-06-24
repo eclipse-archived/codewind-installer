@@ -30,14 +30,15 @@ var errConflict = errors.New(textProjectLinkConflict)
 var errUnknownHTTPCode = errors.New(textUnknownResponseCode)
 
 var projectLinkCreateUpdateDeleteTests = []struct {
+	name       string
 	statusCode int
 	want       *ProjectError
 }{
-	{statusCode: http.StatusAccepted, want: nil},
-	{statusCode: http.StatusBadRequest, want: &ProjectError{errOpResponse, errInvalidRequest, errInvalidRequest.Error()}},
-	{statusCode: http.StatusNotFound, want: &ProjectError{errOpResponse, errUnknownNotFound, errUnknownNotFound.Error()}},
-	{statusCode: http.StatusConflict, want: &ProjectError{errOpResponse, errConflict, errConflict.Error()}},
-	{statusCode: http.StatusPermanentRedirect, want: &ProjectError{errOpResponse, errUnknownHTTPCode, errUnknownHTTPCode.Error()}},
+	{name: "Expect success - request should be accepted", statusCode: http.StatusAccepted, want: nil},
+	{name: "Expect failure - rejected with 400", statusCode: http.StatusBadRequest, want: &ProjectError{errOpResponse, errInvalidRequest, errInvalidRequest.Error()}},
+	{name: "Expect failure - rejected with 404", statusCode: http.StatusNotFound, want: &ProjectError{errOpResponse, errUnknownNotFound, errUnknownNotFound.Error()}},
+	{name: "Expect failure - rejected with 409", statusCode: http.StatusConflict, want: &ProjectError{errOpResponse, errConflict, errConflict.Error()}},
+	{name: "Expect failure - rejected with unknown http code", statusCode: http.StatusPermanentRedirect, want: &ProjectError{errOpResponse, errUnknownHTTPCode, errUnknownHTTPCode.Error()}},
 }
 
 func TestGetProjectLinks(t *testing.T) {
@@ -72,30 +73,36 @@ func TestGetProjectLinks(t *testing.T) {
 
 func TestCreateProjectLinks(t *testing.T) {
 	for _, tt := range projectLinkCreateUpdateDeleteTests {
-		emptyBody := ioutil.NopCloser(bytes.NewReader([]byte{}))
-		mockClient := &security.ClientMockAuthenticate{StatusCode: tt.statusCode, Body: emptyBody}
-		mockConnection := connections.Connection{ID: "local"}
-		got := CreateProjectLink(mockClient, &mockConnection, "dummyurl", "dummyProjectID", "dummyTargetProjectID", "dummyEnvName")
-		assert.Equal(t, tt.want, got)
+		t.Run(tt.name, func(t *testing.T) {
+			emptyBody := ioutil.NopCloser(bytes.NewReader([]byte{}))
+			mockClient := &security.ClientMockAuthenticate{StatusCode: tt.statusCode, Body: emptyBody}
+			mockConnection := connections.Connection{ID: "local"}
+			got := CreateProjectLink(mockClient, &mockConnection, "dummyurl", "dummyProjectID", "dummyTargetProjectID", "dummyEnvName")
+			assert.Equal(t, tt.want, got)
+		})
 	}
 }
 
 func TestUpdateProjectLinks(t *testing.T) {
 	for _, tt := range projectLinkCreateUpdateDeleteTests {
-		emptyBody := ioutil.NopCloser(bytes.NewReader([]byte{}))
-		mockClient := &security.ClientMockAuthenticate{StatusCode: tt.statusCode, Body: emptyBody}
-		mockConnection := connections.Connection{ID: "local"}
-		got := UpdateProjectLink(mockClient, &mockConnection, "dummyurl", "dummyProjectID", "dummyEnvName", "dummyUpdatedEnvName")
-		assert.Equal(t, tt.want, got)
+		t.Run(tt.name, func(t *testing.T) {
+			emptyBody := ioutil.NopCloser(bytes.NewReader([]byte{}))
+			mockClient := &security.ClientMockAuthenticate{StatusCode: tt.statusCode, Body: emptyBody}
+			mockConnection := connections.Connection{ID: "local"}
+			got := UpdateProjectLink(mockClient, &mockConnection, "dummyurl", "dummyProjectID", "dummyEnvName", "dummyUpdatedEnvName")
+			assert.Equal(t, tt.want, got)
+		})
 	}
 }
 
 func TestDeleteProjectLinks(t *testing.T) {
 	for _, tt := range projectLinkCreateUpdateDeleteTests {
-		emptyBody := ioutil.NopCloser(bytes.NewReader([]byte{}))
-		mockClient := &security.ClientMockAuthenticate{StatusCode: tt.statusCode, Body: emptyBody}
-		mockConnection := connections.Connection{ID: "local"}
-		got := DeleteProjectLink(mockClient, &mockConnection, "dummyurl", "dummyProjectID", "dummyEnvName")
-		assert.Equal(t, tt.want, got)
+		t.Run(tt.name, func(t *testing.T) {
+			emptyBody := ioutil.NopCloser(bytes.NewReader([]byte{}))
+			mockClient := &security.ClientMockAuthenticate{StatusCode: tt.statusCode, Body: emptyBody}
+			mockConnection := connections.Connection{ID: "local"}
+			got := DeleteProjectLink(mockClient, &mockConnection, "dummyurl", "dummyProjectID", "dummyEnvName")
+			assert.Equal(t, tt.want, got)
+		})
 	}
 }
