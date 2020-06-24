@@ -50,12 +50,9 @@ func AddRegistrySecret(c *cli.Context) {
 	// Do this first as it will validate the credentials.
 	// Otherwise we have to undo everything else if they are wrong.
 	_, foundChe := os.LookupEnv("CHE_API_EXTERNAL")
+	var dockerErr *docker.DockerError = nil
 	if !foundChe && localLogin {
-		dockerErr := docker.LoginToRegistry(address, username, password)
-		if dockerErr != nil {
-			HandleDockerError(dockerErr)
-			os.Exit(1)
-		}
+		dockerErr = docker.LoginToRegistry(address, username, password)
 	}
 
 	// If this is a local connection we need to persist the details in the
@@ -81,6 +78,13 @@ func AddRegistrySecret(c *cli.Context) {
 		registryErr := &RegistryError{errOpAddRegistry, err, err.Error()}
 		HandleRegistryError(registryErr)
 		os.Exit(1)
+	}
+	if dockerErr != nil {
+		for i, registry := range *registrySecrets {
+			if registry.Address == address && registry.Username == username {
+				(*registrySecrets)[i].LocalDockerError = dockerErr.Desc
+			}
+		}
 	}
 
 	utils.PrettyPrintJSON(registrySecrets)

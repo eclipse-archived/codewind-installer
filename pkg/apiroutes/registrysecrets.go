@@ -27,8 +27,9 @@ import (
 type (
 	// RegistryResponse : The registry information
 	RegistryResponse struct {
-		Address  string `json:"address"`
-		Username string `json:"username"`
+		Address          string `json:"address"`
+		Username         string `json:"username"`
+		LocalDockerError string `json:"localDockerError,omitempty"`
 	}
 
 	// RegistryParameters : The request structure to set the log level
