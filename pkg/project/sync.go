@@ -474,7 +474,7 @@ func syncFile(client utils.HTTPClient, projectID string, projectPath string, pat
 
 	mode := uint(fileStat.Mode().Perm())
 	if runtime.GOOS == "windows" {
-		mode = 509
+		mode = 0775
 	}
 	fileUploadBody := FileUploadMsg{
 		IsDirectory:  fileStat.IsDir(),
