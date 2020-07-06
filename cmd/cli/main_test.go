@@ -14,6 +14,7 @@ package main
 import (
 	"encoding/json"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"os/exec"
 	"testing"
@@ -202,7 +203,7 @@ func testCreateProjectFromTemplate(t *testing.T) {
 		out, err := cmd.CombinedOutput()
 		assert.NotNil(t, err)
 		assert.Contains(t, string(out), "invalid_git_credentials")
-		assert.Contains(t, string(out), "401 Unauthorized")
+		assert.Contains(t, string(out), http.StatusText(http.StatusUnauthorized))
 	})
 }
 
@@ -418,7 +419,7 @@ func testSuccessfulAddAndRemoveTemplateRepos(t *testing.T) {
 		createOut, createErr := createCmd.CombinedOutput()
 		assert.NotNil(t, createErr)
 		assert.Contains(t, string(createOut), "invalid_git_credentials")
-		assert.Contains(t, string(createOut), "401 Unauthorized")
+		assert.Contains(t, string(createOut), http.StatusText(http.StatusUnauthorized))
 
 		removeCmd := exec.Command(cwctl, "templates", "repos", "remove",
 			"--url="+test.GHEDevfileURL,
@@ -454,7 +455,7 @@ func testSuccessfulAddAndRemoveTemplateRepos(t *testing.T) {
 		createOut, createErr := createCmd.CombinedOutput()
 		assert.NotNil(t, createErr)
 		assert.Contains(t, string(createOut), "invalid_git_credentials")
-		assert.Contains(t, string(createOut), "401 Unauthorized")
+		assert.Contains(t, string(createOut), http.StatusText(http.StatusUnauthorized))
 
 		removeCmd := exec.Command(cwctl, "templates", "repos", "remove",
 			"--url="+test.GHEDevfileURL,
