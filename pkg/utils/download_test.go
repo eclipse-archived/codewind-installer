@@ -15,6 +15,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -136,7 +137,7 @@ func TestDownloadFromURLThenExtract(t *testing.T) {
 			inDestination:    filepath.Join(testDir, "failCase"),
 			inGitCredentials: &GitCredentials{Username: test.GHEUsername, Password: "bad password"},
 			wantedType:       errors.New(""),
-			wantedErrMsg:     "401 Unauthorized",
+			wantedErrMsg:     http.StatusText(http.StatusUnauthorized),
 			wantedNumFiles:   0,
 		},
 		"fail case: input good GHE tar.gz URL and credentials but no matching repo found": {
