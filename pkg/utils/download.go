@@ -13,6 +13,7 @@ package utils
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -78,7 +79,6 @@ func DownloadFromTarGzURL(URL *url.URL, destination string, gitCredentials *GitC
 
 func getURLToDownloadReleaseAsset(URL *url.URL, gitCredentials *GitCredentials) (*url.URL, error) {
 	URLPathSlice := strings.Split(URL.Path, "/")
-
 
 	if !strings.Contains(URL.Host, "github") || len(URLPathSlice) < 6 {
 		return nil, fmt.Errorf("URL must point to a GitHub repository release asset: %v", URL)
@@ -152,7 +152,14 @@ func DownloadFromRepoURL(URL *url.URL, destination string, gitCredentials *GitCr
 
 	owner := URLPathSlice[1]
 	repo := URLPathSlice[2]
-	zipURL, err := GetZipURL(owner, repo, "master", client)
+
+	// Get the default branch rather than assuming a name.
+	branch, err := getDefaultBranch(owner, repo, client)
+	if err != nil {
+		return err
+	}
+
+	zipURL, err := GetZipURL(owner, repo, branch, client)
 	if err != nil {
 		return err
 	}
@@ -195,6 +202,18 @@ func GetZipURL(owner, repo, branch string, client *github.Client) (*url.URL, err
 		return nil, err
 	}
 	return URL, nil
+}
+
+func getDefaultBranch(owner, repo string, client *github.Client) (string, error) {
+	ctx := context.Background()
+	repository, response, err := client.Repositories.Get(ctx, owner, repo)
+	if err != nil {
+		if response != nil && response.StatusCode == http.StatusUnauthorized {
+			return "", errors.New(http.StatusText(http.StatusUnauthorized))
+		}
+		return "", err
+	}
+	return *repository.DefaultBranch, nil
 }
 
 // DownloadAndExtractZip downloads a zip file from a URL

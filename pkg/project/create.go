@@ -74,7 +74,7 @@ func DownloadTemplate(destination, url string, gitCredentials *utils.GitCredenti
 	if err != nil {
 		errOp := errOpCreateProject
 		// if 401 error, use invalid credentials error code
-		if strings.Contains(err.Error(), "401 Unauthorized") {
+		if err.Error() == http.StatusText(http.StatusUnauthorized) {
 			errOp = errOpInvalidCredentials
 		}
 		return nil, &ProjectError{errOp, err, err.Error()}
