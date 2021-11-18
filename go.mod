@@ -22,7 +22,7 @@ require (
 	github.com/json-iterator/go v1.1.8 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0-rc1 // indirect
-	github.com/opencontainers/image-spec v1.0.1
+	github.com/opencontainers/image-spec v1.0.2
 	github.com/openshift/api v0.0.0-20191025141232-e7fa4b871a25
 	github.com/openshift/client-go v0.0.0-20191022152013-2823239d2298
 	github.com/sirupsen/logrus v1.6.0
